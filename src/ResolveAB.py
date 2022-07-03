@@ -89,12 +89,11 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
 
     cont_f = 0 #已处理文件计数
     cont_s_sum = 0 #已导出文件计数（累加）
-
     if dodel:
         Delete_File_Dir(destdir) #慎用，会预先删除目的地目录的所有内容
     mkdir(destdir)
 
-    print("开始批量解包!")
+    print("开始批量解包!\n")
     t1=time.time() #计时器开始
 
     for i in flist:
