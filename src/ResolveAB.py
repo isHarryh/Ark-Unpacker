@@ -2,27 +2,31 @@
 # Copyright (c) 2022, Harry Huang
 # @ BSD 3-Clause License
 import os, time
-from osTool import *
+try:
+    from osTool import *
+    from colorTool import *
+except:
+    from .osTool import *
+    from .colorTool import *
 import UnityPy as Upy #UnityPy库用于操作Unity文件
 '''
 Python批量解包Unity(.ab)资源文件
 '''
 
 
-def ab_reslove(env, intodir:str, 
-    doimg:bool=True, dotxt:bool=True, doaud:bool=True, docover:bool=True):
+def ab_reslove(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, docover:bool):
     '''
     #### 解包ab文件env实例
     :param env:     UnityPy.load()创建的environment实例;
     :param intodir: 解包目的地的目录;
-    :param doimg:   是否导出图片资源，默认True;
-    :param dotxt:   是否导出文本资源，默认True;
-    :param doaud:   是否导出音频资源，默认True;
-    :param docover: 是否覆盖重名的已存在的文件，默认True;
+    :param doimg:   是否导出图片资源;
+    :param dotxt:   是否导出文本资源;
+    :param doaud:   是否导出音频资源;
+    :param docover: 是否覆盖重名的已存在的文件，建议False，否则可能出现意外;
     :returns:       (int) 已导出的文件数;
     '''
-    print("  找到了", len(env.objects), "个资源")
     mkdir(intodir)
+    print(color(0,2,0)+"  找到了", len(env.objects), "个资源，已导出：")
     cont_s = 0 #已导出文件计数
     ###
     for i in env.objects:
@@ -35,7 +39,7 @@ def ab_reslove(env, intodir:str,
                 dest = os.path.splitext(dest)[0] + ".png"
                 if not docover and os.path.isfile(dest):
                     continue
-                print("  " + str(i.type.name))
+                print("  " + str(i.type.name) + "\t" + str(data.name))
                 data.image.save(dest)
                 cont_s += 1
             elif dotxt and i.type.name in ["TextAsset"]:
@@ -44,7 +48,7 @@ def ab_reslove(env, intodir:str,
                 dest = os.path.join(intodir, data.name)
                 if not docover and os.path.isfile(dest):
                     continue
-                print("  " + str(i.type.name))
+                print("  " + str(i.type.name) + "\t" + str(data.name))
                 with open(dest, "wb") as f:
                     f.write(data.script)
                 cont_s += 1
@@ -55,22 +59,22 @@ def ab_reslove(env, intodir:str,
                 dest = os.path.splitext(dest)[0] + ".wav"
                 if not docover and os.path.isfile(dest):
                     continue
-                print("  " + str(i.type.name))
+                print("  " + str(i.type.name) + "\t" + str(data.name))
                 for n, d in data.samples.items():
                     with open(dest, "wb") as f:
                         f.write(d)
                 cont_s += 1
         except Exception as arg:
             #错误反馈
-            print("  意外错误：", arg)
-            input("  按下回车键以继续任务...\n")
+            print(color(0,1,0)+"  意外错误：", arg)
+            input(color(0,7,0)+"  按下回车键以继续任务...\n")
     print("  导出了", cont_s, "个文件")
     return cont_s
         
 
 ########## Main-主程序 ##########
 def main(rootdir:list, destdir:str, dodel:bool=False, 
-    doimg:bool=True, dotxt:bool=True, doaud:bool=True, docover:bool=True):
+    doimg:bool=True, dotxt:bool=True, doaud:bool=True, docover:bool=False):
     '''
     #### 批量地从指定目录的ab文件中，导出指定类型的资源
     :param rootdir: 包含来源文件夹们的路径的列表;
@@ -79,10 +83,10 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
     :param doimg:   是否导出图片资源，默认True;
     :param dotxt:   是否导出文本资源，默认True;
     :param doaud:   是否导出音频资源，默认True;
-    :param docover: 是否覆盖重名的已存在的文件，默认True;
+    :param docover: 是否覆盖重名的已存在的文件，默认False，否则可能出现意外;
     :returns: (None);
     '''
-    print("正在解析目录...")
+    print(color(0,7,0)+"\n正在解析目录...")
     flist = [] #目录下所有文件的列表
     for i in rootdir:
         flist += get_filelist(i)
@@ -115,8 +119,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
             print("■ 已累计导出",cont_s_sum,"个文件")
 
     t2=time.time() #计时器结束
-    print("\n批量解包结束!")
+    print(color(0,7,0)+"\n批量解包结束!")
     print("  累计解包", cont_f, "个文件")
     print("  累计导出", cont_s_sum, "个文件")
     print("  用时", round(t2-t1, 1), "秒")
-    input()

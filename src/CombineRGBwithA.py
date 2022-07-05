@@ -2,7 +2,10 @@
 # Copyright (c) 2022, Harry Huang
 # @ BSD 3-Clause License
 import os, time
-from osTool import *
+try:
+    from osTool import *
+except:
+    from .osTool import *
 from PIL import Image #PIL库用于操作图像
 '''
 Python批量合并RGB通道图和A通道图
@@ -21,7 +24,7 @@ def combine_rgb_a(fp_rgb:str, fp_a:str):
     w,h = IM1.size #新图片尺寸取自RGB通道图
     if not (IM1.size == IM2.size):
         #两张图片尺寸不同，对A通道图的尺寸进行缩放
-        print("  警告：通道图尺寸不一，已缩放处理")
+        print('  警告：通道图尺寸不一，已缩放处理')
         IM2 = IM2.resize((w,h), Image.ANTIALIAS)
     #载入原图片的像素到数组
     IM1L = IM1.load()
@@ -49,11 +52,11 @@ def image_resolve(fp:str, intodir:str, docover:bool=True):
     '''
     oridir = os.path.dirname(fp) #原图的目录
     name, ext = os.path.splitext(os.path.basename(fp)) #原图纯文件名和纯扩展名
-    if not ext.lower() in [".png", ".jpg", ".jpeg", ".bmp"]:
+    if not ext.lower() in ['.png', '.jpg', '.jpeg', '.bmp']:
         return 1 #不是图片文件，退出
-    if name[-7:].lower() == "[alpha]":
+    if name[-7:].lower() == '[alpha]':
         fp2 = os.path.join(oridir, name[:-7] + ext) #RGB通道图的路径
-    elif name[-6:].lower() == "_alpha":
+    elif name[-6:].lower() == '_alpha':
         fp2 = os.path.join(oridir, name[:-6] + ext)
     else:
         return 2 #不是指定的A通道图，退出
@@ -67,6 +70,7 @@ def image_resolve(fp:str, intodir:str, docover:bool=True):
         print('  错误：RGB通道图缺失', fp2)
         return 5 #找不到对应的RGB通道图，退出
     mkdir(intodir)
+    print(fp2)
     IM = combine_rgb_a(fp2, fp)
     if IM:
         IM.save(dest) #保存新图
@@ -87,7 +91,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True):
     :param docover: 是否覆盖重名的已存在的文件，默认True;
     :returns: (None);
     '''
-    print("正在解析目录...")
+    print('\n正在解析目录...')
     flist = [] #目录下所有文件的列表
     for i in rootdir:
         flist += get_filelist(i)
@@ -97,34 +101,33 @@ def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True):
         Delete_File_Dir(destdir) #慎用，会预先删除目的地目录的所有内容
     mkdir(destdir)
 
-    print("开始批量合并图片!\n")
+    print('开始批量合并图片!\n')
     t1=time.time() #计时器1开始
 
     for i in flist:
         #递归处理各个文件(i是文件的路径名)
         if not os.path.isfile(i):
             continue #跳过目录等非文件路径
-        if not os.path.splitext(i)[1].lower() in [".png", ".jpg", ".jpeg", ".bmp"]:
+        if not os.path.splitext(i)[1].lower() in ['.png', '.jpg', '.jpeg', '.bmp']:
             continue #不是图片文件，跳过
         #测试相关：
-        #abc=combine_rgb_a("",
-        #    "")
-        #abc.save("1.png")
+        #abc=combine_rgb_a('',
+        #    '')
+        #abc.save('1.png')
         #input()
         print(os.path.basename(i))
         t3=time.time() #计时器2开始
         result = image_resolve(i, destdir, docover=True)
         if result == 0:
             t4=time.time() #计时器2结束
-            print("  成功 (", round(t4-t3, 1), "s)")
+            print('  成功 (', round(t4-t3, 1), 's )')
             cont_f += 1
         elif result in [1,2]:
-            print("  跳过")
+            print('  跳过')
         elif result in [3]:
-            print("  跳过(重名)")
+            print('  跳过(重名)')
 
     t2=time.time() #计时器1结束
-    print("\n批量合成图片结束!")
-    print("  累计合成", cont_f, "张图片")
-    print("  用时", round(t2-t1, 1), "秒")
-    input()
+    print('\n批量合成图片结束!')
+    print('  累计合成', cont_f, '张图片')
+    print('  用时', round(t2-t1, 1), '秒')
