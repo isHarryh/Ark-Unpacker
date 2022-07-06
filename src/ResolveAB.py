@@ -26,7 +26,7 @@ def ab_reslove(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, docover:boo
     :returns:       (int) 已导出的文件数;
     '''
     mkdir(intodir)
-    print(color(0,2,0)+"  找到了", len(env.objects), "个资源，已导出：")
+    print(color(2)+"  找到了", len(env.objects), "个资源，已导出："+color(6))
     cont_s = 0 #已导出文件计数
     ###
     for i in env.objects:
@@ -66,9 +66,9 @@ def ab_reslove(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, docover:boo
                 cont_s += 1
         except Exception as arg:
             #错误反馈
-            print(color(0,1,0)+"  意外错误：", arg)
-            input(color(0,7,0)+"  按下回车键以继续任务...\n")
-    print("  导出了", cont_s, "个文件")
+            print(color(1)+"  意外错误：", arg)
+            input(color(7)+"  按下回车键以继续任务...\n")
+    print(color(2)+"  导出了", cont_s, "个文件"+color(7))
     return cont_s
         
 
@@ -86,7 +86,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
     :param docover: 是否覆盖重名的已存在的文件，默认False，否则可能出现意外;
     :returns: (None);
     '''
-    print(color(0,7,0)+"\n正在解析目录...")
+    print(color(7,0,1)+"\n正在解析目录..."+color(7))
     flist = [] #目录下所有文件的列表
     for i in rootdir:
         flist += get_filelist(i)
@@ -97,7 +97,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
         Delete_File_Dir(destdir) #慎用，会预先删除目的地目录的所有内容
     mkdir(destdir)
 
-    print("开始批量解包!\n")
+    print(color(7,0,1)+"开始批量解包!\n"+color(7))
     t1=time.time() #计时器开始
 
     for i in flist:
@@ -107,7 +107,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
         if not os.path.splitext(i)[1] in [".ab",".AB"]:
             continue #跳过非ab文件
         cont_f += 1
-        print("")
+        print(color(7))
         print(os.path.dirname(i))
         print('['+os.path.basename(i)+']')
         ###
@@ -115,11 +115,11 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
         cont_s_sum += ab_reslove(Ue, os.path.join(destdir, os.path.dirname(i)), doimg, dotxt, doaud, docover)
         ###
         if cont_f % 25 == 0:
-            print("■ 已累计解包",cont_f,"个文件")
+            print(color(7)+"■ 已累计解包",cont_f,"个文件")
             print("■ 已累计导出",cont_s_sum,"个文件")
 
     t2=time.time() #计时器结束
-    print(color(0,7,0)+"\n批量解包结束!")
+    print(color(7,0,1)+"\n批量解包结束!")
     print("  累计解包", cont_f, "个文件")
     print("  累计导出", cont_s_sum, "个文件")
-    print("  用时", round(t2-t1, 1), "秒")
+    print("  用时", round(t2-t1, 1), "秒"+color(7))

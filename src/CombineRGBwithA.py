@@ -4,8 +4,10 @@
 import os, time
 try:
     from osTool import *
+    from colorTool import *
 except:
     from .osTool import *
+    from .colorTool import *
 from PIL import Image #PIL库用于操作图像
 '''
 Python批量合并RGB通道图和A通道图
@@ -24,7 +26,7 @@ def combine_rgb_a(fp_rgb:str, fp_a:str):
     w,h = IM1.size #新图片尺寸取自RGB通道图
     if not (IM1.size == IM2.size):
         #两张图片尺寸不同，对A通道图的尺寸进行缩放
-        print('  警告：通道图尺寸不一，已缩放处理')
+        print(color(3)+'  警告：通道图尺寸不一，已缩放处理')
         IM2 = IM2.resize((w,h), Image.ANTIALIAS)
     #载入原图片的像素到数组
     IM1L = IM1.load()
@@ -64,19 +66,19 @@ def image_resolve(fp:str, intodir:str, docover:bool=True):
     if not docover and os.path.isfile(dest):
         return 3 #新图已存在且没让覆盖，退出
     if not os.path.isfile(fp):
-        print('  错误：alpha通道图缺失', fp)
+        print(color(1)+'  错误：alpha通道图缺失'+color(7), fp)
         return 4 #找不到对应的A通道图，退出
     if not os.path.isfile(fp2):
-        print('  错误：RGB通道图缺失', fp2)
+        print(color(1)+'  错误：RGB通道图缺失'+color(7), fp2)
         return 5 #找不到对应的RGB通道图，退出
     mkdir(intodir)
-    print(fp2)
+    #print(color(7)+fp2)
     IM = combine_rgb_a(fp2, fp)
     if IM:
         IM.save(dest) #保存新图
         return 0 #成功，返回0
     else:
-        print('  错误：通道图合成失败')
+        print(color(1)+'  错误：通道图合成失败'+color(7))
         return -1 #图片合成函数返回了失败的结果，退出
 
 
@@ -91,7 +93,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True):
     :param docover: 是否覆盖重名的已存在的文件，默认True;
     :returns: (None);
     '''
-    print('\n正在解析目录...')
+    print(color(7,0,1)+'\n正在解析目录...'+color(7))
     flist = [] #目录下所有文件的列表
     for i in rootdir:
         flist += get_filelist(i)
@@ -101,7 +103,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True):
         Delete_File_Dir(destdir) #慎用，会预先删除目的地目录的所有内容
     mkdir(destdir)
 
-    print('开始批量合并图片!\n')
+    print(color(7,0,1)+'开始批量合并图片!\n'+color(7))
     t1=time.time() #计时器1开始
 
     for i in flist:
@@ -115,19 +117,19 @@ def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True):
         #    '')
         #abc.save('1.png')
         #input()
-        print(os.path.basename(i))
+        print(color(7)+os.path.basename(i))
         t3=time.time() #计时器2开始
         result = image_resolve(i, destdir, docover=True)
         if result == 0:
             t4=time.time() #计时器2结束
-            print('  成功 (', round(t4-t3, 1), 's )')
+            print(color(2)+'  成功 (', round(t4-t3, 2), 's )'+color(7))
             cont_f += 1
         elif result in [1,2]:
-            print('  跳过')
+            print(color(6)+'  跳过'+color(7))
         elif result in [3]:
-            print('  跳过(重名)')
+            print(color(6)+'  跳过(重名)'+color(7))
 
     t2=time.time() #计时器1结束
-    print('\n批量合成图片结束!')
+    print(color(7,0,1)+'\n批量合成图片结束!')
     print('  累计合成', cont_f, '张图片')
-    print('  用时', round(t2-t1, 1), '秒')
+    print('  用时', round(t2-t1, 1), '秒'+color(7))
