@@ -1,3 +1,10 @@
 .vscode
 __pycache__
+
+dist
+build
+
 temp*
+
+*.bat
+*.log
