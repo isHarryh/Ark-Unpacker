@@ -153,6 +153,8 @@ def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True, detail:
                 print(color(6)+'  跳过(重名)'+color(7))
 
     t2=time.time() #计时器1结束
+    if not detail:
+        os.system('cls')
     print(color(7,0,1)+'\n批量合并图片结束!')
     print('  累计合并', cont_f, '张图片')
     print('  此项用时', round(t2-t1, 1), '秒'+color(7))

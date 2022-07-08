@@ -144,6 +144,8 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
             print("■ 已累计导出",cont_s_sum,"个文件")
 
     t2=time.time() #计时器结束
+    if not detail:
+        os.system('cls')
     print(color(7,0,1)+"\n批量解包结束!")
     print("  累计解包", cont_f, "个文件")
     print("  累计导出", cont_s_sum, "个文件")
