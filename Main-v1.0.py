@@ -17,6 +17,7 @@ def prt_homepage():
     #### 打印主页
     :returns: (none);
     '''
+    os.system('cls')
     print(color(7)+'欢迎使用ArkUnpacker '+AU_ver)
 
 def prt_subtitle(msg:str):
@@ -25,6 +26,7 @@ def prt_subtitle(msg:str):
     :param msg: 标题;
     :returns: (none);
     '''
+    os.system('cls')
     os.chdir('.')
     print("")
     print(color(7,0,1)+'='*10)
@@ -38,13 +40,13 @@ def run_quickaccess():
     :returns: (none);
     '''
     prt_subtitle('步骤1|解包')
-    AU_Rs.main(["test"],"temp",dodel=True)
+    #AU_Rs.main(["test"],"temp",dotxt=False,doaud=False,dodel=True,detail=False)
     prt_subtitle('步骤2|合并')
-    AU_Cb.main(["temp\\test"],"temp2",dodel=True)
+    AU_Cb.main(["temp\\test"],"temp2",dodel=True,detail=False)
     exit()
 
 
 if __name__ == '__main__':
     prt_homepage()
     run_quickaccess()
-    exit()
+    input()

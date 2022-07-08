@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022, Harry Huang
 # @ BSD 3-Clause License
-import os, time
+import os.path, time
 try:
     from osTool import *
     from colorTool import *
@@ -84,30 +84,36 @@ def image_resolve(fp:str, intodir:str, docover:bool=True):
 
 
 ########## Main-主程序 ##########
-def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True):
+def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True, detail:bool=True):
     '''
     #### 批量地从指定目录中，找到名称相互匹配的RGB通道图和A通道图，然后合并图片后保存到另一目录
     :param rootdir: 包含来源文件夹们的路径的列表;
     :param destdir: 解包目的地的根目录的路径;
     :param dodel:   预先删除目的地文件夹的所有文件，默认False;
     :param docover: 是否覆盖重名的已存在的文件，默认True;
+    :param detail:  是否回显详细信息，默认True，否则回显进度条;
     :returns: (None);
     '''
     print(color(7,0,1)+'\n正在解析目录...'+color(7))
     flist = [] #目录下所有文件的列表
     for i in rootdir:
         flist += get_filelist(i)
-
     cont_f = 0 #已合并图片计数
+    cont_a = 0 #已遍历文件计数
+    cont_p = 0 #进度百分比计数
+    cont_l1 = 0 #上个文件用时
     if dodel:
         Delete_File_Dir(destdir) #慎用，会预先删除目的地目录的所有内容
     mkdir(destdir)
 
-    print(color(7,0,1)+'开始批量合并图片!\n'+color(7))
+    if detail:
+        print(color(7,0,1)+'开始批量合并图片!\n'+color(7))
     t1=time.time() #计时器1开始
 
     for i in flist:
         #递归处理各个文件(i是文件的路径名)
+        cont_a += 1
+        cont_p = round((cont_a/len(flist))*100,1)
         if not os.path.isfile(i):
             continue #跳过目录等非文件路径
         if not os.path.splitext(i)[1].lower() in ['.png', '.jpg', '.jpeg', '.bmp']:
@@ -117,19 +123,37 @@ def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True):
         #    '')
         #abc.save('1.png')
         #input()
-        print(color(7)+os.path.basename(i))
+        
+        if detail:
+            print(color(7)+os.path.basename(i))
+        else:
+            #显示模式B：简洁
+            os.system('cls')
+            print(color(7)+"正在合并图片...")
+            print("|"+"■"*int(cont_p//5)+"□"*int(20-cont_p//5)+"|", color(2)+str(cont_p)+"%"+color(7))
+            print("当前目录：\t",os.path.dirname(i))
+            print("当前文件：\t",os.path.basename(i))
+            print("累计合并：\t",cont_f)
+            print(color(6)+"上个用时：\t",cont_l1,"秒"+color(7))
+            print()
+        ###
         t3=time.time() #计时器2开始
         result = image_resolve(i, destdir, docover=True)
         if result == 0:
             t4=time.time() #计时器2结束
-            print(color(2)+'  成功 (', round(t4-t3, 2), 's )'+color(7))
             cont_f += 1
+            cont_l1 = round(t4-t3,2)
+            if detail:
+                print(color(2)+'  成功 (', cont_l1, 's )'+color(7))
         elif result in [1,2]:
-            print(color(6)+'  跳过'+color(7))
+            if detail:
+                print(color(6)+'  跳过'+color(7))
         elif result in [3]:
-            print(color(6)+'  跳过(重名)'+color(7))
+            if detail:
+                print(color(6)+'  跳过(重名)'+color(7))
 
     t2=time.time() #计时器1结束
-    print(color(7,0,1)+'\n批量合成图片结束!')
-    print('  累计合成', cont_f, '张图片')
-    print('  用时', round(t2-t1, 1), '秒'+color(7))
+    print(color(7,0,1)+'\n批量合并图片结束!')
+    print('  累计合并', cont_f, '张图片')
+    print('  此项用时', round(t2-t1, 1), '秒'+color(7))
+    time.sleep(2)
