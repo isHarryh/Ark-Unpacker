@@ -4,7 +4,9 @@
 '''
 控制台多颜色输出函数
 '''
+import os
 
+os.system('')
 def color(front:int=7, back:int=0, mode:int=0):
     '''
     ## Get a Colored Cmd-Output Prefix
