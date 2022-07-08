@@ -1,10 +1,12 @@
 .vscode
 __pycache__
 
-dist
-build
+dist/
+build/
 
-temp*
+test*/
+temp*/
 
 *.bat
 *.log
+*.exe
