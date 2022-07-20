@@ -21,12 +21,13 @@ def prt_homepage():
     os.system('cls')
     os.chdir('.')
     print(color(7,0,1)+'欢迎使用ArkUnpacker '+AU_ver)
-    print(color(7,0,1)+'='*10)
+    print(color(7,0,1)+'='*20)
     print(color(7)+'模式选择：')
-    print('1: 一键执行')
-    print('2: 自定义资源解包')
-    print('3: 自定义图片合并')
-    print('输入序号后按回车，建议您先阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker/')
+    print(color(6)+'1: 一键执行')
+    print(color(6)+'2: 自定义资源解包')
+    print(color(6)+'3: 自定义图片合并')
+    print(color(6)+'0: 退出')
+    print(color(7)+'输入序号后按回车即可，\n如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker/')
 
 def prt_subtitle(msg:str):
     '''
@@ -75,7 +76,7 @@ def get_dirlist(ignore:list=[]):
     filelist = []
     for i in os.listdir():
         if os.path.isdir(i):
-            if i not in ignore:
+            if os.path.basename(i) not in ignore:
                 filelist.append(i)
     return filelist
 
@@ -84,11 +85,15 @@ def run_quickaccess():
     #### 启动一键执行模式
     :returns: (none);
     '''
-    prt_subtitle('步骤1|资源解包')
     destdir="Unpacked_"+str(int(time.time()))
-    AU_Rs.main(get_dirlist("."),destdir, detail=False)
+    ignore = [".vscode","__pycache__",".git"]
+    ###
+    prt_subtitle('步骤1|资源解包')
+    time.sleep(1)
+    AU_Rs.main(get_dirlist(ignore),destdir,detail=False)
     ###
     prt_subtitle('步骤2|合并图片')
+    time.sleep(1)
     AU_Cb.main([destdir],"Combined_"+str(int(time.time())),detail=False)
 
 def run_costm_Rs():
@@ -184,9 +189,12 @@ if __name__ == '__main__':
         order = input(color(2)+'> ')
         if order == '1':
             run_quickaccess()
+            input(color(2)+'\n按任意键返回')
         elif order == '2':
             run_costm_Rs()
+            input(color(2)+'\n按任意键返回')
         elif order == '3':
             run_costm_Cb()
+            input(color(2)+'\n按任意键返回')
         elif order == '0':
             exit()
