@@ -10,6 +10,7 @@ from src import CombineRGBwithA as AU_Cb
 ArkUnpacker主程序
 '''
 AU_ver='v1.0'
+AU_i18n='zh-CN'
 
 
 def prt_homepage():
@@ -18,7 +19,14 @@ def prt_homepage():
     :returns: (none);
     '''
     os.system('cls')
-    print(color(7)+'欢迎使用ArkUnpacker '+AU_ver)
+    os.chdir('.')
+    print(color(7,0,1)+'欢迎使用ArkUnpacker '+AU_ver)
+    print(color(7,0,1)+'='*10)
+    print(color(7)+'模式选择：')
+    print('1: 一键执行')
+    print('2: 自定义资源解包')
+    print('3: 自定义图片合并')
+    print('输入序号后按回车，建议您先阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker/')
 
 def prt_subtitle(msg:str):
     '''
@@ -28,7 +36,6 @@ def prt_subtitle(msg:str):
     '''
     os.system('cls')
     os.chdir('.')
-    print("")
     print(color(7,0,1)+'='*10)
     print(color(7,0,1)+msg)
     print(color(7,0,1)+'='*10)
@@ -59,26 +66,40 @@ def input_path(msg:str,excpt:str):
         inpt = input(excpt)
     return inpt
 
+def get_dirlist(ignore:list=[]):
+    '''
+    #### 获取当前目录下的第一级子目录的列表
+    :param ignore: 可选，忽略名单，精确匹配;
+    :returns:      (list) 子目录的列表;
+    '''
+    filelist = []
+    for i in os.listdir():
+        if os.path.isdir(i):
+            if i not in ignore:
+                filelist.append(i)
+    return filelist
+
 def run_quickaccess():
     '''
     #### 启动一键执行模式
     :returns: (none);
     '''
-    prt_subtitle('步骤1|解包')
-    AU_Rs.main(["test"],"test",dotxt=False,doaud=False,detail=False)
-    prt_subtitle('步骤2|合并')
-    AU_Cb.main(["temp\\test"],"temp2",docover=True,detail=False)
-    exit()
+    prt_subtitle('步骤1|资源解包')
+    destdir="Unpacked_"+str(int(time.time()))
+    AU_Rs.main(get_dirlist("."),destdir, detail=False)
+    ###
+    prt_subtitle('步骤2|合并图片')
+    AU_Cb.main([destdir],"Combined_"+str(int(time.time())),detail=False)
 
 def run_costm_Rs():
     '''
-    #### 启动自定义解包模式
+    #### 启动自定义资源解包模式
     :returns: (none);
     '''
-    prt_subtitle('自定义解包')
+    prt_subtitle('自定义资源解包')
     ###
     print(color(7)+'\n请输入要解包的目录后按回车')
-    print('  支持相对路径，\".\"表示解包当前目录')
+    print('  支持相对路径，\".\"表示选择当前目录')
     rootdir = input_path(color(2)+'> ','  该目录似乎不存在\n> ')
     print('您选择的解包目录是：\n  '+color(6)+os.path.abspath(rootdir))
     ###
@@ -92,17 +113,17 @@ def run_costm_Rs():
     dodel = False
     if os.path.isdir(destdir):
         print(color(7)+'\n该导出目录已存在，您要删除它里面的全部文件吗？')
-        print(color(3)+'  请!慎重!选择：y=删除，n=保留')
+        print(color(3)+'  请!慎重!选择：y=删除，n=保留(默认)')
         dodel = input(color(2)+'> ')
         dodel = True if dodel in ['y','Y'] else False
     ###
     print(color(7)+'\n您希望进行同名文件覆盖吗？')
-    print(color(3)+'  我们!强烈建议!跳过：y=覆盖，n=跳过')
+    print(color(3)+'  我们!强烈建议!跳过：y=覆盖，n=跳过(默认)')
     docover = input(color(2)+'> ')
     docover = True if docover in ['y','Y'] else False
     ###
     print(color(7)+'\n您希望的回显模式是？')
-    print(color(3)+'  y=详细，n=简洁')
+    print(color(3)+'  y=详细，n=简洁(默认)')
     detail = input(color(2)+'> ')
     detail = True if detail in ['y','Y'] else False
     ###
@@ -117,8 +138,55 @@ def run_costm_Rs():
     input(color(2)+'\n再按一次回车以开始任务...')
     AU_Rs.main([rootdir],destdir,dodel,doimg,dotxt,doaud,docover,detail)
 
+def run_costm_Cb():
+    '''
+    #### 启动自定义合并图片模式
+    :returns: (none);
+    '''
+    prt_subtitle('自定义合并图片')
+    ###
+    print(color(7)+'\n请输入存放图片的目录后按回车')
+    print('  支持相对路径，\".\"表示选择当前目录')
+    rootdir = input_path(color(2)+'> ','  该目录似乎不存在\n> ')
+    print('您选择的存放图片的目录是：\n  '+color(6)+os.path.abspath(rootdir))
+    ###
+    print(color(7)+'\n请输入导出的目的地后按回车')
+    print('  支持相对路径，留空表示自动创建')
+    destdir = input(color(2)+'> ')
+    if not destdir:
+        destdir = "Combined_"+str(int(time.time()))
+    print('您选择的导出目录是：\n  '+color(6)+os.path.abspath(destdir))
+    ###
+    dodel = False
+    if os.path.isdir(destdir):
+        print(color(7)+'\n该导出目录已存在，您要删除它里面的全部文件吗？')
+        print(color(3)+'  请!慎重!选择：y=删除，n=保留(默认)')
+        dodel = input(color(2)+'> ')
+        dodel = True if dodel in ['y','Y'] else False
+    ###
+    print(color(7)+'\n您希望进行同名文件覆盖吗？')
+    print(color(3)+'  我们!强烈建议!跳过：y=覆盖，n=跳过(默认)')
+    docover = input(color(2)+'> ')
+    docover = True if docover in ['y','Y'] else False
+    ###
+    print(color(7)+'\n您希望的回显模式是？')
+    print(color(3)+'  y=详细，n=简洁(默认)')
+    detail = input(color(2)+'> ')
+    detail = True if detail in ['y','Y'] else False
+    ###
+    input(color(2)+'\n再按一次回车以开始任务...')
+    AU_Cb.main([rootdir],destdir,dodel,docover,detail)
+
 
 if __name__ == '__main__':
-    prt_homepage()
-    run_costm_Rs()
-    input()
+    while True:
+        prt_homepage()
+        order = input(color(2)+'> ')
+        if order == '1':
+            run_quickaccess()
+        elif order == '2':
+            run_costm_Rs()
+        elif order == '3':
+            run_costm_Cb()
+        elif order == '0':
+            exit()
