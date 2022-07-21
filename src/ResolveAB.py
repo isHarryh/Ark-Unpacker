@@ -8,72 +8,238 @@ try:
 except:
     from .osTool import *
     from .colorTool import *
-import UnityPy as Upy #UnityPy库用于操作Unity文件
+from UnityPy import load as UpyLoad #UnityPy库用于操作Unity文件，这里仅导入个load函数
 '''
 Python批量解包Unity(.ab)资源文件
+明日方舟定制版本
 '''
+
+
+class resource:
+    'resource'
+
+    def __save_image(self, obj, dest):
+        #### 私有方法：保存object中的图片
+        obj.image.save(dest)
+    
+    def __save_script(self, obj, dest):
+        #### 私有方法：保存object中的文本
+        with open(dest, "wb") as f:
+            f.write(obj.script)
+    
+    def __save_samples(self, obj, dest):
+        #### 私有方法：保存object中的音频
+        for n, d in obj.samples.items():
+            with open(dest, "wb") as f:
+                f.write(d)
+    
+    def __rename_add_prefix(self, objlist:list, idx:int, pre:str):
+        #### 私有方法：辅助重命名小人相关文件，前缀
+        tmp = objlist[idx].name
+        objlist[idx].name = str(pre+tmp)
+    
+    def __rename_add_suffix(self, objlist:list, idx:int, suf:str):
+        #### 私有方法：辅助重命名小人相关文件，后缀
+        tmp = objlist[idx].name
+        objlist[idx].name = str(tmp+suf)
+    
+    def __search_in_pathid(self, objlist:list, pathid:int):
+        #### 私有方法：按照路径ID搜索特定对象，返回其索引
+        for i in range(len(objlist)):
+            if objlist[i].path_id == pathid:
+                return i
+        return -1
+
+    def __init__(self, env):
+        '''
+        #### 通过传入一个UnityPy.environment实例，初始化一个resource类
+        :param env: UnityPy.load()创建的environment实例;
+        :returns:   (none);
+        '''
+        self.sprites = []
+        self.texture2ds = []
+        self.textassets = []
+        self.audioclips = []
+        self.monobehaviors = []
+        self.typelist = [ #[类型名称,类型列表,保存后缀,保存方法]
+            ['Sprite',self.sprites,'.png',self.__save_image],
+            ['Texture2D',self.texture2ds,'.png',self.__save_image],
+            ['TextAsset',self.textassets,False,self.__save_script],
+            ['AudioClip',self.audioclips,'.wav',self.__save_samples],
+            ['MonoBehaviour',self.monobehaviors,False,None]
+        ]
+        ###
+        objs = [i for i in env.objects]
+        for i in objs:
+            #(i是单个object)
+            itypename = i.type.name
+            for j in self.typelist:
+                #(j是某资源类型的特征的列表)
+                if itypename == j[0]:
+                    j[1].append(i.read())
+                    break
+
+    def save_all_the(self, typename:str, intodir:str, docover:bool=False, detail:bool=False):
+        '''
+        #### 保存reource类中所有的某个类型的文件
+        :param typename: 类型名称;
+        :param intodir:  保存目的地的目录;
+        :param docover:  是否覆盖重名的已存在的文件，默认False;
+        :param detail:   是否回显详细信息;
+        :returns:        (int) 已保存的文件数;
+        '''
+        cont = 0
+        ospath = os.path
+        for j in self.typelist:
+            #(j是某资源类型的特征的列表)
+            if typename == j[0]:
+                for i in j[1]:
+                    #(i是单个object)
+                    dest = ospath.join(intodir, i.name)
+                    if j[2]:
+                        dest = ospath.splitext(dest)[0] + j[2]
+                    if not docover and ospath.isfile(dest):
+                        continue
+                    if not ospath.isdir(ospath.dirname(dest)):
+                        mkdir(ospath.dirname(dest))
+                    j[3](i, dest) #调用私有保存方法
+                    cont += 1
+                break
+        if detail and cont:
+            print(color(6)+"  成功导出 "+str(cont)+"\t"+typename)
+        return cont
+
+    def rename_spine_images(self):
+        '''
+        #### 重命名小人图片文件
+        明日方舟的战斗界面的小人有正面和背面之分，但是其文件名都一样，此函数将会尝试对其作出区分
+        当前尚未找到准确区分图片文件的方法QwQ
+        :returns: (int);
+        '''
+        ##基建小人（无需处理）
+        '''
+        build = []
+        for i in range(len(self.texture2ds)):
+            #(i是单个Texture2D对象的索引)
+            iname = self.texture2ds[i].name
+            if len(iname) > 11 and 'build_char_' == iname[:11]:
+                build.append(i)
+        for i in range(len(build)):
+            pass
+        '''
+        ##战斗小人
+        spines = []
+        for i in range(len(self.texture2ds)):
+            #(i是单个Texture2D对象的索引)
+            iname = self.texture2ds[i].name
+            if len(iname) > 5 and 'char_' == iname[:5] and iname.count('_') == 2:
+                spines.append(i)
+        spines = sorted(spines, key=lambda x:self.texture2ds[x].path_id)
+        for i in range(len(spines)):
+            self.__rename_add_suffix(self.texture2ds,spines[i],'_#'+str(i))
+        return len(spines)
+
+    def rename_spine_texts(self):
+        '''
+        #### 重命名小人文本文件（包括.skel和.atlas）
+        明日方舟的战斗界面的小人有正面和背面之分，但是其文件名都一样，此函数将会尝试对其作出区分
+        文本文件倒是被我找到了有准确区分的方法:D
+        :returns: (int);
+        '''
+        ##基建小人
+        build = []
+        for i in range(len(self.textassets)):
+            #(i是单个TextAsset对象的索引)
+            iname = self.textassets[i].name
+            if 'build_char_' == iname[:10]:
+                build.append(i)
+        for i in range(len(build)):
+            self.__rename_add_prefix(self.textassets,build[i],'Building\\')
+        ##战斗小人
+        ##在MonoBehaviour中筛选出SkelData并读取
+        datas = [] #[Idx:SkelData,Idx:Skel,Idx:AtlasData,Idx:Atlas,Front/Back]
+        for i in range(len(self.monobehaviors)):
+            #(i是单个Mono对象的索引)
+            iname = self.monobehaviors[i].name
+            if len(iname) > 18 and '_char_' not in iname and iname[-13:] == '_SkeletonData':
+                j = self.monobehaviors[i] #SkelData对象
+                if j.serialized_type.nodes:
+                    #假如可读树状内容
+                    tree = j.read_typetree() #Mono的树状内容
+                    i_skel = self.__search_in_pathid(self.textassets,
+                        tree['skeletonJSON']['m_PathID'])
+                    i_atlasdata = self.__search_in_pathid(self.monobehaviors,
+                        tree['atlasAssets'][0]['m_PathID'])
+                    #至此已找到SkelData,Skel,AtlasData的索引
+                    data = [i,i_skel,i_atlasdata,None,None]
+                    datas.append(data)
+        if len(datas) == 0:
+            return 0
+        ##读取AtlasData
+        for k in range(len(datas)):
+            #(k是单个Data的索引)
+            data = datas[k] #Data的副本
+            j = self.monobehaviors[data[2]] #AtlasData对象
+            if j.serialized_type.nodes:
+                    #假如可读树状内容
+                    tree = j.read_typetree() #Mono的树状内容
+                    i_atlas = self.__search_in_pathid(self.textassets,
+                        tree['atlasFile']['m_PathID'])
+                    ##读取Atlas并判断Front/Back
+                    atlas = self.textassets[i_atlas].text #Atlas的文本内容
+                    ct_f = atlas.count('F_') + atlas.count('f_')
+                    ct_b = atlas.count('B_') + atlas.count('b_')
+                    #至此又找到了Atlas的索引和Front/Back
+                    data[3] = i_atlas
+                    data[4] = 'Front' if ct_f >= ct_b else 'Back'
+                    datas[k] = data
+                    ##重命名Skel
+                    self.__rename_add_prefix(self.textassets,datas[k][1],'Battle'+datas[k][4]+'\\')
+                    ##重命名Atlas
+                    self.__rename_add_prefix(self.textassets,datas[k][3],'Battle'+datas[k][4]+'\\')
+        return len(datas)
+    #EndClass
 
 
 def ab_reslove(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, docover:bool, detail:bool):
     '''
     #### 解包ab文件env实例
+    更新内容：解决了战斗小人正背面导出紊乱的问题
     :param env:     UnityPy.load()创建的environment实例;
     :param intodir: 解包目的地的目录;
     :param doimg:   是否导出图片资源;
     :param dotxt:   是否导出文本资源;
     :param doaud:   是否导出音频资源;
     :param docover: 是否覆盖重名的已存在的文件，建议False，否则可能出现意外;
-    :param detail:  是否回显详细信息；
+    :param detail:  是否回显详细信息;
     :returns:       (int) 已导出的文件数;
     '''
     mkdir(intodir)
     if detail:
         print(color(2)+"  找到了", len(env.objects), "个资源，正在处理...")
     cont_s = 0 #已导出资源计数
-    ospath = os.path
     ###
-    for i in env.objects:
-        #(i是env实例中的单个object)
-        succ = False #是否成功导出该资源
-        itypename = i.type.name #该资源的类型
-        try:
-            if doimg and itypename in ["Texture2D", "Sprite"]:
-                #导出图片文件
-                data = i.read()
-                dest = ospath.join(intodir, data.name)
-                dest = ospath.splitext(dest)[0] + ".png"
-                if not docover and ospath.isfile(dest):
-                    continue
-                data.image.save(dest)
-                succ = True
-            elif dotxt and itypename in ["TextAsset"]:
-                #导出文本文件
-                data = i.read()
-                dest = ospath.join(intodir, data.name)
-                if not docover and ospath.isfile(dest):
-                    continue
-                with open(dest, "wb") as f:
-                    f.write(data.script)
-                succ = True
-            elif doaud and itypename in ["AudioClip"]:
-                #导出音频文件
-                data = i.read()
-                dest = ospath.join(intodir, data.name)
-                dest = ospath.splitext(dest)[0] + ".wav"
-                if not docover and ospath.isfile(dest):
-                    continue
-                for n, d in data.samples.items():
-                    with open(dest, "wb") as f:
-                        f.write(d)
-                succ=True
-        except Exception as arg:
-            #错误反馈
-            print(color(1)+"  意外错误：", arg)
-            input("  按下回车键以继续任务...\n")
-        if succ:
-            cont_s += 1
-            if detail:
-                print(color(6)+"  "+str(i.type.name)+"\t"+str(data.name))
+    reso = resource(env)
+    try:
+        succ = reso.rename_spine_images()
+        if detail:
+            print(color(2)+"  BattileSpineImgs: "+str(succ))
+        succ = reso.rename_spine_texts()
+        if detail:
+            print(color(2)+"  BattelSkel&Atlas: "+str(succ))
+        ###
+        if doimg:
+            cont_s += reso.save_all_the('Sprite', intodir, docover, detail)
+            cont_s += reso.save_all_the('Texture2D', intodir, docover, detail)
+        if dotxt:
+            cont_s += reso.save_all_the('TextAsset', intodir, docover, detail)
+        if doaud:
+            cont_s += reso.save_all_the('AudioClip', intodir, docover, detail)
+    except Exception as arg:
+        #错误反馈
+        print(color(1)+"  意外错误：", arg)
+        input("  按下回车键以跳过此文件并继续任务...")
+    ###
     if detail:
         print(color(2)+"  导出了", cont_s, "个文件"+color(7))
     return cont_s
@@ -136,7 +302,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
             print("累计导出：\t",cont_s_sum)
             print()
         ###
-        Ue = Upy.load(i) #ab文件实例化
+        Ue = UpyLoad(i) #ab文件实例化
         cont_s_sum += ab_reslove(Ue, os.path.join(destdir, os.path.dirname(i)), doimg, dotxt, doaud, docover, detail)
         ###
         if detail and cont_f % 25 == 0:
@@ -151,3 +317,8 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
     print("  累计导出", cont_s_sum, "个文件")
     print("  此项用时", round(t2-t1, 1), "秒"+color(7))
     time.sleep(2)
+
+'''
+Ue = UpyLoad('H:\\hyt\\ArkPackage\\charpack\\char_003_kalts.ab') #ab文件实例化
+ab_reslove(Ue, 'H:\\hyt\\ArkPackage\\test', True, True, False, True, True)
+'''
