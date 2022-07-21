@@ -9,7 +9,7 @@ from src import CombineRGBwithA as AU_Cb
 '''
 ArkUnpacker主程序
 '''
-AU_ver='v1.0'
+AU_ver='v1.1'
 AU_i18n='zh-CN'
 
 
