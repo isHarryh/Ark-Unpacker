@@ -138,7 +138,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True, detail:
             print()
         ###
         t3=time.time() #计时器2开始
-        result = image_resolve(i, destdir, docover=True)
+        result = image_resolve(i, os.path.join(destdir, os.path.dirname(i)), docover=True)
         if result == 0:
             t4=time.time() #计时器2结束
             cont_f += 1
