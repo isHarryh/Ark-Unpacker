@@ -8,7 +8,9 @@ try:
 except:
     from .osTool import *
     from .colorTool import *
+from re import findall
 from PIL import Image #PIL库用于操作图像
+from numpy import mean #Numpy库用于数值计算
 '''
 Python批量合并RGB通道图和A通道图
 '''
@@ -42,6 +44,64 @@ def combine_rgb_a(fp_rgb:str, fp_a:str):
             IM3L[x, y] = (r, g, b, a) #使用新RGBA数据填充新图片的像素
     return IM3
 
+def spine_resolve(fp:str):
+    ''''
+    #### 干员战斗小人Spine图片的正背面的名称都一样，但解包时我们加了后缀"_#"，
+    #### 这时就需要此函数帮我们找到哪个RGB通道图的"_#"能和这个A通道图匹配了
+    :param fp: A通道图的文件路径;
+    :returns:  (str|bool) RGB通道图的文件路径，失败返回False;
+    '''
+    spines = [] #[filepath,confidence]
+    ospath = os.path
+    fpdir = ospath.dirname(fp)
+    fpfile = ospath.basename(fp)
+    flist = os.listdir(os.path.dirname(fp))
+    flist = list(filter(lambda x:'_#' in x, flist)) #初筛
+    flist = list(filter(lambda x:'[alpha]_#' not in x, flist)) #初筛
+    for i in flist:
+        #(i是初筛后文件的路径名)
+        i = ospath.basename(i)
+        if '_#' in i and fpfile != i\
+            and len(i) >8 and fpfile[:8] == i[:8]:
+            i = ospath.join(fpdir, i)
+            if ospath.isfile(i):
+                #找到了一个疑似的图片
+                spines.append([i,similarity(i,fp)])
+    if len(spines) == 0:
+        return False #找不到，退出
+    spines = sorted(spines, key=lambda x:-x[1]) #根据置信度降序排序
+    print(color(6)+' Match',ospath.basename(spines[0][0]),' Confi',spines[0][1])
+    return spines[0][0] #成功，返回置信度最高的图片的文件路径
+
+def similarity(fp_rgb:str, fp_a:str, prec:float=0.1):
+    '''
+    #### 返回两张图片的相似度，仅对比各像素的灰度
+    :param fp_rgb: RGB通道图的文件路径;
+    :param fp_a:   A通道图的文件路径;
+    :param prec:   介于(0,1]的判断精度，值越大越精确，不宜过小，默认0.1;
+    :returns:      (int) 介于[0,255]的相似度，值越大越相似;
+    '''
+    IM1 = Image.open(fp_rgb).convert('L') #RGB通道图实例化(L:灰度模式)
+    IM2 = Image.open(fp_a).convert('L') #A通道图实例化(L:灰度模式)
+    prec = 1 if prec > 1 else (0 if prec < 0 else prec)
+    w,h = (int(IM1.size[0]*prec), int(IM1.size[0]*prec)) #新图片尺寸取自RGB通道图尺寸再乘以精度
+    if not (w > 0 and h > 0):
+        return 0 #精度太小，退出
+    #对两张图片进行缩放
+    IM1 = IM1.resize((w,h), Image.ANTIALIAS)
+    IM2 = IM2.resize((w,h), Image.ANTIALIAS)
+    #载入原图片的像素到数组
+    IM1L = IM1.load()
+    IM2L = IM2.load()
+    Diff = [] #所有位点的差值的数组
+    #对比各像素灰度
+    for y in range(0, h):
+        for x in range(0, w):
+            #遍历到每个像素(x,y是像素的坐标)
+            Diff.append(abs(IM1L[x,y]-IM2L[x,y]))
+    #计算差值的平均值，然后返回相似度
+    Diff_mean = round(mean(Diff))
+    return 0 if Diff_mean >= 255 else (255 if Diff_mean <= 0 else 255-Diff_mean)
 
 def image_resolve(fp:str, intodir:str, docover:bool=True):
     '''
@@ -52,23 +112,38 @@ def image_resolve(fp:str, intodir:str, docover:bool=True):
     :param docover: 是否覆盖重名的已存在的文件，默认True;
     :returns:       (int) 执行状态代码;
     '''
-    oridir = os.path.dirname(fp) #原图的目录
-    name, ext = os.path.splitext(os.path.basename(fp)) #原图纯文件名和纯扩展名
-    if not ext.lower() in ['.png', '.jpg', '.jpeg', '.bmp']:
-        return 1 #不是图片文件，退出
-    if name[-7:].lower() == '[alpha]':
-        fp2 = os.path.join(oridir, name[:-7] + ext) #RGB通道图的路径
-    elif name[-6:].lower() == '_alpha':
-        fp2 = os.path.join(oridir, name[:-6] + ext)
+    ospath = os.path
+    oridir = ospath.dirname(fp) #原图的目录
+    name, ext = ospath.splitext(ospath.basename(fp)) #纯文件名和纯扩展名
+    if '[alpha]_#' in name and '.png' == ext:
+        #我的天！居然是解包出来的Spine图片
+        fp2 = spine_resolve(fp)
+        if not fp2:
+            return 6 #居然匹配不到，退出
+        #dest是新图的保存路径
+        tmp = 0
+        dest = findall(r'.+\[alpha\]_#', name)
+        dest = ospath.join(intodir, dest[0])
+        while ospath.isfile(dest+str(tmp)+'.png'):
+            tmp += 1
+        dest = dest+str(tmp)+'.png'
     else:
-        return 2 #不是指定的A通道图，退出
-    dest = os.path.join(intodir, os.path.basename(fp2)) #新图的路径
-    if not docover and os.path.isfile(dest):
+        if not ext.lower() in ['.png', '.jpg', '.jpeg', '.bmp']:
+            return 1 #不是图片文件，退出
+        elif name[-7:] == '[alpha]':
+            fp2 = ospath.join(oridir, name[:-7] + ext)
+        elif name[-6:] == '_alpha':
+            fp2 = ospath.join(oridir, name[:-6] + ext)
+        else:
+            return 2 #不是指定的A通道图，退出
+        dest = ospath.join(intodir, ospath.basename(fp2))
+    ###
+    if not docover and ospath.isfile(dest):
         return 3 #新图已存在且没让覆盖，退出
-    if not os.path.isfile(fp):
+    if not ospath.isfile(fp):
         print(color(1)+'  错误：alpha通道图缺失'+color(7), fp)
         return 4 #找不到对应的A通道图，退出
-    if not os.path.isfile(fp2):
+    if not ospath.isfile(fp2):
         print(color(1)+'  错误：RGB通道图缺失'+color(7), fp2)
         return 5 #找不到对应的RGB通道图，退出
     mkdir(intodir)
@@ -95,6 +170,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True, detail:
     :returns: (None);
     '''
     print(color(7,0,1)+'\n正在解析目录...'+color(7))
+    ospath = os.path
     flist = [] #目录下所有文件的列表
     for i in rootdir:
         flist += get_filelist(i)
@@ -114,10 +190,12 @@ def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True, detail:
         #递归处理各个文件(i是文件的路径名)
         cont_a += 1
         cont_p = round((cont_a/len(flist))*100,1)
-        if not os.path.isfile(i):
+        if not ospath.isfile(i):
             continue #跳过目录等非文件路径
-        if not os.path.splitext(i)[1].lower() in ['.png', '.jpg', '.jpeg', '.bmp']:
+        if not ospath.splitext(i)[1].lower() in ['.png', '.jpg', '.jpeg', '.bmp']:
             continue #不是图片文件，跳过
+        if 'alpha' not in ospath.basename(i):
+            continue #初步筛选一遍命名特征
         #测试相关：
         #abc=combine_rgb_a('',
         #    '')
@@ -125,32 +203,32 @@ def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True, detail:
         #input()
         
         if detail:
-            print(color(7)+os.path.basename(i))
+            print(color(7)+ospath.basename(i))
         else:
             #显示模式B：简洁
             os.system('cls')
             print(color(7)+"正在合并图片...")
             print("|"+"■"*int(cont_p//5)+"□"*int(20-cont_p//5)+"|", color(2)+str(cont_p)+"%"+color(7))
-            print("当前目录：\t",os.path.dirname(i))
-            print("当前文件：\t",os.path.basename(i))
+            print("当前目录：\t",ospath.dirname(i))
+            print("当前文件：\t",ospath.basename(i))
             print("累计合并：\t",cont_f)
             print(color(6)+"上个用时：\t",cont_l1,"秒"+color(7))
             print()
         ###
         t3=time.time() #计时器2开始
-        result = image_resolve(i, os.path.join(destdir, os.path.dirname(i)), docover=True)
+        result = image_resolve(i, ospath.join(destdir, ospath.dirname(i)), docover)
         if result == 0:
             t4=time.time() #计时器2结束
             cont_f += 1
             cont_l1 = round(t4-t3,2)
             if detail:
                 print(color(2)+'  成功 (', cont_l1, 's )'+color(7))
-        elif result in [1,2]:
-            if detail:
-                print(color(6)+'  跳过'+color(7))
         elif result in [3]:
             if detail:
                 print(color(6)+'  跳过(重名)'+color(7))
+        else:
+            if detail:
+                print(color(6)+'  跳过(状态码'+str(result)+')'+color(7))
 
     t2=time.time() #计时器1结束
     if not detail:
