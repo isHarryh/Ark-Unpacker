@@ -28,7 +28,7 @@ def combine_rgb_a(fp_rgb:str, fp_a:str):
     w,h = IM1.size #新图片尺寸取自RGB通道图
     if not (IM1.size == IM2.size):
         #两张图片尺寸不同，对A通道图的尺寸进行缩放
-        print(color(3)+'  警告：通道图尺寸不一，已缩放处理')
+        print(f'{color(3)}  警告：通道图尺寸不一，已缩放处理')
         IM2 = IM2.resize((w,h), Image.ANTIALIAS)
     #载入原图片的像素到数组
     IM1L = IM1.load()
@@ -70,7 +70,7 @@ def spine_resolve(fp:str):
     if len(spines) == 0:
         return False #找不到，退出
     spines = sorted(spines, key=lambda x:-x[1]) #根据置信度降序排序
-    print(color(6)+' Match',ospath.basename(spines[0][0]),' Confi',spines[0][1])
+    print(f'color{6} Match {ospath.basename(spines[0][0])}  Confi {spines[0][1]}')
     return spines[0][0] #成功，返回置信度最高的图片的文件路径
 
 def similarity(fp_rgb:str, fp_a:str, prec:float=0.1):
@@ -141,10 +141,10 @@ def image_resolve(fp:str, intodir:str, docover:bool=True):
     if not docover and ospath.isfile(dest):
         return 3 #新图已存在且没让覆盖，退出
     if not ospath.isfile(fp):
-        print(color(1)+'  错误：alpha通道图缺失'+color(7), fp)
+        print(f'{color(1)}  错误：alpha通道图缺失{color(7)} {fp}')
         return 4 #找不到对应的A通道图，退出
     if not ospath.isfile(fp2):
-        print(color(1)+'  错误：RGB通道图缺失'+color(7), fp2)
+        print(f'{color(1)}  错误：RGB通道图缺失{color(7)} {fp2}')
         return 5 #找不到对应的RGB通道图，退出
     mkdir(intodir)
     #print(color(7)+fp2)
@@ -153,7 +153,7 @@ def image_resolve(fp:str, intodir:str, docover:bool=True):
         IM.save(dest) #保存新图
         return 0 #成功，返回0
     else:
-        print(color(1)+'  错误：通道图合成失败'+color(7))
+        print(f'{color(1)}  错误：通道图合成失败{color(7)}')
         return -1 #图片合成函数返回了失败的结果，退出
 
 
@@ -169,7 +169,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True, detail:
     :param detail:  是否回显详细信息，默认True，否则回显进度条;
     :returns: (None);
     '''
-    print(color(7,0,1)+'\n正在解析目录...'+color(7))
+    print(f'{color(7,0,1)}\n正在解析目录...{color(7)}')
     ospath = os.path
     flist = [] #目录下所有文件的列表
     for i in rootdir:
@@ -183,7 +183,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True, detail:
     mkdir(destdir)
 
     if detail:
-        print(color(7,0,1)+'开始批量合并图片!\n'+color(7))
+        print(f'{color(7,0,1)}开始批量合并图片!\n{color(7)}')
     t1=time.time() #计时器1开始
 
     for i in flist:
@@ -201,19 +201,17 @@ def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True, detail:
         #    '')
         #abc.save('1.png')
         #input()
-        
         if detail:
-            print(color(7)+ospath.basename(i))
+            print(f'{color(7)}{ospath.basename(i)}')
         else:
             #显示模式B：简洁
             os.system('cls')
-            print(color(7)+"正在合并图片...")
-            print("|"+"■"*int(cont_p//5)+"□"*int(20-cont_p//5)+"|", color(2)+str(cont_p)+"%"+color(7))
-            print("当前目录：\t",ospath.dirname(i))
-            print("当前文件：\t",ospath.basename(i))
-            print("累计合并：\t",cont_f)
-            print(color(6)+"上个用时：\t",cont_l1,"秒"+color(7))
-            print()
+            print(f'{color(7)}正在合并图片...')
+            print(f'|{"■"*int(cont_p//5)}{"□"*int(20-cont_p//5)}| {color(2)}{cont_p}%{color(7)}')
+            print(f'当前目录：\t{ospath.dirname(i)}')
+            print(f'当前文件：\t{ospath.basename(i)}')
+            print(f'累计合并：\t{cont_f}')
+            print(f'{color(6)}上个用时：\t{cont_l1}秒{color(7)}\n')
         ###
         t3=time.time() #计时器2开始
         result = image_resolve(i, ospath.join(destdir, ospath.dirname(i)), docover)
@@ -222,18 +220,18 @@ def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True, detail:
             cont_f += 1
             cont_l1 = round(t4-t3,2)
             if detail:
-                print(color(2)+'  成功 (', cont_l1, 's )'+color(7))
+                print(f'{color(2)}  成功 ({cont_l1}s){color(7)}')
         elif result in [3]:
             if detail:
-                print(color(6)+'  跳过(重名)'+color(7))
+                print(f'{color(6)}  跳过 (重名){color(7)}')
         else:
             if detail:
-                print(color(6)+'  跳过(状态码'+str(result)+')'+color(7))
+                print(f'{color(6)}  跳过 (状态码{result}){color(7)}')
 
     t2=time.time() #计时器1结束
     if not detail:
         os.system('cls')
-    print(color(7,0,1)+'\n批量合并图片结束!')
-    print('  累计合并', cont_f, '张图片')
-    print('  此项用时', round(t2-t1, 1), '秒'+color(7))
+    print(f'{color(7,0,1)}\n批量合并图片结束!')
+    print(f'  累计合并 {cont_f} 张图片')
+    print(f'  此项用时 {round(t2-t1, 1)} 秒{color(7)}')
     time.sleep(2)

@@ -106,7 +106,7 @@ class resource:
                     cont += 1
                 break
         if detail and cont:
-            print(color(6)+"  成功导出 "+str(cont)+"\t"+typename)
+            print(f'{color(6)}  成功导出 {cont}\t{typename}')
         return cont
 
     def rename_spine_images(self):
@@ -216,17 +216,17 @@ def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, docover:boo
     '''
     mkdir(intodir)
     if detail:
-        print(color(2)+"  找到了", len(env.objects), "个资源，正在处理...")
+        print(f'{color(2)}  找到了 {len(env.objects)} 个资源，正在处理...')
     cont_s = 0 #已导出资源计数
     ###
     reso = resource(env)
     try:
         succ = reso.rename_spine_images()
         if detail:
-            print(color(2)+"  BattileSpineImgs: "+str(succ))
+            print(f'{color(2)}  BattileSpineImgs: {succ}')
         succ = reso.rename_spine_texts()
         if detail:
-            print(color(2)+"  BattelSkel&Atlas: "+str(succ))
+            print(f'{color(2)}  BattelSkel&Atlas: {succ}')
         ###
         if doimg:
             cont_s += reso.save_all_the('Sprite', intodir, docover, detail)
@@ -237,11 +237,11 @@ def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, docover:boo
             cont_s += reso.save_all_the('AudioClip', intodir, docover, detail)
     except Exception as arg:
         #错误反馈
-        print(color(1)+"  意外错误：", arg)
-        input("  按下回车键以跳过此文件并继续任务...")
+        print(f'{color(1)}  意外错误：{arg}')
+        input(f'  按下回车键以跳过此文件并继续任务...')
     ###
     if detail:
-        print(color(2)+"  导出了", cont_s, "个文件"+color(7))
+        print(f'{color(2)}  导出了 {cont_s} 个文件{color(7)}')
     return cont_s
         
 
@@ -261,6 +261,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
     :returns: (None);
     '''
     print(color(7,0,1)+"\n正在解析目录..."+color(7))
+    ospath = os.path
     flist = [] #目录下所有文件的列表
     for i in rootdir:
         flist += get_filelist(i)
@@ -273,52 +274,51 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
     mkdir(destdir)
 
     if detail:
-        print(color(7,0,1)+"开始批量解包!\n"+color(7))
+        print(f'{color(7,0,1)}开始批量解包!\n{color(7)}')
     t1=time.time() #计时器开始
 
     for i in flist:
         #递归处理各个文件(i是文件的路径名)
         cont_a += 1
         cont_p = round((cont_a/len(flist))*100,1)
-        if not os.path.isfile(i):
+        if not ospath.isfile(i):
             continue #跳过目录等非文件路径
-        if not os.path.splitext(i)[1] in ['.ab','.AB']:
+        if not ospath.splitext(i)[1] in ['.ab','.AB']:
             continue #跳过非ab文件
         cont_f += 1
         ###
         if detail:
             #显示模式A：流式
-            print(color(7))
-            print(os.path.dirname(i))
-            print('['+os.path.basename(i)+']')
+            print(f'{color(7)}{os.path.dirname(i)}')
+            print(f'[{ospath.basename(i)}]')
         else:
             #显示模式B：简洁
             os.system('cls')
-            print(color(7)+"正在批量解包...")
-            print("|"+"■"*int(cont_p//5)+"□"*int(20-cont_p//5)+"|", color(2)+str(cont_p)+"%"+color(7))
-            print("当前目录：\t",os.path.dirname(i))
-            print("当前文件：\t",os.path.basename(i))
-            print("累计解包：\t",cont_f-1)
-            print("累计导出：\t",cont_s_sum)
-            print()
+            print(f'{color(7)}正在批量解包...')
+            print(f'|{"■"*int(cont_p//5)}{"□"*int(20-cont_p//5)}| {color(2)}{cont_p}%{color(7)}')
+            print(f'当前目录：\t{ospath.dirname(i)}')
+            print(f'当前文件：\t{ospath.basename(i)}')
+            print(f'累计解包：\t{cont_f-1}')
+            print(f'累计导出：\t{cont_s_sum}\n')
         ###
         Ue = UpyLoad(i) #ab文件实例化
         cont_s_sum += ab_resolve(Ue, os.path.join(destdir, os.path.dirname(i)), doimg, dotxt, doaud, docover, detail)
         ###
         if detail and cont_f % 25 == 0:
-            print(color(7,0,1)+"■ 已累计解包",cont_f,"个文件 (",cont_p,"% )")
-            print("■ 已累计导出",cont_s_sum,"个文件")
+            print(f'{color(7,0,1)}■ 已累计解包{cont_f}个文件 ({cont_p}%)')
+            print(f'■ 已累计导出{cont_s_sum}个文件')
 
     t2=time.time() #计时器结束
     if not detail:
         os.system('cls')
-    print(color(7,0,1)+"\n批量解包结束!")
-    print("  累计解包", cont_f, "个文件")
-    print("  累计导出", cont_s_sum, "个文件")
-    print("  此项用时", round(t2-t1, 1), "秒"+color(7))
+    print(f'{color(7,0,1)}\n批量解包结束!')
+    print(f'  累计解包 {cont_f} 个文件')
+    print(f'  累计导出 {cont_f} 个文件')
+    print(f'  此项用时 {round(t2-t1, 1)} 秒{color(7)}')
     time.sleep(2)
 
 '''
-Ue = UpyLoad('H:\\hyt\\ArkPackage\\charpack\\char_003_kalts.ab') #ab文件实例化
-ab_resolve(Ue, 'H:\\hyt\\ArkPackage\\test', True, True, False, True, True)
+测试相关：
+Ue = UpyLoad('')
+ab_resolve(Ue, '', True, True, False, True, True)
 '''
