@@ -16,7 +16,7 @@ Python批量解包Unity(.ab)资源文件
 
 
 class resource:
-    'resource'
+    '存放env内的资源的类'
 
     def __save_image(self, obj, dest):
         #### 私有方法：保存object中的图片
@@ -201,7 +201,7 @@ class resource:
     #EndClass
 
 
-def ab_reslove(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, docover:bool, detail:bool):
+def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, docover:bool, detail:bool):
     '''
     #### 解包ab文件env实例
     更新内容：解决了战斗小人正背面导出紊乱的问题
@@ -303,7 +303,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
             print()
         ###
         Ue = UpyLoad(i) #ab文件实例化
-        cont_s_sum += ab_reslove(Ue, os.path.join(destdir, os.path.dirname(i)), doimg, dotxt, doaud, docover, detail)
+        cont_s_sum += ab_resolve(Ue, os.path.join(destdir, os.path.dirname(i)), doimg, dotxt, doaud, docover, detail)
         ###
         if detail and cont_f % 25 == 0:
             print(color(7,0,1)+"■ 已累计解包",cont_f,"个文件 (",cont_p,"% )")
@@ -320,5 +320,5 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
 
 '''
 Ue = UpyLoad('H:\\hyt\\ArkPackage\\charpack\\char_003_kalts.ab') #ab文件实例化
-ab_reslove(Ue, 'H:\\hyt\\ArkPackage\\test', True, True, False, True, True)
+ab_resolve(Ue, 'H:\\hyt\\ArkPackage\\test', True, True, False, True, True)
 '''
