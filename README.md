@@ -23,9 +23,7 @@ This project only supports Chinese docs. If you are an English user, feel free t
 * 另一部分是通过**热更新**提供的，首先确保您的安卓手机上的明日方舟更新到了最新版本，然后(推荐使用USB数据线)将手机存储的`Android\data\com.hypergryph.arknights\files\AB\Android`文件夹(一般情况下是这个路径)复制到电脑上(重命名为`Android(2)`)。至此，我们的目录结构大致如下：
 > **根目录**  
 > ├─**Android**  
-> │ └─……  
 > └─**Android(2)**  
->   └─……  
 
 最后，将`Android(2)`文件夹里的内容复制到`Android`中，并**覆盖**同名文件，就能得到完整的游戏资源。在这之后，您就可以使用我们的发行版本或者源代码来解包其中的游戏资源了。
 
@@ -57,31 +55,31 @@ This project only supports Chinese docs. If you are an English user, feel free t
 此版本的程序没有发行版本，因为它尚未完成开发。
 
 ### 使用源代码
+您可以把仓库里的**`src`和`Main-v1.1.py`**复制到前述的`Android`文件夹或其父文件夹中，然后运行它，来实现功能(4)。
 
 #### 依赖
-源代码使用Python3编写，它依赖于以下外部库，调试前请确保您已使用`pip`安装过：
+源代码使用**Python3**编写，它依赖于以下外部库，调试前请确保您已安装过：
 * [UnityPy](https://github.com/K0lb3/UnityPy)  
-* [PIL](https://github.com/python-pillow/Pillow)
+* [Pillow](https://github.com/python-pillow/Pillow)  
+* [Numpy](https://github.com/numpy/numpy)
 
-本项目的主要功能源于以下程序文件：
-> `src/ResolveAB.py` - 负责实现功能(1)  
-> `src/CombineRGBwithA.py` - 负责实现功能(2)
-
-以上程序文件需要以下程序文件的辅助：
-> `src/osTool.py` - 提供一些便捷的文件操作函数  
-> `src/colorTool.py` - 提供命令行彩色字体的打印
+好消息是，只要安装UnityPy就会附带地安装上其他两个库，安装命令：
+```
+pip install unitypy
+```
 
 #### 示例
-您可以把`Main-v1.1.py`复制到前述的`Android`文件夹的父目录中，然后运行它，来实现功能(4)。如果您只想利用本项目的代码，来实现一些您自定义的功能，您可以在您的程序中这样写：
+如果您只想利用`src`中的代码，来实现一些您自定义的功能，您可以在您的程序中这样写：
 ```Python 
 from src import ResolveAB
 from src import CombineRGBwithA
-ResolveAB.main(['Android'], 'Unpacked') # ——(a)
-CombineRGBwithA.main(['Unpacked'], 'Combined') # ——(b)
+ResolveAB.main(['Android'], 'Unpacked') # (a)
+CombineRGBwithA.main(['Unpacked'], 'Combined') # (b)
 ```
+
 以上(a)(b)两个函数还有其他可选的参数，具体的用法已在函数声明的代码注释中非常详尽地给出了，如下：
 ```Python
-# src/CombineRGBwithA.py
+# File: src/ResolveAB.py
 def main(rootdir:list, destdir:str, dodel:bool=False, 
     doimg:bool=True, dotxt:bool=True, doaud:bool=True, docover:bool=False, detail:bool=True):
     '''
@@ -97,7 +95,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
     :returns: (None);
     '''
 
-# src/ResolveAB.py
+# File: src/CombineRGBwithA.py
 def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True, detail:bool=True):
     '''
     #### 批量地从指定目录中，找到名称相互匹配的RGB通道图和A通道图，然后合并图片后保存到另一目录
