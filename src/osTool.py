@@ -38,13 +38,12 @@ def mkdir(path:str):
     :returns: (bool) Execution result;
     '''
     path = path.strip().strip('/').rstrip('\\')
-    isExists = os.path.exists(path) #判断路径是否存在
-    if not isExists:
+    if not os.path.exists(path):
         os.makedirs(path)
         if len(path) > 32:
-            print('  目录已创建', '...'+path[-28:])
+            print(f'  目录已创建 {path[-28:]}')
         else:
-            print('  目录已创建', path)
+            print(f'  目录已创建 {path}')
         return True
     else:
         #目录已存在
