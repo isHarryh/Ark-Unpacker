@@ -186,6 +186,9 @@ def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True, detail:
     flist = [] #目录下所有文件的列表
     for i in rootdir:
         flist += get_filelist(i)
+    flist = list(filter(lambda x:'alpha' in ospath.basename(x), flist)) #初筛
+    flist = list(filter(lambda x:ospath.splitext(x)[1].lower() in ['.png', '.jpg', '.jpeg', '.bmp'], flist)) #初筛
+    
     cont_f = 0 #已合并图片计数
     cont_a = 0 #已遍历文件计数
     cont_p = 0 #进度百分比计数
@@ -204,10 +207,6 @@ def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True, detail:
         cont_p = round((cont_a/len(flist))*100,1)
         if not ospath.isfile(i):
             continue #跳过目录等非文件路径
-        if not ospath.splitext(i)[1].lower() in ['.png', '.jpg', '.jpeg', '.bmp']:
-            continue #不是图片文件，跳过
-        if 'alpha' not in ospath.basename(i):
-            continue #初步筛选一遍命名特征
         #测试相关：
         #abc=combine_rgb_a('', '')
         #abc.save('1.png')
