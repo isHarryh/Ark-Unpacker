@@ -265,6 +265,8 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
     flist = [] #目录下所有文件的列表
     for i in rootdir:
         flist += get_filelist(i)
+    flist = list(filter(lambda x:ospath.splitext(x)[1] in ['.ab','.AB'], flist)) #初筛
+    
     cont_f = 0 #已处理文件计数
     cont_a = 0 #已遍历文件计数
     cont_p = 0 #进度百分比计数
@@ -283,8 +285,6 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
         cont_p = round((cont_a/len(flist))*100,1)
         if not ospath.isfile(i):
             continue #跳过目录等非文件路径
-        if not ospath.splitext(i)[1] in ['.ab','.AB']:
-            continue #跳过非ab文件
         cont_f += 1
         ###
         if detail:
