@@ -10,7 +10,6 @@ except:
     from .colorTool import *
 from re import findall
 from PIL import Image #PIL库用于操作图像
-from numpy import mean #Numpy库用于数值计算
 '''
 Python批量合并RGB通道图和A通道图
 '''
@@ -70,7 +69,7 @@ def spine_resolve(fp:str):
     if len(spines) == 0:
         return False #找不到，退出
     spines = sorted(spines, key=lambda x:-x[1]) #根据置信度降序排序
-    print(f'color{6} Match {ospath.basename(spines[0][0])}  Confi {spines[0][1]}')
+    print(f'{color(6)} Match {ospath.basename(spines[0][0])}  Confi {spines[0][1]}')
     return spines[0][0] #成功，返回置信度最高的图片的文件路径
 
 def similarity(fp_rgb:str, fp_a:str, prec:float=0.1):
@@ -102,6 +101,19 @@ def similarity(fp_rgb:str, fp_a:str, prec:float=0.1):
     #计算差值的平均值，然后返回相似度
     Diff_mean = round(mean(Diff))
     return 0 if Diff_mean >= 255 else (255 if Diff_mean <= 0 else 255-Diff_mean)
+
+def mean(lst:list):
+    '''
+    #### 返回数组平均值
+    :param lst: 要计算的列表;
+    :returns:   (float) 数组平均值;
+    '''
+    if len(lst) == 0:
+        return float(0)
+    s = 0
+    for i in lst:
+        s += i
+    return float(s/len(lst))
 
 def image_resolve(fp:str, intodir:str, docover:bool=True):
     '''
@@ -197,8 +209,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False, docover:bool=True, detail:
         if 'alpha' not in ospath.basename(i):
             continue #初步筛选一遍命名特征
         #测试相关：
-        #abc=combine_rgb_a('',
-        #    '')
+        #abc=combine_rgb_a('', '')
         #abc.save('1.png')
         #input()
         if detail:

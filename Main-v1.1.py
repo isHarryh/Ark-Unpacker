@@ -34,7 +34,7 @@ def prt_subtitle(msg:str):
     '''
     os.system('cls')
     os.chdir('.')
-    print(f'{color(7,0,1)}{"="}*10')
+    print(f'{color(7,0,1)}{"="*10}')
     print(msg)
     print(f'{"="*10}\n{color(7)}')
 
@@ -80,6 +80,7 @@ def run_quickaccess():
     #### 启动一键执行模式
     :returns: (none);
     '''
+    os.system('title ArkUnpacker - Processing')
     destdir = f'Unpacked_{int(time.time())}'
     ignore = [".vscode","__pycache__",".git"]
     ###
@@ -136,6 +137,7 @@ def run_costm_Rs():
     doaud = True if 'a' in dothem or 'A' in dothem else False
     ###
     input(f'{color(2)}\n再按一次回车以开始任务...')
+    os.system('title ArkUnpacker - Processing')
     AU_Rs.main([rootdir],destdir,dodel,doimg,dotxt,doaud,docover,detail)
 
 def run_costm_Cb():
@@ -175,11 +177,13 @@ def run_costm_Cb():
     detail = True if detail in ['y','Y'] else False
     ###
     input(f'{color(2)}\n再按一次回车以开始任务...')
+    os.system('title ArkUnpacker - Processing')
     AU_Cb.main([rootdir],destdir,dodel,docover,detail)
 
 
 if __name__ == '__main__':
     while True:
+        os.system('title ArkUnpacker')
         prt_homepage()
         order = input(f'{color(2)}> ')
         if order == '1':
