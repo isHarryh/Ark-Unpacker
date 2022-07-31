@@ -8,6 +8,7 @@ try:
 except:
     from .osTool import *
     from .colorTool import *
+from io import BytesIO
 from UnityPy import load as UpyLoad #UnityPy库用于操作Unity文件，这里仅导入个load函数
 '''
 Python批量解包Unity(.ab)资源文件
@@ -18,21 +19,35 @@ Python批量解包Unity(.ab)资源文件
 class resource:
     '存放env内的资源的类'
 
-    def __save_image(self, obj, dest):
-        #### 私有方法：保存object中的图片
-        obj.image.save(dest)
+    def __save_bytes(self, byt, dest):
+        #### 私有方法：保存字节流数据
+        with open(dest, 'wb') as f:
+            f.write(byt)
+        return True
+
+    def __save_image(self, obj, ext='.png'):
+        #### 私有方法：保存object中的图片为字节流
+        if obj.image.height <= 0 and obj.image.width <= 0:
+            return False
+        byt = BytesIO()
+        if ext == '.png':
+            format = 'PNG'
+        else:
+            format = 'JPEG'
+        obj.image.save(byt, format=format)
+        return byt.getvalue()
     
-    def __save_script(self, obj, dest):
-        #### 私有方法：保存object中的文本
-        with open(dest, "wb") as f:
-            f.write(obj.script)
+    def __save_script(self, obj, ext):
+        #### 私有方法：保存object中的文本为字节流
+        return obj.script
     
-    def __save_samples(self, obj, dest):
-        #### 私有方法：保存object中的音频
+    def __save_samples(self, obj, ext):
+        #### 私有方法：保存object中的音频为字节流
+        byt = bytes()
         for n, d in obj.samples.items():
-            with open(dest, "wb") as f:
-                f.write(d)
-    
+            byt += d
+        return byt
+
     def __rename_add_prefix(self, objlist:list, idx:int, pre:str):
         #### 私有方法：辅助重命名小人相关文件，前缀
         tmp = objlist[idx].name
@@ -48,7 +63,32 @@ class resource:
         for i in range(len(objlist)):
             if objlist[i].path_id == pathid:
                 return i
-        return -1
+        return i
+
+    def __is_identical(self, data:bytes, fp:str):
+        #### 私有方法：判断是否和某指定文件内容相同
+        with open(fp, 'rb') as f:
+            cache = f.read()
+        return True if bytes(data) == bytes(cache) else False
+    
+    def __is_unique(self, data:bytes, intodir:str, name:str, ext:str):
+        #### 私有方法：判断是否不存在内容相同的原本重名的文件
+        flist = os.listdir(intodir)
+        flist = list(filter(lambda x:(x == name+ext or (name in x and ext in x)), flist)) #初筛
+        for i in flist:
+            #(i是初筛后文件的路径名)
+            if self.__is_identical(data, os.path.join(intodir, i)):
+                return False
+        return True
+
+    def __solve_namesake(self, intodir:str, name:str, ext:str):
+        #### 私有方法：解决重名问题
+        tmp = 0
+        dest = os.path.join(intodir, f'{name}{ext}')
+        while os.path.isfile(dest):
+            dest = os.path.join(intodir, f'{name}_#{tmp}{ext}')
+            tmp += 1
+        return dest
 
     def __init__(self, env):
         '''
@@ -61,12 +101,12 @@ class resource:
         self.textassets = []
         self.audioclips = []
         self.monobehaviors = []
-        self.typelist = [ #[类型名称,类型列表,保存后缀,保存方法]
+        self.typelist = [ #[类型名称,类型列表,保存后缀,字节流方法]
             ['Sprite',self.sprites,'.png',self.__save_image],
             ['Texture2D',self.texture2ds,'.png',self.__save_image],
-            ['TextAsset',self.textassets,False,self.__save_script],
+            ['TextAsset',self.textassets,'',self.__save_script],
             ['AudioClip',self.audioclips,'.wav',self.__save_samples],
-            ['MonoBehaviour',self.monobehaviors,False,None]
+            ['MonoBehaviour',self.monobehaviors,'',None]
         ]
         ###
         objs = [i for i in env.objects]
@@ -79,12 +119,11 @@ class resource:
                     j[1].append(i.read())
                     break
 
-    def save_all_the(self, typename:str, intodir:str, docover:bool=False, detail:bool=False):
+    def save_all_the(self, typename:str, intodir:str, detail:bool=False):
         '''
         #### 保存reource类中所有的某个类型的文件
         :param typename: 类型名称;
         :param intodir:  保存目的地的目录;
-        :param docover:  是否覆盖重名的已存在的文件，默认False;
         :param detail:   是否回显详细信息;
         :returns:        (int) 已保存的文件数;
         '''
@@ -95,15 +134,16 @@ class resource:
             if typename == j[0]:
                 for i in j[1]:
                     #(i是单个object)
-                    dest = ospath.join(intodir, i.name)
-                    if j[2]:
-                        dest = ospath.splitext(dest)[0] + j[2]
-                    if not docover and ospath.isfile(dest):
-                        continue
-                    if not ospath.isdir(ospath.dirname(dest)):
-                        mkdir(ospath.dirname(dest))
-                    j[3](i, dest) #调用私有保存方法
-                    cont += 1
+                    data = j[3](i, j[2]) #获取为字节流
+                    if not data:
+                        continue #没有数据，跳过
+                    if not self.__is_unique(data, intodir, i.name, j[2]):
+                        continue #已有文件与数据相同，跳过
+                    #正式保存字节流
+                    dest = self.__solve_namesake(intodir, i.name, j[2])
+                    mkdir(ospath.dirname(dest))
+                    if self.__save_bytes(data, dest):
+                        cont += 1
                 break
         if detail and cont:
             print(f'{color(6)}  成功导出 {cont}\t{typename}')
@@ -201,7 +241,7 @@ class resource:
     #EndClass
 
 
-def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, docover:bool, detail:bool):
+def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, detail:bool):
     '''
     #### 解包ab文件env实例
     更新内容：解决了战斗小人正背面导出紊乱的问题
@@ -210,7 +250,6 @@ def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, docover:boo
     :param doimg:   是否导出图片资源;
     :param dotxt:   是否导出文本资源;
     :param doaud:   是否导出音频资源;
-    :param docover: 是否覆盖重名的已存在的文件，建议False，否则可能出现意外;
     :param detail:  是否回显详细信息;
     :returns:       (int) 已导出的文件数;
     '''
@@ -229,12 +268,12 @@ def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, docover:boo
             print(f'{color(2)}  BattelSkel&Atlas: {succ}')
         ###
         if doimg:
-            cont_s += reso.save_all_the('Sprite', intodir, docover, detail)
-            cont_s += reso.save_all_the('Texture2D', intodir, docover, detail)
+            cont_s += reso.save_all_the('Sprite', intodir, detail)
+            cont_s += reso.save_all_the('Texture2D', intodir, detail)
         if dotxt:
-            cont_s += reso.save_all_the('TextAsset', intodir, docover, detail)
+            cont_s += reso.save_all_the('TextAsset', intodir, detail)
         if doaud:
-            cont_s += reso.save_all_the('AudioClip', intodir, docover, detail)
+            cont_s += reso.save_all_the('AudioClip', intodir, detail)
     except Exception as arg:
         #错误反馈
         print(f'{color(1)}  意外错误：{arg}')
@@ -247,7 +286,7 @@ def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, docover:boo
 
 ########## Main-主程序 ##########
 def main(rootdir:list, destdir:str, dodel:bool=False, 
-    doimg:bool=True, dotxt:bool=True, doaud:bool=True, docover:bool=False, detail:bool=True):
+    doimg:bool=True, dotxt:bool=True, doaud:bool=True, detail:bool=True):
     '''
     #### 批量地从指定目录的ab文件中，导出指定类型的资源
     :param rootdir: 包含来源文件夹们的路径的列表;
@@ -256,7 +295,6 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
     :param doimg:   是否导出图片资源，默认True;
     :param dotxt:   是否导出文本资源，默认True;
     :param doaud:   是否导出音频资源，默认True;
-    :param docover: 是否覆盖重名的已存在的文件，默认False，否则可能出现意外;
     :param detail:  是否回显详细信息，默认True，否则回显进度条;
     :returns: (None);
     '''
@@ -302,7 +340,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
             print(f'累计导出：\t{cont_s_sum}\n')
         ###
         Ue = UpyLoad(i) #ab文件实例化
-        cont_s_sum += ab_resolve(Ue, os.path.join(destdir, os.path.dirname(i)), doimg, dotxt, doaud, docover, detail)
+        cont_s_sum += ab_resolve(Ue, os.path.join(destdir, os.path.dirname(i)), doimg, dotxt, doaud, detail)
         ###
         if detail and cont_f % 25 == 0:
             print(f'{color(7,0,1)}■ 已累计解包{cont_f}个文件 ({cont_p}%)')
@@ -313,12 +351,12 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
         os.system('cls')
     print(f'{color(7,0,1)}\n批量解包结束!')
     print(f'  累计解包 {cont_f} 个文件')
-    print(f'  累计导出 {cont_f} 个文件')
+    print(f'  累计导出 {cont_s_sum} 个文件')
     print(f'  此项用时 {round(t2-t1, 1)} 秒{color(7)}')
     time.sleep(2)
 
 '''
-测试相关：
+#测试相关：
 Ue = UpyLoad('')
-ab_resolve(Ue, '', True, True, False, True, True)
+ab_resolve(Ue, 'temp', True, True, False, True, True)
 '''
