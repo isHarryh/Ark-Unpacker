@@ -161,11 +161,6 @@ def run_costm_Cb():
         dodel = input(f'{color(2)}> ')
         dodel = True if dodel in ['y','Y'] else False
     ###
-    print(f'{color(7)}\n您希望进行同名文件覆盖吗？')
-    print(f'{color(3)}  建议跳过：y=覆盖，n=跳过(默认)')
-    docover = input(f'{color(2)}> ')
-    docover = True if docover in ['y','Y'] else False
-    ###
     print(f'{color(7)}\n您希望的回显模式是？')
     print(f'{color(3)}  y=详细，n=简洁(默认)')
     detail = input(f'{color(2)}> ')
@@ -173,7 +168,7 @@ def run_costm_Cb():
     ###
     input(f'{color(2)}\n再按一次回车以开始任务...')
     os.system('title ArkUnpacker - Processing')
-    AU_Cb.main([rootdir],destdir,dodel,docover,detail)
+    AU_Cb.main([rootdir],destdir,dodel,detail)
 
 
 if __name__ == '__main__':
