@@ -5,9 +5,11 @@ import os.path, time
 try:
     from osTool import *
     from colorTool import *
+    from communalTool import *
 except:
     from .osTool import *
     from .colorTool import *
+    from .communalTool import *
 from re import findall
 from PIL import Image #PIL库用于操作图像
 '''

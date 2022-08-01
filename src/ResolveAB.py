@@ -5,9 +5,11 @@ import os.path, time
 try:
     from osTool import *
     from colorTool import *
+    from communalTool import *
 except:
     from .osTool import *
     from .colorTool import *
+    from .communalTool import *
 from io import BytesIO
 from UnityPy import load as UpyLoad #UnityPy库用于操作Unity文件，这里仅导入个load函数
 '''
