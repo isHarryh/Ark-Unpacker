@@ -149,34 +149,27 @@ def image_resolve(fp:str, intodir:str):
     if '[alpha]' in name: #xxx[alpha]xxx.png形式 
         fp2 = alpha_resolve(fp)
         if not fp2:
-            return 6 #匹配不到，退出
+            return 2 #匹配不到，退出
         real = findall(r'.+\[alpha\]', name)[0]
     elif name[-6:] == '_alpha': #xxx_alpha.png形式
         fp2 = ospath.join(oridir, name[:-6] + ext)
         real = name[:-6]
     else:
-        return 2 #不是指定的A通道图，退出
-    #防止重名冲突，dest是新图保存路径
-    tmp = 0
-    dest = ospath.join(intodir, f'{real}{ext}')
-    while ospath.isfile(dest):
-        dest = ospath.join(intodir, f'{real}_#{tmp}{ext}')
-        tmp += 1
+        return 3 #不是指定的A通道图，退出
     ###
-    if ospath.isfile(dest):
-        return 3 #新图怎么又存在，退出
     if not ospath.isfile(fp):
         print(f'{color(1)}  错误：alpha通道图缺失{color(7)} {fp}')
         return 4 #找不到对应的A通道图，退出
     if not ospath.isfile(fp2):
         print(f'{color(1)}  错误：RGB通道图缺失{color(7)} {fp2}')
         return 5 #找不到对应的RGB通道图，退出
-    mkdir(intodir)
     #print(color(7)+fp2)
     IM = combine_rgb_a(fp2, fp)
     if IM:
-        IM.save(dest) #保存新图
-        return 0 #成功，返回0
+        if MySaver.save_image(IM, intodir, real, '.png'): #保存新图
+            return 0 #成功，返回0
+        else:
+            return 6 #未保存，返回6
     else:
         print(f'{color(1)}  错误：通道图合成失败{color(7)}')
         return -1 #图片合成函数返回了失败的结果，退出
@@ -204,7 +197,8 @@ def main(rootdir:list, destdir:str, dodel:bool=False, detail:bool=True):
     cont_f = 0 #已合并图片计数
     cont_a = 0 #已遍历文件计数
     cont_p = 0 #进度百分比计数
-    cont_l1 = 0 #上个文件用时
+    cont_l1 = 0
+    cont_l2 = ''
     if dodel:
         Delete_File_Dir(destdir) #慎用，会预先删除目的地目录的所有内容
     mkdir(destdir)
@@ -229,22 +223,26 @@ def main(rootdir:list, destdir:str, dodel:bool=False, detail:bool=True):
             print(f'当前目录：\t{ospath.dirname(i)}')
             print(f'当前文件：\t{ospath.basename(i)}')
             print(f'累计合并：\t{cont_f}')
-            print(f'{color(6)}上个用时：\t{cont_l1}秒{color(7)}\n')
+            print(f'{color(6)}上个用时：\t{cont_l1}{cont_l2}{color(7)}\n')
         ###
         t3=time.time() #计时器2开始
         result = image_resolve(i, ospath.join(destdir, ospath.dirname(i)))
+        t4=time.time() #计时器2结束
+        cont_l1 = round(t4-t3,2)
         if result == 0:
-            t4=time.time() #计时器2结束
             cont_f += 1
-            cont_l1 = round(t4-t3,2)
             if detail:
                 print(f'{color(2)}  成功 ({cont_l1}s){color(7)}')
-        elif result in [3]:
+        elif result == 6:
             if detail:
                 print(f'{color(6)}  跳过 (重名){color(7)}')
+            else:  
+                cont_l2 = '秒 (重名未保存)'
         else:
             if detail:
                 print(f'{color(6)}  跳过 (状态码{result}){color(7)}')
+            else:  
+                cont_l2 = f'跳过 (状态码{result})'
 
     t2=time.time() #计时器1结束
     if not detail:

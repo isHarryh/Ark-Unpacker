@@ -20,78 +20,43 @@ Python批量解包Unity(.ab)资源文件
 
 class resource:
     '存放env内的资源的类'
-
-    def __save_bytes(self, byt, dest):
-        #### 私有方法：保存字节流数据
-        with open(dest, 'wb') as f:
-            f.write(byt)
-        return True
-
-    def __save_image(self, obj, ext='.png'):
-        #### 私有方法：保存object中的图片为字节流
-        if obj.image.height <= 0 and obj.image.width <= 0:
-            return False
-        byt = BytesIO()
-        if ext == '.png':
-            format = 'PNG'
-        else:
-            format = 'JPEG'
-        obj.image.save(byt, format=format)
-        return byt.getvalue()
     
-    def __save_script(self, obj, ext):
-        #### 私有方法：保存object中的文本为字节流
-        return obj.script
-    
-    def __save_samples(self, obj, ext):
-        #### 私有方法：保存object中的音频为字节流
-        byt = bytes()
-        for n, d in obj.samples.items():
-            byt += d
-        return byt
+    @classmethod
+    def __get_image(self, obj):
+        #### 私有方法：获取object中的图片，返回Image实例
+        return obj.image
 
+    @classmethod
+    def __get_script(self, obj):
+        #### 私有方法：获取object中的文本，返回字节流
+        return bytes(obj.script)
+
+    @classmethod
+    def __get_samples(self, obj):
+        #### 私有方法：获取object中的音频，返回音频采样点列表
+        return obj.samples.items
+
+    @classmethod
     def __rename_add_prefix(self, objlist:list, idx:int, pre:str):
         #### 私有方法：辅助重命名小人相关文件，前缀
         tmp = objlist[idx].name
         objlist[idx].name = str(pre+tmp)
-    
+
+    @classmethod
     def __rename_add_suffix(self, objlist:list, idx:int, suf:str):
         #### 私有方法：辅助重命名小人相关文件，后缀
         tmp = objlist[idx].name
         objlist[idx].name = str(tmp+suf)
-    
+
+    @classmethod
     def __search_in_pathid(self, objlist:list, pathid:int):
         #### 私有方法：按照路径ID搜索特定对象，返回其索引
         for i in range(len(objlist)):
             if objlist[i].path_id == pathid:
                 return i
-        return i
+        return False
 
-    def __is_identical(self, data:bytes, fp:str):
-        #### 私有方法：判断是否和某指定文件内容相同
-        with open(fp, 'rb') as f:
-            cache = f.read()
-        return True if bytes(data) == bytes(cache) else False
-    
-    def __is_unique(self, data:bytes, intodir:str, name:str, ext:str):
-        #### 私有方法：判断是否不存在内容相同的原本重名的文件
-        flist = os.listdir(intodir)
-        flist = list(filter(lambda x:(x == name+ext or (name in x and ext in x)), flist)) #初筛
-        for i in flist:
-            #(i是初筛后文件的路径名)
-            if self.__is_identical(data, os.path.join(intodir, i)):
-                return False
-        return True
-
-    def __solve_namesake(self, intodir:str, name:str, ext:str):
-        #### 私有方法：解决重名问题
-        tmp = 0
-        dest = os.path.join(intodir, f'{name}{ext}')
-        while os.path.isfile(dest):
-            dest = os.path.join(intodir, f'{name}_#{tmp}{ext}')
-            tmp += 1
-        return dest
-
+    @classmethod
     def __init__(self, env):
         '''
         #### 通过传入一个UnityPy.environment实例，初始化一个resource类
@@ -103,12 +68,12 @@ class resource:
         self.textassets = []
         self.audioclips = []
         self.monobehaviors = []
-        self.typelist = [ #[类型名称,类型列表,保存后缀,字节流方法]
-            ['Sprite',self.sprites,'.png',self.__save_image],
-            ['Texture2D',self.texture2ds,'.png',self.__save_image],
-            ['TextAsset',self.textassets,'',self.__save_script],
-            ['AudioClip',self.audioclips,'.wav',self.__save_samples],
-            ['MonoBehaviour',self.monobehaviors,'',None]
+        self.typelist = [ #[0:类型名称,1:类型列表,2:保存后缀,3:内容提取方法,4:安全保存方法]
+            ['Sprite',self.sprites,'.png',self.__get_image,MySaver.save_image],
+            ['Texture2D',self.texture2ds,'.png',self.__get_image,MySaver.save_image],
+            ['TextAsset',self.textassets,'',self.__get_script,MySaver.save_script],
+            ['AudioClip',self.audioclips,'.wav',self.__get_samples,MySaver.save_samples],
+            ['MonoBehaviour',self.monobehaviors,'',None,None]
         ]
         ###
         objs = [i for i in env.objects]
@@ -121,6 +86,7 @@ class resource:
                     j[1].append(i.read())
                     break
 
+    @classmethod
     def save_all_the(self, typename:str, intodir:str, detail:bool=False):
         '''
         #### 保存reource类中所有的某个类型的文件
@@ -130,27 +96,20 @@ class resource:
         :returns:        (int) 已保存的文件数;
         '''
         cont = 0
-        ospath = os.path
         for j in self.typelist:
             #(j是某资源类型的特征的列表)
             if typename == j[0]:
                 for i in j[1]:
                     #(i是单个object)
-                    data = j[3](i, j[2]) #获取为字节流
-                    if not data:
-                        continue #没有数据，跳过
-                    if not self.__is_unique(data, intodir, i.name, j[2]):
-                        continue #已有文件与数据相同，跳过
-                    #正式保存字节流
-                    dest = self.__solve_namesake(intodir, i.name, j[2])
-                    mkdir(ospath.dirname(dest))
-                    if self.__save_bytes(data, dest):
+                    data = j[3](i) #内容提取
+                    if j[4](data, intodir, i.name, j[2]): #安全保存
                         cont += 1
                 break
         if detail and cont:
             print(f'{color(6)}  成功导出 {cont}\t{typename}')
         return cont
 
+    @classmethod
     def rename_spine_images(self):
         '''
         #### 重命名小人图片文件
@@ -181,6 +140,7 @@ class resource:
             self.__rename_add_suffix(self.texture2ds,spines[i],'_#'+str(i))
         return len(spines)
 
+    @classmethod
     def rename_spine_texts(self):
         '''
         #### 重命名小人文本文件（包括.skel和.atlas）
@@ -276,7 +236,7 @@ def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, detail:bool
             cont_s += reso.save_all_the('TextAsset', intodir, detail)
         if doaud:
             cont_s += reso.save_all_the('AudioClip', intodir, detail)
-    except Exception as arg:
+    except BaseException as arg:
         #错误反馈
         print(f'{color(1)}  意外错误：{arg}')
         input(f'  按下回车键以跳过此文件并继续任务...')
