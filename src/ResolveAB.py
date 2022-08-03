@@ -216,8 +216,13 @@ def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, detail:bool
     :returns:       (int) 已导出的文件数;
     '''
     mkdir(intodir)
+    cont_obj = len(env.objects)
     if detail:
-        print(f'{color(2)}  找到了 {len(env.objects)} 个资源，正在处理...')
+        print(f'{color(2)}  找到了 {cont_obj} 个资源，正在处理...')
+    if cont_obj >= 1000:
+        print(f'{color(6)}  提示：此文件包含资源较多，用时可能较长')
+    elif cont_obj <= 0:
+        return 0
     cont_s = 0 #已导出资源计数
     ###
     reso = resource(env)

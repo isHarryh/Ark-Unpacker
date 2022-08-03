@@ -52,8 +52,9 @@ class SafeSaver():
     def __is_unique(data:bytes, intodir:str, name:str, ext:str):
         #### 私有方法：判断是否不存在内容相同的原本重名的文件
         if os.path.isdir(intodir):
+            lenname = len(name)
             flist = os.listdir(intodir)
-            flist = list(filter(lambda x:(name in x and ext in x), flist)) #初筛
+            flist = list(filter(lambda x:(name == x[:lenname] and ext in x), flist)) #初筛
             for i in flist:
                 #(i是初筛后文件的路径名)
                 if SafeSaver.__is_identical(data, os.path.join(intodir, i)):
