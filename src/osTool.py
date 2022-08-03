@@ -40,8 +40,8 @@ def mkdir(path:str):
     path = path.strip().strip('/').rstrip('\\')
     if not os.path.exists(path):
         os.makedirs(path)
-        if len(path) > 32:
-            print(f'  目录已创建 {path[-28:]}')
+        if len(path) > 24:
+            print(f'  目录已创建 ...{path[-20:]}')
         else:
             print(f'  目录已创建 {path}')
         return True
