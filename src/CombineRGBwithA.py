@@ -20,30 +20,22 @@ Python批量合并RGB通道图和A通道图
 def combine_rgb_a(fp_rgb:str, fp_a:str):
     '''
     #### 将RGB通道图和A通道图合并
+    此算法更新后速率提升了400%
     :param fp_rgb: RGB通道图的文件路径;
     :param fp_a:   A通道图的文件路径;
     :returns:      Image实例;
     '''
-    IM1 = Image.open(fp_rgb).convert('RGB') #RGB通道图实例化
+    IM1 = Image.open(fp_rgb).convert('RGBA') #RGB通道图实例化
     IM2 = Image.open(fp_a).convert('L') #A通道图实例化(L:灰度模式)
-    w,h = IM1.size #新图片尺寸取自RGB通道图
     if not (IM1.size == IM2.size):
         #两张图片尺寸不同，对A通道图的尺寸进行缩放
-        print(f'{color(3)}  警告：通道图尺寸不一，已缩放处理')
-        IM2 = IM2.resize((w,h), Image.ANTIALIAS)
-    #载入原图片的像素到数组
-    IM1L = IM1.load()
-    IM2L = IM2.load()
-    #输出到新图片
-    IM3  = Image.new('RGBA', (w,h), (0,0,0,0))
-    IM3L = IM3.load()
-    for x in range(0, w):
-        for y in range(0, h):
-            #遍历到每个像素(x,y是像素的坐标)
-            a = IM2L[x, y] #该像素的A值
-            r,g,b = IM1L[x, y] if a > 0 else (0,0,0) #当A值为全透明(0)时抹除掉该像素RGB值
-            IM3L[x, y] = (r, g, b, a) #使用新RGBA数据填充新图片的像素
-    return IM3
+        IM2 = IM2.resize(IM1.size, Image.ANTIALIAS)
+        print(f'{color(3)}  警告：通道图尺寸不一，已缩放处理')    
+    IM3 = Image.new('RGBA', IM1.size) #透明抹除全黑图实例化
+    IM4 = IM2.point(lambda x:0 if x>0 else 255) #透明抹除反色图实例化
+    IM1.putalpha(IM2) #RGB通道图使用A通道图作为alpha层
+    IM1.paste(IM3, IM4) #RGB通道图被执行透明抹除
+    return IM1
 
 def alpha_resolve(fp:str):
     ''''
@@ -82,8 +74,7 @@ def alpha_resolve(fp:str):
         return spines[0][0] #成功，唯一图片的文件路径
     else:
         spines = sorted(spines, key=lambda x:-x[1]) #根据置信度降序排序
-        print(f'{color(6)}  匹配到 {ospath.basename(spines[0][0])}')
-        print(f'{color(6)}  置信度 {spines[0][1]}')
+        print(f'{color(6)}  匹配到 {ospath.basename(spines[0][0])}\n  置信度 {spines[0][1]}')
         if spines[0][1] < 128:
             print(f'{color(3)}  警告：置信度较低，可能匹配错误')
         return spines[0][0] #成功，返回置信度最高的图片的文件路径
@@ -104,8 +95,8 @@ def similarity(fp_rgb:str, fp_a:str, prec:int=100):
     IM2 = Image.open(fp_a).convert('L') #A通道图实例化
     prec = 100 if prec < 0 else prec
     #对两张图片进行缩放
-    IM1 = IM1.resize((prec,prec), Image.ANTIALIAS)
-    IM2 = IM2.resize((prec,prec), Image.ANTIALIAS)
+    IM1 = IM1.resize((prec,prec), Image.BICUBIC)
+    IM2 = IM2.resize((prec,prec), Image.BICUBIC)
     #载入原图片的像素到数组
     IM1L = IM1.load()
     IM2L = IM2.load()
@@ -150,7 +141,7 @@ def image_resolve(fp:str, intodir:str):
         fp2 = alpha_resolve(fp)
         if not fp2:
             return 2 #匹配不到，退出
-        real = findall(r'.+\[alpha\]', name)[0]
+        real = findall(r'.+\[alpha\]', name)[0][:-7]
     elif name[-6:] == '_alpha': #xxx_alpha.png形式
         fp2 = ospath.join(oridir, name[:-6] + ext)
         real = name[:-6]
@@ -197,8 +188,8 @@ def main(rootdir:list, destdir:str, dodel:bool=False, detail:bool=True):
     cont_f = 0 #已合并图片计数
     cont_a = 0 #已遍历文件计数
     cont_p = 0 #进度百分比计数
-    cont_l1 = 0
-    cont_l2 = ''
+    log_rst = ''
+
     if dodel:
         Delete_File_Dir(destdir) #慎用，会预先删除目的地目录的所有内容
     mkdir(destdir)
@@ -223,26 +214,20 @@ def main(rootdir:list, destdir:str, dodel:bool=False, detail:bool=True):
             print(f'当前目录：\t{ospath.dirname(i)}')
             print(f'当前文件：\t{ospath.basename(i)}')
             print(f'累计合并：\t{cont_f}')
-            print(f'{color(6)}上个用时：\t{cont_l1}{cont_l2}{color(7)}\n')
+            print(f'上个结果：\t{log_rst}{color(7)}\n')
         ###
         t3=time.time() #计时器2开始
         result = image_resolve(i, ospath.join(destdir, ospath.dirname(i)))
         t4=time.time() #计时器2结束
-        cont_l1 = round(t4-t3,2)
         if result == 0:
             cont_f += 1
-            if detail:
-                print(f'{color(2)}  成功 ({cont_l1}s){color(7)}')
+            log_rst = f'{color(2)}成功 ({round(t4-t3,2)}s)'
         elif result == 6:
-            if detail:
-                print(f'{color(6)}  跳过 (重名){color(7)}')
-            else:  
-                cont_l2 = '秒 (重名未保存)'
+            log_rst = f'{color(6)}未保存 (有重复)'
         else:
-            if detail:
-                print(f'{color(6)}  跳过 (状态码{result}){color(7)}')
-            else:  
-                cont_l2 = f'跳过 (状态码{result})'
+            log_rst = f'{color(3)}失败 (状态码{result})'
+        if detail:
+            print(f'  {log_rst}{color(7)}')
 
     t2=time.time() #计时器1结束
     if not detail:
