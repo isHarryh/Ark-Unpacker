@@ -14,6 +14,7 @@ from re import findall
 from PIL import Image #PIL库用于操作图像
 '''
 Python批量合并RGB通道图和A通道图
+明日方舟定制版本
 '''
 
 

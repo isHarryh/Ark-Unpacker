@@ -10,7 +10,6 @@ except:
     from .osTool import *
     from .colorTool import *
     from .communalTool import *
-from io import BytesIO
 from UnityPy import load as UpyLoad #UnityPy库用于操作Unity文件，这里仅导入个load函数
 '''
 Python批量解包Unity(.ab)资源文件
@@ -34,7 +33,7 @@ class resource:
     @classmethod
     def __get_samples(self, obj):
         #### 私有方法：获取object中的音频，返回音频采样点列表
-        return obj.samples.items
+        return obj.samples.items()
 
     @classmethod
     def __rename_add_prefix(self, objlist:list, idx:int, pre:str):
@@ -117,17 +116,7 @@ class resource:
         当前尚未找到准确区分图片文件的方法QwQ
         :returns: (int);
         '''
-        ##基建小人（无需处理）
-        '''
-        build = []
-        for i in range(len(self.texture2ds)):
-            #(i是单个Texture2D对象的索引)
-            iname = self.texture2ds[i].name
-            if len(iname) > 11 and 'build_char_' == iname[:11]:
-                build.append(i)
-        for i in range(len(build)):
-            pass
-        '''
+        ##基建小人无需处理
         ##战斗小人
         spines = []
         for i in range(len(self.texture2ds)):
@@ -219,9 +208,9 @@ def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, detail:bool
     cont_obj = len(env.objects)
     if detail:
         print(f'{color(2)}  找到了 {cont_obj} 个资源，正在处理...')
-    if cont_obj >= 1000:
+    if cont_obj > 2000:
         print(f'{color(6)}  提示：此文件包含资源较多，用时可能较长')
-    elif cont_obj <= 0:
+    elif cont_obj == 0:
         return 0
     cont_s = 0 #已导出资源计数
     ###
