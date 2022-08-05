@@ -13,6 +13,9 @@ This project only supports Chinese docs. If you are an English user, feel free t
 3. (NEW)对战斗小人的正背面的文件进行初步区分
 4. 提供命令行式的人性化界面实现上述的功能
 
+#### 更新日志
+[查看CHANGELOG](./CHANGELOG.md)
+
 ## 使用方法 <sub>Usage</sub>
 
 ### 准备
@@ -92,24 +95,10 @@ This project only supports Chinese docs. If you are an English user, feel free t
 3. 快捷键`Ctrl+C`用于强行终止程序，若想复制文本，请用鼠标选取文本后再按此快捷键。
 4. 左键单击小黑窗会进入“文本选取”模式，此时程序会暂停。
 5. 右键单击小黑窗可以粘贴文本。
+6. 如果程序报错可向我们提交Issue。
 
 #### 测试数据
-如果在您的电脑上运行报错，请向我们提交Issue。  
-本程序在作者的电脑上测试结果如下：
-> 电脑配置  
-> -- Windows 10 (64位)  
-> -- CPU基频：2.00GHz  
-> -- RAM内存：8.00GB  
-> 明日方舟版本  
-> -- Android v1.8.01  
-> 测试内容  
-> -- “一键执行”整个Android文件夹  
-> -- 源文件夹：4.74GB(5.9K个文件)  
-> 测试结果  
-> -- 用时：2.5h  
-> -- 错误：未发生  
-> -- 资源解包文件夹：18.4GB(57K个文件)  
-> -- 图片合并文件夹：1.90GB(5.4K个文件)  
+[查看CHANGELOG](./CHANGELOG.md)
 
 ### 使用源代码
 如果您是高级用户或开发者，您才需要阅读以下内容：
