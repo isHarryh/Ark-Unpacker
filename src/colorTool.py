@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022, Harry Huang
 # @ BSD 3-Clause License
+import os
 '''
 控制台多颜色输出函数
 '''
-import os
 
 os.system('')
 def color(front:int=7, back:int=0, mode:int=0):
@@ -18,4 +18,4 @@ def color(front:int=7, back:int=0, mode:int=0):
     :param mode:  Display Method [0=default,1=bold,4=underlined,5=flashing,7=inverted,8=none];
     :returns:     (str) The Prefix;
     '''
-    return str('\033['+str(mode)+';3'+str(front)+';4'+str(back)+'m')
+    return f'\033[{mode};3{front};4{back}m'
