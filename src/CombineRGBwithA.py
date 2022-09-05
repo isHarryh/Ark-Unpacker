@@ -111,19 +111,6 @@ def similarity(fp_rgb:str, fp_a:str, prec:int=100):
     Diff_mean = round(mean(Diff))
     return 0 if Diff_mean >= 255 else (255 if Diff_mean <= 0 else 255-Diff_mean)
 
-def mean(lst:list):
-    '''
-    #### 返回数组平均值
-    :param lst: 要计算的列表;
-    :returns:   (float) 数组平均值;
-    '''
-    if len(lst) == 0:
-        return float(0)
-    s = 0
-    for i in lst:
-        s += i
-    return float(s/len(lst))
-
 def image_resolve(fp:str, intodir:str):
     '''
     #### 判断某图片的名称是否包含A通道图的特定命名特征，
@@ -187,13 +174,13 @@ def main(rootdir:list, destdir:str, dodel:bool=False, detail:bool=True):
     flist = list(filter(lambda x:ospath.splitext(x)[1].lower() in ['.png', '.jpg', '.jpeg', '.bmp'], flist)) #初筛
     
     cont_f = 0 #已合并图片计数
-    cont_a = 0 #已遍历文件计数
     cont_p = 0 #进度百分比计数
     log_rst = ''
 
     if dodel:
         Delete_File_Dir(destdir) #慎用，会预先删除目的地目录的所有内容
     mkdir(destdir)
+    TR = TimeRecorder(len(flist))
 
     if detail:
         print(f'{color(7,0,1)}开始批量合并图片!\n{color(7)}')
@@ -201,8 +188,8 @@ def main(rootdir:list, destdir:str, dodel:bool=False, detail:bool=True):
 
     for i in flist:
         #递归处理各个文件(i是文件的路径名)
-        cont_a += 1
-        cont_p = round((cont_a/len(flist))*100,1)
+        TR.update()
+        cont_p = round((TR.n_cur/TR.n_dest)*100,1)
         if not ospath.isfile(i):
             continue #跳过目录等非文件路径
         if detail:
@@ -215,6 +202,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False, detail:bool=True):
             print(f'当前目录：\t{ospath.dirname(i)}')
             print(f'当前文件：\t{ospath.basename(i)}')
             print(f'累计合并：\t{cont_f}')
+            print(f'剩余时间：\t{round(TR.getRemainingTime(),1)}min')
             print(f'上个结果：\t{log_rst}{color(7)}\n')
         ###
         t3=time.time() #计时器2开始

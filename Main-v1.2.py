@@ -123,6 +123,11 @@ def run_costm_Rs():
     detail = input(f'{color(2)}> ')
     detail = True if detail in ['y','Y'] else False
     ###
+    print(f'{color(7)}\n您希望用AB文件原名来分类每组文件吗？')
+    print(f'{color(3)}  y=是(默认)，n=否')
+    separate = input(f'{color(2)}> ')
+    separate = False if separate in ['n','N'] else True
+    ###
     print(f'{color(7)}\n请输入要导出的资源类型后按回车')
     print('  可多选：i=图片，t=文本，a=音频')
     print('  示例输入：\"ita\"，\"ia\"')
@@ -133,7 +138,7 @@ def run_costm_Rs():
     ###
     input(f'{color(2)}\n再按一次回车以开始任务...')
     os.system('title ArkUnpacker - Processing')
-    AU_Rs.main([rootdir],destdir,dodel,doimg,dotxt,doaud,detail)
+    AU_Rs.main([rootdir],destdir,dodel,doimg,dotxt,doaud,detail,separate)
 
 def run_costm_Cb():
     '''

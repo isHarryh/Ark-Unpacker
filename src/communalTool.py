@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022, Harry Huang
 # @ BSD 3-Clause License
-import os
+import os, time
+from typing import ClassVar
 try:
     from osTool import *
 except:
@@ -127,3 +128,72 @@ class MySaver(SafeSaver):
             return False
         return SafeSaver.save(byt, intodir, name, ext)
     #EndClass
+
+class TimeRecorder():
+    'Tasking Time Recorder'
+
+    t_init = 0
+    t_rec = [] #[curVal,curTime,Time(Seconds)OfEach]
+    n_dest = 0
+    n_cur = 0
+
+    @classmethod
+    def __init__(self, dest:int):
+        '''
+        #### Initialize a Tasking Time Recorder.
+        :param dest: The destination value of the task;
+        :returns: (none);
+        '''
+        self.t_init = time.time()
+        self.t_rec = [[0, self.t_init, 0]]
+        self.n_dest = dest
+        self.n_cur = 0
+
+    @classmethod
+    def update(self, delta:int=1):
+        '''
+        #### Update the current value of the task.
+        :param delta: Delta value;
+        :returns: (none);
+        '''
+        self.n_cur += delta
+        t_cur = time.time()
+        self.t_rec.append([self.n_cur, t_cur, t_cur-self.t_rec[len(self.t_rec)-1][1] / delta])
+    
+    @classmethod
+    def getSpeed(self, basis:int=50):
+        '''
+        #### Get the processing speed.
+        :param basis: How many records do we use to calculate the speed;
+        :returns: (float) Items per minute;
+        '''
+        n_cnt = 0
+        v_sum = 0
+        for i in range(len(self.t_rec)-1, -1, -1):
+            if self.t_rec[i][0]+basis <= self.n_cur:
+                break
+            n_cnt += 1
+            v_sum += self.t_rec[i][2]
+        return (n_cnt / v_sum * 60) if v_sum !=0 else 0
+    
+    def getRemainingTime(self, basis:int=50):
+        '''
+        #### Get the time remaining.
+        :param basis: How many records do we use to calculate the speed;
+        :returns: (float) Minutes;
+        '''
+        return (self.n_dest-self.n_cur)/self.getSpeed(basis) if self.getSpeed(basis) != 0 else 0
+    #EndClass
+
+def mean(lst:list):
+    '''
+    #### 返回数组平均值
+    :param lst: 要计算的列表;
+    :returns:   (float) 数组平均值;
+    '''
+    if len(lst) == 0:
+        return float(0)
+    s = 0
+    for i in lst:
+        s += i
+    return float(s/len(lst))

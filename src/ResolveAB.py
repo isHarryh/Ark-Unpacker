@@ -242,7 +242,7 @@ def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, detail:bool
 
 ########## Main-主程序 ##########
 def main(rootdir:list, destdir:str, dodel:bool=False, 
-    doimg:bool=True, dotxt:bool=True, doaud:bool=True, detail:bool=True):
+    doimg:bool=True, dotxt:bool=True, doaud:bool=True, detail:bool=True, separate:bool=True):
     '''
     #### 批量地从指定目录的ab文件中，导出指定类型的资源
     :param rootdir: 包含来源文件夹们的路径的列表;
@@ -261,13 +261,13 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
         flist += get_filelist(i)
     flist = list(filter(lambda x:ospath.splitext(x)[1] in ['.ab','.AB'], flist)) #初筛
     
-    cont_f = 0 #已处理文件计数
-    cont_a = 0 #已遍历文件计数
+    cont_f = 0 #已解包文件计数
     cont_p = 0 #进度百分比计数
     cont_s_sum = 0 #已导出文件计数（累加）
     if dodel:
         Delete_File_Dir(destdir) #慎用，会预先删除目的地目录的所有内容
     mkdir(destdir)
+    TR = TimeRecorder(len(flist))
 
     if detail:
         print(f'{color(7,0,1)}开始批量解包!\n{color(7)}')
@@ -275,8 +275,8 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
 
     for i in flist:
         #递归处理各个文件(i是文件的路径名)
-        cont_a += 1
-        cont_p = round((cont_a/len(flist))*100,1)
+        TR.update()
+        cont_p = round((TR.n_cur/TR.n_dest)*100,1)
         if not ospath.isfile(i):
             continue #跳过目录等非文件路径
         cont_f += 1
@@ -293,10 +293,13 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
             print(f'当前目录：\t{ospath.dirname(i)}')
             print(f'当前文件：\t{ospath.basename(i)}')
             print(f'累计解包：\t{cont_f-1}')
-            print(f'累计导出：\t{cont_s_sum}\n')
+            print(f'累计导出：\t{cont_s_sum}')
+            print(f'剩余时间：\t{round(TR.getRemainingTime(),1)}min\n')
         ###
         Ue = UpyLoad(i) #ab文件实例化
-        cont_s_sum += ab_resolve(Ue, os.path.join(destdir, os.path.dirname(i)), doimg, dotxt, doaud, detail)
+        curdestdir = os.path.join(destdir, ospath.dirname(i), ospath.splitext(ospath.basename(i))[0]) \
+            if separate else os.path.join(destdir, ospath.dirname(i))
+        cont_s_sum += ab_resolve(Ue, curdestdir, doimg, dotxt, doaud, detail)
         ###
         if detail and cont_f % 25 == 0:
             print(f'{color(7,0,1)}■ 已累计解包{cont_f}个文件 ({cont_p}%)')
