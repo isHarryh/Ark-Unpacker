@@ -252,6 +252,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
     :param dotxt:   是否导出文本资源，默认True;
     :param doaud:   是否导出音频资源，默认True;
     :param detail:  是否回显详细信息，默认True，否则回显进度条;
+    :param separate:是否按AB文件分类保存，默认True;
     :returns: (None);
     '''
     print(color(7,0,1)+"\n正在解析目录..."+color(7))

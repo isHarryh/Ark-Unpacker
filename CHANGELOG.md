@@ -2,6 +2,15 @@ CHANGELOG
 ==========
 This project only supports Chinese docs. If you are an English user, feel free to contact us.
 
+## v1.2
+### 新增
+1. (重要) 支持将不同ab文件中解包出的文件分别放到不同的子文件夹中，以便分类保存。
+2. (重要) 支持显示任务的剩余时间。
+
+### 优化
+1. 优化了目录创建的回显：现在不会轻易回显这类信息，以提升运行速度。
+
+
 ## v1.1
 ### 新增
 1. 新增了程序文件的图标。
