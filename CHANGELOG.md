@@ -10,6 +10,9 @@ This project only supports Chinese docs. If you are an English user, feel free t
 ### 优化
 1. 优化了目录创建的回显：现在不会轻易回显这类信息，以提升运行速度。
 
+### 其他
+1. 不再以`Main-vx.x.py`的形式命名主程序文件，现在统一使用`Main.py`命名。
+
 
 ## v1.1
 ### 新增
