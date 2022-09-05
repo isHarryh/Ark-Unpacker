@@ -30,20 +30,22 @@ def Delete_File_Dir(dirName:str):
         except:
             print('  错误：删除目录失败', dirName)
 
-def mkdir(path:str):
+def mkdir(path:str, echo:bool=False):
     '''
     ## Create a Dir
     #### 创建一个文件夹
     :param path: Path of the new dir;
+    :param echo: Echo info;
     :returns: (bool) Execution result;
     '''
     path = path.strip().strip('/').rstrip('\\')
     if not os.path.exists(path):
         os.makedirs(path)
-        if len(path) > 24:
-            print(f'  目录已创建 ...{path[-20:]}')
-        else:
-            print(f'  目录已创建 {path}')
+        if echo:
+            if len(path) > 24:
+                print(f'  目录已创建 ...{path[-20:]}')
+            else:
+                print(f'  目录已创建 {path}')
         return True
     else:
         #目录已存在
