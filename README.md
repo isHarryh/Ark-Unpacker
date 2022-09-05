@@ -32,7 +32,7 @@ This project only supports Chinese docs. If you are an English user, feel free t
 
 最后，将`Android(2)`文件夹里的内容复制到`Android`中，并**覆盖**同名文件，就能得到完整的游戏资源。合并后的文件夹约有5GB大小，在这之后，您就可以使用我们的发行版本或者源代码来解包其中的游戏资源了。
 
-为了方便您找到想要的资源的AB文件，我们整理并列出了各个子目录储存的资源的内容（以安卓`v1.8.01`的明日方舟为例）：
+为了方便您找到想要的资源的AB文件，我们整理并列出了各个子目录储存的资源的内容（以安卓`v1.8.61`的明日方舟为例）：
 > **Android**  
 > ├─activity / 活动   
 > ├─arts / 图片  
@@ -40,7 +40,8 @@ This project only supports Chinese docs. If you are an English user, feel free t
 > ├─avg / 剧情图  
 > ├─battle / 战斗相关  
 > ├─building / 基建  
-> ├─charpack / 干员  
+> ├─chararts / 干员(立绘和基建小人)  
+> ├─charpack / 干员(战斗小人)  
 > ├─config / 配置  
 > ├─crisisseasons / 危机合约  
 > ├─gamedata / 游戏数据  
@@ -55,6 +56,9 @@ This project only supports Chinese docs. If you are an English user, feel free t
 > ├─skinpack / 皮肤  
 > ├─spritepack / 图标  
 > └─ui / 用户界面  
+> 
+> 提示：在明日方舟`v1.8.01`及之前版本中，干员默认皮肤的立绘、基建小人和战斗小人全都位于`charpack`中；
+> 而在之后的版本中，立绘和基建小人被转移到了`chararts`中存放。
 
 
 ### 理论
