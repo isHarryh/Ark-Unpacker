@@ -145,55 +145,76 @@ class TimeRecorder():
         :returns: (none);
         '''
         self.t_init = time.time()
-        self.t_rec = [[0, self.t_init, 0]]
+        self.t_rec = [[self.t_init, 0]]
         self.n_dest = dest
         self.n_cur = 0
 
     @classmethod
-    def update(self, delta:int=1):
+    def update(self):
         '''
         #### Update the current value of the task.
         :param delta: Delta value;
         :returns: (none);
         '''
-        self.n_cur += delta
+        self.n_cur += 1
         t_cur = time.time()
-        self.t_rec.append([self.n_cur, t_cur, t_cur-self.t_rec[len(self.t_rec)-1][1] / delta])
+        self.t_rec.append([t_cur, t_cur-self.t_rec[len(self.t_rec)-1][0]])
     
     @classmethod
-    def getSpeed(self, basis:int=50):
+    def getSpeed(self, basis:int=100):
         '''
         #### Get the processing speed.
         :param basis: How many records do we use to calculate the speed;
         :returns: (float) Items per minute;
         '''
-        n_cnt = 0
-        v_sum = 0
+        sum = []
         for i in range(len(self.t_rec)-1, -1, -1):
-            if self.t_rec[i][0]+basis <= self.n_cur:
+            if i+basis < self.n_cur:
                 break
-            n_cnt += 1
-            v_sum += self.t_rec[i][2]
-        return (n_cnt / v_sum * 60) if v_sum !=0 else 0
+            if self.t_rec[i][1]:
+                sum.append(self.t_rec[i][1])
+        rst = trimmean(sum, 0.05)
+        return 60 / rst if rst != 0 else 0
     
-    def getRemainingTime(self, basis:int=50):
+    def getRemainingTime(self, basis:int=100):
         '''
         #### Get the time remaining.
         :param basis: How many records do we use to calculate the speed;
         :returns: (float) Minutes;
         '''
-        return (self.n_dest-self.n_cur)/self.getSpeed(basis) if self.getSpeed(basis) != 0 else 0
+        return (self.n_dest-self.n_cur) / self.getSpeed(basis) if self.getSpeed(basis) != 0 else 0
     #EndClass
 
 def mean(lst:list):
     '''
+    ## Get the mean
     #### 返回数组平均值
-    :param lst: 要计算的列表;
-    :returns:   (float) 数组平均值;
+    :param lst: List of values;
+    :returns:   (float) Mean;
     '''
     if len(lst) == 0:
         return float(0)
     s = 0
     for i in lst:
         s += i
-    return float(s/len(lst))
+    return float(s / len(lst))
+
+def trimmean(lst:list, percent:float):
+    '''
+    ## Trim extreme values from the both ends of the list and get the mean
+    #### 去除数组两极的极端值，返回数组平均值
+    :param lst: List of values;
+    :param percent: (float) Ratio of extreme values of one end;
+    '''
+    if len(lst) == 0:
+        return float(0)
+    if percent < 0 or percent > 1:
+        return float(0)
+    newlst = lst[:]
+    newlst.sort()
+    blocked = int(len(lst) * percent) if len(lst) * percent >= 0 else 0
+    newlst = newlst[blocked:-blocked]
+    if len(newlst) == 0:
+        return mean(lst)
+    else:
+        return mean(newlst)
