@@ -9,6 +9,7 @@ except:
     from .osTool import *
 from io import BytesIO
 from PIL import Image #PIL库用于操作图像
+from threading import Thread, enumerate, Event #threading库用于进行多线程
 '''
 为ArkUnpacker提供一些可复用的代码
 '''
@@ -129,6 +130,38 @@ class MySaver(SafeSaver):
         return SafeSaver.save(byt, intodir, name, ext)
     #EndClass
 
+class ThreadCtrl():
+    'Tool for Multi Threading'
+
+    def __init__(self, max_subthread):
+        self.max = max_subthread
+        self.sts = []
+    
+    def count_subthread(self):
+        self.sts = list(filter(lambda x:x.is_alive(), self.sts))
+        return len(self.sts)
+    
+    def run_subthread(self, fun, args:tuple=(), kwargs:dict={}):
+        while self.count_subthread() >= self.max:
+            pass
+        ts = Thread(target=fun, args=args, kwargs=kwargs, daemon=False)
+        self.sts.append(ts)
+        ts.start()
+        
+    #EndClass
+
+class Counter():
+    'Counter'
+
+    def __init__(self):
+        self.s = 0
+
+    def update(self, val=1):
+        self.s += val
+    
+    def get_sum(self):
+        return self.s
+
 class TimeRecorder():
     'Tasking Time Recorder'
 
@@ -137,7 +170,6 @@ class TimeRecorder():
     n_dest = 0
     n_cur = 0
 
-    @classmethod
     def __init__(self, dest:int):
         '''
         #### Initialize a Tasking Time Recorder.
@@ -149,7 +181,6 @@ class TimeRecorder():
         self.n_dest = dest
         self.n_cur = 0
 
-    @classmethod
     def update(self):
         '''
         #### Update the current value of the task.
@@ -160,7 +191,6 @@ class TimeRecorder():
         t_cur = time.time()
         self.t_rec.append([t_cur, t_cur-self.t_rec[len(self.t_rec)-1][0]])
     
-    @classmethod
     def getSpeed(self, basis:int=100):
         '''
         #### Get the processing speed.
@@ -184,6 +214,15 @@ class TimeRecorder():
         '''
         return (self.n_dest-self.n_cur) / self.getSpeed(basis) if self.getSpeed(basis) != 0 else 0
     #EndClass
+
+class rounder():
+    'Loading Rounder'
+    char = ['/','--','\\','|','/','--','\\','|']
+    def __init__(self):
+        self.__n = 0
+    def next(self):
+        self.__n = 0 if self.__n >= len(self.char)-1 else self.__n+1
+        return self.char[self.__n]
 
 def mean(lst:list):
     '''

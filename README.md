@@ -2,7 +2,7 @@ Ark-Unpacker
 ==========
 A tool that can unpack Arknights AB assets automatically.  
 明日方舟游戏资源批量解包器  
-版本(Version)`v1.2`  
+版本(Version)`v2.0`  
 
 This project only supports Chinese docs. If you are an English user, feel free to contact us.
 
@@ -147,7 +147,7 @@ CombineRGBwithA.main(['Unpacked'], 'Combined') # (b)
 ```Python
 # File: src/ResolveAB.py
 def main(rootdir:list, destdir:str, dodel:bool=False, 
-    doimg:bool=True, dotxt:bool=True, doaud:bool=True, detail:bool=True, separate:bool=True):
+    doimg:bool=True, dotxt:bool=True, doaud:bool=True, separate:bool=True):
     '''
     #### 批量地从指定目录的ab文件中，导出指定类型的资源
     :param rootdir: 包含来源文件夹们的路径的列表;
@@ -156,7 +156,6 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
     :param doimg:   是否导出图片资源，默认True;
     :param dotxt:   是否导出文本资源，默认True;
     :param doaud:   是否导出音频资源，默认True;
-    :param detail:  是否回显详细信息，默认True，否则回显进度条;
     :param separate:是否按AB文件分类保存，默认True;
     :returns: (None);
     '''

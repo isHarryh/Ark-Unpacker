@@ -9,7 +9,7 @@ from src import CombineRGBwithA as AU_Cb
 '''
 ArkUnpacker主程序
 '''
-AU_ver='v1.2'
+AU_ver='v2.0'
 AU_i18n='zh-CN'
 
 
@@ -86,7 +86,7 @@ def run_quickaccess():
     ###
     prt_subtitle('步骤1|资源解包')
     time.sleep(1)
-    AU_Rs.main(get_dirlist(ignore),destdir,detail=False)
+    AU_Rs.main(get_dirlist(ignore),destdir)
     ###
     prt_subtitle('步骤2|合并图片')
     time.sleep(1)
@@ -118,11 +118,6 @@ def run_costm_Rs():
         dodel = input(f'{color(2)}> ')
         dodel = True if dodel in ['y','Y'] else False
     ###
-    print(f'{color(7)}\n您希望的回显模式是？')
-    print(f'{color(3)}  y=详细，n=简洁(默认)')
-    detail = input(f'{color(2)}> ')
-    detail = True if detail in ['y','Y'] else False
-    ###
     print(f'{color(7)}\n您希望用AB文件原名来分类每组文件吗？')
     print(f'{color(3)}  y=是(默认)，n=否')
     separate = input(f'{color(2)}> ')
@@ -138,7 +133,7 @@ def run_costm_Rs():
     ###
     input(f'{color(2)}\n再按一次回车以开始任务...')
     os.system('title ArkUnpacker - Processing')
-    AU_Rs.main([rootdir],destdir,dodel,doimg,dotxt,doaud,detail,separate)
+    AU_Rs.main([rootdir],destdir,dodel,doimg,dotxt,doaud,separate)
 
 def run_costm_Cb():
     '''

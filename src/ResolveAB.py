@@ -10,7 +10,7 @@ except:
     from .osTool import *
     from .colorTool import *
     from .communalTool import *
-from UnityPy import load as UpyLoad #UnityPy库用于操作Unity文件，这里仅导入个load函数
+from UnityPy import load as UpyLoad #UnityPy库用于操作Unity文件
 '''
 Python批量解包Unity(.ab)资源文件
 明日方舟定制版本
@@ -20,34 +20,28 @@ Python批量解包Unity(.ab)资源文件
 class resource:
     '存放env内的资源的类'
     
-    @classmethod
     def __get_image(self, obj):
         #### 私有方法：获取object中的图片，返回Image实例
         return obj.image
 
-    @classmethod
     def __get_script(self, obj):
         #### 私有方法：获取object中的文本，返回字节流
         return bytes(obj.script)
 
-    @classmethod
     def __get_samples(self, obj):
         #### 私有方法：获取object中的音频，返回音频采样点列表
         return obj.samples.items()
 
-    @classmethod
     def __rename_add_prefix(self, objlist:list, idx:int, pre:str):
         #### 私有方法：辅助重命名小人相关文件，前缀
         tmp = objlist[idx].name
         objlist[idx].name = str(pre+tmp)
 
-    @classmethod
     def __rename_add_suffix(self, objlist:list, idx:int, suf:str):
         #### 私有方法：辅助重命名小人相关文件，后缀
         tmp = objlist[idx].name
         objlist[idx].name = str(tmp+suf)
 
-    @classmethod
     def __search_in_pathid(self, objlist:list, pathid:int):
         #### 私有方法：按照路径ID搜索特定对象，返回其索引
         for i in range(len(objlist)):
@@ -55,7 +49,6 @@ class resource:
                 return i
         return False
 
-    @classmethod
     def __init__(self, env):
         '''
         #### 通过传入一个UnityPy.environment实例，初始化一个resource类
@@ -85,13 +78,13 @@ class resource:
                     j[1].append(i.read())
                     break
 
-    @classmethod
-    def save_all_the(self, typename:str, intodir:str, detail:bool=False):
+    def save_all_the(self, typename:str, intodir:str, detail:bool=False, callback=None):
         '''
         #### 保存reource类中所有的某个类型的文件
         :param typename: 类型名称;
         :param intodir:  保存目的地的目录;
         :param detail:   是否回显详细信息;
+        :param callback: 每保存一个文件后的回调函数;
         :returns:        (int) 已保存的文件数;
         '''
         cont = 0
@@ -103,12 +96,13 @@ class resource:
                     data = j[3](i) #内容提取
                     if j[4](data, intodir, i.name, j[2]): #安全保存
                         cont += 1
+                        if callback:
+                            callback()
                 break
         if detail and cont:
             print(f'{color(6)}  成功导出 {cont}\t{typename}')
         return cont
 
-    @classmethod
     def rename_spine_images(self):
         '''
         #### 重命名小人图片文件
@@ -129,7 +123,6 @@ class resource:
             self.__rename_add_suffix(self.texture2ds,spines[i],'_#'+str(i))
         return len(spines)
 
-    @classmethod
     def rename_spine_texts(self):
         '''
         #### 重命名小人文本文件（包括.skel和.atlas）
@@ -192,7 +185,7 @@ class resource:
     #EndClass
 
 
-def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, detail:bool):
+def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, callback=None, subcallback=None):
     '''
     #### 解包ab文件env实例
     更新内容：解决了战斗小人正背面导出紊乱的问题
@@ -201,48 +194,39 @@ def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, detail:bool
     :param doimg:   是否导出图片资源;
     :param dotxt:   是否导出文本资源;
     :param doaud:   是否导出音频资源;
-    :param detail:  是否回显详细信息;
-    :returns:       (int) 已导出的文件数;
+    :param callback:完成后的回调函数，默认None;
+    :param subcallback:每导出一个文件后的回调函数，默认None;
+    :returns:       (None);
     '''
     mkdir(intodir)
     cont_obj = len(env.objects)
-    if detail:
-        print(f'{color(2)}  找到了 {cont_obj} 个资源，正在处理...')
     if cont_obj > 2000:
         print(f'{color(6)}  提示：此文件包含资源较多，用时可能较长')
     elif cont_obj == 0:
-        return 0
-    cont_s = 0 #已导出资源计数
+        return
     ###
     reso = resource(env)
     try:
-        succ = reso.rename_spine_images()
-        if detail:
-            print(f'{color(2)}  BattileSpineImgs: {succ}')
-        succ = reso.rename_spine_texts()
-        if detail:
-            print(f'{color(2)}  BattelSkel&Atlas: {succ}')
+        reso.rename_spine_images()
+        reso.rename_spine_texts()
         ###
         if doimg:
-            cont_s += reso.save_all_the('Sprite', intodir, detail)
-            cont_s += reso.save_all_the('Texture2D', intodir, detail)
+            reso.save_all_the('Sprite', intodir, False, subcallback)
+            reso.save_all_the('Texture2D', intodir, False, subcallback)
         if dotxt:
-            cont_s += reso.save_all_the('TextAsset', intodir, detail)
+            reso.save_all_the('TextAsset', intodir, False, subcallback)
         if doaud:
-            cont_s += reso.save_all_the('AudioClip', intodir, detail)
+            reso.save_all_the('AudioClip', intodir, False, subcallback)
     except BaseException as arg:
         #错误反馈
         print(f'{color(1)}  意外错误：{arg}')
-        input(f'  按下回车键以跳过此文件并继续任务...')
-    ###
-    if detail:
-        print(f'{color(2)}  导出了 {cont_s} 个文件{color(7)}')
-    return cont_s
+    if callback:
+        callback()
         
 
 ########## Main-主程序 ##########
 def main(rootdir:list, destdir:str, dodel:bool=False, 
-    doimg:bool=True, dotxt:bool=True, doaud:bool=True, detail:bool=True, separate:bool=True):
+    doimg:bool=True, dotxt:bool=True, doaud:bool=True, separate:bool=True):
     '''
     #### 批量地从指定目录的ab文件中，导出指定类型的资源
     :param rootdir: 包含来源文件夹们的路径的列表;
@@ -251,7 +235,6 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
     :param doimg:   是否导出图片资源，默认True;
     :param dotxt:   是否导出文本资源，默认True;
     :param doaud:   是否导出音频资源，默认True;
-    :param detail:  是否回显详细信息，默认True，否则回显进度条;
     :param separate:是否按AB文件分类保存，默认True;
     :returns: (None);
     '''
@@ -262,56 +245,59 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
         flist += get_filelist(i)
     flist = list(filter(lambda x:ospath.splitext(x)[1] in ['.ab','.AB'], flist)) #初筛
     
-    cont_f = 0 #已解包文件计数
     cont_p = 0 #进度百分比计数
-    cont_s_sum = 0 #已导出文件计数（累加）
     if dodel:
         Delete_File_Dir(destdir) #慎用，会预先删除目的地目录的所有内容
     mkdir(destdir)
+    Cprogs = Counter()
+    Cfiles = Counter()
+    TC = ThreadCtrl(8)
     TR = TimeRecorder(len(flist))
 
-    if detail:
-        print(f'{color(7,0,1)}开始批量解包!\n{color(7)}')
     t1=time.time() #计时器开始
 
     for i in flist:
         #递归处理各个文件(i是文件的路径名)
-        TR.update()
-        cont_p = round((TR.n_cur/TR.n_dest)*100,1)
         if not ospath.isfile(i):
             continue #跳过目录等非文件路径
-        cont_f += 1
-        ###
-        if detail:
-            #显示模式A：流式
-            print(f'{color(7)}{os.path.dirname(i)}')
-            print(f'[{ospath.basename(i)}]')
-        else:
-            #显示模式B：简洁
-            os.system('cls')
-            print(f'{color(7)}正在批量解包...')
-            print(f'|{"■"*int(cont_p//5)}{"□"*int(20-cont_p//5)}| {color(2)}{cont_p}%{color(7)}')
-            print(f'当前目录：\t{ospath.dirname(i)}')
-            print(f'当前文件：\t{ospath.basename(i)}')
-            print(f'累计解包：\t{cont_f-1}')
-            print(f'累计导出：\t{cont_s_sum}')
-            print(f'剩余时间：\t{round(TR.getRemainingTime(),1)}min\n')
+        os.system('cls')
+        print(
+f'''{color(7)}正在批量解包...
+|{"■"*int(cont_p//5)}{"□"*int(20-cont_p//5)}| {color(2)}{cont_p}%{color(7)}
+当前目录：\t{ospath.dirname(i)}
+当前文件：\t{ospath.basename(i)}
+累计解包：\t{Cprogs.get_sum()}
+累计导出：\t{Cfiles.get_sum()}
+剩余时间：\t{round(TR.getRemainingTime(),1)}min
+''')
         ###
         Ue = UpyLoad(i) #ab文件实例化
         curdestdir = os.path.join(destdir, ospath.dirname(i), ospath.splitext(ospath.basename(i))[0]) \
             if separate else os.path.join(destdir, ospath.dirname(i))
-        cont_s_sum += ab_resolve(Ue, curdestdir, doimg, dotxt, doaud, detail)
-        ###
-        if detail and cont_f % 25 == 0:
-            print(f'{color(7,0,1)}■ 已累计解包{cont_f}个文件 ({cont_p}%)')
-            print(f'■ 已累计导出{cont_s_sum}个文件')
+        TC.run_subthread(ab_resolve,(Ue, curdestdir, doimg, dotxt, doaud), \
+            {'callback': Cprogs.update, 'subcallback': Cfiles.update})
+        TR.update()
+        cont_p = round((TR.n_cur/TR.n_dest)*100,1)
+
+    RD = rounder()
+    while TC.count_subthread():
+        #等待子进程结束
+        os.system('cls')
+        print(
+f'''{color(7)}正在批量解包...
+|正在等待子进程结束| {color(2)}{RD.next()}{color(7)}
+剩余进程：\t{TC.count_subthread()}
+累计解包：\t{Cprogs.get_sum()}
+累计导出：\t{Cfiles.get_sum()}
+剩余时间：\t--
+''')
+        time.sleep(0.2)
 
     t2=time.time() #计时器结束
-    if not detail:
-        os.system('cls')
+    os.system('cls')
     print(f'{color(7,0,1)}\n批量解包结束!')
-    print(f'  累计解包 {cont_f} 个文件')
-    print(f'  累计导出 {cont_s_sum} 个文件')
+    print(f'  累计解包 {Cprogs.get_sum()} 个文件')
+    print(f'  累计导出 {Cfiles.get_sum()} 个文件')
     print(f'  此项用时 {round(t2-t1, 1)} 秒{color(7)}')
     time.sleep(2)
 
