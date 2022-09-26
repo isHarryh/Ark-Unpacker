@@ -9,9 +9,11 @@ This project only supports Chinese docs. If you are an English user, feel free t
 ## 介绍 <sub>Intro</sub>
 #### 实现的功能
 1. 批量解包UnityAB文件中的图片、文本、音频
+    1. 解包时对战斗小人的正背面的文件进行初步区分
+    2. 解包时可以将文件按AB文件名分目录存放
 2. 批量合并RGB通道图和A通道图
-3. 对战斗小人的正背面的文件进行初步区分
-4. 提供命令行式的人性化界面实现上述的功能
+3. 提供命令行式的人性化界面实现上述的功能
+4. 支持且默认以多线程模式运行（默认8线程）
 
 #### 更新日志
 想了解此版本的ArkUnpacker的新特性？
@@ -161,13 +163,12 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
     '''
 
 # File: src/CombineRGBwithA.py
-def main(rootdir:list, destdir:str, dodel:bool=False, detail:bool=True):
+def main(rootdir:list, destdir:str, dodel:bool=False):
     '''
     #### 批量地从指定目录中，找到名称相互匹配的RGB通道图和A通道图，然后合并图片后保存到另一目录
     :param rootdir: 包含来源文件夹们的路径的列表;
     :param destdir: 解包目的地的根目录的路径;
     :param dodel:   预先删除目的地文件夹的所有文件，默认False;
-    :param detail:  是否回显详细信息，默认True，否则回显进度条;
     :returns: (None);
     '''
 ```

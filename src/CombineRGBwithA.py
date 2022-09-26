@@ -191,7 +191,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False):
     mkdir(destdir)
     Cprogs = Counter()
     Cfiles = Counter()
-    TC = ThreadCtrl(1)
+    TC = ThreadCtrl(8)
     TR = TimeRecorder(len(flist))
 
     t1=time.time() #计时器开始
