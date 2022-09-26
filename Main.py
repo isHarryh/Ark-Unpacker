@@ -90,7 +90,7 @@ def run_quickaccess():
     ###
     prt_subtitle('步骤2|合并图片')
     time.sleep(1)
-    AU_Cb.main([destdir],f'Combined_{int(time.time())}',detail=False)
+    AU_Cb.main([destdir],f'Combined_{int(time.time())}')
 
 def run_costm_Rs():
     '''
@@ -161,14 +161,9 @@ def run_costm_Cb():
         dodel = input(f'{color(2)}> ')
         dodel = True if dodel in ['y','Y'] else False
     ###
-    print(f'{color(7)}\n您希望的回显模式是？')
-    print(f'{color(3)}  y=详细，n=简洁(默认)')
-    detail = input(f'{color(2)}> ')
-    detail = True if detail in ['y','Y'] else False
-    ###
     input(f'{color(2)}\n再按一次回车以开始任务...')
     os.system('title ArkUnpacker - Processing')
-    AU_Cb.main([rootdir],destdir,dodel,detail)
+    AU_Cb.main([rootdir],destdir,dodel)
 
 
 if __name__ == '__main__':
