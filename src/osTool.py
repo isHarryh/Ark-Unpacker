@@ -40,13 +40,19 @@ def mkdir(path:str, echo:bool=False):
     '''
     path = path.strip().strip('/').rstrip('\\')
     if not os.path.exists(path):
-        os.makedirs(path)
-        if echo:
-            if len(path) > 24:
-                print(f'  目录已创建 ...{path[-20:]}')
-            else:
-                print(f'  目录已创建 {path}')
-        return True
+        try:
+            os.makedirs(path)
+            if echo:
+                if len(path) > 24:
+                    print(f'  目录已创建 ...{path[-20:]}')
+                else:
+                    print(f'  目录已创建 {path}')
+            return True
+        except:
+            #错误
+            if echo:
+                print("  目录创建失败")
+            return False
     else:
         #目录已存在
         return False
