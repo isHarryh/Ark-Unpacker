@@ -226,7 +226,7 @@ def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, callback=No
 
 ########## Main-主程序 ##########
 def main(rootdir:list, destdir:str, dodel:bool=False, 
-    doimg:bool=True, dotxt:bool=True, doaud:bool=True, separate:bool=True):
+    doimg:bool=True, dotxt:bool=True, doaud:bool=True, separate:bool=True, threads:int=8):
     '''
     #### 批量地从指定目录的ab文件中，导出指定类型的资源
     :param rootdir: 包含来源文件夹们的路径的列表;
@@ -236,6 +236,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
     :param dotxt:   是否导出文本资源，默认True;
     :param doaud:   是否导出音频资源，默认True;
     :param separate:是否按AB文件分类保存，默认True;
+    :param threads: 最大线程数，默认8;
     :returns: (None);
     '''
     print(color(7,0,1)+"\n正在解析目录..."+color(7))
@@ -251,7 +252,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
     mkdir(destdir)
     Cprogs = Counter()
     Cfiles = Counter()
-    TC = ThreadCtrl(8)
+    TC = ThreadCtrl(threads if threads >= 1 else 1)
     TR = TimeRecorder(len(flist))
 
     t1=time.time() #计时器开始
@@ -300,9 +301,3 @@ f'''{color(7)}正在批量解包...
     print(f'  累计导出 {Cfiles.get_sum()} 个文件')
     print(f'  此项用时 {round(t2-t1, 1)} 秒{color(7)}')
     time.sleep(2)
-
-'''
-#测试相关：
-Ue = UpyLoad('')
-ab_resolve(Ue, 'temp', True, True, False, True, True)
-'''

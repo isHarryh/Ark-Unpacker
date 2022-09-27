@@ -85,7 +85,7 @@ def showimg(fp:str):
     IM = Image.open(fp)
     IM.show()
 
-def similarity(fp_rgb:str, fp_a:str, prec:int=100):
+def similarity(fp_rgb:str, fp_a:str, prec:int=150):
     '''
     #### 对比RGB通道图和A通道图的相似度
     :param fp_rgb: RGB通道图的文件路径;
@@ -168,12 +168,13 @@ def image_resolve(fp:str, intodir:str, callback=None, successcallback=None):
 
 
 ########## Main-主程序 ##########
-def main(rootdir:list, destdir:str, dodel:bool=False):
+def main(rootdir:list, destdir:str, dodel:bool=False, threads:int=8):
     '''
     #### 批量地从指定目录中，找到名称相互匹配的RGB通道图和A通道图，然后合并图片后保存到另一目录
     :param rootdir: 包含来源文件夹们的路径的列表;
     :param destdir: 解包目的地的根目录的路径;
     :param dodel:   预先删除目的地文件夹的所有文件，默认False;
+    :param threads: 最大线程数，默认8;
     :returns: (None);
     '''
     print(f'{color(7,0,1)}\n正在解析目录...{color(7)}')
@@ -191,7 +192,7 @@ def main(rootdir:list, destdir:str, dodel:bool=False):
     mkdir(destdir)
     Cprogs = Counter()
     Cfiles = Counter()
-    TC = ThreadCtrl(8)
+    TC = ThreadCtrl(threads if threads >= 1 else 1)
     TR = TimeRecorder(len(flist))
 
     t1=time.time() #计时器开始

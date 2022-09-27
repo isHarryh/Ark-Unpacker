@@ -11,6 +11,7 @@ ArkUnpacker主程序
 '''
 AU_ver='v2.0'
 AU_i18n='zh-CN'
+MAX_THS=21
 
 
 def prt_homepage():
@@ -131,9 +132,14 @@ def run_costm_Rs():
     dotxt = True if 't' in dothem or 'T' in dothem else False
     doaud = True if 'a' in dothem or 'A' in dothem else False
     ###
+    print(f'{color(7)}\n最大线程数（同时执行任务数）：')
+    print('  建议：5-15')
+    ths = input_allow(f'{color(2)}> ', [str(i) for i in range(1,MAX_THS)], '  请重新输入合理的数字\n> ')
+    ths = int(ths)
+    ###
     input(f'{color(2)}\n再按一次回车以开始任务...')
     os.system('title ArkUnpacker - Processing')
-    AU_Rs.main([rootdir],destdir,dodel,doimg,dotxt,doaud,separate)
+    AU_Rs.main([rootdir],destdir,dodel,doimg,dotxt,doaud,separate,ths)
 
 def run_costm_Cb():
     '''
@@ -161,9 +167,14 @@ def run_costm_Cb():
         dodel = input(f'{color(2)}> ')
         dodel = True if dodel in ['y','Y'] else False
     ###
+    print(f'{color(7)}\n最大线程数（同时执行任务数）：')
+    print('  建议：5-15')
+    ths = input_allow(f'{color(2)}> ', [str(i) for i in range(1,MAX_THS)], '  请重新输入合理的数字\n> ')
+    ths = int(ths)
+    ###
     input(f'{color(2)}\n再按一次回车以开始任务...')
     os.system('title ArkUnpacker - Processing')
-    AU_Cb.main([rootdir],destdir,dodel)
+    AU_Cb.main([rootdir],destdir,dodel,ths)
 
 
 if __name__ == '__main__':
