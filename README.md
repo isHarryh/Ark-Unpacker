@@ -97,7 +97,7 @@ This project only supports Chinese docs. If you are an English user, feel free t
 > 输入序号后按回车即可，如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)  
 
 最后，“一键执行”解包完成的文件（如图片、文本、音频）默认放置在`Unpacked_xxxx`文件夹中，合并完成的图片默认放置在`Combined_xxxx`文件夹中。  
-若您选择“自定义资源解包”或“自定义图片合并”，还可以**自定义**解包目标和保存目的地等内容。
+若您选择“自定义资源解包”或“自定义图片合并”，还可以**自定义**解包目标、保存目的地、最大执行线程数等内容。
 
 #### 注意事项
 1. 使用一键执行模式时，不会解包与exe**同一目录**下的ab文件，只会解包**文件夹里的**ab文件。
@@ -149,7 +149,7 @@ CombineRGBwithA.main(['Unpacked'], 'Combined') # (b)
 ```Python
 # File: src/ResolveAB.py
 def main(rootdir:list, destdir:str, dodel:bool=False, 
-    doimg:bool=True, dotxt:bool=True, doaud:bool=True, separate:bool=True):
+    doimg:bool=True, dotxt:bool=True, doaud:bool=True, separate:bool=True, threads:int=8):
     '''
     #### 批量地从指定目录的ab文件中，导出指定类型的资源
     :param rootdir: 包含来源文件夹们的路径的列表;
@@ -159,16 +159,18 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
     :param dotxt:   是否导出文本资源，默认True;
     :param doaud:   是否导出音频资源，默认True;
     :param separate:是否按AB文件分类保存，默认True;
+    :param threads: 最大线程数，默认8;
     :returns: (None);
     '''
 
 # File: src/CombineRGBwithA.py
-def main(rootdir:list, destdir:str, dodel:bool=False):
+def main(rootdir:list, destdir:str, dodel:bool=False, threads:int=8):
     '''
     #### 批量地从指定目录中，找到名称相互匹配的RGB通道图和A通道图，然后合并图片后保存到另一目录
     :param rootdir: 包含来源文件夹们的路径的列表;
     :param destdir: 解包目的地的根目录的路径;
     :param dodel:   预先删除目的地文件夹的所有文件，默认False;
+    :param threads: 最大线程数，默认8;
     :returns: (None);
     '''
 ```
