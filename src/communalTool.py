@@ -163,7 +163,6 @@ class ThreadCtrl():
         ts = Thread(target=fun, args=args, kwargs=kwargs, daemon=False)
         self.__sts.append(ts)
         ts.start()
-        
     #EndClass
 
 class Counter():
@@ -194,6 +193,7 @@ class Counter():
         :returns: (int) Current value;
         '''
         return self.__s
+    #EndClass
 
 class TimeRecorder():
     'Tasking Time Recorder'
@@ -224,6 +224,15 @@ class TimeRecorder():
         self.n_cur += 1
         t_cur = time.time()
         self.t_rec.append([t_cur, t_cur-self.t_rec[len(self.t_rec)-1][0]])
+    
+    def getProgress(self, ndigits:int=1):
+        '''
+        ## Get the progress (%).
+        #### 获取进度百分比
+        :param ndigits: Decimal Digits;
+        :returns: (int);
+        '''
+        return round((self.n_cur/self.n_dest)*100, ndigits)
     
     def getSpeed(self, basis:int=100):
         '''
@@ -262,6 +271,7 @@ class rounder():
     def next(self):
         self.__n = 0 if self.__n >= len(self.char)-1 else self.__n+1
         return self.char[self.__n]
+    #EndClass
 
 def mean(lst:list):
     '''

@@ -278,7 +278,7 @@ f'''{color(7)}正在批量解包...
         TC.run_subthread(ab_resolve,(Ue, curdestdir, doimg, dotxt, doaud), \
             {'callback': Cprogs.update, 'subcallback': Cfiles.update})
         TR.update()
-        cont_p = round((TR.n_cur/TR.n_dest)*100,1)
+        cont_p = TR.getProgress()
 
     RD = rounder()
     while TC.count_subthread():

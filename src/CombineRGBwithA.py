@@ -216,7 +216,7 @@ f'''{color(7)}正在批量解包...
             {'callback': Cprogs.update, 'successcallback': Cfiles.update})
 
         TR.update()
-        cont_p = round((TR.n_cur/TR.n_dest)*100,1)
+        cont_p = TR.getProgress()
 
     RD = rounder()
     while TC.count_subthread():
