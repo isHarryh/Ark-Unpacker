@@ -134,18 +134,34 @@ class ThreadCtrl():
     'Tool for Multi Threading'
 
     def __init__(self, max_subthread):
-        self.max = max_subthread
-        self.sts = []
+        '''
+        ## Initialize a tool for multi threading.
+        #### 初始化一个多线程控制类
+        :param max_subthread: The max number of sub threads;
+        :returns: (none);
+        '''
+        self.__max = max_subthread
+        self.__sts = []
     
     def count_subthread(self):
-        self.sts = list(filter(lambda x:x.is_alive(), self.sts))
-        return len(self.sts)
+        '''
+        ## Get the number of alive sub threads.
+        #### 获取当前存在的子线程数量
+        :returns: (int);
+        '''
+        self.__sts = list(filter(lambda x:x.is_alive(), self.__sts))
+        return len(self.__sts)
     
     def run_subthread(self, fun, args:tuple=(), kwargs:dict={}):
-        while self.count_subthread() >= self.max:
+        '''
+        ## Create a sub thread and run it.
+        #### 创建并运行一个子线程
+        :returns: (none);
+        '''
+        while self.count_subthread() >= self.__max:
             pass
         ts = Thread(target=fun, args=args, kwargs=kwargs, daemon=False)
-        self.sts.append(ts)
+        self.__sts.append(ts)
         ts.start()
         
     #EndClass
@@ -154,13 +170,30 @@ class Counter():
     'Counter'
 
     def __init__(self):
-        self.s = 0
+        '''
+        ## Initialize a counter.
+        #### 初始化一个计数器
+        :returns: (none);
+        '''
+        self.__s = 0
 
-    def update(self, val=1):
-        self.s += val
+    def update(self, val:int=1):
+        '''
+        ## Update the counter.
+        #### 更新计数
+        :param val: Delta value;
+        :returns: (int) Current value;
+        '''
+        self.__s += val
+        return self.__s
     
     def get_sum(self):
-        return self.s
+        '''
+        ## Get the current value.
+        #### 获取当前计数
+        :returns: (int) Current value;
+        '''
+        return self.__s
 
 class TimeRecorder():
     'Tasking Time Recorder'
@@ -172,7 +205,8 @@ class TimeRecorder():
 
     def __init__(self, dest:int):
         '''
-        #### Initialize a Tasking Time Recorder.
+        ## Initialize a Tasking Time Recorder.
+        #### 初始化一个任务时间计数器
         :param dest: The destination value of the task;
         :returns: (none);
         '''
@@ -183,8 +217,8 @@ class TimeRecorder():
 
     def update(self):
         '''
-        #### Update the current value of the task.
-        :param delta: Delta value;
+        ## Update the current value of the task.
+        #### 追加一个时间节点
         :returns: (none);
         '''
         self.n_cur += 1
@@ -193,7 +227,8 @@ class TimeRecorder():
     
     def getSpeed(self, basis:int=100):
         '''
-        #### Get the processing speed.
+        ## Get the processing speed.
+        #### 计算当前任务速度
         :param basis: How many records do we use to calculate the speed;
         :returns: (float) Items per minute;
         '''
@@ -208,7 +243,8 @@ class TimeRecorder():
     
     def getRemainingTime(self, basis:int=100):
         '''
-        #### Get the time remaining.
+        ## Get the time remaining.
+        #### 计算当前剩余时间
         :param basis: How many records do we use to calculate the speed;
         :returns: (float) Minutes;
         '''
@@ -217,9 +253,12 @@ class TimeRecorder():
 
 class rounder():
     'Loading Rounder'
+
     char = ['/','--','\\','|','/','--','\\','|']
+
     def __init__(self):
         self.__n = 0
+
     def next(self):
         self.__n = 0 if self.__n >= len(self.char)-1 else self.__n+1
         return self.char[self.__n]
