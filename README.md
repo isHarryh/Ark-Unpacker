@@ -63,7 +63,8 @@ This project only supports Chinese docs. If you are an English user, feel free t
 > 而在之后的版本中，立绘和基建小人被转移到了`chararts`中存放。
 
 ### 2.下载ArkUnpacker
-为了方便普通用户使用，我们推出了针对`Windows`64位操作系统（暂不支持其他操作系统）的发行版本(Release Version)。它是一个采用文件虚拟化技术打包的可执行文件(`.exe`)，经测试，使用它比直接使用源代码的处理速率提升了接近一倍。下面介绍其使用方法和一些细节：
+为了方便普通用户使用，我们推出了针对`Windows`64位操作系统（暂不支持其他操作系统）的发行版本(Release Version)。它是一个采用文件虚拟化技术打包的可执行文件(`.exe`)，经测试，使用它比直接使用源代码的处理速率提升了接近一倍。
+
 请进入Releases页面下载exe文件“`ArkUnpacker-vx.x.x_x64.exe`”：[前往页面](https://github.com/isHarryh/Ark-Unpacker/releases)
 
 ### 3.必备知识
