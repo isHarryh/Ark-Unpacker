@@ -17,7 +17,24 @@ This project only supports Chinese docs. If you are an English user, feel free t
 2. 优化了图片匹配的精确度：调整了算法的关键参数。
 
 #### 其他
-1. 不再支持流式显示运行时的详细信息，现在都只以简洁模式（进度条模式）回显信息。
+1. 整理了说明文档，建立独立目录`docs`用于存储附加说明文档。
+2. 不再支持流式显示运行时的详细信息，现在都只以简洁模式（进度条模式）回显信息。
+
+#### 测试数据
+本程序在作者的电脑上测试结果如下：
+> 电脑配置  
+> -- Windows 10 (64位)  
+> -- CPU 2.00GHz, RAM 8.00GB  
+> 明日方舟版本  
+> -- Android v1.9.01  
+> 测试内容  
+> -- “一键执行”整个Android文件夹  
+> -- 线程模式：8线程
+> -- 源文件夹：5.19GB(6.8K个文件)  
+> 测试结果  
+> -- 用时：1.5h  
+> -- 资源解包文件夹：13.5GB(61K个文件)  
+> -- 图片合并文件夹：2.04GB(5.8K个文件)  
 
 
 ## v1.2
@@ -35,8 +52,7 @@ This project only supports Chinese docs. If you are an English user, feel free t
 本程序在作者的电脑上测试结果如下：
 > 电脑配置  
 > -- Windows 10 (64位)  
-> -- CPU基频：2.00GHz  
-> -- RAM内存：8.00GB  
+> -- CPU 2.00GHz, RAM 8.00GB  
 > 明日方舟版本  
 > -- Android v1.8.81  
 > 测试内容  
@@ -44,7 +60,6 @@ This project only supports Chinese docs. If you are an English user, feel free t
 > -- 源文件夹：5.06GB(6.6K个文件)  
 > 测试结果  
 > -- 用时：3.0h  
-> -- 错误：未发生  
 > -- 资源解包文件夹：20.1GB(70K个文件)  
 > -- 图片合并文件夹：2.03GB(5.2K个文件)  
 
@@ -82,8 +97,7 @@ This project only supports Chinese docs. If you are an English user, feel free t
 本程序在作者的电脑上测试结果如下：
 > 电脑配置  
 > -- Windows 10 (64位)  
-> -- CPU基频：2.00GHz  
-> -- RAM内存：8.00GB  
+> -- CPU 2.00GHz, RAM 8.00GB  
 > 明日方舟版本  
 > -- Android v1.8.01  
 > 测试内容  
@@ -91,6 +105,5 @@ This project only supports Chinese docs. If you are an English user, feel free t
 > -- 源文件夹：4.74GB(5.9K个文件)  
 > 测试结果  
 > -- 用时：2.5h  
-> -- 错误：未发生  
 > -- 资源解包文件夹：18.4GB(57K个文件)  
 > -- 图片合并文件夹：1.90GB(5.4K个文件)  
