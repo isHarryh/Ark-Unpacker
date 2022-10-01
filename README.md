@@ -34,35 +34,7 @@ This project only supports Chinese docs. If you are an English user, feel free t
 
 最后，将`Android(2)`文件夹里的内容复制到`Android`中，并**覆盖**同名文件，就能得到完整的游戏资源。合并后的文件夹约有5GB大小，在这之后，您就可以使用我们的发行版本或者源代码来解包其中的游戏资源了。
 
-为了方便您找到想要的资源的AB文件，我们整理并列出了各个子目录储存的资源的内容（以安卓`v1.9.01`的明日方舟为例）：
-> **Android**  
-> ├─activity / 活动   
-> ├─arts / 图片  
-> ├─audio / 音频  
-> ├─avg / 剧情图  
-> ├─battle / 战斗相关  
-> ├─building / 基建  
-> ├─chararts / 干员(立绘和基建小人)  
-> ├─charpack / 干员(战斗小人)  
-> ├─config / 配置  
-> ├─crisisseasons / 危机合约  
-> ├─gamedata / 游戏数据  
-> ├─graphics / 图形渲染  
-> ├─hotupdate / 热更新相关  
-> ├─i18n / 多语言(国际化)  
-> ├─npcpack / NPC  
-> ├─prefabs / 预设文件  
-> ├─raw / 未打包文件(例如视频)  
-> ├─retro / 复刻活动  
-> ├─scenes / 关卡  
-> ├─skinpack / 皮肤  
-> ├─spritepack / 图标  
-> └─ui / 用户界面  
-
-提示：
-1. 在明日方舟`v1.8.01`及之前版本中，干员默认皮肤的立绘、基建小人和战斗小人全都位于`charpack`中。而在之后的版本中，立绘和基建小人被转移到了`chararts`中存放。
-2. 解包出的语音包内容取决于您的原始游戏文件。这意味着如果您在游戏里没有下载某个语言的语音包，则不会解包出此语言包。
-3. 解包只是解包AB文件。这意味着像`raw\video\`里的部分非AB文件文件不会放到解包后文件夹中，请在原始文件中查找它们。
+为了方便您找到想要的资源的AB文件，我们整理并列出了各个子目录储存的资源的内容，[前往页面](docs/AssetsGuide.md)以查看详情。
 
 ### 2.下载ArkUnpacker
 为了方便普通用户使用，我们推出了针对`Windows`64位操作系统（暂不支持其他操作系统）的发行版本(Release Version)。它是一个采用文件虚拟化技术打包的可执行文件(`.exe`)，经测试，使用它比直接使用源代码的处理速率提升了接近一倍。
