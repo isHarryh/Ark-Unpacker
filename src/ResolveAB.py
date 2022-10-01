@@ -225,11 +225,11 @@ def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, callback=No
         
 
 ########## Main-主程序 ##########
-def main(rootdir:list, destdir:str, dodel:bool=False, 
+def main(rootdir:str, destdir:str, dodel:bool=False, 
     doimg:bool=True, dotxt:bool=True, doaud:bool=True, separate:bool=True, threads:int=8):
     '''
     #### 批量地从指定目录的ab文件中，导出指定类型的资源
-    :param rootdir: 包含来源文件夹们的路径的列表;
+    :param rootdir: 来源文件夹的根目录的路径;
     :param destdir: 解包目的地的根目录的路径;
     :param dodel:   预先删除目的地文件夹的所有文件，默认False;
     :param doimg:   是否导出图片资源，默认True;
@@ -241,13 +241,14 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
     '''
     print(color(7,0,1)+"\n正在解析目录..."+color(7))
     ospath = os.path
+    rootdir = ospath.normpath(ospath.realpath(rootdir)) #标准化目录名
     flist = [] #目录下所有文件的列表
-    for i in rootdir:
-        flist += get_filelist(i)
+    flist = get_filelist(rootdir)
     flist = list(filter(lambda x:ospath.splitext(x)[1] in ['.ab','.AB'], flist)) #初筛
     
     cont_p = 0 #进度百分比计数
     if dodel:
+        print(color(7,0,1)+"\n正在初始化..."+color(7))
         Delete_File_Dir(destdir) #慎用，会预先删除目的地目录的所有内容
     mkdir(destdir)
     Cprogs = Counter()
@@ -273,7 +274,7 @@ f'''{color(7)}正在批量解包...
 ''')
         ###
         Ue = UpyLoad(i) #ab文件实例化
-        curdestdir = os.path.join(destdir, ospath.dirname(i), ospath.splitext(ospath.basename(i))[0]) \
+        curdestdir = os.path.join(destdir, ospath.normpath(ospath.dirname(i).replace(rootdir,'')), ospath.splitext(ospath.basename(i))[0]) \
             if separate else os.path.join(destdir, ospath.dirname(i))
         TC.run_subthread(ab_resolve,(Ue, curdestdir, doimg, dotxt, doaud), \
             {'callback': Cprogs.update, 'subcallback': Cfiles.update})

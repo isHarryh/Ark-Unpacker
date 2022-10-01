@@ -59,9 +59,9 @@ def input_path(msg:str,excpt:str):
     :param excpt: 输入目录不存在时的提示信息;
     :returns:     (str) 一个合规的输入;
     '''
-    inpt = input(msg)
-    while not (os.path.isdir(inpt)):
-        inpt = input(excpt)
+    inpt = os.path.normpath(input(msg))
+    while not os.path.isdir(inpt):
+            inpt = os.path.normpath(input(excpt))
     return inpt
 
 def get_dirlist(ignore:list=[]):
@@ -87,11 +87,11 @@ def run_quickaccess():
     ###
     prt_subtitle('步骤1|资源解包')
     time.sleep(1)
-    AU_Rs.main(get_dirlist(ignore),destdir)
+    AU_Rs.main('.',destdir)
     ###
     prt_subtitle('步骤2|合并图片')
     time.sleep(1)
-    AU_Cb.main([destdir],f'Combined_{int(time.time())}')
+    AU_Cb.main(destdir,f'Combined_{int(time.time())}')
 
 def run_costm_Rs():
     '''
@@ -139,7 +139,7 @@ def run_costm_Rs():
     ###
     input(f'{color(2)}\n再按一次回车以开始任务...')
     os.system('title ArkUnpacker - Processing')
-    AU_Rs.main([rootdir],destdir,dodel,doimg,dotxt,doaud,separate,ths)
+    AU_Rs.main(rootdir,destdir,dodel,doimg,dotxt,doaud,separate,ths)
 
 def run_costm_Cb():
     '''
@@ -174,7 +174,7 @@ def run_costm_Cb():
     ###
     input(f'{color(2)}\n再按一次回车以开始任务...')
     os.system('title ArkUnpacker - Processing')
-    AU_Cb.main([rootdir],destdir,dodel,ths)
+    AU_Cb.main(rootdir,destdir,dodel,ths)
 
 
 if __name__ == '__main__':
