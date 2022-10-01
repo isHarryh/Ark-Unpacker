@@ -263,7 +263,7 @@ class TimeRecorder():
 class rounder():
     'Loading Rounder'
 
-    char = ['/','--','\\','|','/','--','\\','|']
+    char = ['/','-','\\','|','/','-','\\','|']
 
     def __init__(self):
         self.__n = 0
