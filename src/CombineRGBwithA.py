@@ -180,6 +180,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
     print(f'{color(7,0,1)}\n正在解析目录...{color(7)}')
     ospath = os.path
     rootdir = ospath.normpath(ospath.realpath(rootdir)) #标准化目录名
+    destdir = ospath.normpath(ospath.realpath(destdir)) #标准化目录名
     flist = [] #目录下所有文件的列表
     flist = get_filelist(rootdir)
     flist = list(filter(lambda x:'alpha' in ospath.basename(x), flist)) #初筛
@@ -206,14 +207,15 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
         print(
 f'''{color(7)}正在批量解包...
 |{"■"*int(cont_p//5)}{"□"*int(20-cont_p//5)}| {color(2)}{cont_p}%{color(7)}
-当前目录：\t{ospath.dirname(i)}
+当前目录：\t{ospath.basename(ospath.dirname(i))}
 当前文件：\t{ospath.basename(i)}
 累计处理：\t{Cprogs.get_sum()}
 累计导出：\t{Cfiles.get_sum()}
 剩余时间：\t{round(TR.getRemainingTime(),1)}min
 ''')
         ###
-        TC.run_subthread(image_resolve,(i, ospath.join(destdir, ospath.normpath(ospath.dirname(i).replace(rootdir+ospath.sep,'')))), \
+        subdestdir = ospath.dirname(i).strip(ospath.sep).replace(rootdir, '').strip(ospath.sep)
+        TC.run_subthread(image_resolve,(i, ospath.join(destdir, subdestdir)), \
             {'callback': Cprogs.update, 'successcallback': Cfiles.update})
         TR.update()
         cont_p = TR.getProgress()

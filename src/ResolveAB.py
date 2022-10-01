@@ -242,6 +242,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     print(color(7,0,1)+"\n正在解析目录..."+color(7))
     ospath = os.path
     rootdir = ospath.normpath(ospath.realpath(rootdir)) #标准化目录名
+    destdir = ospath.normpath(ospath.realpath(destdir)) #标准化目录名
     flist = [] #目录下所有文件的列表
     flist = get_filelist(rootdir)
     flist = list(filter(lambda x:ospath.splitext(x)[1] in ['.ab','.AB'], flist)) #初筛
@@ -266,7 +267,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
         print(
 f'''{color(7)}正在批量解包...
 |{"■"*int(cont_p//5)}{"□"*int(20-cont_p//5)}| {color(2)}{cont_p}%{color(7)}
-当前目录：\t{ospath.dirname(i)}
+当前目录：\t{ospath.basename(ospath.dirname(i))}
 当前文件：\t{ospath.basename(i)}
 累计解包：\t{Cprogs.get_sum()}
 累计导出：\t{Cfiles.get_sum()}
@@ -274,8 +275,9 @@ f'''{color(7)}正在批量解包...
 ''')
         ###
         Ue = UpyLoad(i) #ab文件实例化
-        curdestdir = os.path.join(destdir, ospath.normpath(ospath.dirname(i).replace(rootdir,'')), ospath.splitext(ospath.basename(i))[0]) \
-            if separate else os.path.join(destdir, ospath.dirname(i))
+        subdestdir = ospath.dirname(i).strip(ospath.sep).replace(rootdir, '').strip(ospath.sep)
+        curdestdir = os.path.join(destdir, subdestdir, ospath.splitext(ospath.basename(i))[0]) \
+            if separate else os.path.join(destdir, subdestdir)
         TC.run_subthread(ab_resolve,(Ue, curdestdir, doimg, dotxt, doaud), \
             {'callback': Cprogs.update, 'subcallback': Cfiles.update})
         TR.update()
