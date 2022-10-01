@@ -35,11 +35,11 @@ CombineRGBwithA.main(['Unpacked'], 'Combined') # (b)
 以上(a)(b)两个衔接层的函数还有其他可选的参数，具体的用法已在函数声明的代码注释中非常详尽地给出了，如下：
 ```Python
 # File: src/ResolveAB.py
-def main(rootdir:list, destdir:str, dodel:bool=False, 
+def main(rootdir:str, destdir:str, dodel:bool=False, 
     doimg:bool=True, dotxt:bool=True, doaud:bool=True, separate:bool=True, threads:int=8):
     '''
     #### 批量地从指定目录的ab文件中，导出指定类型的资源
-    :param rootdir: 包含来源文件夹们的路径的列表;
+    :param rootdir: 来源文件夹的根目录的路径;
     :param destdir: 解包目的地的根目录的路径;
     :param dodel:   预先删除目的地文件夹的所有文件，默认False;
     :param doimg:   是否导出图片资源，默认True;
@@ -51,10 +51,10 @@ def main(rootdir:list, destdir:str, dodel:bool=False,
     '''
 
 # File: src/CombineRGBwithA.py
-def main(rootdir:list, destdir:str, dodel:bool=False, threads:int=8):
+def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
     '''
     #### 批量地从指定目录中，找到名称相互匹配的RGB通道图和A通道图，然后合并图片后保存到另一目录
-    :param rootdir: 包含来源文件夹们的路径的列表;
+    :param rootdir: 来源文件夹的根目录的路径;
     :param destdir: 解包目的地的根目录的路径;
     :param dodel:   预先删除目的地文件夹的所有文件，默认False;
     :param threads: 最大线程数，默认8;
