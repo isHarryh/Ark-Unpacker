@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, Harry Huang
+# Copyright (c) 2022-2023, Harry Huang
 # @ BSD 3-Clause License
 import os, time
 from src.osTool       import *
@@ -9,7 +9,7 @@ from src import CombineRGBwithA as AU_Cb
 '''
 ArkUnpacker主程序
 '''
-AU_ver='v2.0'
+AU_ver='v2.1'
 AU_i18n='zh-CN'
 MAX_THS=21
 

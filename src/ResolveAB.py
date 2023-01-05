@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022, Harry Huang
+# Copyright (c) 2022-2023, Harry Huang
 # @ BSD 3-Clause License
 import os.path, time
 try:
@@ -263,16 +263,16 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
         #递归处理各个文件(i是文件的路径名)
         if not ospath.isfile(i):
             continue #跳过目录等非文件路径
-        os.system('cls')
-        print(
-f'''{color(7)}正在批量解包...
+        echo = f'''{color(7)}正在批量解包...
 |{"■"*int(cont_p//5)}{"□"*int(20-cont_p//5)}| {color(2)}{cont_p}%{color(7)}
 当前目录：\t{ospath.basename(ospath.dirname(i))}
 当前文件：\t{ospath.basename(i)}
 累计解包：\t{Cprogs.get_sum()}
 累计导出：\t{Cfiles.get_sum()}
 剩余时间：\t{round(TR.getRemainingTime(),1)}min
-''')
+'''
+        os.system('cls')
+        print(echo)
         ###
         Ue = UpyLoad(i) #ab文件实例化
         subdestdir = ospath.dirname(i).strip(ospath.sep).replace(rootdir, '').strip(ospath.sep)

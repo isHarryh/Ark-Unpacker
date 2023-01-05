@@ -1,14 +1,6 @@
-.Env
-.Release
-.vs
-.vscode
-__pycache__
-
-dist/
-build/
-
-test*/
-temp*/
+*/
+!/docs/
+!/src/
 
 *.bat
 *.log
