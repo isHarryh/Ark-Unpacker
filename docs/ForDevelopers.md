@@ -1,9 +1,9 @@
 ArkUnpacker附加说明文档
-# 开发者须知
+# 开发者指引
 
 如果您是高级用户或开发者，希望实现一些额外功能，以下内容可能会帮助到你：  
 
-### 依赖
+## 依赖
 源代码使用**Python3**编写和调试，您需要先安装[Python](https://www.python.org/downloads)。  
 另外，本项目依赖于以下**外部库**，调试前请确保您已安装过：
 * [UnityPy](https://github.com/K0lb3/UnityPy)
@@ -14,7 +14,7 @@ ArkUnpacker附加说明文档
 pip install unitypy -i https://mirrors.aliyun.com/pypi/simple
 ```
 
-### 原理
+## 原理
 本项目的代码结构分为4个层次：
 * 表现层（`Main.py`）
 * 衔接层（`ResolveAB.py和CombineRGBwithA.py`中的`Main`函数）
@@ -23,7 +23,7 @@ pip install unitypy -i https://mirrors.aliyun.com/pypi/simple
 
 当您运行了`Main.py`时表现层会负责显示出操作提示。在您向表现层输入指令后，表现层会调用衔接层来完成指令。衔接层负责批量地调用操作层函数，而操作层负责底层的文件处理。此外，前三个层都有调用辅助层的通用函数。
 
-### 示例
+## 示例
 如果您不想使用我们的表现层的功能，只想利用衔接层甚至操作层中的代码，来实现一些您自定义的功能，您可以在您的程序中这样写：
 ```Python
 from src import ResolveAB

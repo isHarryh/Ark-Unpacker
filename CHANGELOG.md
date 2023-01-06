@@ -2,8 +2,13 @@
 ==========
 This project only supports Chinese docs. If you are an English user, feel free to contact us.
 
+## v2.1
+#### 新增
+1. (重要) 支持新功能“ArkModels提取与分拣工具”，详情参见[附加文档](docs/ArkModelsRepoKit.md)。
+
+
 ## v2.0
-此版本发生了革命性的变化
+> 此版本发生了革命性的变化
 #### 新增
 1. (重要) 支持且默认以多线程模式运行资源解包和图片合并。多线程以增加单位时间内的CPU占用率为代价，极大地提升了运行速度。
 > 速度对比 / 2.0 VS 1.2  
