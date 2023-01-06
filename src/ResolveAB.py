@@ -131,14 +131,16 @@ class resource:
         :returns: (int);
         '''
         ##基建小人
+        '''
         build = []
         for i in range(len(self.textassets)):
             #(i是单个TextAsset对象的索引)
             iname = self.textassets[i].name
             if 'build_char_' == iname[:10]:
                 build.append(i)
-        for i in range(len(build)):
-            self.__rename_add_prefix(self.textassets,build[i],'Building\\')
+        for i in build:
+            self.__rename_add_prefix(self.textassets,i,'Building'+os.path.sep)
+        '''
         ##战斗小人
         ##在MonoBehaviour中筛选出SkelData并读取
         datas = [] #[Idx:SkelData,Idx:Skel,Idx:AtlasData,Idx:Atlas,Front/Back]
@@ -178,9 +180,9 @@ class resource:
                     data[4] = 'Front' if ct_f >= ct_b else 'Back'
                     datas[k] = data
                     ##重命名Skel
-                    self.__rename_add_prefix(self.textassets,datas[k][1],'Battle'+datas[k][4]+'\\')
+                    self.__rename_add_prefix(self.textassets,datas[k][1],'Battle'+datas[k][4]+os.path.sep)
                     ##重命名Atlas
-                    self.__rename_add_prefix(self.textassets,datas[k][3],'Battle'+datas[k][4]+'\\')
+                    self.__rename_add_prefix(self.textassets,datas[k][3],'Battle'+datas[k][4]+os.path.sep)
         return len(datas)
     #EndClass
 

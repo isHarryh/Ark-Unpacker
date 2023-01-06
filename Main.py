@@ -6,6 +6,8 @@ from src.osTool       import *
 from src.colorTool    import *
 from src import ResolveAB       as AU_Rs
 from src import CombineRGBwithA as AU_Cb
+from src import CollectModels   as AU_Cm
+from src import ModelsDataDist  as AU_Mdd
 '''
 ArkUnpacker主程序
 '''
@@ -24,8 +26,8 @@ def prt_homepage():
     print(f'{color(7,0,1)}欢迎使用ArkUnpacker {AU_ver}')
     print('='*20)
     print(f'{color(7)}模式选择：{color(6)}')
-    print('1: 一键执行\n2: 自定义资源解包\n3: 自定义图片合并\n0: 退出')
-    print(f'{color(7)}输入序号后按回车即可，\n如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker/')
+    print('1: 一键执行\n2: 自定义资源解包\n3: 自定义图片合并\n4: ArkModels提取与分拣工具\n0: 退出')
+    print(f'{color(7)}输入序号后按回车即可，\n如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker ')
 
 def prt_subtitle(msg:str):
     '''
@@ -38,6 +40,13 @@ def prt_subtitle(msg:str):
     print(f'{color(7,0,1)}{"="*10}')
     print(msg)
     print(f'{"="*10}\n{color(7)}')
+
+def prt_continue():
+    '''
+    #### 打印按任意键返回的信息
+    :returns: (none);
+    '''
+    input(f'{color(2)}\n按任意键返回')
 
 def input_allow(msg:str,allow:list,excpt:str):
     '''
@@ -132,7 +141,7 @@ def run_costm_Rs():
     dotxt = True if 't' in dothem or 'T' in dothem else False
     doaud = True if 'a' in dothem or 'A' in dothem else False
     ###
-    print(f'{color(7)}\n最大线程数（同时执行任务数）：')
+    print(f'{color(7)}\n请指定最大线程数（同时执行任务数）：')
     print('  建议：5-15')
     ths = input_allow(f'{color(2)}> ', [str(i) for i in range(1,MAX_THS)], '  请重新输入合理的数字\n> ')
     ths = int(ths)
@@ -167,7 +176,7 @@ def run_costm_Cb():
         dodel = input(f'{color(2)}> ')
         dodel = True if dodel in ['y','Y'] else False
     ###
-    print(f'{color(7)}\n最大线程数（同时执行任务数）：')
+    print(f'{color(7)}\n请指定最大线程数（同时执行任务数）：')
     print('  建议：5-15')
     ths = input_allow(f'{color(2)}> ', [str(i) for i in range(1,MAX_THS)], '  请重新输入合理的数字\n> ')
     ths = int(ths)
@@ -176,6 +185,102 @@ def run_costm_Cb():
     os.system('title ArkUnpacker - Processing')
     AU_Cb.main(rootdir,destdir,dodel,ths)
 
+def run_arkmodels_unpacking():
+    '''
+    #### 以ArkModels仓库的标准执行Spine模型提取
+    :returns: (none);
+    '''
+    prt_subtitle('ArkModels 模型提取')
+    ###
+    dirs = ['chararts', 'skinpack']
+    destdir1 = "unpacked_temp_for_arkmodels"
+    destdir2 = "combined_temp_for_arkmodels"
+    for i in dirs:
+        if not os.path.exists(i):
+            print(f'{color(3)}在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是本程序版本与您的资源版本不再兼容，可尝试获取新版程序。{color(7)}')
+            return
+    ###
+    print(f'{color(7)}请指定最大线程数（同时执行任务数）：')
+    print('  建议：5-15')
+    ths = input_allow(f'{color(2)}> ', [str(i) for i in range(1,MAX_THS)], '  请重新输入合理的数字\n> ')
+    ths = int(ths)
+    ###
+    input(f'{color(2)}\n准备就绪，再按一次回车以开始任务...')
+    os.system('title ArkUnpacker - Processing')
+    ###
+    Delete_File_Dir(destdir1)
+    for i in dirs:
+        AU_Rs.main(i,destdir1,doaud=False,threads=ths)
+    ###
+    Delete_File_Dir(destdir2)
+    AU_Cb.main(destdir1,destdir2,threads=ths)
+
+def run_arkmodels_filtering():
+    '''
+    #### 以ArkModels仓库的标准执行Spine模型文件分拣
+    :returns: (none);
+    '''
+    prt_subtitle('ArkModels 文件分拣')
+    ###
+    destdir0 = "models"
+    destdir1 = "unpacked_temp_for_arkmodels"
+    destdir2 = "combined_temp_for_arkmodels"
+    for i in [destdir1,destdir2]:
+        if not os.path.exists(i):
+            print(f'{color(3)}在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是您事先没有进行"模型提取"的步骤。{color(7)}')
+            return
+    Delete_File_Dir(destdir0)
+    AU_Cm.sort_oper_build(destdir0,os.path.join(destdir2),os.path.join(destdir1),dele=False)
+    ###
+    print(f'{color(2)}\n任务执行完毕')
+    print(f'{color(7)}\n您希望删除分拣前的解包文件吗？')
+    print(f'{color(3)}  y=是，n=否(默认)')
+    if input() in ['y','Y']:
+        Delete_File_Dir(destdir1)
+        Delete_File_Dir(destdir2)
+
+def run_arkmodels_data_dist():
+    '''
+    #### 以ArkModels仓库的标准生成Spine模型数据集
+    此功能专门服务于ArkModels仓库（一个存储明日方舟Spine模型的仓库）。
+    :returns: (none);
+    '''
+    prt_subtitle('ArkModels 生成数据集')
+    ###
+    dir = "models"
+    if not os.path.exists(dir):
+        input(f'{color(3)}在工作目录下找不到 {dir}，请确认您先前已运行了"文件分拣"。按Enter以忽略此错误继续。{color(7)}')
+    AU_Mdd.main()
+
+def run_arkmodels_workflow():
+    '''
+    #### 进入ArkModels提取与分拣工具的页面
+    此功能专门服务于ArkModels仓库（一个存储明日方舟Spine模型的仓库）。
+    :returns: (none);
+    '''
+    def prt_arkmodels_menu():
+        os.system('cls')
+        os.chdir('.')
+        print(f'{color(7,0,1)}ArkModels提取与分拣工具')
+        print('='*20)
+        print(f'{color(7)}ArkModels是作者建立的明日方舟Spine模型仓库（https://github.com/isHarryh/Ark-Models）\n以下功能专门为ArkModels仓库的更新而设计，开始工作流程前需要将skinpack和chararts文件夹放到程序所在目录。\n执行步骤选择：{color(6)}')
+        print('1: 提取模型\n2: 文件分拣\n3: 生成数据集\n0: 返回')
+        print(f'{color(7)}输入序号后按回车即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker ')
+    while True:
+        os.system('title ArkUnpacker')
+        prt_arkmodels_menu()
+        order = input(f'{color(2)}> ')
+        if order == '1':
+            run_arkmodels_unpacking()
+            prt_continue()
+        elif order == '2':
+            run_arkmodels_filtering()
+            prt_continue()
+        elif order == '3':
+            run_arkmodels_data_dist()
+            prt_continue()
+        elif order == '0':
+            return
 
 if __name__ == '__main__':
     while True:
@@ -184,12 +289,14 @@ if __name__ == '__main__':
         order = input(f'{color(2)}> ')
         if order == '1':
             run_quickaccess()
-            input(f'{color(2)}\n按任意键返回')
+            prt_continue()
         elif order == '2':
             run_costm_Rs()
-            input(f'{color(2)}\n按任意键返回')
+            prt_continue()
         elif order == '3':
             run_costm_Cb()
-            input(f'{color(2)}\n按任意键返回')
+            prt_continue()
+        elif order == '4':
+            run_arkmodels_workflow()
         elif order == '0':
             exit()
