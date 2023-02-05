@@ -2,14 +2,14 @@
 # Copyright (c) 2022-2023, Harry Huang
 # @ BSD 3-Clause License
 import os, time
-from typing import ClassVar
 try:
     from osTool import *
 except:
     from .osTool import *
 from io import BytesIO
+from datetime import datetime
 from PIL import Image #PIL库用于操作图像
-from threading import Thread, enumerate, Event #threading库用于进行多线程
+from threading import Thread #threading库用于进行多线程
 '''
 为ArkUnpacker提供一些可复用的代码
 '''
@@ -198,11 +198,6 @@ class Counter():
 class TimeRecorder():
     'Tasking Time Recorder'
 
-    t_init = 0
-    t_rec = [] #[curVal,curTime,Time(Seconds)OfEach]
-    n_dest = 0
-    n_cur = 0
-
     def __init__(self, dest:int):
         '''
         ## Initialize a Tasking Time Recorder.
@@ -211,7 +206,7 @@ class TimeRecorder():
         :returns: (none);
         '''
         self.t_init = time.time()
-        self.t_rec = [[self.t_init, 0]]
+        self.t_rec = [[self.t_init, 0]] #[curTime,Time(Seconds)OfEach]
         self.n_dest = dest
         self.n_cur = 0
 
@@ -273,12 +268,24 @@ class rounder():
         return self.char[self.__n]
     #EndClass
 
+class Logger():
+    'Logger'
+    
+    def __init__(self, log_file_path):
+        self.log_file_path = log_file_path
+    
+    def log(self, tag, msg):
+        rec = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} [{tag}] {msg}\n"
+        with open(self.log_file_path, 'a', encoding='UTF-8') as f:
+            f.write(rec)
+
+
 def mean(lst:list):
     '''
-    ## Get the mean
+    ## Get the mean value of an array
     #### 返回数组平均值
     :param lst: List of values;
-    :returns:   (float) Mean;
+    :returns:   (float) Mean value;
     '''
     if len(lst) == 0:
         return float(0)
@@ -292,7 +299,7 @@ def trimmean(lst:list, percent:float):
     ## Trim extreme values from the both ends of the list and get the mean
     #### 去除数组两极的极端值，返回数组平均值
     :param lst: List of values;
-    :param percent: (float) Ratio of extreme values of one end;
+    :param percent: (float) Ratio of extreme values of each end;
     '''
     if len(lst) == 0:
         return float(0)
@@ -300,7 +307,7 @@ def trimmean(lst:list, percent:float):
         return float(0)
     newlst = lst[:]
     newlst.sort()
-    blocked = int(len(lst) * percent) if len(lst) * percent >= 0 else 0
+    blocked = int(len(lst) * percent)
     newlst = newlst[blocked:-blocked]
     if len(newlst) == 0:
         return mean(lst)

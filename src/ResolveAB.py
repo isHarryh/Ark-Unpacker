@@ -112,12 +112,13 @@ class resource:
         '''
         ##基建小人无需处理
         ##战斗小人
-        spines = []
+        spines = [] #已找到的战斗小人的索引
         for i in range(len(self.texture2ds)):
             #(i是单个Texture2D对象的索引)
             iname = self.texture2ds[i].name
             if len(iname) > 5 and 'char_' == iname[:5] and iname.count('_') == 2:
                 spines.append(i)
+        #目前采用的方法是，将Spine按照path_id的顺序排序后，给其文件名末尾加上_#编号
         spines = sorted(spines, key=lambda x:self.texture2ds[x].path_id)
         for i in range(len(spines)):
             self.__rename_add_suffix(self.texture2ds,spines[i],'_#'+str(i))
@@ -190,7 +191,6 @@ class resource:
 def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, callback=None, subcallback=None):
     '''
     #### 解包ab文件env实例
-    更新内容：解决了战斗小人正背面导出紊乱的问题
     :param env:     UnityPy.load()创建的environment实例;
     :param intodir: 解包目的地的目录;
     :param doimg:   是否导出图片资源;

@@ -4,15 +4,33 @@ ArkUnpacker附加说明文档
 如果您是高级用户或开发者，希望实现一些额外功能，以下内容可能会帮助到你：  
 
 ## 依赖
-源代码使用**Python3**编写和调试，您需要先安装[Python](https://www.python.org/downloads)。  
-另外，本项目依赖于以下**外部库**，调试前请确保您已安装过：
-* [UnityPy](https://github.com/K0lb3/UnityPy)
-* [Pillow](https://github.com/python-pillow/Pillow)
+1. **Python：** 源代码使用**Python3**编写和调试，您需要先安装[Python](https://www.python.org/downloads)。  
+2. **外部库：** 本项目依赖于以下**外部库**，调试前请确保您已安装过：
+    * [UnityPy](https://github.com/K0lb3/UnityPy)
+    * [Pillow](https://github.com/python-pillow/Pillow)
 
-好消息是，只要安装UnityPy就会附带地安装上Pillow，安装命令：
-```
-pip install unitypy -i https://mirrors.aliyun.com/pypi/simple
-```
+    本项目的完整依赖表如下：
+    ```
+    altgraph==0.17
+    Brotli==1.0.9
+    certifi==2021.5.30
+    etcpak==0.9.6
+    future==0.18.2
+    lz4==4.0.0
+    pefile==2021.5.24
+    Pillow==8.4.0
+    pyinstaller==4.5.1
+    pyinstaller-hooks-contrib==2021.3
+    pywin32==301
+    pywin32-ctypes==0.2.0
+    requests==2.26.0
+    texture2ddecoder==1.0.4
+    UnityPy==1.8.9
+    ```
+    通常情况下，只要安装UnityPy就会附带地安装上Pillow，安装命令：
+    ```
+    pip install unitypy -i https://mirrors.aliyun.com/pypi/simple
+    ```
 
 ## 原理
 本项目的代码结构分为4个层次：
@@ -28,8 +46,8 @@ pip install unitypy -i https://mirrors.aliyun.com/pypi/simple
 ```Python
 from src import ResolveAB
 from src import CombineRGBwithA
-ResolveAB.main(['Android'], 'Unpacked') # (a)
-CombineRGBwithA.main(['Unpacked'], 'Combined') # (b)
+ResolveAB.main('Android', 'Unpacked') # (a)
+CombineRGBwithA.main('Unpacked', 'Combined') # (b)
 ```
 
 以上(a)(b)两个衔接层的函数还有其他可选的参数，具体的用法已在函数声明的代码注释中非常详尽地给出了，如下：
