@@ -47,7 +47,7 @@ class resource:
         for i in range(len(objlist)):
             if objlist[i].path_id == pathid:
                 return i
-        return False
+        return -1
 
     def __init__(self, env):
         '''
@@ -59,12 +59,14 @@ class resource:
         self.texture2ds = []
         self.textassets = []
         self.audioclips = []
+        self.materials = []
         self.monobehaviors = []
         self.typelist = [ #[0:类型名称,1:类型列表,2:保存后缀,3:内容提取方法,4:安全保存方法]
             ['Sprite',self.sprites,'.png',self.__get_image,MySaver.save_image],
             ['Texture2D',self.texture2ds,'.png',self.__get_image,MySaver.save_image],
             ['TextAsset',self.textassets,'',self.__get_script,MySaver.save_script],
             ['AudioClip',self.audioclips,'.wav',self.__get_samples,MySaver.save_samples],
+            ['Material',self.materials,'',None,None],
             ['MonoBehaviour',self.monobehaviors,'',None,None]
         ]
         ###
@@ -103,36 +105,15 @@ class resource:
             print(f'{color(6)}  成功导出 {cont}\t{typename}')
         return cont
 
-    def rename_spine_images(self):
+    def rename_battle_spine(self):
         '''
-        #### 重命名小人图片文件
-        明日方舟的战斗界面的小人有正面和背面之分，但是其文件名都一样，此函数将会尝试对其作出区分
-        当前尚未找到准确区分图片文件的方法QwQ
-        :returns: (int);
-        '''
-        ##基建小人无需处理
-        ##战斗小人
-        spines = [] #已找到的战斗小人的索引
-        for i in range(len(self.texture2ds)):
-            #(i是单个Texture2D对象的索引)
-            iname = self.texture2ds[i].name
-            if len(iname) > 5 and 'char_' == iname[:5] and iname.count('_') == 2:
-                spines.append(i)
-        #目前采用的方法是，将Spine按照path_id的顺序排序后，给其文件名末尾加上_#编号
-        spines = sorted(spines, key=lambda x:self.texture2ds[x].path_id)
-        for i in range(len(spines)):
-            self.__rename_add_suffix(self.texture2ds,spines[i],'_#'+str(i))
-        return len(spines)
-
-    def rename_spine_texts(self):
-        '''
-        #### 重命名小人文本文件（包括.skel和.atlas）
-        明日方舟的战斗界面的小人有正面和背面之分，但是其文件名都一样，此函数将会尝试对其作出区分
-        文本文件倒是被我找到了有准确区分的方法:D
+        #### 重命名战斗小人文件（包括Skel/Atlas/Png）
+        明日方舟的战斗界面的小人有正面和背面之分，但是其文件名都一样，此函数将会尝试对其作出区分。
+        思路是先从Atlas文件的内容中判断Atlas的正背面，顺便找到和其相关的Skel的正背面，
+        然后根据Atlas连结的Material对象找到对应的Png纹理。
         :returns: (int);
         '''
         ##基建小人
-        '''
         build = []
         for i in range(len(self.textassets)):
             #(i是单个TextAsset对象的索引)
@@ -141,49 +122,76 @@ class resource:
                 build.append(i)
         for i in build:
             self.__rename_add_prefix(self.textassets,i,'Building'+os.path.sep)
-        '''
         ##战斗小人
         ##在MonoBehaviour中筛选出SkelData并读取
-        datas = [] #[Idx:SkelData,Idx:Skel,Idx:AtlasData,Idx:Atlas,Front/Back]
+        datas = [] #[SkelDataIdx,SkelIdx,AtlasDataIdx,AtlasIdx,isFront]
         for i in range(len(self.monobehaviors)):
             #(i是单个Mono对象的索引)
             iname = self.monobehaviors[i].name
-            if len(iname) > 18 and '_char_' not in iname and iname[-13:] == '_SkeletonData':
-                j = self.monobehaviors[i] #SkelData对象
+            if '_char_' not in iname and iname.endswith('_SkeletonData'):
+                j = self.monobehaviors[i] #SkelData的Mono对象
                 if j.serialized_type.nodes:
-                    #假如可读树状内容
                     tree = j.read_typetree() #Mono的树状内容
                     i_skel = self.__search_in_pathid(self.textassets,
                         tree['skeletonJSON']['m_PathID'])
                     i_atlasdata = self.__search_in_pathid(self.monobehaviors,
                         tree['atlasAssets'][0]['m_PathID'])
                     #至此已找到SkelData,Skel,AtlasData的索引
-                    data = [i,i_skel,i_atlasdata,None,None]
-                    datas.append(data)
+                    datas.append({
+                        'SkelDataIdx': i,
+                        'SkelIdx': i_skel,
+                        'AtlasDataIdx': i_atlasdata
+                        })
+            if iname.endswith('_Atlas'):
+                j = self.monobehaviors[i] #Atlas的Mono对象
+                if j.serialized_type.nodes:
+                    pass
         if len(datas) == 0:
-            return 0
+            return 0 #该文件不含战斗小人文件
         ##读取AtlasData
         for k in range(len(datas)):
             #(k是单个Data的索引)
-            data = datas[k] #Data的副本
-            j = self.monobehaviors[data[2]] #AtlasData对象
+            j = self.monobehaviors[datas[k]['AtlasDataIdx']] #AtlasData对象
             if j.serialized_type.nodes:
-                    #假如可读树状内容
-                    tree = j.read_typetree() #Mono的树状内容
-                    i_atlas = self.__search_in_pathid(self.textassets,
-                        tree['atlasFile']['m_PathID'])
-                    ##读取Atlas并判断Front/Back
-                    atlas = self.textassets[i_atlas].text #Atlas的文本内容
-                    ct_f = atlas.count('F_') + atlas.count('f_')
-                    ct_b = atlas.count('B_') + atlas.count('b_')
-                    #至此又找到了Atlas的索引和Front/Back
-                    data[3] = i_atlas
-                    data[4] = 'Front' if ct_f >= ct_b else 'Back'
-                    datas[k] = data
-                    ##重命名Skel
-                    self.__rename_add_prefix(self.textassets,datas[k][1],'Battle'+datas[k][4]+os.path.sep)
-                    ##重命名Atlas
-                    self.__rename_add_prefix(self.textassets,datas[k][3],'Battle'+datas[k][4]+os.path.sep)
+                tree = j.read_typetree() #Mono的树状内容
+                i_atlas = self.__search_in_pathid(self.textassets,
+                    tree['atlasFile']['m_PathID'])
+                ##读取Atlas并判断Front/Back
+                atlas = self.textassets[i_atlas].text #Atlas的文本内容
+                ct_f = atlas.count('F_') + atlas.count('f_')
+                ct_b = atlas.count('B_') + atlas.count('b_')
+                #至此又找到了Atlas的索引和Front/Back
+                datas[k]['AtlasIdx'] = i_atlas
+                datas[k]['isFront'] = ct_f >= ct_b
+                ##重命名Skel
+                ##TODO 将\\改成随着os而改变的separator
+                self.__rename_add_prefix(self.textassets, datas[k]['SkelIdx'],\
+                    'Battle'+('Front' if datas[k]['isFront'] else 'Back')+'\\')
+                ##重命名Atlas
+                self.__rename_add_prefix(self.textassets, datas[k]['AtlasIdx'],\
+                    'Battle'+('Front' if datas[k]['isFront'] else 'Back')+'\\')
+            if 'AtlasIdx' in datas[k].keys():
+                if j.serialized_type.nodes:
+                    tree = j.read_typetree() #Mono的树状
+                    i_material = self.__search_in_pathid(self.materials, tree['materials'][0]['m_PathID'])
+                    if i_material >= 0:
+                        j = self.materials[i_material]
+                        if j.serialized_type.nodes:
+                            tree = j.read_typetree() #Material的树状内容
+                            tex_envs = tree['m_SavedProperties']['m_TexEnvs']
+                            for l in tex_envs:
+                                if l[0] == '_MainTex':
+                                    datas[k]['RgbIdx'] = self.__search_in_pathid(self.texture2ds, l[1]['m_Texture']['m_PathID'])
+                                if l[0] == '_AlphaTex':
+                                    datas[k]['AlphaIdx'] = self.__search_in_pathid(self.texture2ds, l[1]['m_Texture']['m_PathID'])
+                    if 'RgbIdx' in datas[k].keys() and 'AlphaIdx' in datas[k].keys():
+                        if datas[k]['RgbIdx'] >= 0 and datas[k]['AlphaIdx'] >= 0:
+                            ##重命名RGB图
+                            self.__rename_add_prefix(self.texture2ds, datas[k]['RgbIdx'],\
+                                'Battle'+('Front' if datas[k]['isFront'] else 'Back')+'\\')
+                            ##重命名Alpha图
+                            self.__rename_add_prefix(self.texture2ds, datas[k]['AlphaIdx'],\
+                                'Battle'+('Front' if datas[k]['isFront'] else 'Back')+'\\')
         return len(datas)
     #EndClass
 
@@ -209,8 +217,7 @@ def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, callback=No
     ###
     reso = resource(env)
     try:
-        reso.rename_spine_images()
-        reso.rename_spine_texts()
+        reso.rename_battle_spine()
         ###
         if doimg:
             reso.save_all_the('Sprite', intodir, False, subcallback)
@@ -222,6 +229,7 @@ def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, callback=No
     except BaseException as arg:
         #错误反馈
         print(f'{color(1)}  意外错误：{arg}')
+        #raise(arg) #调试时使用
     if callback:
         callback()
         
