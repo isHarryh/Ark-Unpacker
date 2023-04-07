@@ -33,17 +33,17 @@ class resource:
         return obj.samples.items()
 
     def __rename_add_prefix(self, objlist:list, idx:int, pre:str):
-        #### 私有方法：辅助重命名小人相关文件，前缀
+        #### 私有方法：辅助重命名小人相关文件，为资源名称添加前缀
         tmp = objlist[idx].name
         objlist[idx].name = str(pre+tmp)
 
     def __rename_add_suffix(self, objlist:list, idx:int, suf:str):
-        #### 私有方法：辅助重命名小人相关文件，后缀
+        #### 私有方法：辅助重命名小人相关文件，为资源名称添加后缀
         tmp = objlist[idx].name
         objlist[idx].name = str(tmp+suf)
 
     def __search_in_pathid(self, objlist:list, pathid:int):
-        #### 私有方法：按照路径ID搜索特定对象，返回其索引
+        #### 私有方法：按照路径ID搜索特定对象，返回其索引，未找到返回-1
         for i in range(len(objlist)):
             if objlist[i].path_id == pathid:
                 return i
@@ -147,7 +147,10 @@ class resource:
                 if j.serialized_type.nodes:
                     pass
         if len(datas) == 0:
-            return 0 #该文件不含战斗小人文件
+            return 0 #该文件不含小人文件，跳过
+        if len(datas) > 4:
+            #TODO 进行更加准确的判断
+            return 0 #该文件包含的小人文件过多，可能这是敌方小人的包，跳过
         ##读取AtlasData
         for k in range(len(datas)):
             #(k是单个Data的索引)
@@ -163,13 +166,13 @@ class resource:
                 #至此又找到了Atlas的索引和Front/Back
                 datas[k]['AtlasIdx'] = i_atlas
                 datas[k]['isFront'] = ct_f >= ct_b
+                #TODO 当 ct_f * ct_b = 0 时认定为非战斗小人Spine
                 ##重命名Skel
-                ##TODO 将\\改成随着os而改变的separator
                 self.__rename_add_prefix(self.textassets, datas[k]['SkelIdx'],\
-                    'Battle'+('Front' if datas[k]['isFront'] else 'Back')+'\\')
+                    'Battle'+('Front' if datas[k]['isFront'] else 'Back')+os.path.sep)
                 ##重命名Atlas
                 self.__rename_add_prefix(self.textassets, datas[k]['AtlasIdx'],\
-                    'Battle'+('Front' if datas[k]['isFront'] else 'Back')+'\\')
+                    'Battle'+('Front' if datas[k]['isFront'] else 'Back')+os.path.sep)
             if 'AtlasIdx' in datas[k].keys():
                 if j.serialized_type.nodes:
                     tree = j.read_typetree() #Mono的树状
@@ -188,10 +191,10 @@ class resource:
                         if datas[k]['RgbIdx'] >= 0 and datas[k]['AlphaIdx'] >= 0:
                             ##重命名RGB图
                             self.__rename_add_prefix(self.texture2ds, datas[k]['RgbIdx'],\
-                                'Battle'+('Front' if datas[k]['isFront'] else 'Back')+'\\')
+                                'Battle'+('Front' if datas[k]['isFront'] else 'Back')+os.path.sep)
                             ##重命名Alpha图
                             self.__rename_add_prefix(self.texture2ds, datas[k]['AlphaIdx'],\
-                                'Battle'+('Front' if datas[k]['isFront'] else 'Back')+'\\')
+                                'Battle'+('Front' if datas[k]['isFront'] else 'Back')+os.path.sep)
         return len(datas)
     #EndClass
 
@@ -211,7 +214,8 @@ def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, callback=No
     mkdir(intodir)
     cont_obj = len(env.objects)
     if cont_obj > 2000:
-        print(f'{color(6)}  提示：此文件包含资源较多，用时可能较长')
+        pass #TODO 日志系统优化
+        #print(f'{color(6)}  提示：此文件包含资源较多，用时可能较长')
     elif cont_obj == 0:
         return
     ###

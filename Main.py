@@ -11,9 +11,9 @@ from src import ModelsDataDist  as AU_Mdd
 '''
 ArkUnpacker主程序
 '''
-AU_ver='v2.1'
+AU_ver='v2.2'
 AU_i18n='zh-CN'
-MAX_THS=21
+MAX_THS=32
 
 
 def prt_homepage():
@@ -185,16 +185,13 @@ def run_costm_Cb():
     os.system('title ArkUnpacker - Processing')
     AU_Cb.main(rootdir,destdir,dodel,ths)
 
-def run_arkmodels_unpacking():
+def run_arkmodels_unpacking(dirs, destdir1, destdir2):
     '''
     #### 以ArkModels仓库的标准执行Spine模型提取
     :returns: (none);
     '''
     prt_subtitle('ArkModels 模型提取')
     ###
-    dirs = ['chararts', 'skinpack']
-    destdir1 = "unpacked_temp_for_arkmodels"
-    destdir2 = "combined_temp_for_arkmodels"
     for i in dirs:
         if not os.path.exists(i):
             print(f'{color(3)}在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是本程序版本与您的资源版本不再兼容，可尝试获取新版程序。{color(7)}')
@@ -215,29 +212,26 @@ def run_arkmodels_unpacking():
     Delete_File_Dir(destdir2)
     AU_Cb.main(destdir1,destdir2,threads=ths)
 
-def run_arkmodels_filtering():
+def run_arkmodels_filtering(func, destdir, fromdir1, fromdir2):
     '''
-    #### 以ArkModels仓库的标准执行Spine模型文件分拣
+    #### 以ArkModels仓库的标准执行Spine模型文件分拣（干员基建小人）
     :returns: (none);
     '''
     prt_subtitle('ArkModels 文件分拣')
     ###
-    destdir0 = "models"
-    destdir1 = "unpacked_temp_for_arkmodels"
-    destdir2 = "combined_temp_for_arkmodels"
-    for i in [destdir1,destdir2]:
+    for i in [fromdir1,fromdir2]:
         if not os.path.exists(i):
             print(f'{color(3)}在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是您事先没有进行"模型提取"的步骤。{color(7)}')
             return
-    Delete_File_Dir(destdir0)
-    AU_Cm.sort_oper_build(destdir0,os.path.join(destdir2),os.path.join(destdir1),dele=False)
+    Delete_File_Dir(destdir)
+    func(destdir,os.path.join(fromdir2),os.path.join(fromdir1),dele=False)
     ###
     print(f'{color(2)}\n任务执行完毕')
     print(f'{color(7)}\n您希望删除分拣前的解包文件吗？')
     print(f'{color(3)}  y=是，n=否(默认)')
     if input() in ['y','Y']:
-        Delete_File_Dir(destdir1)
-        Delete_File_Dir(destdir2)
+        Delete_File_Dir(fromdir1)
+        Delete_File_Dir(fromdir2)
 
 def run_arkmodels_data_dist():
     '''
@@ -263,20 +257,26 @@ def run_arkmodels_workflow():
         os.chdir('.')
         print(f'{color(7,0,1)}ArkModels提取与分拣工具')
         print('='*20)
-        print(f'{color(7)}ArkModels是作者建立的明日方舟Spine模型仓库（https://github.com/isHarryh/Ark-Models）\n以下功能专门为ArkModels仓库的更新而设计，开始工作流程前需要将skinpack和chararts文件夹放到程序所在目录。\n执行步骤选择：{color(6)}')
-        print('1: 提取模型\n2: 文件分拣\n3: 生成数据集\n0: 返回')
+        print(f'{color(7)}ArkModels是作者建立的明日方舟Spine模型仓库（https://github.com/isHarryh/Ark-Models）\n以下功能专门为ArkModels仓库的更新而设计，开始工作流程前需要将skinpack，chararts 以及battle/prefabs/enemies文件夹直接放到程序所在目录。\n执行步骤选择：{color(6)}')
+        print('1: 干员基建模型提取\n2: 敌方战斗模型提取\n3: 干员基建模型分拣\n4: 敌方战斗模型分拣\n5: 生成数据集\n0: 返回')
         print(f'{color(7)}输入序号后按回车即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker ')
     while True:
         os.system('title ArkUnpacker')
         prt_arkmodels_menu()
         order = input(f'{color(2)}> ')
         if order == '1':
-            run_arkmodels_unpacking()
+            run_arkmodels_unpacking(['chararts', 'skinpack'], "unpacked_temp_arkmodels", "combined_temp_arkmodels")
             prt_continue()
         elif order == '2':
-            run_arkmodels_filtering()
+            run_arkmodels_unpacking(['enemies'], "unpacked_temp_arkmodels_enemies", "combined_temp_arkmodels_enemies")
             prt_continue()
         elif order == '3':
+            run_arkmodels_filtering(AU_Cm.sort_oper_build, "models", "unpacked_temp_arkmodels", "combined_temp_arkmodels")
+            prt_continue()
+        elif order == '4':
+            run_arkmodels_filtering(AU_Cm.sort_enemy, "models_enemies", "unpacked_temp_arkmodels_enemies", "combined_temp_arkmodels_enemies")
+            prt_continue()
+        elif order == '5':
             run_arkmodels_data_dist()
             prt_continue()
         elif order == '0':
