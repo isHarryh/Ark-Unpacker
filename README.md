@@ -1,10 +1,9 @@
 Ark-Unpacker
 ==========
 A tool that can unpack Arknights AB assets automatically.  
-明日方舟游戏资源批量解包器  
-版本(Version)`v2.1`  
+明日方舟游戏资源批量解包器  **` v2.2 `**  
 
-This project only supports Chinese docs. If you are an English user, feel free to contact us.
+<sup> This project only supports Chinese docs. If you are an English user, feel free to contact us. </sup>
 
 ## 介绍 <sub>Intro</sub>
 #### 实现的功能
@@ -77,8 +76,7 @@ This project only supports Chinese docs. If you are an English user, feel free t
     2. 左键单击小黑窗会进入“文本选取”模式，此时程序会暂停。
     3. 右键单击小黑窗可以粘贴文本。
 4. 如果程序报错或运行结果明显有误，可向我们提交Issue。
-5. 欲查看测试数据，请[查看CHANGELOG](CHANGELOG.md)
-6. 如果您希望了解更多细节或参与贡献，请[查看开发者指引](docs/ForDevelopers.md)
+5. 如果您希望了解更多细节或参与贡献，请[查看开发者指引](docs/ForDevelopers.md)
 
 
 ## 许可证 <sub>License</sub>
