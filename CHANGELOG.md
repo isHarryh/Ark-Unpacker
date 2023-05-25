@@ -1,6 +1,12 @@
 更新日志 / CHANGELOG
 ==========
-This project only supports Chinese docs. If you are an English user, feel free to contact us.
+<sup> This project only supports Chinese docs. If you are an English user, feel free to contact us. </sup>
+
+## v2.3
+#### 新增
+1. (重要) 新增了日志系统。程序运行时会在工作目录保存日志文件，以便后续的检查和故障排除等操作。
+2. (重要) 新增了配置文件。程序启动时会在工作目录读取配置文件，用户可以通过编辑该文件来调整部分设置参数。
+
 
 ## v2.2
 #### 新增
@@ -22,8 +28,8 @@ This project only supports Chinese docs. If you are an English user, feel free t
 2. 支持在自定义模式下用户可以选择最大执行线程数。
 
 #### 优化
-1. 优化了运行时的回显：减少了简洁模式中 `print()` 的调用次数，以提升运行速度。
-2. 优化了图片匹配的精确度：调整了算法的关键参数。
+1. 优化了运行时的回显表现和打印速度。
+2. 优化了图片匹配的精确度，调整了算法的参数。
 
 #### 修复
 1. (重要) 修复了特定情况下保存目的地异常的问题：现在任务目标相对路径含有 `..` 时，也能被正确地保存。
