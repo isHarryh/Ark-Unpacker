@@ -4,6 +4,7 @@
 import os, time
 from src.osTool       import *
 from src.colorTool    import *
+from src.communalTool import *
 from src import ResolveAB       as AU_Rs
 from src import CombineRGBwithA as AU_Cb
 from src import CollectModels   as AU_Cm
@@ -11,9 +12,8 @@ from src import ModelsDataDist  as AU_Mdd
 '''
 ArkUnpacker主程序
 '''
-AU_ver='v2.2'
+AU_ver='v2.3'
 AU_i18n='zh-CN'
-MAX_THS=32
 
 
 def prt_homepage():
@@ -21,6 +21,7 @@ def prt_homepage():
     #### 打印主页
     :returns: (none);
     '''
+    Logger.info("CI: In Homepage.")
     os.system('cls')
     os.chdir('.')
     print(f'{color(7,0,1)}欢迎使用ArkUnpacker {AU_ver}')
@@ -90,23 +91,25 @@ def run_quickaccess():
     #### 启动一键执行模式
     :returns: (none);
     '''
+    Logger.info("CI: Run quick access.")
     os.system('title ArkUnpacker - Processing')
     destdir = f'Unpacked_{int(time.time())}'
     ignore = [".vscode","__pycache__",".git"]
     ###
     prt_subtitle('步骤1|资源解包')
     time.sleep(1)
-    AU_Rs.main('.',destdir)
+    AU_Rs.main('.',destdir,threads=config.get("threads_default"))
     ###
     prt_subtitle('步骤2|合并图片')
     time.sleep(1)
-    AU_Cb.main(destdir,f'Combined_{int(time.time())}')
+    AU_Cb.main(destdir,f'Combined_{int(time.time())}',threads=config.get("threads_default"))
 
 def run_costm_Rs():
     '''
     #### 启动自定义资源解包模式
     :returns: (none);
     '''
+    Logger.info("CI: Customized unpack mode.")
     prt_subtitle('自定义资源解包')
     ###
     print(f'{color(7)}\n请输入要解包的目录后按回车')
@@ -143,7 +146,7 @@ def run_costm_Rs():
     ###
     print(f'{color(7)}\n请指定最大线程数（同时执行任务数）：')
     print('  建议：5-15')
-    ths = input_allow(f'{color(2)}> ', [str(i) for i in range(1,MAX_THS)], '  请重新输入合理的数字\n> ')
+    ths = input_allow(f'{color(2)}> ', [str(i) for i in range(1,config.get('threads_limit'))], '  请重新输入合理的数字\n> ')
     ths = int(ths)
     ###
     input(f'{color(2)}\n再按一次回车以开始任务...')
@@ -155,6 +158,7 @@ def run_costm_Cb():
     #### 启动自定义合并图片模式
     :returns: (none);
     '''
+    Logger.info("CI: Customized image combine mode.")
     prt_subtitle('自定义合并图片')
     ###
     print(f'{color(7)}\n请输入存放图片的目录后按回车')
@@ -178,7 +182,7 @@ def run_costm_Cb():
     ###
     print(f'{color(7)}\n请指定最大线程数（同时执行任务数）：')
     print('  建议：5-15')
-    ths = input_allow(f'{color(2)}> ', [str(i) for i in range(1,MAX_THS)], '  请重新输入合理的数字\n> ')
+    ths = input_allow(f'{color(2)}> ', [str(i) for i in range(1,config.get('threads_limit'))], '  请重新输入合理的数字\n> ')
     ths = int(ths)
     ###
     input(f'{color(2)}\n再按一次回车以开始任务...')
@@ -190,6 +194,7 @@ def run_arkmodels_unpacking(dirs, destdir1, destdir2):
     #### 以ArkModels仓库的标准执行Spine模型提取
     :returns: (none);
     '''
+    Logger.info("CI: ArkModels unpack mode.")
     prt_subtitle('ArkModels 模型提取')
     ###
     for i in dirs:
@@ -199,7 +204,7 @@ def run_arkmodels_unpacking(dirs, destdir1, destdir2):
     ###
     print(f'{color(7)}请指定最大线程数（同时执行任务数）：')
     print('  建议：5-15')
-    ths = input_allow(f'{color(2)}> ', [str(i) for i in range(1,MAX_THS)], '  请重新输入合理的数字\n> ')
+    ths = input_allow(f'{color(2)}> ', [str(i) for i in range(1,config.get('threads_limit'))], '  请重新输入合理的数字\n> ')
     ths = int(ths)
     ###
     input(f'{color(2)}\n准备就绪，再按一次回车以开始任务...')
@@ -217,6 +222,7 @@ def run_arkmodels_filtering(func, destdir, fromdir1, fromdir2):
     #### 以ArkModels仓库的标准执行Spine模型文件分拣（干员基建小人）
     :returns: (none);
     '''
+    Logger.info("CI: ArkModels file filter mode.")
     prt_subtitle('ArkModels 文件分拣')
     ###
     for i in [fromdir1,fromdir2]:
@@ -239,6 +245,7 @@ def run_arkmodels_data_dist():
     此功能专门服务于ArkModels仓库（一个存储明日方舟Spine模型的仓库）。
     :returns: (none);
     '''
+    Logger.info("CI: ArkModels dataset mode.")
     prt_subtitle('ArkModels 生成数据集')
     ###
     dir = "models"
@@ -252,6 +259,7 @@ def run_arkmodels_workflow():
     此功能专门服务于ArkModels仓库（一个存储明日方舟Spine模型的仓库）。
     :returns: (none);
     '''
+    Logger.info("CI: In ArkModels workflow.")
     def prt_arkmodels_menu():
         os.system('cls')
         os.chdir('.')
@@ -283,6 +291,9 @@ def run_arkmodels_workflow():
             return
 
 if __name__ == '__main__':
+    config = Config()
+    Logger.set_instance(config.get('log_file'), config.get('log_level'))
+    Logger.info("Initialized")
     while True:
         os.system('title ArkUnpacker')
         prt_homepage()
@@ -299,4 +310,5 @@ if __name__ == '__main__':
         elif order == '4':
             run_arkmodels_workflow()
         elif order == '0':
+            Logger.info("CI: Program terminating.")
             exit()

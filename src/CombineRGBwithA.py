@@ -31,7 +31,6 @@ def combine_rgb_a(fp_rgb:str, fp_a:str):
     if not (IM1.size == IM2.size):
         #两张图片尺寸不同，对A通道图的尺寸进行缩放
         IM2 = IM2.resize(IM1.size, Image.ANTIALIAS)
-        #print(f'{color(3)}  警告：通道图尺寸不一，已缩放处理')    
     IM3 = Image.new('RGBA', IM1.size) #透明抹除全黑图实例化
     IM4 = IM2.point(lambda x:0 if x>0 else 255) #透明抹除反色图实例化
     IM1.putalpha(IM2) #RGB通道图使用A通道图作为alpha层
@@ -70,15 +69,14 @@ def alpha_resolve(fp:str):
                 #找到了一个疑似的图片
                 spines.append([i,similarity(i,fp)])
     if len(spines) == 0:
+        Logger.warn(f"CombineRGBwithA: No RGB-image could be matched to \"{fp}\"")
         return False #找不到，退出
     elif len(spines) == 1:
         return spines[0][0] #成功，唯一图片的文件路径
     else:
         spines = sorted(spines, key=lambda x:-x[1]) #根据置信度降序排序
-        #print(f'{color(6)}  匹配到 {ospath.basename(spines[0][0])}\n  置信度 {spines[0][1]}')
         if spines[0][1] < 128:
-            pass
-            #print(f'{color(3)}  警告：置信度较低，可能匹配错误')
+            Logger.info(f"CombineRGBwithA: Low confidentiality ({spines[0][1]}) about \"{fp}\" and \"{spines[0][0]}\"")
         return spines[0][0] #成功，返回置信度最高的图片的文件路径
 
 def showimg(fp:str):
@@ -143,16 +141,16 @@ def image_resolve(fp:str, intodir:str, callback=None, successcallback=None):
         return 3 #不是指定的A通道图，退出
     ###
     if not ospath.isfile(fp):
-        print(f'{color(1)}  错误：alpha通道图缺失{color(7)} {fp}')
+        Logger.warn(f"CombineRGBwithA: Alpha-image not found: \"{fp}\"")
         if callback: callback()
         return 4 #找不到对应的A通道图，退出
     if not ospath.isfile(fp2):
-        print(f'{color(1)}  错误：RGB通道图缺失{color(7)} {fp2}')
+        Logger.warn(f"CombineRGBwithA: RGB-image not found: \"{fp}\"")
         if callback: callback()
         return 5 #找不到对应的RGB通道图，退出
-    #print(color(7)+fp2)
     IM = combine_rgb_a(fp2, fp)
     if IM:
+        Logger.debug(f"CombineRGBwithA: \"{fp}\" -> \"{fp2}\"")
         if MySaver.save_image(IM, intodir, real, '.png'): #保存新图
             if callback: callback()
             if successcallback: successcallback()
@@ -161,7 +159,7 @@ def image_resolve(fp:str, intodir:str, callback=None, successcallback=None):
             if callback: callback()
             return 6 #未保存，返回6
     else:
-        print(f'{color(1)}  错误：通道图合成失败{color(7)}')
+        Logger.warn(f"CombineRGBwithA: Failed to combine \"{fp}\" with \"{fp2}\"")
         if callback: callback()
         return -1 #图片合成函数返回了失败的结果，退出
 
@@ -178,6 +176,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
     :returns: (None);
     '''
     print(f'{color(7,0,1)}\n正在解析目录...{color(7)}')
+    Logger.info("CombineRGBwithA: Reading directories...")
     ospath = os.path
     rootdir = ospath.normpath(ospath.realpath(rootdir)) #标准化目录名
     destdir = ospath.normpath(ospath.realpath(destdir)) #标准化目录名
@@ -220,7 +219,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
         TR.update()
         cont_p = TR.getProgress()
 
-    RD = rounder()
+    RD = Rounder()
     while TC.count_subthread():
         #等待子进程结束
         os.system('cls')

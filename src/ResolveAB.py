@@ -11,6 +11,7 @@ except:
     from .colorTool import *
     from .communalTool import *
 from UnityPy import load as UpyLoad #UnityPy库用于操作Unity文件
+from UnityPy import Environment
 '''
 Python批量解包Unity(.ab)资源文件
 明日方舟定制版本
@@ -49,12 +50,15 @@ class resource:
                 return i
         return -1
 
-    def __init__(self, env):
+    def __init__(self, env:Environment):
         '''
         #### 通过传入一个UnityPy.environment实例，初始化一个resource类
         :param env: UnityPy.load()创建的environment实例;
         :returns:   (none);
         '''
+        self.env = env
+        self.name = env.file.name
+        self.length = len(env.objects)
         self.sprites = []
         self.texture2ds = []
         self.textassets = []
@@ -80,7 +84,7 @@ class resource:
                     j[1].append(i.read())
                     break
 
-    def save_all_the(self, typename:str, intodir:str, detail:bool=False, callback=None):
+    def save_all_the(self, typename:str, intodir:str, callback=None):
         '''
         #### 保存reource类中所有的某个类型的文件
         :param typename: 类型名称;
@@ -97,12 +101,11 @@ class resource:
                     #(i是单个object)
                     data = j[3](i) #内容提取
                     if j[4](data, intodir, i.name, j[2]): #安全保存
+                        Logger.debug(f"ResolveAB: \"{self.name}\" -> \"{i.name}{j[2]}\"")
                         cont += 1
                         if callback:
                             callback()
                 break
-        if detail and cont:
-            print(f'{color(6)}  成功导出 {cont}\t{typename}')
         return cont
 
     def rename_battle_spine(self):
@@ -199,7 +202,7 @@ class resource:
     #EndClass
 
 
-def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, callback=None, subcallback=None):
+def ab_resolve(env:Environment, intodir:str, doimg:bool, dotxt:bool, doaud:bool, callback=None, subcallback=None):
     '''
     #### 解包ab文件env实例
     :param env:     UnityPy.load()创建的environment实例;
@@ -212,27 +215,27 @@ def ab_resolve(env, intodir:str, doimg:bool, dotxt:bool, doaud:bool, callback=No
     :returns:       (None);
     '''
     mkdir(intodir)
-    cont_obj = len(env.objects)
-    if cont_obj > 2000:
-        pass #TODO 日志系统优化
-        #print(f'{color(6)}  提示：此文件包含资源较多，用时可能较长')
-    elif cont_obj == 0:
+    reso = resource(env)
+    Logger.debug(f'ResolveAB: "{reso.name}" has {reso.length} objects.')
+    if reso.length >= 10000:
+        Logger.info(f'ResolveAB: Too many objects in file "{reso.name}", unpacking it may take a long time.')
+    elif reso.length == 0:
+        Logger.info(f'ResolveAB: No object in file "{reso.name}", skipped it.')
         return
     ###
-    reso = resource(env)
     try:
         reso.rename_battle_spine()
         ###
         if doimg:
-            reso.save_all_the('Sprite', intodir, False, subcallback)
-            reso.save_all_the('Texture2D', intodir, False, subcallback)
+            reso.save_all_the('Sprite', intodir, subcallback)
+            reso.save_all_the('Texture2D', intodir, subcallback)
         if dotxt:
-            reso.save_all_the('TextAsset', intodir, False, subcallback)
+            reso.save_all_the('TextAsset', intodir, subcallback)
         if doaud:
-            reso.save_all_the('AudioClip', intodir, False, subcallback)
+            reso.save_all_the('AudioClip', intodir, subcallback)
     except BaseException as arg:
         #错误反馈
-        print(f'{color(1)}  意外错误：{arg}')
+        Logger.error(f'ResolveAB: Error occurred while unpacking file "{env.file}": {arg}')
         #raise(arg) #调试时使用
     if callback:
         callback()
@@ -254,6 +257,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     :returns: (None);
     '''
     print(color(7,0,1)+"\n正在解析目录..."+color(7))
+    Logger.info("ResolveAB: Reading directories...")
     ospath = os.path
     rootdir = ospath.normpath(ospath.realpath(rootdir)) #标准化目录名
     destdir = ospath.normpath(ospath.realpath(destdir)) #标准化目录名
@@ -297,7 +301,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
         TR.update()
         cont_p = TR.getProgress()
 
-    RD = rounder()
+    RD = Rounder()
     while TC.count_subthread():
         #等待子进程结束
         os.system('cls')

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2023, Harry Huang
 # @ BSD 3-Clause License
-import os, time
+import os, time, json
 try:
     from osTool import *
 except:
@@ -255,7 +255,7 @@ class TimeRecorder():
         return (self.n_dest-self.n_cur) / self.getSpeed(basis) if self.getSpeed(basis) != 0 else 0
     #EndClass
 
-class rounder():
+class Rounder():
     'Loading Rounder'
 
     char = ['/','-','\\','|','/','-','\\','|']
@@ -269,15 +269,125 @@ class rounder():
     #EndClass
 
 class Logger():
-    'Logger'
+    'Logger class for ArkUnpacker'
+
+    __time_format   = '%Y-%m-%d %H:%M:%S'
+    __file_encoding = 'UTF-8'
+    __instance      = None
+    LV_NONE     = 0
+    LV_ERROR    = 1
+    LV_WARN     = 2
+    LV_INFO     = 3
+    LV_DEBUG    = 4
     
-    def __init__(self, log_file_path):
+    def __init__(self, log_file_path:str, level:int):
+        self.log_level = level
         self.log_file_path = log_file_path
+        self.file = None
+        self.queue = []
+        def loop(self:Logger):
+            while True:
+                try:
+                    if len(self.queue):
+                        t = self.queue.pop(0)
+                        with open(self.log_file_path, 'a', encoding=Logger.__file_encoding) as f:
+                            f.write(t)
+                except BaseException:
+                    pass
+        self.thread = Thread(name=self.__class__.__name__, target=loop, args=(self,), daemon=True)
+        self.thread.start()
     
-    def log(self, tag, msg):
-        rec = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} [{tag}] {msg}\n"
-        with open(self.log_file_path, 'a', encoding='UTF-8') as f:
-            f.write(rec)
+    def __set_level(self, level:int):
+        self.log_level = level
+    
+    def __log(self, tag:str, msg:str):
+        try:
+            self.queue.append(f"{datetime.now().strftime(Logger.__time_format)} [{tag}] {msg}\n")
+            return True
+        except BaseException:
+            return False
+    
+    def __error(self, msg:str):
+        if self.log_level >= Logger.LV_ERROR: self.__log('ERROR', msg)
+    
+    def __warn(self, msg:str):
+        if self.log_level >= Logger.LV_WARN: self.__log('WARN', msg)
+    
+    def __info(self, msg:str):
+        if self.log_level >= Logger.LV_INFO: self.__log('INFO', msg)
+    
+    def __debug(self, msg:str):
+        if self.log_level >= Logger.LV_DEBUG: self.__log('DEBUG', msg)
+    
+    @staticmethod
+    def set_instance(log_file_path:str, level:int=LV_INFO):
+        if not Logger.__instance: Logger.set_instance_override(log_file_path, level)
+
+    @staticmethod
+    def set_instance_override(log_file_path:str, level:int=LV_INFO):
+        Logger.__instance = Logger(log_file_path, level)
+    
+    @staticmethod
+    def set_level(level:int):
+        if Logger.__instance: Logger.__instance.__set_level(level)
+    
+    @staticmethod
+    def log(tag:str, msg:str):
+        if Logger.__instance: Logger.__instance.__log(tag, msg)
+    
+    @staticmethod
+    def error(msg:str):
+        if Logger.__instance: Logger.__instance.__error(msg)
+    
+    @staticmethod
+    def warn(msg:str):
+        if Logger.__instance: Logger.__instance.__warn(msg)
+    
+    @staticmethod
+    def info(msg:str):
+        if Logger.__instance: Logger.__instance.__info(msg)
+    
+    @staticmethod
+    def debug(msg:str):
+        if Logger.__instance: Logger.__instance.__debug(msg)
+
+class Config():
+    'Configuration class for ArkUnpacker'
+
+    __config_path = "ArkUnpackerConfig.json"
+    __file_encoding = 'UTF-8'
+    __default_config = {
+        'log_file': "ArkUnpackerLogs.log",
+        'log_level': Logger.LV_INFO,
+        'threads_limit': 32,
+        'threads_default': 8,
+    }
+    
+    def __init__(self):
+        self.read_config()
+        self.save_config()
+    
+    def get(self, key):
+        return self.config[key] if key in self.config.keys() else None
+    
+    def read_config(self):
+        try:
+            self.config = json.load(open(Config.__config_path, 'r', encoding=Config.__file_encoding)) if os.path.exists(Config.__config_path) else Config.__default_config
+            Logger.set_instance(self.get('log_file'), self.get('log_level'))
+            Logger.info(f"Succeeded in reading config.")
+        except Exception as arg:
+            self.config = Config.__default_config
+            Logger.set_instance(self.get('log_file'), self.get('log_level'))
+            Logger.error(f"Failed to read or initialize config: {arg}")
+    
+    def save_config(self):
+        try:
+            json.dump(self.config, open(self.__config_path, 'w', encoding=Config.__file_encoding), indent=4, ensure_ascii=False)
+            Logger.set_instance(self.get('log_file'), self.get('log_level'))
+            Logger.info(f"Succeeded in saving config.")
+        except Exception as arg:
+            Logger.set_instance(self.get('log_file'), self.get('log_level'))
+            Logger.error(f"Failed to save config: {arg}")
 
 
 def mean(lst:list):

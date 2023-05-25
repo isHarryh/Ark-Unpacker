@@ -16,7 +16,7 @@ def get_curl(url):
             return r.text
         else:
             print(f"\t下载数据错误，返回码：{r.status_code}")
-    except Exception as arg:
+    except BaseException as arg:
         print(f"\t下载数据错误：{arg}")
     return False
 
@@ -198,7 +198,6 @@ def main():
             checksum_fail += 1
             print(f"[{i}] {collection[i]['name']} 是{collection[i]['type']}类型的，但未在脚本预设中找到该类型的存储目录")
     print(f"\n\t校验完成：成功{checksum_total - checksum_fail}，失败{checksum_fail}")
-    print("\t如有预备干员和精英支援干员文件未找到属正常现象。报其他错误或者有其他未找到文件者，可向我们提交Issue查明原因。\n")
 
     print("查询数据源修订版本...")
     d = judge_result(get_curl(src_verdata))
