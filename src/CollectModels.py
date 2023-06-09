@@ -4,8 +4,10 @@
 import os.path, re, shutil
 try:
     from osTool import *
+    from communalTool import *
 except:
     from .osTool import *
+    from .communalTool import *
 '''
 从ArkUnpacker解包出来的文件中筛选出指定Spine模型（ArkModels仓库定制）
 '''
@@ -70,6 +72,7 @@ def sort_oper_build(dest, src_com, src_unp, dele=True, echo=True):
     :param echo: 是否回显进度;
     :returns: (none);
     '''
+    Logger.info(f"CollectModels: From \"{src_com}\" and \"{src_unp}\" to \"{dest}\"")
     if echo:
         print(f"From {src_com} and {src_unp}")
         print(f"  to {dest}")
@@ -77,12 +80,11 @@ def sort_oper_build(dest, src_com, src_unp, dele=True, echo=True):
         if echo:
             print("Deleteing...")
         Delete_File_Dir(dest)
-    flist = []
-    for j in [src_unp, src_com]:
-        flist += get_filelist(j)
+    flist = [get_filelist(j) for j in (src_unp, src_com)]
     n_all = len(flist)
-    n_cur = 0
-    n_pst = 0
+    n_cur, n_pst = 0, 0
+
+    Logger.info("CollectModels: Filtering...")
     if echo:
         print("Filtering...")
     for i in flist:
@@ -116,13 +118,17 @@ def sort_oper_build(dest, src_com, src_unp, dele=True, echo=True):
                         id = get_oper_id(base)
                         name = get_oper_name(base)
                         if id == "" or name == "":
+                            Logger.warn(f"CollectModels: \"{j}\" may not be a legal operator-asset.")
                             continue #可能不是干员模型文件
                         if contains_file(os.path.join(i,"BattleBack"),os.path.basename(j)):
+                            Logger.debug(f"CollectModels: \"{j}\" may has multiple operator-assets.")
                             continue #可能不是只有一套Spine的模型
                         if contains_file(i,"build_" + base):
+                            Logger.info(f"CollectModels: \"{j}\" may has its operator-asset in its directly-parent dir.")
                             continue #可能目录下本身就能找到基建小人
                         if os.path.splitext(base)[1] in [".atlas", ".skel"]:
                             #j是模型文件
+                            Logger.info(f"CollectModels: \"{j}\" is a single-spine operator-asset.")
                             to = os.path.join(dest, f"{id}_{name}", base)
                             mkdir(os.path.dirname(to))
                             shutil.copyfile(j, to)
@@ -134,6 +140,7 @@ def sort_oper_build(dest, src_com, src_unp, dele=True, echo=True):
         if (n_cur/n_all*100)-n_pst >= 10:
             n_pst += 10
             print(f"  {n_pst}%")
+    Logger.info("CollectModels: Completed.")
     if echo:
         print(f"Completed.\n")
 
@@ -147,6 +154,7 @@ def sort_enemy(dest, src_com, src_unp, dele=True, echo=True):
     :param echo: 是否回显进度;
     :returns: (none);
     '''
+    Logger.info(f"CollectModels: From \"{src_com}\" and \"{src_unp}\" to \"{dest}\"")
     if echo:
         print(f"From {src_com} and {src_unp}")
         print(f"  to {dest}")
@@ -154,12 +162,11 @@ def sort_enemy(dest, src_com, src_unp, dele=True, echo=True):
         if echo:
             print("Deleteing...")
         Delete_File_Dir(dest)
-    flist = []
-    for j in [src_unp, src_com]:
-        flist += get_filelist(j)
+    flist = [get_filelist(j) for j in (src_unp, src_com)]
     n_all = len(flist)
-    n_cur = 0
-    n_pst = 0
+    n_cur, n_pst = 0, 0
+
+    Logger.info("CollectModels: Filtering...")
     if echo:
         print("Filtering...")
     for i in flist:
@@ -180,6 +187,7 @@ def sort_enemy(dest, src_com, src_unp, dele=True, echo=True):
         if (n_cur/n_all*100)-n_pst >= 10:
             n_pst += 10
             print(f"  {n_pst}%")
+    Logger.info("CollectModels: Completed.")
     if echo:
         print(f"Completed.\n")
 

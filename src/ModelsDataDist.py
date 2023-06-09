@@ -2,6 +2,10 @@
 # Copyright (c) 2022-2023, Harry Huang
 # @ BSD 3-Clause License
 import os.path, requests, json, warnings, hashlib
+try:
+    from communalTool import *
+except:
+    from .communalTool import *
 '''
 生成ArkModels仓库使用的JSON数据集
 '''
@@ -10,13 +14,17 @@ import os.path, requests, json, warnings, hashlib
 def get_curl(url):
     headers = {}
     try:
+        Logger.info(f"ModelsDataDist: Fetching \"{url}\"")
         r = requests.get(url, headers=headers, verify=False)
         if r.status_code == 200:
             r.encoding = "UTF-8"
+            Logger.debug(f"ModelsDataDist: Fetching was success, content length: {len(r.content)} Bytes.")
             return r.text
         else:
+            Logger.error(f"ModelsDataDist: Failed to fetch \"{url}\": Responce code {r.status_code}")
             print(f"\t下载数据错误，返回码：{r.status_code}")
     except BaseException as arg:
+        Logger.error(f"ModelsDataDist: Failed to fetch \"{url}\": {arg}")
         print(f"\t下载数据错误：{arg}")
     return False
 
@@ -27,7 +35,8 @@ def get_json(url):
     try:
         j = json.loads(j)
         return j
-    except Exception as arg:
+    except BaseException as arg:
+        Logger.error(f"ModelsDataDist: Failed to convert into JSON: {arg}")
         print(f"\t转化为JSON错误：{arg}")
     return False
 
@@ -52,27 +61,24 @@ def get_item_data(assetId, type, style, sortTags, name, appellation, SGId, SGNam
     }
 
 def get_oper_sort_tags(data, isSkin = False):
-    rst = []
-    rst.append("Operator")
+    rst = ["Operator"]
     if isSkin:
         rst.append("Skinned")
     return rst
 
 def get_enemy_sort_tags(data):
-    rst = []
-    rst.append("Enemy")
+    def get_enemy_type(num):
+        if num == "NORMAL":
+            return "EnemyNormal"
+        if num == "ELITE":
+            return "EnemyElite"
+        if num == "BOSS":
+            return "EnemyBoss"
+        return "Enemy"
+    rst = ["Enemy"]
     rst.append(get_enemy_type(data["levelType"]["m_value"]))
     return rst
-        
 
-def get_enemy_type(num):
-    if num == 0:
-        return "EnemyCommon"
-    if num == 1:
-        return "EnemyElite"
-    if num == 2:
-        return "EnemyBoss"
-    return "Enemy"
 
 ########## Main-主程序 ##########
 def main():
@@ -88,7 +94,7 @@ def main():
         "Operator": "干员",
         "Skinned": "时装",
         "Enemy": "敌人",
-        "EnemyCommon": "普通敌人",
+        "EnemyNormal": "普通敌人",
         "EnemyElite": "精英敌人",
         "EnemyBoss": "领袖敌人"
     }
@@ -100,6 +106,11 @@ def main():
 
     ##### 主程序↓ #####
     warnings.filterwarnings("ignore")
+    print("查询数据源修订版本...")
+    src_version = judge_result(get_curl(src_verdata))
+    if not src_version:
+        return
+
     print("获取干员数据...")
     d = judge_result(get_json(src_operdata))
     if not d:
@@ -112,6 +123,7 @@ def main():
             item = d[i]
             collection[key] = get_item_data("build_" + i, "Operator", "BuildingDefault", get_oper_sort_tags(item, False),
                     item["name"], item["appellation"], "ILLUST", "默认服装")
+    Logger.debug(f"ModelsDataDist: Found {len(collection)} operators.")
     print(f"\t找到 {len(collection)} 位干员")
 
     print("获取干员皮肤信息...")
@@ -128,8 +140,10 @@ def main():
                 addition[key] = get_item_data("build_" + item["buildingId"], "Operator", "BuildingSkin", get_oper_sort_tags(item, True),
                         collection[item["charId"][5:]]["name"], collection[item["charId"][5:]]["appellation"], item["displaySkin"]["skinGroupId"], item["displaySkin"]["skinGroupName"])
             else:
+                Logger.info(f"ModelsDataDist: The operator-key of the skin \"{d[i]['charId']}\" not found.")
                 print(f"\t皮肤 {d[i]['charId']} 找不到对应的干员Key")
     collection.update(addition)
+    Logger.debug(f"ModelsDataDist: Found {len(addition)} skins.")
     print(f"\t找到 {len(addition)} 个皮肤")
 
     print("获取敌人信息...")
@@ -146,6 +160,7 @@ def main():
             addition[key] = get_item_data("enemy_" + key, "Enemy", None, tags,
                     item["name"]["m_value"], None, tags[-1], sort_tags_l10n[tags[-1]])
     collection.update(addition)
+    Logger.debug(f"ModelsDataDist: Found {len(addition)} enemies.")
     print(f"\t找到 {len(addition)} 个敌人")
 
     print("校验模型文件...")
@@ -166,7 +181,8 @@ def main():
                             b = f.read()
                             md5 = hashlib.md5(b).hexdigest()
                             checksum[j] = md5
-                    except Exception as arg:
+                    except BaseException as arg:
+                        Logger.warn(f"ModelsDataDist: Failed to get the checksum of {p}: {arg}")
                         print(f"\t[{i}] {collection[i]['name']} 计算文件摘要时错误：{p}，原因：{arg}")
                         checksum = None
                         checksum_fail += 1
@@ -182,12 +198,14 @@ def main():
                                 md5 = hashlib.md5(b).hexdigest()
                                 checksum[j] = md5
                                 collection[i]["assetId"] = newId
-                        except Exception as arg:
+                        except BaseException as arg:
+                            Logger.warn(f"ModelsDataDist: Failed to get the checksum of {p}: {arg}")
                             print(f"\t[{i}] {collection[i]['name']} 计算文件摘要时错误：{p}，原因：{arg}")
                             checksum = None
                             checksum_fail += 1
                             break
                     else:
+                        Logger.info(f"ModelsDataDist: The model asset of \"{i}\" not found.")
                         print(f"\t[{i}] {collection[i]['name']} 未找到其部分文件")
                         checksum = None
                         checksum_fail += 1
@@ -195,25 +213,24 @@ def main():
             collection[i]["checksum"] = checksum
             checksum_total += 1
         else:
-            checksum_fail += 1
+            Logger.info(f"ModelsDataDist: The model asset of \"{i}\" is the type of \"{collection[i]['type']}\" which is not declared in the prefab.")
             print(f"[{i}] {collection[i]['name']} 是{collection[i]['type']}类型的，但未在脚本预设中找到该类型的存储目录")
+            checksum_fail += 1
     print(f"\n\t校验完成：成功{checksum_total - checksum_fail}，失败{checksum_fail}")
 
-    print("查询数据源修订版本...")
-    d = judge_result(get_curl(src_verdata))
-    if not d:
-        return
     print("保存为数据集文件...")
     collection = {
         "storageDirectory": models_dir,
         "sortTags": sort_tags_l10n,
-        "gameDataVersionDescription": d,
+        "gameDataVersionDescription": src_version,
         "gameDataServerRegion": src_server,
         "data": collection,
         "arkPetsCompatibility": arkPetsCompatibility
     }
+    Logger.debug("ModelsDataDist: Writing...")
     with open("models_data.json", "w", encoding="UTF-8") as f:
-        f.write(json.dumps(collection, indent=4, ensure_ascii=False))
+        json.dump(collection, f, indent=4, ensure_ascii=False)
+    Logger.info("ModelsDataDist: Succeeded.")
     print("\t完成")
     return True
 

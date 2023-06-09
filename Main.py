@@ -293,22 +293,29 @@ def run_arkmodels_workflow():
 if __name__ == '__main__':
     config = Config()
     Logger.set_instance(config.get('log_file'), config.get('log_level'))
-    Logger.info("Initialized")
-    while True:
-        os.system('title ArkUnpacker')
-        prt_homepage()
-        order = input(f'{color(2)}> ')
-        if order == '1':
-            run_quickaccess()
-            prt_continue()
-        elif order == '2':
-            run_costm_Rs()
-            prt_continue()
-        elif order == '3':
-            run_costm_Cb()
-            prt_continue()
-        elif order == '4':
-            run_arkmodels_workflow()
-        elif order == '0':
-            Logger.info("CI: Program terminating.")
-            exit()
+    try:
+        Logger.info("Initialized")
+        while True:
+            os.system('title ArkUnpacker')
+            prt_homepage()
+            order = input(f'{color(2)}> ')
+            if order == '1':
+                run_quickaccess()
+                prt_continue()
+            elif order == '2':
+                run_costm_Rs()
+                prt_continue()
+            elif order == '3':
+                run_costm_Cb()
+                prt_continue()
+            elif order == '4':
+                run_arkmodels_workflow()
+            elif order == '0':
+                Logger.info("CI: Program was exited explicitly.")
+                exit(0)
+    except InterruptedError as arg:
+        Logger.info("CI: Program was interrupted.")
+        exit(0)
+    except BaseException as arg:
+        Logger.error(f"CI: Oops! Unexpected error occurred: {arg}")
+        exit(1)
