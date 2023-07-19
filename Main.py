@@ -317,5 +317,5 @@ if __name__ == '__main__':
         Logger.info("CI: Program was interrupted.")
         exit(0)
     except BaseException as arg:
-        Logger.error(f"CI: Oops! Unexpected error occurred: {arg}")
+        Logger.error(f"CI: Oops! Unexpected error occurred: ({type(arg)}) {arg}")
         exit(1)
