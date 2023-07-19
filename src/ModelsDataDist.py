@@ -206,7 +206,7 @@ def main():
                             break
                     else:
                         Logger.info(f"ModelsDataDist: The model asset of \"{i}\" not found.")
-                        print(f"\t[{i}] {collection[i]['name']} 未找到其部分文件")
+                        print(f"\t[{i}] {collection[i]['name']} 未找到其文件")
                         checksum = None
                         checksum_fail += 1
                         break

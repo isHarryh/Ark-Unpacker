@@ -311,11 +311,14 @@ if __name__ == '__main__':
             elif order == '4':
                 run_arkmodels_workflow()
             elif order == '0':
-                Logger.info("CI: Program was exited explicitly.")
                 exit(0)
+        
     except InterruptedError as arg:
         Logger.info("CI: Program was interrupted.")
         exit(0)
+    except SystemExit as arg:
+        Logger.info(f"CI: Program was exited explicitly with code {arg.code}.")
+        exit(arg.code)
     except BaseException as arg:
-        Logger.error(f"CI: Oops! Unexpected error occurred: {arg}")
+        Logger.error(f"CI: Oops! Unexpected error occurred: ({type(arg)}) {arg}")
         exit(1)

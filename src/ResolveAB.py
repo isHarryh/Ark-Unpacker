@@ -11,6 +11,7 @@ except:
     from .colorTool import *
     from .communalTool import *
 from UnityPy import load as UpyLoad #UnityPy库用于操作Unity文件
+from UnityPy import classes as UpyClasses
 from UnityPy import Environment
 '''
 Python批量解包Unity(.ab)资源文件
@@ -18,7 +19,7 @@ Python批量解包Unity(.ab)资源文件
 '''
 
 
-class resource:
+class Resource:
     '存放env内的资源的类'
     
     def __get_image(self, obj):
@@ -56,15 +57,19 @@ class resource:
         :param env: UnityPy.load()创建的environment实例;
         :returns:   (none);
         '''
-        self.env = env
-        self.name = env.file.name
-        self.length = len(env.objects)
-        self.sprites = []
-        self.texture2ds = []
-        self.textassets = []
-        self.audioclips = []
-        self.materials = []
-        self.monobehaviors = []
+        self.env:Environment = env
+        '''The UnityPy Environment instance'''
+        self.name:str = env.file.name
+        '''The file name of the UnityPy Environment instance'''
+        self.length:int = len(env.objects)
+        '''The count of all objects'''
+        ###
+        self.sprites:list[UpyClasses.Sprite] = []
+        self.texture2ds:list[UpyClasses.Texture2D] = []
+        self.textassets:list[UpyClasses.TextAsset] = []
+        self.audioclips:list[UpyClasses.AudioClip] = []
+        self.materials:list[UpyClasses.Material] = []
+        self.monobehaviors:list[UpyClasses.MonoBehaviour] = []
         self.typelist = [ #[0:类型名称,1:类型列表,2:保存后缀,3:内容提取方法,4:安全保存方法]
             ['Sprite',self.sprites,'.png',self.__get_image,MySaver.save_image],
             ['Texture2D',self.texture2ds,'.png',self.__get_image,MySaver.save_image],
@@ -108,97 +113,105 @@ class resource:
                 break
         return cont
 
-    def rename_battle_spine(self):
+    def rename_skeletons(self):
         '''
-        #### 重命名战斗小人文件（包括Skel/Atlas/Png）
-        明日方舟的战斗界面的小人有正面和背面之分，但是其文件名都一样，此函数将会尝试对其作出区分。
-        思路是先从Atlas文件的内容中判断Atlas的正背面，顺便找到和其相关的Skel的正背面，
-        然后根据Atlas连结的Material对象找到对应的Png纹理。
-        :returns: (int);
+        #### 重设Spine骨骼动画文件的路径（包括Skel/Atlas/Png）
+        明日方舟的骨骼动画分为三种类型，战斗正面、战斗背面、基建。
+        为了更好地进行区分，需要将它们的导出文件路径更改为与其类型相对应的特定目录。
+        :returns: (none);
         '''
-        ##基建小人
-        build = []
-        for i in range(len(self.textassets)):
-            #(i是单个TextAsset对象的索引)
-            iname = self.textassets[i].name
-            if 'build_char_' == iname[:10]:
-                build.append(i)
-        for i in build:
-            self.__rename_add_prefix(self.textassets,i,'Building'+os.path.sep)
-        ##战斗小人
-        ##在MonoBehaviour中筛选出SkelData并读取
-        datas = [] #[SkelDataIdx,SkelIdx,AtlasDataIdx,AtlasIdx,isFront]
+        class SpineAsset:
+            UNKNOWN = 0
+            BUILDING = 1
+            BATTLE_FRONT = 2
+            BATTLE_BACK = 3
+
+            def __init__(self, resource:Resource, skel_idx:int, atlas_idx:int, rgb_idx:int, alpha_idx:int, type:int=UNKNOWN):
+                self.__resource = resource
+                self.skel_idx = skel_idx
+                self.atlas_idx = atlas_idx
+                self.rgb_idx = rgb_idx
+                self.alpha_idx = alpha_idx
+                self.type = type
+            
+            def is_front_geq_back(self):
+                text = self.__resource.textassets[self.atlas_idx].text
+                return text.count('F_') + text.count('f_') >= text.count('B_') + text.count('b_')
+            
+            def is_available(self):
+                for i in (self.skel_idx, self.atlas_idx, self.rgb_idx, self.alpha_idx):
+                    if i < 0:
+                        return False
+                return True
+
+        spines:list[SpineAsset] = []
         for i in range(len(self.monobehaviors)):
             #(i是单个Mono对象的索引)
-            iname = self.monobehaviors[i].name
-            if '_char_' not in iname and iname.endswith('_SkeletonData'):
-                j = self.monobehaviors[i] #SkelData的Mono对象
-                if j.serialized_type.nodes:
-                    tree = j.read_typetree() #Mono的树状内容
-                    i_skel = self.__search_in_pathid(self.textassets,
-                        tree['skeletonJSON']['m_PathID'])
-                    i_atlasdata = self.__search_in_pathid(self.monobehaviors,
-                        tree['atlasAssets'][0]['m_PathID'])
-                    #至此已找到SkelData,Skel,AtlasData的索引
-                    datas.append({
-                        'SkelDataIdx': i,
-                        'SkelIdx': i_skel,
-                        'AtlasDataIdx': i_atlasdata
-                        })
-            if iname.endswith('_Atlas'):
-                j = self.monobehaviors[i] #Atlas的Mono对象
-                if j.serialized_type.nodes:
-                    pass
-        if len(datas) == 0:
-            return 0 #该文件不含小人文件，跳过
-        if len(datas) > 4:
-            #TODO 进行更加准确的判断
-            return 0 #该文件包含的小人文件过多，可能这是敌方小人的包，跳过
-        ##读取AtlasData
-        for k in range(len(datas)):
-            #(k是单个Data的索引)
-            j = self.monobehaviors[datas[k]['AtlasDataIdx']] #AtlasData对象
-            if j.serialized_type.nodes:
-                tree = j.read_typetree() #Mono的树状内容
-                i_atlas = self.__search_in_pathid(self.textassets,
-                    tree['atlasFile']['m_PathID'])
-                ##读取Atlas并判断Front/Back
-                atlas = self.textassets[i_atlas].text #Atlas的文本内容
-                ct_f = atlas.count('F_') + atlas.count('f_')
-                ct_b = atlas.count('B_') + atlas.count('b_')
-                #至此又找到了Atlas的索引和Front/Back
-                datas[k]['AtlasIdx'] = i_atlas
-                datas[k]['isFront'] = ct_f >= ct_b
-                #TODO 当 ct_f * ct_b = 0 时认定为非战斗小人Spine
-                ##重命名Skel
-                self.__rename_add_prefix(self.textassets, datas[k]['SkelIdx'],\
-                    'Battle'+('Front' if datas[k]['isFront'] else 'Back')+os.path.sep)
-                ##重命名Atlas
-                self.__rename_add_prefix(self.textassets, datas[k]['AtlasIdx'],\
-                    'Battle'+('Front' if datas[k]['isFront'] else 'Back')+os.path.sep)
-            if 'AtlasIdx' in datas[k].keys():
-                if j.serialized_type.nodes:
-                    tree = j.read_typetree() #Mono的树状
-                    i_material = self.__search_in_pathid(self.materials, tree['materials'][0]['m_PathID'])
-                    if i_material >= 0:
-                        j = self.materials[i_material]
-                        if j.serialized_type.nodes:
-                            tree = j.read_typetree() #Material的树状内容
-                            tex_envs = tree['m_SavedProperties']['m_TexEnvs']
-                            for l in tex_envs:
-                                if l[0] == '_MainTex':
-                                    datas[k]['RgbIdx'] = self.__search_in_pathid(self.texture2ds, l[1]['m_Texture']['m_PathID'])
-                                if l[0] == '_AlphaTex':
-                                    datas[k]['AlphaIdx'] = self.__search_in_pathid(self.texture2ds, l[1]['m_Texture']['m_PathID'])
-                    if 'RgbIdx' in datas[k].keys() and 'AlphaIdx' in datas[k].keys():
-                        if datas[k]['RgbIdx'] >= 0 and datas[k]['AlphaIdx'] >= 0:
-                            ##重命名RGB图
-                            self.__rename_add_prefix(self.texture2ds, datas[k]['RgbIdx'],\
-                                'Battle'+('Front' if datas[k]['isFront'] else 'Back')+os.path.sep)
-                            ##重命名Alpha图
-                            self.__rename_add_prefix(self.texture2ds, datas[k]['AlphaIdx'],\
-                                'Battle'+('Front' if datas[k]['isFront'] else 'Back')+os.path.sep)
-        return len(datas)
+            mono = self.monobehaviors[i]
+            success = False
+            if mono.serialized_type.nodes:
+                #对骨骼动画对象操作
+                tree = mono.read_typetree()
+                if 'skeletonDataAsset' not in tree.keys():
+                    continue #不是骨骼动画对象，跳过
+                path2skeldata = tree['skeletonDataAsset']['m_PathID']
+                idx2skeldata = self.__search_in_pathid(self.monobehaviors, path2skeldata)
+                mono_sd = self.monobehaviors[idx2skeldata]
+                if mono_sd.serialized_type.nodes:
+                    #对骨骼数据对象操作
+                    tree_sd = mono_sd.read_typetree()
+                    path2skel = tree_sd['skeletonJSON']['m_PathID']
+                    path2atlasdata = tree_sd['atlasAssets'][0]['m_PathID']
+                    idx2skel = self.__search_in_pathid(self.textassets, path2skel)
+                    idx2atlasdata = self.__search_in_pathid(self.monobehaviors, path2atlasdata)
+                    mono_ad = self.monobehaviors[idx2atlasdata]
+                    if mono_ad.serialized_type.nodes:
+                        #对ATLAS数据对象操作
+                        tree_ad = mono_ad.read_typetree()
+                        path2atlas = tree_ad['atlasFile']['m_PathID']
+                        path2mat = tree_ad['materials'][0]['m_PathID']
+                        idx2atlas = self.__search_in_pathid(self.textassets, path2atlas)
+                        idx2mat = self.__search_in_pathid(self.materials, path2mat)
+                        if idx2mat >= 0:
+                            mat = self.materials[idx2mat]
+                            idx2rgb, idx2alpha = -1, -1
+                            if mat.serialized_type.nodes:
+                                #对材质对象操作
+                                tree_mat = mat.read_typetree()
+                                tex_envs = tree_mat['m_SavedProperties']['m_TexEnvs']
+                                for tex in tex_envs:
+                                    if tex[0] == '_MainTex':
+                                        path2rgb = tex[1]['m_Texture']['m_PathID']
+                                        idx2rgb = self.__search_in_pathid(self.texture2ds, path2rgb)
+                                    elif tex[0] == '_AlphaTex':
+                                        path2alpha = tex[1]['m_Texture']['m_PathID']
+                                        idx2alpha = self.__search_in_pathid(self.texture2ds, path2alpha)
+                                #封装为SpineAsset对象
+                                spine = SpineAsset(self, idx2skel, idx2atlas, idx2rgb, idx2alpha)
+                                if spine.is_available():
+                                    #该骨骼数据解析成功
+                                    if 'Relax' in tree['_animationName'] or \
+                                        (len(self.textassets[idx2skel].name) > 6 and self.textassets[idx2skel].name[:6] == 'build_'):
+                                        spine.type = SpineAsset.BUILDING
+                                    else:
+                                        spine.type = SpineAsset.BATTLE_FRONT if spine.is_front_geq_back() else SpineAsset.BATTLE_BACK
+                                    spines.append(spine)
+                                    success = True
+            if not success:
+                Logger.warn(f'ResolveAB: Failed to handle skeletonDataAsset at pathId {mono.path_id} of {self.name}.')
+        
+        for spine in spines:
+            prefix = ""
+            if spine.type == SpineAsset.BUILDING:
+                prefix = 'Building' + os.path.sep
+            elif spine.type == SpineAsset.BATTLE_FRONT:
+                prefix = 'BattleFront' + os.path.sep
+            elif spine.type == SpineAsset.BATTLE_BACK:
+                prefix = 'BattleBack' + os.path.sep
+            self.__rename_add_prefix(self.textassets, spine.skel_idx, prefix)
+            self.__rename_add_prefix(self.textassets, spine.atlas_idx, prefix)
+            self.__rename_add_prefix(self.texture2ds, spine.rgb_idx, prefix)
+            self.__rename_add_prefix(self.texture2ds, spine.alpha_idx, prefix)
     #EndClass
 
 
@@ -215,7 +228,7 @@ def ab_resolve(env:Environment, intodir:str, doimg:bool, dotxt:bool, doaud:bool,
     :returns:       (None);
     '''
     mkdir(intodir)
-    reso = resource(env)
+    reso = Resource(env)
     Logger.debug(f'ResolveAB: "{reso.name}" has {reso.length} objects.')
     if reso.length >= 10000:
         Logger.info(f'ResolveAB: Too many objects in file "{reso.name}", unpacking it may take a long time.')
@@ -224,7 +237,9 @@ def ab_resolve(env:Environment, intodir:str, doimg:bool, dotxt:bool, doaud:bool,
         return
     ###
     try:
-        reso.rename_battle_spine()
+        if reso.name[:5] == 'char_':
+            #如果这个文件可能是干员模型文件，则进行骨骼动画整理
+            reso.rename_skeletons()
         ###
         if doimg:
             reso.save_all_the('Sprite', intodir, subcallback)
@@ -235,7 +250,7 @@ def ab_resolve(env:Environment, intodir:str, doimg:bool, dotxt:bool, doaud:bool,
             reso.save_all_the('AudioClip', intodir, subcallback)
     except BaseException as arg:
         #错误反馈
-        Logger.error(f'ResolveAB: Error occurred while unpacking file "{env.file}": {arg}')
+        Logger.error(f'ResolveAB: Error occurred while unpacking file "{env.file}": ({type(arg)}) {arg}')
         #raise(arg) #调试时使用
     if callback:
         callback()

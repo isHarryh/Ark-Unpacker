@@ -290,8 +290,9 @@ class Logger():
                 try:
                     if len(self.queue):
                         t = self.queue.pop(0)
-                        with open(self.log_file_path, 'a', encoding=Logger.__file_encoding) as f:
-                            f.write(t)
+                        if type(self.log_file_path) == str and len(self.log_file_path) > 0:
+                            with open(self.log_file_path, 'a', encoding=Logger.__file_encoding) as f:
+                                f.write(t)
                 except BaseException:
                     pass
         self.thread = Thread(name=self.__class__.__name__, target=loop, args=(self,), daemon=True)

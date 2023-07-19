@@ -36,7 +36,7 @@ ArkUnpacker附加说明文档
 本项目的代码结构分为4个层次：
 * 表现层（`Main.py`）
 * 衔接层（`ResolveAB.py和CombineRGBwithA.py`中的`Main`函数）
-* 操作层（`ResolveAB.py和CombineRGBwithA.py`中的其他函数）
+* 操作层（`ResolveAB.py和CombineRGBwithA.py`等中的其他函数）
 * 辅助层（`colorTool.py、osTool.py、communalTool.py`）
 
 当您运行了`Main.py`时表现层会负责显示出操作提示。在您向表现层输入指令后，表现层会调用衔接层来完成指令。衔接层负责批量地调用操作层函数，而操作层负责底层的文件处理。此外，前三个层都有调用辅助层的通用函数。

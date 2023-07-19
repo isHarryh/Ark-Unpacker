@@ -74,19 +74,25 @@ def get_dir_size(path:str):
             size += get_dir_size(new)
     return size
 
-def get_filelist(path:str): ###获取目录的所有文件列表|返回list###
+def get_filelist(path:str, max_depth=0, only_dirs=False):
     '''
-    ## Get a List Containing All the Files in a Dir
-    #### 获取一个目录中的所有文件的列表
-    :param path: Path of the dir;
-    :returns: (list) Filelist;
+    ## Get a list containing all the sub dirs (and files) in the given dir
+    #### 获取指定目录中的所有子文件夹（和文件）的列表
+    :param path: Path of the specified parent dir;
+    :param max_depth: Max searching depth, 0 for unlimited;
+    :param only_dirs: Whether to exclude files;
+    :returns: (list) A list of file paths;
     '''
+    max_depth = int(max_depth)
     lst = []
-    for root, dirs, files in os.walk(path):
-        for dir in dirs:
-            lst.append(os.path.join(root, dir))
-        for file in files:
-            lst.append(os.path.join(root, file))
+    for i in os.listdir(path):
+        i = os.path.join(path, i)
+        if os.path.isdir(i):
+            lst.append(i)
+            if max_depth == 0 or max_depth > 1:
+                lst.extend(get_filelist(i, max_depth - 1))
+        elif not only_dirs and os.path.isfile(i):
+            lst.append(i)
     return lst
 
 def get_path_authority(path:str):

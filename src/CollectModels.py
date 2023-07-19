@@ -80,7 +80,9 @@ def sort_oper_build(dest, src_com, src_unp, dele=True, echo=True):
         if echo:
             print("Deleteing...")
         Delete_File_Dir(dest)
-    flist = [get_filelist(j) for j in (src_unp, src_com)]
+    flist = []
+    for i in (src_com, src_unp):
+        flist.extend(get_filelist(i, only_dirs=True, max_depth=1))
     n_all = len(flist)
     n_cur, n_pst = 0, 0
 
@@ -91,53 +93,46 @@ def sort_oper_build(dest, src_com, src_unp, dele=True, echo=True):
         #遍历文件
         i = i.lower() #特殊处理：可能有些文件名没有规范地变成小写，需要强制小写以识别。
         n_cur += 1
-        if os.path.isfile(i):
-            #i是文件
-            base = os.path.basename(i)
-            id = get_oper_id(base)
-            name = get_oper_name(base)
-            if ("[alpha]" not in base) and ("build_" in base) and \
-                (os.path.splitext(base)[1] in [".png", ".atlas", ".skel"]):
-                #i是模型文件
-                to = os.path.join(dest, f"{id}_{name}", base)
-                mkdir(os.path.dirname(to))
-                shutil.copyfile(i, to)
-        elif os.path.isdir(i):
+        if os.path.isdir(i):
             #i是目录
-            if os.path.exists(os.path.join(i,"BattleFront")):
-                #特殊处理：有些干员只有一套Spine，可以同时用在战斗正面、背面和基建小人，
-                #解包时只会解包出战斗正面的，这时需要手动复制一份作为它的基建小人模型。
-                flag = False
-                if flag:
-                    continue
-                for j in get_filelist(os.path.join(i,"BattleFront")):
-                    #遍历原目录下BattleFront内的文件
+            if os.path.exists(os.path.join(i, 'Building')):
+                #该目录下包含Building文件夹，则直接复制Building中的文件
+                for j in get_filelist(os.path.join(i, 'Building'), max_depth=1):
                     if os.path.isfile(j):
-                        #j是文件
+                        #j是原目录下Building中的文件
                         base = os.path.basename(j)
                         id = get_oper_id(base)
                         name = get_oper_name(base)
-                        if id == "" or name == "":
+                        if ('[alpha]' not in base) and \
+                            (os.path.splitext(base)[1] in ['.png', '.atlas', '.skel']):
+                            j2 = os.path.join(dest, f"{id}_{name}", os.path.basename(j))
+                            mkdir(os.path.dirname(j2))
+                            shutil.copyfile(j, j2)
+            elif os.path.exists(os.path.join(i, 'BattleFront')):
+                #该目录下不包含Building文件夹，但是包含BattleFront文件夹
+                #特殊处理：有些干员只有一套Spine，可以同时用在战斗正面、背面和基建小人，
+                #解包时只会解包出战斗正面的，这时需要手动复制一份作为它的基建小人模型。
+                for j in get_filelist(os.path.join(i, "BattleFront")):
+                    if os.path.isfile(j):
+                        #j是原目录下BattleFront中的文件
+                        base = os.path.basename(j)
+                        id = get_oper_id(base)
+                        name = get_oper_name(base)
+                        if id == '' or name == '':
                             Logger.warn(f"CollectModels: \"{j}\" may not be a legal operator-asset.")
                             continue #可能不是干员模型文件
-                        if contains_file(os.path.join(i,"BattleBack"),os.path.basename(j)):
-                            Logger.debug(f"CollectModels: \"{j}\" may has multiple operator-assets.")
-                            continue #可能不是只有一套Spine的模型
-                        if contains_file(i,"build_" + base):
-                            Logger.info(f"CollectModels: \"{j}\" may has its operator-asset in its directly-parent dir.")
-                            continue #可能目录下本身就能找到基建小人
-                        if os.path.splitext(base)[1] in [".atlas", ".skel"]:
+                        if os.path.splitext(base)[1] in ['.atlas', '.skel']:
                             #j是模型文件
-                            Logger.info(f"CollectModels: \"{j}\" is a single-spine operator-asset.")
+                            Logger.info(f"CollectModels: Operator-asset \"{id}_{name}\", \"{j}\" is a single-spine operator-asset.")
                             to = os.path.join(dest, f"{id}_{name}", base)
                             mkdir(os.path.dirname(to))
                             shutil.copyfile(j, to)
-                            tryimg = os.path.join(src_com, os.path.splitext(base)[0], os.path.splitext(base)[0] + ".png")
+                            tryimg = os.path.join(src_com, os.path.splitext(base)[0], os.path.splitext(base)[0] + '.png')
                             if os.path.isfile(tryimg):
                                 to = os.path.join(dest, f"{id}_{name}", os.path.basename(tryimg))
                                 mkdir(os.path.dirname(to))
                                 shutil.copyfile(tryimg, to)
-        if (n_cur/n_all*100)-n_pst >= 10:
+        if (n_cur / n_all*100) - n_pst >= 10:
             n_pst += 10
             print(f"  {n_pst}%")
     Logger.info("CollectModels: Completed.")
@@ -162,7 +157,9 @@ def sort_enemy(dest, src_com, src_unp, dele=True, echo=True):
         if echo:
             print("Deleteing...")
         Delete_File_Dir(dest)
-    flist = [get_filelist(j) for j in (src_unp, src_com)]
+    flist = []
+    for i in (src_com, src_unp):
+        flist.extend(get_filelist(i))
     n_all = len(flist)
     n_cur, n_pst = 0, 0
 
@@ -178,8 +175,8 @@ def sort_enemy(dest, src_com, src_unp, dele=True, echo=True):
             base = os.path.basename(i)
             id = get_enemy_id(base)
             name = get_enemy_name(base)
-            if ("[alpha]" not in base) and ("enemy_" in base) and \
-                (os.path.splitext(base)[1] in [".png", ".atlas", ".skel"]):
+            if ('[alpha]' not in base) and ('enemy_' in base) and \
+                (os.path.splitext(base)[1] in ['.png', '.atlas', '.skel']):
                 #i是模型文件
                 to = os.path.join(dest, f"{id}_{name}", base)
                 mkdir(os.path.dirname(to))
