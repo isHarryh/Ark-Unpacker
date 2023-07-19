@@ -14,7 +14,7 @@ ArkUnpacker附加说明文档
     "threads_default": 8
 }
 ```
-- `log_file`：字符串。日志文件的存储路径。
+- `log_file`：字符串。日志文件的存储路径，设为`""`以禁用日志文件写入。
 - `log_level`：整数。日志等级，`0=None` `1=Error` `2=Warn` `3=Info` `4=Debug`。
 - `threads_limit`：整数。允许用户设置的最大线程数。
 - `threads_default`：整数。一键执行模式中默认的线程数。
