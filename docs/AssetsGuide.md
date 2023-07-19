@@ -8,7 +8,7 @@ ArkUnpacker附加说明文档
 
 
 ## 资源导览
-各个子目录储存的资源的内容 (可使用`Ctrl+F`查找)：
+各个子目录储存的资源的内容：
 
 **Android**  
 ├─[activity](#activity) / 活动   
@@ -42,22 +42,25 @@ ArkUnpacker附加说明文档
 
 
 ## 常用资源定位
+条目较多，可使用`Ctrl+F`查找关键字。
 [返回顶部](#资源导览)
 
 ### Activity
-- `activity/[uc]act_{xxx}.ab` 某个活动的相关资源
-- `activity/commonassets.ab` 活动物资通用图标
+- `activity/[uc]act{xxx}.ab` 某个活动的界面相关资源
+- `activity/commonassets.ab` 活动物资的通用图标
 
 ### Arts
-- `arts/building/` 基建相关图标
+- `arts/building/` 基建相关图标（基建技能图标等）
 - `arts/charportraits/` 干员半身像
 - `arts/dynchars/` 动态立绘资源
+- `arts/guidebookpages/` 新手指引相关
+- `arts/maps/` 地图地形材质
 - `arts/shop/` 采购中心相关
-- `arts/ui/` UI
+- `arts/ui/` 各类UI插图
 - `arts/clue_hub.ab` 线索图标
 - `arts/elite_hub.ab` 精英化图标
 - `arts/potential_hub.ab` 潜能图标
-- `arts/profession_hub.ab` 职业图标
+- `arts/profession_hub.ab` 职业图
 - `arts/rarity_hub.ab` 稀有度星级图标
 - `arts/specialized_hub.ab` 技能专精图标
 
@@ -68,7 +71,7 @@ ArkUnpacker附加说明文档
 - `audio/sound_beta_2/player/` 干员战斗音效
 - `audio/sound_beta_2/voice/` 语音包(日文)
 - `audio/sound_beta_2/voice_{xxx}/` 语音包(其他语言)
-- `audio/sound_beta_2/ambience.ab` 环境音效
+- `audio/sound_beta_2/ambience.ab` 环境氛围音效
 - `audio/sound_beta_2/battle.ab` 其他战斗音效
 - `audio/sound_beta_2/vox.ab` 人声音效
 
@@ -104,7 +107,7 @@ ArkUnpacker附加说明文档
 
 ### Spritepack
 活动
-- `spritepack/act_achieve.ab` 活动相关
+- `spritepack/act_achieve_{xxx}.ab` 活动相关插图
 - `spritepack/ui_charm_icon_list.ab` 活动:多索雷斯假日标志物
 
 剿灭作战
@@ -142,6 +145,7 @@ ArkUnpacker附加说明文档
 - `spritepack/ui_item_icons.ab` 仓库:常规物品图标
 - `spritepack/ui_item_icons_acticon.ab` 仓库:活动物品图标?
 - `spritepack/ui_item_icons_apsupply.ab` 仓库:理智道具图标
+- `spritepack/ui_item_icons_classpotential.ab` 仓库:中坚潜能信物图标
 - `spritepack/ui_item_icons_potential.ab` 仓库:潜能信物图标
 
 蚀刻章
@@ -187,14 +191,14 @@ ArkUnpacker附加说明文档
 - `ui/legion/` 保全派驻
 - `ui/operation/returnning/` 玩家回归活动
 - `ui/pages/` 各种页面的UI
-- `ui/rglktopic/` 集成战略主题UI
+- `ui/rglktopic/` 集成战略各主题UI
 - `ui/squadassist/` 好友助战编队相关
 - `ui/stage/enemyhandbook/` 敌人档案相关
 - `ui/timelydrop/` 限时掉落
 - `ui/[uc]charsortfilter.ab` 干员筛选相关
 - `ui/[uc]climbtower.ab` 保全派驻关卡页相关
 - `ui/[uc]squad.ab` 编队页面相关
-- `ui/activity/actfun.ab` 特殊活动
+- `ui/activity/actfun.ab` 愚人节活动
 - `ui/recruit/states/recruit_ten_result_state.ab` 十连寻访
 - `ui/skin_groups.ab` 时装品牌
 - `ui/zonemap_{x}.ab` 主线关卡页背景
