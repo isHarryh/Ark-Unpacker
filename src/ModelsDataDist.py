@@ -36,7 +36,7 @@ def get_json(url):
         j = json.loads(j)
         return j
     except BaseException as arg:
-        Logger.error(f"ModelsDataDist: Failed to convert into JSON: {arg}")
+        Logger.error(f"ModelsDataDist: Failed to convert into JSON: Exception{type(arg)} {arg}")
         print(f"\t转化为JSON错误：{arg}")
     return False
 

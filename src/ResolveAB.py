@@ -250,7 +250,7 @@ def ab_resolve(env:Environment, intodir:str, doimg:bool, dotxt:bool, doaud:bool,
             reso.save_all_the('AudioClip', intodir, subcallback)
     except BaseException as arg:
         #错误反馈
-        Logger.error(f'ResolveAB: Error occurred while unpacking file "{env.file}": ({type(arg)}) {arg}')
+        Logger.error(f'ResolveAB: Error occurred while unpacking file "{env.file}": Eception{type(arg)} {arg}')
         #raise(arg) #调试时使用
     if callback:
         callback()

@@ -320,5 +320,5 @@ if __name__ == '__main__':
         Logger.info(f"CI: Program was exited explicitly with code {arg.code}.")
         exit(arg.code)
     except BaseException as arg:
-        Logger.error(f"CI: Oops! Unexpected error occurred: ({type(arg)}) {arg}")
+        Logger.error(f"CI: Oops! Unexpected error occurred: Exception{type(arg)} {arg}")
         exit(1)

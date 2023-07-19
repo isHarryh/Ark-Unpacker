@@ -89,9 +89,9 @@ def get_filelist(path:str, max_depth=0, only_dirs=False):
         i = os.path.join(path, i)
         if os.path.isdir(i):
             lst.append(i)
-            if max_depth == 0 or max_depth > 1:
+            if max_depth != 1:
                 lst.extend(get_filelist(i, max_depth - 1))
-        elif not only_dirs and os.path.isfile(i):
+        elif not only_dirs:
             lst.append(i)
     return lst
 

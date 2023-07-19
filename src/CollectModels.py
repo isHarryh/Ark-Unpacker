@@ -106,32 +106,9 @@ def sort_oper_build(dest, src_com, src_unp, dele=True, echo=True):
                         if ('[alpha]' not in base) and \
                             (os.path.splitext(base)[1] in ['.png', '.atlas', '.skel']):
                             j2 = os.path.join(dest, f"{id}_{name}", os.path.basename(j))
-                            mkdir(os.path.dirname(j2))
-                            shutil.copyfile(j, j2)
-            elif os.path.exists(os.path.join(i, 'BattleFront')):
-                #该目录下不包含Building文件夹，但是包含BattleFront文件夹
-                #特殊处理：有些干员只有一套Spine，可以同时用在战斗正面、背面和基建小人，
-                #解包时只会解包出战斗正面的，这时需要手动复制一份作为它的基建小人模型。
-                for j in get_filelist(os.path.join(i, "BattleFront")):
-                    if os.path.isfile(j):
-                        #j是原目录下BattleFront中的文件
-                        base = os.path.basename(j)
-                        id = get_oper_id(base)
-                        name = get_oper_name(base)
-                        if id == '' or name == '':
-                            Logger.warn(f"CollectModels: \"{j}\" may not be a legal operator-asset.")
-                            continue #可能不是干员模型文件
-                        if os.path.splitext(base)[1] in ['.atlas', '.skel']:
-                            #j是模型文件
-                            Logger.info(f"CollectModels: Operator-asset \"{id}_{name}\", \"{j}\" is a single-spine operator-asset.")
-                            to = os.path.join(dest, f"{id}_{name}", base)
-                            mkdir(os.path.dirname(to))
-                            shutil.copyfile(j, to)
-                            tryimg = os.path.join(src_com, os.path.splitext(base)[0], os.path.splitext(base)[0] + '.png')
-                            if os.path.isfile(tryimg):
-                                to = os.path.join(dest, f"{id}_{name}", os.path.basename(tryimg))
-                                mkdir(os.path.dirname(to))
-                                shutil.copyfile(tryimg, to)
+                            if not os.path.exists(j2):
+                                mkdir(os.path.dirname(j2))
+                                shutil.copyfile(j, j2)
         if (n_cur / n_all*100) - n_pst >= 10:
             n_pst += 10
             print(f"  {n_pst}%")
@@ -179,8 +156,9 @@ def sort_enemy(dest, src_com, src_unp, dele=True, echo=True):
                 (os.path.splitext(base)[1] in ['.png', '.atlas', '.skel']):
                 #i是模型文件
                 to = os.path.join(dest, f"{id}_{name}", base)
-                mkdir(os.path.dirname(to))
-                shutil.copyfile(i, to)
+                if not os.path.exists(to):
+                    mkdir(os.path.dirname(to))
+                    shutil.copyfile(i, to)
         if (n_cur/n_all*100)-n_pst >= 10:
             n_pst += 10
             print(f"  {n_pst}%")
