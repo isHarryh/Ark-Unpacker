@@ -253,6 +253,14 @@ class TimeRecorder():
         :returns: (float) Minutes;
         '''
         return (self.n_dest-self.n_cur) / self.getSpeed(basis) if self.getSpeed(basis) != 0 else 0
+    
+    def getTotalTime(self):
+        '''
+        ## Get the time from the first record to now.
+        #### 计算截至目前的用时
+        :returns: (float) Seconds;
+        '''
+        return time.time() - self.t_rec[0][0]
     #EndClass
 
 class Rounder():

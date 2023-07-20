@@ -18,16 +18,16 @@ Python批量合并RGB通道图和A通道图
 '''
 
 
-def combine_rgb_a(fp_rgb:str, fp_a:str):
+def combine_rgb_a(rgb:"str|Image.Image", a:"str|Image.Image"):
     '''
     #### 将RGB通道图和A通道图合并
     此算法更新后速率提升了400%
-    :param fp_rgb: RGB通道图的文件路径;
-    :param fp_a:   A通道图的文件路径;
+    :param fp_rgb: RGB通道图的图片对象或其路径;
+    :param fp_a:   A通道图的图片对象或其路径;
     :returns:      Image实例;
     '''
-    IM1 = Image.open(fp_rgb).convert('RGBA') #RGB通道图实例化
-    IM2 = Image.open(fp_a).convert('L') #A通道图实例化(L:灰度模式)
+    IM1 = (rgb if type(rgb) == Image.Image else Image.open(rgb)).convert('RGBA') #RGB通道图实例化
+    IM2 = (a if type(a) == Image.Image else Image.open(a)).convert('L') #A通道图实例化(L:灰度模式)
     if not (IM1.size == IM2.size):
         #两张图片尺寸不同，对A通道图的尺寸进行缩放
         IM2 = IM2.resize(IM1.size, Image.ANTIALIAS)
@@ -188,15 +188,13 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
     cont_p = 0 #进度百分比计数
 
     if dodel:
-        print(color(7,0,1)+"\n正在初始化..."+color(7))
-        Delete_File_Dir(destdir) #慎用，会预先删除目的地目录的所有内容
+        print(color(7,0,1)+"\n正在清理..."+color(7))
+        rmdir(destdir) #慎用，会预先删除目的地目录的所有内容
     mkdir(destdir)
     Cprogs = Counter()
     Cfiles = Counter()
     TC = ThreadCtrl(threads if threads >= 1 else 1)
     TR = TimeRecorder(len(flist))
-
-    t1=time.time() #计时器开始
 
     for i in flist:
         #递归处理各个文件(i是文件的路径名)
@@ -233,9 +231,8 @@ f'''{color(7)}正在批量解包...
 ''')
         time.sleep(0.2)
 
-    t2=time.time() #计时器结束
     os.system('cls')
     print(f'{color(7,0,1)}\n批量合并图片结束!')
     print(f'  累计导出 {Cfiles.get_sum()} 张照片')
-    print(f'  此项用时 {round(t2-t1, 1)} 秒{color(7)}')
+    print(f'  此项用时 {round(TR.getTotalTime())} 秒{color(7)}')
     time.sleep(2)

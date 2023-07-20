@@ -1,34 +1,19 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2023, Harry Huang
 # @ BSD 3-Clause License
-import os
+import os, shutil
 '''
 包含一些常用的文件操作函数
 '''
 
-def Delete_File_Dir(dirName:str):
+def rmdir(path:str):
     '''
     ## Delete a Dir
     #### 删除一个文件夹
-    :param dirName: Path of the dir;
-    :returns: (bool) Execution result;
+    :param path: Path of the dir;
+    :returns: (none);
     '''
-    if os.path.isfile(dirName):
-        #若是文件
-        try:
-            os.remove(dirName)
-        except:
-            print('  错误：删除文件失败', dirName)
-            return False
-    elif os.path.isdir(dirName):
-        #若是文件夹
-        for item in os.listdir(dirName):
-            tf = os.path.join(dirName,item)
-            Delete_File_Dir(tf) #递归调用
-        try:
-            os.rmdir(dirName)
-        except:
-            print('  错误：删除目录失败', dirName)
+    shutil.rmtree(path, ignore_errors=True)
 
 def mkdir(path:str, echo:bool=False):
     '''
@@ -56,6 +41,17 @@ def mkdir(path:str, echo:bool=False):
     else:
         #目录已存在
         return False
+
+def mvfile(path_from:str, path_to:str):
+    '''
+    ## Move a File
+    #### 移动一个文件
+    :param path_from: Path from;
+    :param path_to: Path to;
+    :returns: (none);
+    '''
+    mkdir(os.path.dirname(path_to))
+    shutil.move(path_from, path_to)
 
 def get_dir_size(path:str):
     '''
