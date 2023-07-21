@@ -207,7 +207,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
         print(f'当前文件：\t{ospath.basename(i)}', y=4)
         print(f'累计处理：\t{Cprogs.get_sum()}', y=5)
         print(f'累计导出：\t{Cfiles.get_sum()}', y=6)
-        print(f'剩余时间：\t{round(TR.getRemainingTime(),1)}min', y=7)
+        print(f'剩余时间：\t{round(TR.get_remaining_time()/60,1)}min', y=7)
         ###
         subdestdir = ospath.dirname(i).strip(ospath.sep).replace(rootdir, '').strip(ospath.sep)
         TC.run_subthread(image_resolve,(i, ospath.join(destdir, subdestdir)), \
@@ -224,11 +224,11 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
         print(f'剩余进程：\t{TC.count_subthread()}', y=3)
         print(f'累计处理：\t{Cprogs.get_sum()}', y=4)
         print(f'累计导出：\t{Cfiles.get_sum()}', y=5)
-        print(f'剩余时间：\t{round(TR.getRemainingTime(),1)}min', y=6)
+        print(f'剩余时间：\t--', y=6)
         time.sleep(0.2)
 
     os.system('cls')
     print(f'\n批量合并图片结束!', s=1)
     print(f'  累计导出 {Cfiles.get_sum()} 张照片')
-    print(f'  此项用时 {round(TR.getTotalTime())} 秒')
+    print(f'  此项用时 {round(TR.get_consumed_time())} 秒')
     time.sleep(2)

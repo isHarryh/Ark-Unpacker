@@ -220,7 +220,7 @@ class TimeRecorder():
         t_cur = time.time()
         self.t_rec.append([t_cur, t_cur-self.t_rec[len(self.t_rec)-1][0]])
     
-    def getProgress(self, ndigits:int=1):
+    def get_progress(self, ndigits:int=1):
         '''
         ## Get the progress (%).
         #### 获取进度百分比
@@ -229,12 +229,12 @@ class TimeRecorder():
         '''
         return round((self.n_cur/self.n_dest)*100, ndigits)
     
-    def getSpeed(self, basis:int=100):
+    def get_speed(self, basis:int=100):
         '''
         ## Get the processing speed.
         #### 计算当前任务速度
         :param basis: How many records do we use to calculate the speed;
-        :returns: (float) Items per minute;
+        :returns: (float) Items per second;
         '''
         sum = []
         for i in range(len(self.t_rec)-1, -1, -1):
@@ -243,18 +243,18 @@ class TimeRecorder():
             if self.t_rec[i][1]:
                 sum.append(self.t_rec[i][1])
         rst = trimmean(sum, 0.05)
-        return 60 / rst if rst != 0 else 0
+        return 1 / rst if rst != 0 else 0
     
-    def getRemainingTime(self, basis:int=100):
+    def get_remaining_time(self, basis:int=100):
         '''
         ## Get the time remaining.
         #### 计算当前剩余时间
         :param basis: How many records do we use to calculate the speed;
-        :returns: (float) Minutes;
+        :returns: (float) Seconds;
         '''
-        return (self.n_dest-self.n_cur) / self.getSpeed(basis) if self.getSpeed(basis) != 0 else 0
+        return (self.n_dest-self.n_cur) / self.get_speed(basis) if self.get_speed(basis) != 0 else 0
     
-    def getTotalTime(self):
+    def get_consumed_time(self):
         '''
         ## Get the time from the first record to now.
         #### 计算截至目前的用时

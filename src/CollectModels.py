@@ -106,7 +106,7 @@ def main(srcdirs:"list[str]", destdirs:"list[str]", dodel:bool=False):
         print(f'|{progress_bar(cont_p/100, 25)}| {color(2)}{cont_p}%', y=2)
         print(f'当前目录：\t{dir2}', y=3)
         print(f'累计分拣：\t{cont_f}', y=4)
-        print(f'剩余时间：\t{round(TR.getRemainingTime(),1)}min', y=5)
+        print(f'剩余时间：\t{round(TR.get_remaining_time()/60,1)}min', y=5)
         ###
         dir1_base = ospath.basename(dir1)
         dir2_base = ospath.basename(dir2)
@@ -122,10 +122,10 @@ def main(srcdirs:"list[str]", destdirs:"list[str]", dodel:bool=False):
                 mvfile(m, ospath.join(dest, newname))
                 cont_f += 1
         TR.update()
-        cont_p = TR.getProgress()
+        cont_p = TR.get_progress()
 
     os.system('cls')
     print(f'\n分拣模型结束!', s=1)
     print(f'  累计分拣 {cont_f} 套模型')
-    print(f'  此项用时 {round(TR.getTotalTime())} 秒')
+    print(f'  此项用时 {round(TR.get_consumed_time())} 秒')
     time.sleep(2)
