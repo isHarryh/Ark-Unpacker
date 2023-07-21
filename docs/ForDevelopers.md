@@ -33,16 +33,15 @@ ArkUnpacker附加说明文档
     ```
 
 ## 原理
-本项目的代码结构分为4个层次：
-* 表现层（`Main.py`）
-* 衔接层（`ResolveAB.py和CombineRGBwithA.py`中的`Main`函数）
-* 操作层（`ResolveAB.py和CombineRGBwithA.py`等中的其他函数）
-* 辅助层（`colorTool.py、osTool.py、communalTool.py`）
+本项目的代码结构分为3个层次：
+* 命令行界面(CLI)层（`Main.py`）
+* 操作层
+* 辅助工具层
 
-当您运行了`Main.py`时表现层会负责显示出操作提示。在您向表现层输入指令后，表现层会调用衔接层来完成指令。衔接层负责批量地调用操作层函数，而操作层负责底层的文件处理。此外，前三个层都有调用辅助层的通用函数。
+当您运行了`Main.py`时CLI层会负责显示出操作提示。在您向CLI层输入指令后，其会调用操作层来完成指令。
 
 ## 示例
-如果您不想使用我们的表现层的功能，只想利用衔接层甚至操作层中的代码，来实现一些您自定义的功能，您可以在您的程序中这样写：
+如果您不想使用我们的CLI层的功能，只想利用操作层中的代码，来实现一些您自定义的功能，您可以在您的程序中这样写：
 ```Python
 from src import ResolveAB
 from src import CombineRGBwithA
@@ -54,17 +53,18 @@ CombineRGBwithA.main('Unpacked', 'Combined') # (b)
 ```Python
 # File: src/ResolveAB.py
 def main(rootdir:str, destdir:str, dodel:bool=False, 
-    doimg:bool=True, dotxt:bool=True, doaud:bool=True, separate:bool=True, threads:int=8):
+    doimg:bool=True, dotxt:bool=True, doaud:bool=True, dospine:bool=False, separate:bool=True, threads:int=8):
     '''
     #### 批量地从指定目录的ab文件中，导出指定类型的资源
-    :param rootdir: 来源文件夹的根目录的路径;
-    :param destdir: 解包目的地的根目录的路径;
-    :param dodel:   预先删除目的地文件夹的所有文件，默认False;
-    :param doimg:   是否导出图片资源，默认True;
-    :param dotxt:   是否导出文本资源，默认True;
-    :param doaud:   是否导出音频资源，默认True;
-    :param separate:是否按AB文件分类保存，默认True;
-    :param threads: 最大线程数，默认8;
+    :param rootdir:   来源文件夹的根目录的路径;
+    :param destdir:   解包目的地的根目录的路径;
+    :param dodel:     预先删除目的地文件夹的所有文件，默认False;
+    :param doimg:     是否导出图片资源，默认True;
+    :param dotxt:     是否导出文本资源，默认True;
+    :param doaud:     是否导出音频资源，默认True;
+    :param onlyspine: 是否导出Spine动画，注意Spine动画和图片资源、文本资源有重叠的部分，默认False;
+    :param separate:  是否按AB文件分类保存，默认True;
+    :param threads:   最大线程数，默认8;
     :returns: (None);
     '''
 
