@@ -1,8 +1,5 @@
-*
-!/.vscode/
-!/docs/
-!/src/
-
-*.bat
-*.log
-*.exe
+/*
+__pycache__/
+!.vscode/
+!docs/
+!src/

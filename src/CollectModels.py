@@ -3,16 +3,13 @@
 # @ BSD 3-Clause License
 import os.path, re
 try:
-    from osTool import *
-    from cliTool import *
-    from communalTool import *
+    from .utils._ImportAllUtils import *
 except:
-    from .osTool import *
-    from .cliTool import *
-    from .communalTool import *
+    from utils._ImportAllUtils import*
 '''
 从ArkUnpacker解包出来的文件中筛选出指定Spine模型（ArkModels仓库定制）
 '''
+
 
 def get_oper_common_name(str):
     def get_oper_id(str):

@@ -2,9 +2,7 @@
 # Copyright (c) 2022-2023, Harry Huang
 # @ BSD 3-Clause License
 import os, time
-from src.osTool       import *
-from src.cliTool      import *
-from src.communalTool import *
+from src.utils._ImportAllUtils import *
 from src import ResolveAB       as AU_Rs
 from src import CombineRGBwithA as AU_Cb
 from src import CollectModels   as AU_Cm

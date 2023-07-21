@@ -3,15 +3,11 @@
 # @ BSD 3-Clause License
 import os.path, time
 try:
-    from osTool import *
-    from cliTool import *
-    from communalTool import *
-    from CombineRGBwithA import combine_rgb_a
-except:
-    from .osTool import *
-    from .cliTool import *
-    from .communalTool import *
+    from .utils._ImportAllUtils import *
     from .CombineRGBwithA import combine_rgb_a
+except:
+    from utils._ImportAllUtils import*
+    from CombineRGBwithA import combine_rgb_a
 from UnityPy import load as UpyLoad #UnityPy库用于操作Unity文件
 from UnityPy import classes as UpyClasses
 from UnityPy import Environment
@@ -374,7 +370,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     while TC.count_subthread():
         #等待子进程结束
         print('正在批量解包...', y=1)
-        print(f'|正在等待子进程结束| {RD.next()}', y=2)
+        print(f'|正在等待子进程结束| {color(2)}{RD.next()}', y=2)
         print(f'剩余进程：\t{TC.count_subthread()}', y=3)
         print(f'累计解包：\t{Cprogs.get_sum()}', y=4)
         print(f'累计导出：\t{Cfiles.get_sum()}', y=5)

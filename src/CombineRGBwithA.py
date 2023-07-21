@@ -3,13 +3,9 @@
 # @ BSD 3-Clause License
 import os.path, time
 try:
-    from osTool import *
-    from cliTool import *
-    from communalTool import *
+    from .utils._ImportAllUtils import *
 except:
-    from .osTool import *
-    from .cliTool import *
-    from .communalTool import *
+    from utils._ImportAllUtils import*
 from re import findall
 from PIL import Image #PIL库用于操作图像
 '''
@@ -164,7 +160,6 @@ def image_resolve(fp:str, intodir:str, callback=None, successcallback=None):
         return -1 #图片合成函数返回了失败的结果，退出
 
 
-
 ########## Main-主程序 ##########
 def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
     '''
@@ -220,7 +215,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
     while TC.count_subthread():
         #等待子进程结束
         print('正在批量合并图片...', y=1)
-        print(f'|正在等待子进程结束| {RD.next()}', y=2)
+        print(f'|正在等待子进程结束| {color(2)}{RD.next()}', y=2)
         print(f'剩余进程：\t{TC.count_subthread()}', y=3)
         print(f'累计处理：\t{Cprogs.get_sum()}', y=4)
         print(f'累计导出：\t{Cfiles.get_sum()}', y=5)

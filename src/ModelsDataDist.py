@@ -3,9 +3,9 @@
 # @ BSD 3-Clause License
 import os.path, requests, json, warnings, hashlib
 try:
-    from communalTool import *
+    from .utils._ImportAllUtils import *
 except:
-    from .communalTool import *
+    from utils._ImportAllUtils import*
 '''
 生成ArkModels仓库使用的JSON数据集
 '''
