@@ -4,11 +4,11 @@
 import os.path, time
 try:
     from osTool import *
-    from colorTool import *
+    from cliTool import *
     from communalTool import *
 except:
     from .osTool import *
-    from .colorTool import *
+    from .cliTool import *
     from .communalTool import *
 from re import findall
 from PIL import Image #PIL库用于操作图像
@@ -175,7 +175,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
     :param threads: 最大线程数，默认8;
     :returns: (None);
     '''
-    print(f'{color(7,0,1)}\n正在解析目录...{color(7)}')
+    print(f'\n正在解析目录...', s=1)
     Logger.info("CombineRGBwithA: Reading directories...")
     ospath = os.path
     rootdir = ospath.normpath(ospath.realpath(rootdir)) #标准化目录名
@@ -188,7 +188,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
     cont_p = 0 #进度百分比计数
 
     if dodel:
-        print(color(7,0,1)+"\n正在清理..."+color(7))
+        print("\n正在清理...", s=1)
         rmdir(destdir) #慎用，会预先删除目的地目录的所有内容
     mkdir(destdir)
     Cprogs = Counter()
@@ -196,20 +196,18 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
     TC = ThreadCtrl(threads if threads >= 1 else 1)
     TR = TimeRecorder(len(flist))
 
+    os.system('cls')
     for i in flist:
         #递归处理各个文件(i是文件的路径名)
         if not ospath.isfile(i):
             continue #跳过目录等非文件路径
-        echo = f'''{color(7)}正在批量合并图片...
-|{"■"*int(cont_p//5)}{"□"*int(20-cont_p//5)}| {color(2)}{cont_p}%{color(7)}
-当前目录：\t{ospath.basename(ospath.dirname(i))}
-当前文件：\t{ospath.basename(i)}
-累计处理：\t{Cprogs.get_sum()}
-累计导出：\t{Cfiles.get_sum()}
-剩余时间：\t{round(TR.getRemainingTime(),1)}min
-'''
-        os.system('cls')
-        print(echo)
+        print(f'正在批量合并图片...', y=1)
+        print(f'|{progress_bar(cont_p/100, 25)}| {color(2)}{cont_p}%', y=2)
+        print(f'当前目录：\t{ospath.basename(ospath.dirname(i))}', y=3)
+        print(f'当前文件：\t{ospath.basename(i)}', y=4)
+        print(f'累计处理：\t{Cprogs.get_sum()}', y=5)
+        print(f'累计导出：\t{Cfiles.get_sum()}', y=6)
+        print(f'剩余时间：\t{round(TR.getRemainingTime(),1)}min', y=7)
         ###
         subdestdir = ospath.dirname(i).strip(ospath.sep).replace(rootdir, '').strip(ospath.sep)
         TC.run_subthread(image_resolve,(i, ospath.join(destdir, subdestdir)), \
@@ -218,21 +216,19 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
         cont_p = TR.getProgress()
 
     RD = Rounder()
+    os.system('cls')
     while TC.count_subthread():
         #等待子进程结束
-        os.system('cls')
-        print(
-f'''{color(7)}正在批量解包...
-|正在等待子进程结束| {color(2)}{RD.next()}{color(7)}
-剩余进程：\t{TC.count_subthread()}
-累计处理：\t{Cprogs.get_sum()}
-累计导出：\t{Cfiles.get_sum()}
-剩余时间：\t--
-''')
+        print('正在批量合并图片...', y=1)
+        print(f'|正在等待子进程结束| {RD.next()}', y=2)
+        print(f'剩余进程：\t{TC.count_subthread()}', y=3)
+        print(f'累计处理：\t{Cprogs.get_sum()}', y=4)
+        print(f'累计导出：\t{Cfiles.get_sum()}', y=5)
+        print(f'剩余时间：\t{round(TR.getRemainingTime(),1)}min', y=6)
         time.sleep(0.2)
 
     os.system('cls')
-    print(f'{color(7,0,1)}\n批量合并图片结束!')
+    print(f'\n批量合并图片结束!', s=1)
     print(f'  累计导出 {Cfiles.get_sum()} 张照片')
-    print(f'  此项用时 {round(TR.getTotalTime())} 秒{color(7)}')
+    print(f'  此项用时 {round(TR.getTotalTime())} 秒')
     time.sleep(2)

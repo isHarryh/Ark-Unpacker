@@ -4,11 +4,11 @@
 import os.path, re
 try:
     from osTool import *
-    from colorTool import *
+    from cliTool import *
     from communalTool import *
 except:
     from .osTool import *
-    from .colorTool import *
+    from .cliTool import *
     from .communalTool import *
 '''
 从ArkUnpacker解包出来的文件中筛选出指定Spine模型（ArkModels仓库定制）
@@ -76,16 +76,16 @@ def main(srcdirs:"list[str]", destdirs:"list[str]", dodel:bool=False):
     :param dodel:      预先删除目标文件夹的所有文件，默认False;
     :returns: (None);
     '''
-    print(color(7,0,1)+"\n正在解析目录..."+color(7))
+    print("\n正在解析目录...", s=1)
     Logger.info("CollectModels: Reading directories...")
     ospath = os.path
     if len(srcdirs) != len(destdirs):
-        print(color(1)+"参数错误")
+        print("参数错误", c=3)
         return
     
     flist = [] #[(subsub-srcdir, sub-srcdir, destdir),...]
     for src, dest in zip(srcdirs, destdirs):
-        print(color(7)+"\t正在读取目录 "+src)
+        print("\t正在读取目录 "+src)
         for dir1 in get_filelist(src, only_dirs=True, max_depth=1):
             for dir2 in get_filelist(dir1, only_dirs=True, max_depth=1):
                 flist.append((dir2, dir1, dest))
@@ -93,21 +93,20 @@ def main(srcdirs:"list[str]", destdirs:"list[str]", dodel:bool=False):
     cont_f = 0 #已分拣模型计数
     cont_p = 0 #进度百分比计数
     if dodel:
-        print(color(7,0,1)+"\n正在清理..."+color(7))
+        print("\n正在清理...", s=1)
         for i in destdirs:
+            print("\t正在清理目录 "+i)
             rmdir(i) #慎用，会预先删除目的地目录的所有内容
     TR = TimeRecorder(len(flist))
 
+    os.system('cls')
     for dir2, dir1, dest in flist:
         #递归处理各个目录(i是元组(sub-srcdir, destdir))
-        echo = f'''{color(7)}正在分拣模型...
-|{"■"*int(cont_p//5)}{"□"*int(20-cont_p//5)}| {color(2)}{cont_p}%{color(7)}
-当前目录：\t{dir2}
-累计分拣：\t{cont_f}
-剩余时间：\t{round(TR.getRemainingTime(),1)}min
-'''
-        os.system('cls')
-        print(echo)
+        print('正在分拣模型...', y=1)
+        print(f'|{progress_bar(cont_p/100, 25)}| {color(2)}{cont_p}%', y=2)
+        print(f'当前目录：\t{dir2}', y=3)
+        print(f'累计分拣：\t{cont_f}', y=4)
+        print(f'剩余时间：\t{round(TR.getRemainingTime(),1)}min', y=5)
         ###
         dir1_base = ospath.basename(dir1)
         dir2_base = ospath.basename(dir2)
@@ -126,7 +125,7 @@ def main(srcdirs:"list[str]", destdirs:"list[str]", dodel:bool=False):
         cont_p = TR.getProgress()
 
     os.system('cls')
-    print(f'{color(7,0,1)}\n分拣模型结束!')
+    print(f'\n分拣模型结束!', s=1)
     print(f'  累计分拣 {cont_f} 套模型')
-    print(f'  此项用时 {round(TR.getTotalTime())} 秒{color(7)}')
+    print(f'  此项用时 {round(TR.getTotalTime())} 秒')
     time.sleep(2)
