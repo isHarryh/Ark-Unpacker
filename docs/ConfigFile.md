@@ -10,8 +10,8 @@ ArkUnpacker附加说明文档
 {
     "log_file": "ArkUnpackerLogs.log",
     "log_level": 3,
-    "threads_limit": 32,
-    "threads_default": 8
+    "threads_limit": 48,
+    "threads_default": 16
 }
 ```
 - `log_file`：字符串。日志文件的存储路径，设为`""`以禁用日志文件写入。
