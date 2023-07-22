@@ -2,6 +2,12 @@
 ==========
 <sup> This project only supports Chinese docs. If you are an English user, feel free to contact us. </sup>
 
+## v2.5
+#### 优化
+1. (重要) 优化了多线程分配逻辑，文件写入系统已支持多线程，提升了大型ab文件的解包速度。
+2. (重要) 优化了程序的目录结构，分离了部分程序脚本。
+
+
 ## v2.4
 #### 修复
 1. (重要) 修复了无法正确导出多纹理的Spine模型（例如岁相、部分干员动态立绘）文件的问题。
