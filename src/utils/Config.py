@@ -15,8 +15,8 @@ class Config():
     __default_config = {
         'log_file': "ArkUnpackerLogs.log",
         'log_level': Logger.LV_INFO,
-        'threads_limit': 32,
-        'threads_default': 8,
+        'threads_limit': 48,
+        'threads_default': 16,
     }
     
     def __init__(self):

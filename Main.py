@@ -10,8 +10,9 @@ from src import ModelsDataDist  as AU_Mdd
 '''
 ArkUnpacker主程序
 '''
-AU_ver='v2.4'
-AU_i18n='zh-CN'
+AU_ver = 'v2.5'
+AU_i18n = 'zh-CN'
+AU_thread_suggest = '10-20'
 
 
 def prt_homepage():
@@ -145,7 +146,7 @@ def run_costm_Rs():
     doaud = True if 'a' in dothem or 'A' in dothem else False
     ###
     print(f'\n请指定最大线程数（同时执行任务数）：')
-    print('  建议：5-15')
+    print(f'  建议：{AU_thread_suggest}')
     ths = input_allow(f'> ', [str(i) for i in range(1,config.get('threads_limit'))], '  请重新输入合理的数字\n> ')
     ths = int(ths)
     ###
@@ -183,7 +184,7 @@ def run_costm_Cb():
         dodel = True if dodel in ['y','Y'] else False
     ###
     print(f'\n请指定最大线程数（同时执行任务数）：')
-    print('  建议：5-15')
+    print(f'  建议：{AU_thread_suggest}')
     ths = input_allow(f'> ', [str(i) for i in range(1,config.get('threads_limit'))], '  请重新输入合理的数字\n> ')
     ths = int(ths)
     ###
@@ -205,7 +206,7 @@ def run_arkmodels_unpacking(dirs, destdir):
             return
     ###
     print(f'请指定最大线程数（同时执行任务数）：')
-    print('  建议：10-20')
+    print(f'  建议：{AU_thread_suggest}')
     ths = input_allow(f'> ', [str(i) for i in range(1,config.get('threads_limit'))], '  请重新输入合理的数字\n> ')
     ths = int(ths)
     ###

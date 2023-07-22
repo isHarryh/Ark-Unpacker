@@ -210,7 +210,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
         TC.run_subthread(image_resolve,(i, ospath.join(destdir, subdestdir)), \
             {'callback': Cprogs.update, 'successcallback': Cfiles.update}, name=f"CBThread:{id(i)}")
         TR.update()
-        cont_p = TR.getProgress()
+        cont_p = TR.get_progress()
 
     RD = Rounder()
     os.system('cls')
