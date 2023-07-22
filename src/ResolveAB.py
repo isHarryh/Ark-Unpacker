@@ -101,7 +101,7 @@ class Resource:
                 return i
         return None
 
-    def save_all_the(self, typename:str, intodir:str, callback=None):
+    def save_all_the(self, typename:str, intodir:str, callback:staticmethod=None):
         '''
         #### 保存Reource类中某个类型的所有文件
         :param typename: 类型名称;
@@ -115,13 +115,11 @@ class Resource:
                 for i in j[1]:
                     #(i是单个object)
                     data = j[3](i) #内容提取
-                    if j[4](data, intodir, i.name, j[2]): #安全保存
-                        Logger.debug(f"ResolveAB: \"{self.name}\" -> \"{i.name}{j[2]}\"")
-                        if callback:
-                            callback()
+                    j[4](data, intodir, i.name, j[2], callback) #保存
+                    Logger.debug(f"ResolveAB: \"{self.name}\" -> \"{i.name}{j[2]}\"")
                 break
     
-    def save_skeletons(self, intodir:str, callback=None):
+    def save_skeletons(self, intodir:str, callback:staticmethod=None):
         '''
         #### 保存所有找到的Spine动画，请确保已先执行sort_skeletons
         :param intodir:  保存目的地的目录;
@@ -240,7 +238,7 @@ class Resource:
                 return os.path.splitext(os.path.basename(self.atlas.name))[0]
             return "Unknown"
         
-        def save_spine(self, intodir:str, callback=None):
+        def save_spine(self, intodir:str, callback:staticmethod=None):
             if self.is_available():
                 for i in self.tex_list:
                     if i[0]:
@@ -334,14 +332,17 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     flist = get_filelist(rootdir)
     flist = list(filter(lambda x:ospath.splitext(x)[1] in ['.ab','.AB'], flist)) #初筛
     
-    cont_p = 0 #进度百分比计数
+    cont_p1 = 0 #进度百分比计数
+    cont_p2 = 0 #进度百分比计数
     if dodel:
         print("\n正在清理...", s=1)
         rmdir(destdir) #慎用，会预先删除目的地目录的所有内容
     mkdir(destdir)
     Cprogs = Counter()
     Cfiles = Counter()
-    TC = ThreadCtrl(threads if threads >= 1 else 1)
+    MySaver.reset()
+    MySaver.thread_ctrl.set_max_subthread(threads)
+    TC = ThreadCtrl(threads)
     TR = TimeRecorder(len(flist))
 
     os.system('cls')
@@ -349,32 +350,33 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
         #递归处理各个文件(i是文件的路径名)
         if not ospath.isfile(i):
             continue #跳过目录等非文件路径
-        print('正在批量解包...', y=1)
-        print(f'|{progress_bar(cont_p/100, 25)}| {color(2)}{cont_p}%', y=2)
-        print(f'当前目录：\t{ospath.basename(ospath.dirname(i))}', y=3)
-        print(f'当前文件：\t{ospath.basename(i)}', y=4)
-        print(f'累计解包：\t{Cprogs.get_sum()}', y=5)
-        print(f'累计导出：\t{Cfiles.get_sum()}', y=6)
-        print(f'剩余时间：\t{round(TR.get_remaining_time()/60,1)}min', y=7)
+        print(f'正在批量解包... {color(2, 0, 1)}{(cont_p1*100)}%', y=1)
+        print(f'解包进度 |{progress_bar(cont_p1, 25)}|', y=2)
+        print(f'导出进度 |{progress_bar(cont_p2, 25)}|', y=3)
+        print(f'当前目录：\t{ospath.basename(ospath.dirname(i))}', y=4)
+        print(f'当前文件：\t{ospath.basename(i)}', y=5)
+        print(f'累计解包：\t{Cprogs.get_sum()}', y=6)
+        print(f'累计导出：\t{Cfiles.get_sum()}', y=7)
+        print(f'剩余时间：\t{round(TR.get_remaining_time()/60,1)}min', y=8)
         ###
         subdestdir = ospath.dirname(i).strip(ospath.sep).replace(rootdir, '').strip(ospath.sep)
         curdestdir = os.path.join(destdir, subdestdir, ospath.splitext(ospath.basename(i))[0]) \
             if separate else os.path.join(destdir, subdestdir)
         TC.run_subthread(ab_resolve, (i, curdestdir, doimg, dotxt, doaud, dospine), \
-            {'callback': Cprogs.update, 'subcallback': Cfiles.update})
+            {'callback': Cprogs.update, 'subcallback': Cfiles.update}, name=f"RsThread:{id(i)}")
         TR.update()
-        cont_p = TR.get_progress()
+        cont_p1 = TR.get_progress()
+        cont_p2 = MySaver.get_progress()
 
     RD = Rounder()
     os.system('cls')
-    while TC.count_subthread():
+    while TC.count_subthread() or MySaver.thread_ctrl.count_subthread():
         #等待子进程结束
         print('正在批量解包...', y=1)
         print(f'|正在等待子进程结束| {color(2)}{RD.next()}', y=2)
-        print(f'剩余进程：\t{TC.count_subthread()}', y=3)
-        print(f'累计解包：\t{Cprogs.get_sum()}', y=4)
-        print(f'累计导出：\t{Cfiles.get_sum()}', y=5)
-        print(f'剩余时间：\t--', y=6)
+        print(f'累计解包：\t{Cprogs.get_sum()}', y=3)
+        print(f'累计导出：\t{Cfiles.get_sum()}', y=4)
+        print(f'剩余时间：\t--', y=5)
         time.sleep(0.2)
 
     os.system('cls')

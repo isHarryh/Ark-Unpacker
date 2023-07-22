@@ -188,7 +188,9 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
     mkdir(destdir)
     Cprogs = Counter()
     Cfiles = Counter()
-    TC = ThreadCtrl(threads if threads >= 1 else 1)
+    MySaver.reset()
+    MySaver.thread_ctrl.set_max_subthread(threads)
+    TC = ThreadCtrl(threads)
     TR = TimeRecorder(len(flist))
 
     os.system('cls')
@@ -196,8 +198,8 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
         #递归处理各个文件(i是文件的路径名)
         if not ospath.isfile(i):
             continue #跳过目录等非文件路径
-        print(f'正在批量合并图片...', y=1)
-        print(f'|{progress_bar(cont_p/100, 25)}| {color(2)}{cont_p}%', y=2)
+        print(f'正在批量合并图片... {color(2, 0, 1)}{cont_p}%', y=1)
+        print(f'|{progress_bar(cont_p, 25)}|', y=2)
         print(f'当前目录：\t{ospath.basename(ospath.dirname(i))}', y=3)
         print(f'当前文件：\t{ospath.basename(i)}', y=4)
         print(f'累计处理：\t{Cprogs.get_sum()}', y=5)
@@ -206,7 +208,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
         ###
         subdestdir = ospath.dirname(i).strip(ospath.sep).replace(rootdir, '').strip(ospath.sep)
         TC.run_subthread(image_resolve,(i, ospath.join(destdir, subdestdir)), \
-            {'callback': Cprogs.update, 'successcallback': Cfiles.update})
+            {'callback': Cprogs.update, 'successcallback': Cfiles.update}, name=f"CBThread:{id(i)}")
         TR.update()
         cont_p = TR.getProgress()
 

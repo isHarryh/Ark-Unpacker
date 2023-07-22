@@ -18,8 +18,34 @@ class ThreadCtrl():
         :param max_subthread: The max number of sub threads;
         :returns: (none);
         '''
-        self.__max = max_subthread
-        self.__sts = []
+        self.__sts:list[Thread] = []
+        self.set_max_subthread(max_subthread)
+    
+    def set_max_subthread(self, max_subthread:int):
+        '''
+        ## Set the max number of sub threads.
+        #### 设置最大子线程数
+        :param max_subthread: The max number of sub threads;
+        :returns: (none);
+        '''
+        self.__max:int = max(1, max_subthread)
+    
+    def get_max_sub_thread(self):
+        '''
+        ## Set the max number of sub threads.
+        #### 获取最大子线程数
+        :returns: (int);
+        '''
+        return self.__max
+    
+    def get_idle_ratio(self, ndigits:int=3):
+        '''
+        ## Get the idle ratio
+        #### 获取空闲率
+        :param ndigits: Decimal Digits;
+        :returns: (float);
+        '''
+        return self.count_subthread() - self.get_max_sub_thread()
     
     def count_subthread(self):
         '''
@@ -30,7 +56,7 @@ class ThreadCtrl():
         self.__sts = list(filter(lambda x:x.is_alive(), self.__sts))
         return len(self.__sts)
     
-    def run_subthread(self, fun, args:tuple=(), kwargs:dict={}):
+    def run_subthread(self, fun, args:tuple=(), kwargs:dict={}, name:"str|None"=None):
         '''
         ## Create a sub thread and run it.
         #### 创建并运行一个子线程
@@ -38,7 +64,7 @@ class ThreadCtrl():
         '''
         while self.count_subthread() >= self.__max:
             pass
-        ts = Thread(target=fun, args=args, kwargs=kwargs, daemon=False)
+        ts = Thread(target=fun, args=args, kwargs=kwargs, daemon=False, name=name)
         self.__sts.append(ts)
         ts.start()
     #EndClass
@@ -57,14 +83,14 @@ class Counter():
         '''
         self.__s = 0
 
-    def update(self, val:int=1):
+    def update(self, val:"int|bool"=1):
         '''
         ## Update the counter.
         #### 更新计数
         :param val: Delta value;
         :returns: (int) Current value;
         '''
-        self.__s += val
+        self.__s += int(val)
         return self.__s
     
     def get_sum(self):
@@ -104,14 +130,14 @@ class TimeRecorder():
         t_cur = time.time()
         self.t_rec.append([t_cur, t_cur-self.t_rec[len(self.t_rec)-1][0]])
     
-    def get_progress(self, ndigits:int=1):
+    def get_progress(self, ndigits:int=3):
         '''
-        ## Get the progress (%).
+        ## Get the progress (/100%).
         #### 获取进度百分比
         :param ndigits: Decimal Digits;
-        :returns: (int);
+        :returns: (float);
         '''
-        return round((self.n_cur/self.n_dest)*100, ndigits)
+        return round((self.n_cur/self.n_dest), ndigits)
     
     def get_speed(self, basis:int=100):
         '''
