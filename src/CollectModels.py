@@ -99,8 +99,8 @@ def main(srcdirs:"list[str]", destdirs:"list[str]", dodel:bool=False):
     os.system('cls')
     for dir2, dir1, dest in flist:
         #递归处理各个目录(i是元组(sub-srcdir, destdir))
-        print(f'正在分拣模型... {color(2)}{cont_p}%', y=1)
-        print(f'|{progress_bar(cont_p, 25)}|', y=2)
+        print(f'正在分拣模型...', y=1)
+        print(f'|{progress_bar(cont_p, 25)}| {color(2)}{round(cont_p*100, 1)}%', y=2)
         print(f'当前目录：\t{dir2}', y=3)
         print(f'累计分拣：\t{cont_f}', y=4)
         print(f'剩余时间：\t{round(TR.get_remaining_time()/60,1)}min', y=5)

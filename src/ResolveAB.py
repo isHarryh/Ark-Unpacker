@@ -332,8 +332,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     flist = get_filelist(rootdir)
     flist = list(filter(lambda x:ospath.splitext(x)[1] in ['.ab','.AB'], flist)) #初筛
     
-    cont_p1 = 0 #进度百分比计数
-    cont_p2 = 0 #进度百分比计数
+    cont_p = 0 #进度百分比计数
     if dodel:
         print("\n正在清理...", s=1)
         rmdir(destdir) #慎用，会预先删除目的地目录的所有内容
@@ -350,14 +349,13 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
         #递归处理各个文件(i是文件的路径名)
         if not ospath.isfile(i):
             continue #跳过目录等非文件路径
-        print(f'正在批量解包... {color(2, 0, 1)}{(cont_p1*100)}%', y=1)
-        print(f'解包进度 |{progress_bar(cont_p1, 25)}|', y=2)
-        print(f'导出进度 |{progress_bar(cont_p2, 25)}|', y=3)
-        print(f'当前目录：\t{ospath.basename(ospath.dirname(i))}', y=4)
-        print(f'当前文件：\t{ospath.basename(i)}', y=5)
-        print(f'累计解包：\t{Cprogs.get_sum()}', y=6)
-        print(f'累计导出：\t{Cfiles.get_sum()}', y=7)
-        print(f'剩余时间：\t{round(TR.get_remaining_time()/60,1)}min', y=8)
+        print(f'正在批量解包...', y=1)
+        print(f'|{progress_bar(cont_p, 25)}| {color(2, 0, 1)}{round(cont_p*100, 1)}%', y=2)
+        print(f'当前目录：\t{ospath.basename(ospath.dirname(i))}', y=3)
+        print(f'当前文件：\t{ospath.basename(i)}', y=4)
+        print(f'累计解包：\t{Cprogs.get_sum()}', y=5)
+        print(f'累计导出：\t{Cfiles.get_sum()}', y=6)
+        print(f'剩余时间：\t{round(TR.get_remaining_time()/60,1)}min', y=7)
         ###
         subdestdir = ospath.dirname(i).strip(ospath.sep).replace(rootdir, '').strip(ospath.sep)
         curdestdir = os.path.join(destdir, subdestdir, ospath.splitext(ospath.basename(i))[0]) \
@@ -365,8 +363,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
         TC.run_subthread(ab_resolve, (i, curdestdir, doimg, dotxt, doaud, dospine), \
             {'callback': Cprogs.update, 'subcallback': Cfiles.update}, name=f"RsThread:{id(i)}")
         TR.update()
-        cont_p1 = TR.get_progress()
-        cont_p2 = MySaver.get_progress()
+        cont_p = TR.get_progress()
 
     RD = Rounder()
     os.system('cls')
