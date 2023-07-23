@@ -69,31 +69,18 @@ def progress_bar(progress:float, length:int):
 
 ##### ↓ IO related ↓ #####
 
-def mkdir(path:str, echo:bool=False):
+def mkdir(path:str):
     '''
     ## Create a Dir
     #### 创建一个文件夹
-    :param path: Path of the new dir;
-    :param echo: Whether to echo info;
+    :param path: Path of the dir to create;
     :returns:    (bool) Execution result;
     '''
     path = path.strip().strip('/').rstrip('\\')
-    if not os.path.exists(path):
-        try:
-            os.makedirs(path)
-            if echo:
-                if len(path) > 24:
-                    print(f'  目录已创建 ...{path[-20:]}')
-                else:
-                    print(f'  目录已创建 {path}')
-            return True
-        except:
-            #错误
-            if echo:
-                print("  目录创建失败", c=3)
-            return False
-    else:
-        #目录已存在
+    try:
+        os.makedirs(path, exist_ok=True)
+        return True
+    except:
         return False
 
 def mvfile(path_from:str, path_to:str):
@@ -124,34 +111,44 @@ def get_dir_size(path:str):
     :returns:    (int) Size in Byte;
     '''
     size = 0
-    lst = os.listdir(path)
-    for el in lst:
-        new = path+'\\'+el
-        if os.path.isfile(new):
-            size += os.path.getsize(new)
-        else:
-            size += get_dir_size(new)
+    lst = get_filelist(path)
+    for i in lst:
+        if os.path.isfile(i):
+            size += os.path.getsize(i)
     return size
 
 def get_filelist(path:str, max_depth=0, only_dirs=False):
     '''
     ## Get a list containing all the sub dirs (and files) in the given dir
     #### 获取指定目录中的所有子文件夹（和文件）的列表
+    Note: If `max_depth` is specified to unlimited, `os.walk` (the most efficient) will be used in this method instead of `os.listdir`.
     :param path:      Path of the specified parent dir;
     :param max_depth: Max searching depth, 0 for unlimited;
     :param only_dirs: Whether to exclude files;
     :returns:         (list) A list of file paths;
     '''
-    max_depth = int(max_depth)
     lst = []
-    for i in os.listdir(path):
-        i = os.path.join(path, i)
-        if os.path.isdir(i):
-            lst.append(i)
-            if max_depth != 1:
-                lst.extend(get_filelist(i, max_depth - 1))
-        elif not only_dirs:
-            lst.append(i)
+    max_depth = int(max_depth)
+    if max_depth <= 0:
+        if only_dirs:
+            for root, dirs, files in os.walk(path):
+                for dir in dirs:
+                    lst.append(os.path.join(root, dir))
+        else:
+            for root, dirs, files in os.walk(path):
+                for dir in dirs:
+                    lst.append(os.path.join(root, dir))
+                for file in files:
+                    lst.append(os.path.join(root, file))
+    else:
+        for i in os.listdir(path):
+            i = os.path.join(path, i)
+            if os.path.isdir(i):
+                lst.append(i)
+                if max_depth != 1:
+                    lst.extend(get_filelist(i, max_depth - 1))
+            elif not only_dirs:
+                lst.append(i)
     return lst
 
 def get_path_authority(path:str):
@@ -161,11 +158,7 @@ def get_path_authority(path:str):
     :param path: Path;
     :returns:    (bool) True=Available, False=Unavailable;
     '''
-    if os.path.exists(path)\
-        and os.access(path,os.X_OK|os.W_OK|os.R_OK):
-        return True
-    else:
-        return False
+    return os.path.exists(path) and os.access(path,os.X_OK|os.W_OK|os.R_OK)
 
 ##### ↓ Stat related ↓ #####
 
@@ -190,9 +183,7 @@ def trimmean(lst:list, percent:float):
     :param lst:     List of values;
     :param percent: (float) Ratio of extreme values of each end;
     '''
-    if len(lst) == 0:
-        return float(0)
-    if percent < 0 or percent > 1:
+    if len(lst) == 0 or percent < 0 or percent > 1:
         return float(0)
     newlst = lst[:]
     newlst.sort()

@@ -336,7 +336,6 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     if dodel:
         print("\n正在清理...", s=1)
         rmdir(destdir) #慎用，会预先删除目的地目录的所有内容
-    mkdir(destdir)
     Cprogs = Counter()
     Cfiles = Counter()
     MySaver.reset()
