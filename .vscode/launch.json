@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "ArkUnpacker",
+            "name": "Python: ArkUnpacker",
             "type": "python",
             "request": "launch",
             "program": "Main.py",
@@ -17,6 +17,14 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Build: ArkUnpacker",
+            "type": "python",
+            "request": "launch",
+            "program": "build${pathSeparator}Build.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }
