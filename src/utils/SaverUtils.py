@@ -18,14 +18,13 @@ class SafeSaver():
     total_requested = Counter()
 
     @staticmethod
-    def get_progress(ndigits:int=3):
+    def get_progress():
         '''
         ## Get the progress (/100%).
-        #### 获取进度百分比
-        :param ndigits: Decimal Digits;
+        #### 获取进度百分比，即线程池空闲率
         :returns: (float);
         '''
-        return round((1-MySaver.thread_ctrl.get_idle_ratio()), ndigits)
+        return 1 - MySaver.thread_ctrl.get_idle_ratio()
 
     @staticmethod
     def reset():
@@ -120,7 +119,7 @@ class MySaver(SafeSaver):
         :param name:    纯文件名;
         :param ext:     文件后缀;
         :param callbak: 成功保存回调，参数(has_saved);
-        :returns:       (bool) 是否进行了保存;
+        :returns:       (bool) 是否调用了保存;
         '''
         ext = ext.lower()
         if ext not in ['.png', '.jpg', '.jpeg', '.bmp']:
@@ -130,7 +129,8 @@ class MySaver(SafeSaver):
         byt = BytesIO()
         IM.save(byt, format = ('PNG' if ext == '.png' else 'JPEG'))
         byt = byt.getvalue()
-        return SafeSaver.save(byt, intodir, name, ext, callback)
+        SafeSaver.save(byt, intodir, name, ext, callback)
+        return True
 
     @staticmethod
     def save_script(byt:bytes, intodir:str, name:str, ext:str='', callback:staticmethod=None):
@@ -141,12 +141,13 @@ class MySaver(SafeSaver):
         :param name:    纯文件名;
         :param ext:     文件后缀;
         :param callbak: 成功保存回调，参数(has_saved);
-        :returns:       (bool) 是否进行了保存;
+        :returns:       (bool) 是否调用了保存;
         '''
         ext = ext.lower()
         if not byt:
             return False
-        return SafeSaver.save(byt, intodir, name, ext, callback)
+        SafeSaver.save(byt, intodir, name, ext, callback)
+        return True
 
     @staticmethod
     def save_samples(items:bytes, intodir:str, name:str, ext:str='', callback:staticmethod=None):
@@ -157,12 +158,14 @@ class MySaver(SafeSaver):
         :param name:    纯文件名;
         :param ext:     文件后缀;
         :param callbak: 成功保存回调，参数(has_saved);
-        :returns:       (bool) 是否进行了保存;
+        :returns:       (bool) 是否调用了保存;
         '''
+        ext = ext.lower()
         byt = bytes()
         for n, d in items:
             byt += d
         if not byt:
             return False
-        return SafeSaver.save(byt, intodir, name, ext, callback)
+        SafeSaver.save(byt, intodir, name, ext, callback)
+        return True
     #EndClass

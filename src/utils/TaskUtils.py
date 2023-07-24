@@ -38,11 +38,10 @@ class ThreadCtrl():
         '''
         return self.__max
     
-    def get_idle_ratio(self, ndigits:int=3):
+    def get_idle_ratio(self):
         '''
         ## Get the idle ratio
         #### 获取空闲率
-        :param ndigits: Decimal Digits;
         :returns: (float);
         '''
         return self.count_subthread() - self.get_max_sub_thread()
@@ -130,14 +129,13 @@ class TimeRecorder():
         t_cur = time.time()
         self.t_rec.append([t_cur, t_cur-self.t_rec[len(self.t_rec)-1][0]])
     
-    def get_progress(self, ndigits:int=3):
+    def get_progress(self):
         '''
         ## Get the progress (/100%).
         #### 获取进度百分比
-        :param ndigits: Decimal Digits;
         :returns: (float);
         '''
-        return round((self.n_cur/self.n_dest), ndigits)
+        return self.n_cur / self.n_dest
     
     def get_speed(self, basis:int=100):
         '''

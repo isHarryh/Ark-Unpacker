@@ -106,7 +106,7 @@ def similarity(fp_rgb:str, fp_a:str, prec:int=150):
     Diff_mean = round(mean(Diff))
     return 0 if Diff_mean >= 255 else (255 if Diff_mean <= 0 else 255-Diff_mean)
 
-def image_resolve(fp:str, intodir:str, callback=None, successcallback=None):
+def image_resolve(fp:str, intodir:str, callback:staticmethod=None, successcallback:staticmethod=None):
     '''
     #### 判断某图片的名称是否包含A通道图的特定命名特征，
     #### 如果是的话就寻找它的RGB通道图进行合并，然后保存合并的图片
@@ -147,13 +147,8 @@ def image_resolve(fp:str, intodir:str, callback=None, successcallback=None):
     IM = combine_rgb_a(fp2, fp)
     if IM:
         Logger.debug(f"CombineRGBwithA: \"{fp}\" -> \"{fp2}\"")
-        if MySaver.save_image(IM, intodir, real, '.png'): #保存新图
-            if callback: callback()
-            if successcallback: successcallback()
-            return 0 #成功，返回0
-        else:
-            if callback: callback()
-            return 6 #未保存，返回6
+        MySaver.save_image(IM, intodir, real, '.png', successcallback) #保存新图
+        if callback: callback()
     else:
         Logger.warn(f"CombineRGBwithA: Failed to combine \"{fp}\" with \"{fp2}\"")
         if callback: callback()
