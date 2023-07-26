@@ -68,6 +68,94 @@ class ThreadCtrl():
         ts.start()
     #EndClass
 
+class UICtrl():
+    '''
+    UI Controller in the separated thread
+    用户界面控制器（独立线程）
+    '''
+    THREAD_NAME = 'UIThread'
+
+    def __init__(self, interval:float):
+        '''
+        ## Initialize a UI Controller
+        #### 初始化用户界面控制器
+        :param interval: Auto-refresh interval (seconds);
+        :returns: (none);
+        '''
+        self.__lines = []
+        self.__cache_lines = []
+        self.__status = True
+        self.set_refresh_rate(interval)
+    
+    def __loop(self):
+        while self.__status:
+            self.refresh(post_delay=self.__interval)
+    
+    def loop_start(self):
+        '''
+        ## Start auto-refresh
+        #### 开始自动刷新界面
+        :returns: (none);
+        '''
+        self.__status = True
+        self.__cache_lines = []
+        Thread(target=self.__loop, daemon=False, name=UICtrl.THREAD_NAME).start()
+    
+    def loop_stop(self):
+        '''
+        ## Stop auto-refresh
+        #### 停止自动刷新界面
+        :returns: (none);
+        '''
+        self.__status = False
+        self.__cache_lines = []
+    
+    def refresh(self, post_delay:float=0, force_refresh:bool=False):
+        '''
+        ## Request a immediate refresh
+        #### 请求立即刷新界面
+        :param post_delay: Set the post delay after this refresh (seconds);
+        :param force_refresh: If True, do refresh regardless of whether the content has changed or not;
+        :returns: (none);
+        '''
+        if self.__lines != self.__cache_lines or force_refresh:
+            for i in range(len(self.__lines)):
+                print(self.__lines[i], y=i+1)
+            if post_delay > 0:
+                time.sleep(post_delay)
+            self.__lines = self.__cache_lines
+        if post_delay > 0:
+            time.sleep(post_delay)
+    
+    def request(self, lines:"list[str]"):
+        '''
+        ## Update the content
+        #### 更新界面内容
+        :param lines: A list containing the content of each line;
+        :returns: (none);
+        '''
+        self.__lines = lines
+    
+    def reset(self):
+        '''
+        ## Clear the content
+        #### 清除界面内容
+        :returns: (none);
+        '''
+        os.system('cls')
+        self.__lines = []
+        self.__cache_lines = []
+    
+    def set_refresh_rate(self, interval:float):
+        '''
+        ## Set the auto-refresh interval
+        #### 设置自动刷新间隔
+        :param interval: Auto-refresh interval (seconds);
+        :returns: (none);
+        '''
+        self.__interval = interval  
+    #EndClass
+
 class Counter():
     '''
     Counter

@@ -185,20 +185,24 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
     MySaver.reset()
     MySaver.thread_ctrl.set_max_subthread(threads)
     TC = ThreadCtrl(threads)
+    UI = UICtrl(0.5)
     TR = TimeRecorder(len(flist))
 
-    os.system('cls')
+    UI.reset()
+    UI.loop_start()
     for i in flist:
         #递归处理各个文件(i是文件的路径名)
         if not ospath.isfile(i):
             continue #跳过目录等非文件路径
-        print(f'正在批量合并图片...', y=1)
-        print(f'|{progress_bar(cont_p, 25)}| {color(2, 0, 1)}{round(cont_p*100, 1)}%', y=2)
-        print(f'当前目录：\t{ospath.basename(ospath.dirname(i))}', y=3)
-        print(f'当前文件：\t{ospath.basename(i)}', y=4)
-        print(f'累计处理：\t{Cprogs.get_sum()}', y=5)
-        print(f'累计导出：\t{Cfiles.get_sum()}', y=6)
-        print(f'剩余时间：\t{round(TR.get_remaining_time()/60,1)}min', y=7)
+        UI.request([
+            f'正在批量合并图片...',
+            f'|{progress_bar(cont_p, 25)}| {color(2, 0, 1)}{round(cont_p*100, 1)}%',
+            f'当前目录：\t{ospath.basename(ospath.dirname(i))}',
+            f'当前文件：\t{ospath.basename(i)}',
+            f'累计处理：\t{Cprogs.get_sum()}',
+            f'累计导出：\t{Cfiles.get_sum()}',
+            f'剩余时间：\t{round(TR.get_remaining_time()/60,1)}min',
+        ])
         ###
         subdestdir = ospath.dirname(i).strip(ospath.sep).replace(rootdir, '').strip(ospath.sep)
         TC.run_subthread(image_resolve,(i, ospath.join(destdir, subdestdir)), \
@@ -207,18 +211,20 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
         cont_p = TR.get_progress()
 
     RD = Rounder()
-    os.system('cls')
+    UI.reset()
+    UI.loop_stop()
     while TC.count_subthread():
         #等待子进程结束
-        print('正在批量合并图片...', y=1)
-        print(f'|正在等待子进程结束| {color(2)}{RD.next()}', y=2)
-        print(f'剩余进程：\t{TC.count_subthread()}', y=3)
-        print(f'累计处理：\t{Cprogs.get_sum()}', y=4)
-        print(f'累计导出：\t{Cfiles.get_sum()}', y=5)
-        print(f'剩余时间：\t--', y=6)
-        time.sleep(0.2)
+        UI.request([
+            '正在批量合并图片...',
+            f'|正在等待子进程结束| {color(2)}{RD.next()}',
+            f'累计处理：\t{Cprogs.get_sum()}',
+            f'累计导出：\t{Cfiles.get_sum()}',
+            f'剩余时间：\t--',
+        ])
+        UI.refresh(post_delay=0.2)
 
-    os.system('cls')
+    UI.reset()
     print(f'\n批量合并图片结束!', s=1)
     print(f'  累计导出 {Cfiles.get_sum()} 张照片')
     print(f'  此项用时 {round(TR.get_consumed_time())} 秒')
