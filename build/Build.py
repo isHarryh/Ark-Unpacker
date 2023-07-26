@@ -7,7 +7,7 @@ if __name__ == '__main__':
     # Settings
     app_info = {
         'name': 'ArkUnpacker',
-        'version': '2.5.0',
+        'version': '2.6.0',
         'company': 'by Harry Huang',
         'copyright': '©Harry Huang @BSD 3-Clause License'
     }

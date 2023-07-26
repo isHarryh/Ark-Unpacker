@@ -10,7 +10,7 @@ from src import ModelsDataDist  as AU_Mdd
 '''
 ArkUnpacker主程序
 '''
-AU_ver = 'v2.5'
+AU_ver = 'v2.6'
 AU_i18n = 'zh-CN'
 AU_thread_suggest = '10-20'
 
