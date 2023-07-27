@@ -110,11 +110,11 @@ def image_resolve(fp:str, intodir:str, callback:staticmethod=None, successcallba
     '''
     #### 判断某图片的名称是否包含A通道图的特定命名特征，
     #### 如果是的话就寻找它的RGB通道图进行合并，然后保存合并的图片
-    :param fp:      图片的文件路径;
-    :param intodir: 保存目的地的目录;
-    :param callback:完成后的回调函数，默认None;
-    :param successcallback:成功导出后的回调函数，默认None;
-    :returns:       (int) 执行状态代码;
+    :param fp:              图片的文件路径;
+    :param intodir:         保存目的地的目录;
+    :param callback:        完成后的回调函数（无参数），默认None;
+    :param successcallback: 成功导出后的回调函数（接受一个布尔参数“是否进行了保存”），默认None;
+    :returns:               (int) 执行状态代码;
     '''
     ospath = os.path
     oridir = ospath.dirname(fp) #原图的目录
@@ -174,19 +174,19 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
     flist = get_filelist(rootdir)
     flist = list(filter(lambda x:'alpha' in ospath.basename(x), flist)) #初筛
     flist = list(filter(lambda x:ospath.splitext(x)[1].lower() in ['.png', '.jpg', '.jpeg', '.bmp'], flist)) #初筛
-    
-    cont_p = 0 #进度百分比计数
 
     if dodel:
         print("\n正在清理...", s=1)
         rmdir(destdir) #慎用，会预先删除目的地目录的所有内容
-    Cprogs = Counter()
-    Cfiles = Counter()
     MySaver.reset()
     MySaver.thread_ctrl.set_max_subthread(threads)
+    Cprogs = Counter()
+    Cfiles = Counter()
     TC = ThreadCtrl(threads)
     UI = UICtrl(0.5)
     TR = TimeRecorder(len(flist))
+    callback = lambda: (Cprogs.update(), TR.update())
+    successcallback = lambda x: (Cfiles.update(x))
 
     UI.reset()
     UI.loop_start()
@@ -194,30 +194,41 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
         #递归处理各个文件(i是文件的路径名)
         if not ospath.isfile(i):
             continue #跳过目录等非文件路径
+        TR_p = TR.get_progress()
+        TR_r = TR.get_remaining_time()
         UI.request([
             f'正在批量合并图片...',
-            f'|{progress_bar(cont_p, 25)}| {color(2, 0, 1)}{round(cont_p*100, 1)}%',
+            f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
             f'当前目录：\t{ospath.basename(ospath.dirname(i))}',
             f'当前文件：\t{ospath.basename(i)}',
             f'累计处理：\t{Cprogs.get_sum()}',
             f'累计导出：\t{Cfiles.get_sum()}',
-            f'剩余时间：\t{round(TR.get_remaining_time()/60,1)}min',
+            f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
         ])
         ###
         subdestdir = ospath.dirname(i).strip(ospath.sep).replace(rootdir, '').strip(ospath.sep)
         TC.run_subthread(image_resolve,(i, ospath.join(destdir, subdestdir)), \
-            {'callback': Cprogs.update, 'successcallback': Cfiles.update}, name=f"CBThread:{id(i)}")
-        TR.update()
-        cont_p = TR.get_progress()
+            {'callback': callback, 'successcallback': successcallback}, name=f"CBThread:{id(i)}")
 
     RD = Rounder()
     UI.reset()
     UI.loop_stop()
-    while TC.count_subthread():
+    while TC.count_subthread() or MySaver.thread_ctrl.count_subthread():
         #等待子进程结束
+        while TR.get_progress() < 1:
+            TR_p = TR.get_progress()
+            TR_r = TR.get_remaining_time()
+            UI.request([
+                f'正在批量合并图片...',
+                f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
+                f'累计处理：\t{Cprogs.get_sum()}',
+                f'累计导出：\t{Cfiles.get_sum()}',
+                f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
+            ])
+            UI.refresh(post_delay=0.2)
         UI.request([
             '正在批量合并图片...',
-            f'|正在等待子进程结束| {color(2)}{RD.next()}',
+            f'|正在等待子进程结束| {color(2, 0, 1)}{RD.next()}',
             f'累计处理：\t{Cprogs.get_sum()}',
             f'累计导出：\t{Cfiles.get_sum()}',
             f'剩余时间：\t--',

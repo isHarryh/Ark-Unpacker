@@ -100,7 +100,7 @@ class UICtrl():
         self.__status = True
         self.__cache_lines = []
         Thread(target=self.__loop, daemon=False, name=UICtrl.THREAD_NAME).start()
-    
+
     def loop_stop(self):
         '''
         ## Stop auto-refresh
@@ -119,11 +119,12 @@ class UICtrl():
         :returns: (none);
         '''
         if self.__lines != self.__cache_lines or force_refresh:
-            for i in range(len(self.__lines)):
-                print(self.__lines[i], y=i+1)
-            if post_delay > 0:
-                time.sleep(post_delay)
-            self.__lines = self.__cache_lines
+            try:
+                self.__cache_lines = self.__lines[:]
+                for i in range(len(self.__cache_lines)):
+                    print(self.__cache_lines[i], y=i+1)
+            except IndexError:
+                pass
         if post_delay > 0:
             time.sleep(post_delay)
     

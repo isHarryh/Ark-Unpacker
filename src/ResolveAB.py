@@ -263,7 +263,9 @@ class Resource:
     #EndClass
 
 
-def ab_resolve(abfile:str, intodir:str, doimg:bool, dotxt:bool, doaud:bool, dospine:bool, callback=None, subcallback=None):
+def ab_resolve(abfile:str, intodir:str, \
+    doimg:bool, dotxt:bool, doaud:bool, dospine:bool, \
+    callback:staticmethod=None, subcallback:staticmethod=None):
     '''
     #### 解包ab文件env实例
     :param abfile:      ab文件的路径;
@@ -272,8 +274,8 @@ def ab_resolve(abfile:str, intodir:str, doimg:bool, dotxt:bool, doaud:bool, dosp
     :param dotxt:       是否导出文本资源;
     :param doaud:       是否导出音频资源;
     :param dospine:     是否导出Spine动画，注意Spine动画和图片资源、文本资源有重叠的部分;
-    :param callback:    完成后的回调函数，默认None;
-    :param subcallback: 每导出一个文件后的回调函数，默认None;
+    :param callback:    完成后的回调函数（无参数），默认None;
+    :param subcallback: 每导出一个文件后的回调函数（接受一个布尔参数“是否进行了保存”），默认None;
     :returns:       (None);
     '''
     env = UpyLoad(abfile)
@@ -331,18 +333,19 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     flist = [] #目录下所有文件的列表
     flist = get_filelist(rootdir)
     flist = list(filter(lambda x:ospath.splitext(x)[1] in ['.ab','.AB'], flist)) #初筛
-    
-    cont_p = 0 #进度百分比计数
+
     if dodel:
         print("\n正在清理...", s=1)
         rmdir(destdir) #慎用，会预先删除目的地目录的所有内容
-    Cprogs = Counter()
-    Cfiles = Counter()
     MySaver.reset()
     MySaver.thread_ctrl.set_max_subthread(threads)
+    Cprogs = Counter()
+    Cfiles = Counter()
     TC = ThreadCtrl(threads)
     UI = UICtrl(0.5)
     TR = TimeRecorder(len(flist))
+    callback = lambda: (Cprogs.update(), TR.update())
+    subcallback = lambda x: (Cfiles.update(x))
 
     UI.reset()
     UI.loop_start()
@@ -350,32 +353,43 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
         #递归处理各个文件(i是文件的路径名)
         if not ospath.isfile(i):
             continue #跳过目录等非文件路径
+        TR_p = TR.get_progress()
+        TR_r = TR.get_remaining_time()
         UI.request([
             f'正在批量解包...',
-            f'|{progress_bar(cont_p, 25)}| {color(2, 0, 1)}{round(cont_p*100, 1)}%',
+            f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
             f'当前目录：\t{ospath.basename(ospath.dirname(i))}',
             f'当前文件：\t{ospath.basename(i)}',
             f'累计解包：\t{Cprogs.get_sum()}',
             f'累计导出：\t{Cfiles.get_sum()}',
-            f'剩余时间：\t{round(TR.get_remaining_time()/60,1)}min',
+            f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
         ])
         ###
         subdestdir = ospath.dirname(i).strip(ospath.sep).replace(rootdir, '').strip(ospath.sep)
         curdestdir = os.path.join(destdir, subdestdir, ospath.splitext(ospath.basename(i))[0]) \
             if separate else os.path.join(destdir, subdestdir)
         TC.run_subthread(ab_resolve, (i, curdestdir, doimg, dotxt, doaud, dospine), \
-            {'callback': Cprogs.update, 'subcallback': Cfiles.update}, name=f"RsThread:{id(i)}")
-        TR.update()
-        cont_p = TR.get_progress()
+            {'callback': callback, 'subcallback': subcallback}, name=f"RsThread:{id(i)}")
 
     RD = Rounder()
     UI.reset()
     UI.loop_stop()
     while TC.count_subthread() or MySaver.thread_ctrl.count_subthread():
         #等待子进程结束
+        while TR.get_progress() < 1:
+            TR_p = TR.get_progress()
+            TR_r = TR.get_remaining_time()
+            UI.request([
+                f'正在批量解包...',
+                f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
+                f'累计解包：\t{Cprogs.get_sum()}',
+                f'累计导出：\t{Cfiles.get_sum()}',
+                f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
+            ])
+            UI.refresh(post_delay=0.2)
         UI.request([
             f'正在批量解包...',
-            f'|正在等待子进程结束| {color(2)}{RD.next()}',
+            f'|正在等待子进程结束| {color(2, 0, 1)}{RD.next()}',
             f'累计解包：\t{Cprogs.get_sum()}',
             f'累计导出：\t{Cfiles.get_sum()}',
             f'剩余时间：\t--',

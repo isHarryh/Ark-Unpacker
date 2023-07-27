@@ -63,8 +63,9 @@ class SafeSaver():
                 SafeSaver._save_bytes(data, dest)
                 if callback:
                     callback(True)
-            if callback:
-                callback(False)
+            else:
+                if callback:
+                    callback(False)
         except Exception as arg:
             Logger.error(f"Saver: Failed to save file {dest} because: Exception{type(arg)} {arg}")
         MySaver.total_processed.update()
