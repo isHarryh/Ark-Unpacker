@@ -13,10 +13,14 @@ class Config():
     __config_path = "ArkUnpackerConfig.json"
     __file_encoding = 'UTF-8'
     __default_config = {
-        'log_file': "ArkUnpackerLogs.log",
-        'log_level': Logger.LV_INFO,
-        'threads_limit': 48,
-        'threads_default': 16,
+        'log_file': "ArkUnpackerLogs.log", #日志文件名称
+        'log_level': Logger.LV_INFO, #日志等级
+        'threads_limit': 48, #可指定的最大线程数限制
+        'threads_default': 16, #默认线程数
+        'ark_models_constants': {
+            'src_prefix': "https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master", #资源地址前缀
+            'src_server': "zh_CN", #游戏服务器地区（例如zh_CN）
+        }
     }
     
     def __init__(self):

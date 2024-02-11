@@ -251,14 +251,14 @@ class Resource:
                         if MySaver.save_image(rgba, intodir, i[0].name):
                             Logger.debug(f"ResolveAB: Spine asset \"{i[0].name}\" saved.")
                             if callback:
-                                callback()
+                                callback(True)
                     else:
                         Logger.warn(f"ResolveAB: Spine asset \"{i[0].name}\" texture lost.")
                 for i in (self.atlas, self.skel):
                     if MySaver.save_script(Resource._get_script(i), intodir, i.name):
                         Logger.debug(f"ResolveAB: Spine asset \"{i.name}\" saved.")
                         if callback:
-                            callback()
+                            callback(True)
         #EndClass
     #EndClass
 

@@ -2,6 +2,7 @@
 # Copyright (c) 2022-2023, Harry Huang
 # @ BSD 3-Clause License
 import os, time
+from builtins import exit
 from src.utils._ImportAllUtils import *
 from src import ResolveAB       as AU_Rs
 from src import CombineRGBwithA as AU_Cb
@@ -227,18 +228,22 @@ def run_arkmodels_filtering(dirs, destdirs):
     prt_subtitle('ArkModels 文件分拣')
     ###
     dirs_ = []
-    for i in dirs:
+    destdirs_ = []
+    for i, j in zip(dirs, destdirs):
+        #TODO 检查二者长度相等
         if not os.path.exists(i):
-            input(f'在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是您事先没有进行"模型提取"的步骤。按Enter以继续操作。', c=3)
+            input(f'在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是您事先没有进行"模型提取"的步骤。按Enter以尝试继续。', c=3)
         else:
             dirs_.append(i)
+            destdirs_.append(j)
     ###
-    AU_Cm.main(dirs_, destdirs)
+    AU_Cm.main(dirs_, destdirs_)
     print('\n任务执行完毕', c=2)
     print('\n您希望删除分拣前的解包文件吗？')
     print('  y=是，n=否(默认)', c=3)
     if input(c=2) in ['y','Y']:
         print('正在清理...')
+        print('这可能需要一段时间。您也可以关闭程序，然后手动删除。')
         for i in dirs_:
             rmdir(i) 
 
@@ -269,8 +274,9 @@ def run_arkmodels_workflow():
         os.chdir('.')
         print(f'ArkModels提取与分拣工具', s=1)
         print('='*20)
-        print(f'ArkModels是作者建立的明日方舟Spine模型仓库（https://github.com/isHarryh/Ark-Models）\n以下功能专门为ArkModels仓库的更新而设计，开始工作流程前需要将skinpack，chararts 以及battle/prefabs/enemies文件夹直接放到程序所在目录。\n执行步骤选择：')
-        print('1: 干员基建模型提取\n2: 敌方战斗模型提取\n3: 模型分拣\n4: 生成数据集\n0: 返回', c=6)
+        print(f'ArkModels是作者建立的明日方舟Spine模型仓库（https://github.com/isHarryh/Ark-Models），以下功能专门为ArkModels仓库的更新而设计。')
+        print(f'运行部分功能之前，需要将括号内所示的资源文件夹放到程序所在目录中。\n执行步骤选择：')
+        print('1: 干员基建模型提取（skinpack，chararts）\n2: 敌方战斗模型提取（battle/prefabs/enemies）\n3: 动态立绘模型提取（arts/dynchars）\n4: 模型分拣\n5: 生成数据集\n0: 返回', c=6)
         print(f'输入序号后按回车即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker ')
     while True:
         os.system('title ArkUnpacker')
@@ -283,9 +289,12 @@ def run_arkmodels_workflow():
             run_arkmodels_unpacking(['enemies'], "temp_arkmodels_enemies")
             prt_continue()
         elif order == '3':
-            run_arkmodels_filtering(["temp_arkmodels", "temp_arkmodels_enemies"], ['models', 'models_enemies'])
+            run_arkmodels_unpacking(['dynchars'], "temp_arkmodels_dynchars")
             prt_continue()
         elif order == '4':
+            run_arkmodels_filtering(["temp_arkmodels", "temp_arkmodels_enemies", "temp_arkmodels_dynchars"], ['models', 'models_enemies', 'models_illust'])
+            prt_continue()
+        elif order == '5':
             run_arkmodels_data_dist()
             prt_continue()
         elif order == '0':
@@ -322,4 +331,4 @@ if __name__ == '__main__':
         exit(arg.code)
     except BaseException as arg:
         Logger.error(f"CI: Oops! Unexpected error occurred: Exception{type(arg)} {arg}")
-        exit(1)
+        raise arg

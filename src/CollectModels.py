@@ -57,6 +57,9 @@ def get_enemy_common_name(str):
     id, name = get_enemy_id(str), get_enemy_name(str)
     return "" if len(id) * len(name) == 0 else f"{id}_{name}"
 
+def get_dyn_illust_common_name(str):
+    return "" if len(get_oper_common_name(str)) == 0 else 'dyn_illust_' + get_oper_common_name(str)
+
 def contains_file(dir, filename):
     if os.path.isdir(dir):
         for j in get_filelist(dir):
@@ -100,24 +103,34 @@ def main(srcdirs:"list[str]", destdirs:"list[str]", dodel:bool=False):
     for dir2, dir1, dest in flist:
         #递归处理各个目录(i是元组(sub-srcdir, destdir))
         print(f'正在分拣模型...', y=1)
-        print(f'|{progress_bar(cont_p, 25)}| {color(2)}{round(cont_p*100, 1)}%', y=2)
+        print(f'|{progress_bar(cont_p, 25)}| {color(2, 0, 1)}{round(cont_p*100, 1)}%', y=2)
         print(f'当前目录：\t{dir2}', y=3)
         print(f'累计分拣：\t{cont_f}', y=4)
-        print(f'剩余时间：\t{round(TR.get_remaining_time()/60,1)}min', y=5)
+        print(f'剩余时间：\t{round(TR.get_remaining_time() / 60, 1)}min', y=5)
         ###
-        dir1_base = ospath.basename(dir1)
-        dir2_base = ospath.basename(dir2)
-        models = get_filelist(dir2, only_dirs=True, max_depth=1)
-        if (dir2_base == 'Building' and 'char_' in dir1_base):
-            for m in models:
-                newname = get_oper_common_name(ospath.basename(m)+'.')
-                mvfile(m, ospath.join(dest, newname))
-                cont_f += 1
-        elif 'enemy_' in dir1_base:
-            for m in models:
-                newname = get_enemy_common_name(ospath.basename(m)+'.')
-                mvfile(m, ospath.join(dest, newname))
-                cont_f += 1
+        try:
+            dir1_base = ospath.basename(dir1)
+            dir2_base = ospath.basename(dir2)
+            models = get_filelist(dir2, only_dirs=True, max_depth=1)
+            if (dir2_base in ['Building']) and 'char_' in dir1_base:
+                for m in models:
+                    newname = get_oper_common_name(ospath.basename(m)+'.')
+                    mvfile(m, ospath.join(dest, newname))
+                    cont_f += 1
+            elif 'enemy_' in dir1_base:
+                for m in models:
+                    newname = get_enemy_common_name(ospath.basename(m)+'.')
+                    mvfile(m, ospath.join(dest, newname))
+                    cont_f += 1
+            elif (dir2_base in ['DynIllust']) and 'char_' in dir1_base:
+                for m in models:
+                    m_base = ospath.basename(m)
+                    if '_start' not in m_base.lower() and 'dyn_illust_' in m_base.lower():
+                        newname = get_dyn_illust_common_name(m_base+'.')
+                        mvfile(m, ospath.join(dest, newname))
+                        cont_f += 1
+        except BaseException as arg:
+            Logger.error(f'CollectModels: Error occurred while handleing "{dir2}": Exception{type(arg)} {arg}')
         TR.update()
         cont_p = TR.get_progress()
 
