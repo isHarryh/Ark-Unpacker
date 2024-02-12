@@ -2,7 +2,6 @@
 # Copyright (c) 2022-2023, Harry Huang
 # @ BSD 3-Clause License
 import os, time
-from builtins import exit
 from src.utils._ImportAllUtils import *
 from src import ResolveAB       as AU_Rs
 from src import CombineRGBwithA as AU_Cb
@@ -321,14 +320,12 @@ if __name__ == '__main__':
             elif order == '4':
                 run_arkmodels_workflow()
             elif order == '0':
-                exit(0)
+                break
         
     except InterruptedError as arg:
         Logger.info("CI: Program was interrupted.")
-        exit(0)
     except SystemExit as arg:
         Logger.info(f"CI: Program was exited explicitly with code {arg.code}.")
-        exit(arg.code)
     except BaseException as arg:
         Logger.error(f"CI: Oops! Unexpected error occurred: Exception{type(arg)} {arg}")
         raise arg
