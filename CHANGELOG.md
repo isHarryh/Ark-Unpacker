@@ -2,6 +2,14 @@
 ==========
 <sup> This project only supports Chinese docs. If you are an English user, feel free to contact us. </sup>
 
+## v2.6
+#### 新增
+1. (重要) 新增了“ArkModels提取与分拣工具”对于动态立绘的提取和分拣支持。
+
+#### 优化
+1. (重要) 优化了用户界面输出的打印逻辑，减少了不必要的性能消耗。
+
+
 ## v2.5
 #### 优化
 1. (重要) 优化了多线程分配逻辑，文件写入系统已支持多线程，提升了大型ab文件的解包速度。
