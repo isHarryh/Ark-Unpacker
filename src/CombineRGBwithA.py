@@ -57,7 +57,7 @@ def alpha_resolve(fp:str):
             i = ospath.join(fpdir, i) #i变成初筛后的路径名
             if ospath.isfile(i):
                 #找到了一个疑似的图片
-                spines.append([i,similarity(i,fp)])
+                spines.append([i, similarity(i, fp)])
     if len(spines) == 0:
         Logger.warn(f"CombineRGBwithA: No RGB-image could be matched to \"{fp}\"")
         return False #找不到，退出
@@ -82,8 +82,8 @@ def similarity(fp_rgb:str, fp_a:str, prec:int=150):
     IM2 = Image.open(fp_a).convert('L') #A通道图实例化
     prec = 100 if prec < 0 else prec
     #对两张图片进行缩放
-    IM1 = IM1.resize((prec,prec), Image.BICUBIC)
-    IM2 = IM2.resize((prec,prec), Image.BICUBIC)
+    IM1 = IM1.resize((prec, prec), Image.BICUBIC)
+    IM2 = IM2.resize((prec, prec), Image.BICUBIC)
     #载入原图片的像素到数组
     IM1L = IM1.load()
     IM2L = IM2.load()
@@ -92,7 +92,7 @@ def similarity(fp_rgb:str, fp_a:str, prec:int=150):
     for y in range(prec):
         for x in range(prec):
             #遍历到每个像素(x,y是像素的坐标)
-            Diff.append((((IM1L[x,y] if IM1L[x,y] < 255 else 0) - IM2L[x,y])**2)/256)
+            Diff.append((((IM1L[x, y] if IM1L[x, y] < 255 else 0) - IM2L[x, y])**2)/256)
     #计算差值的平均值，然后返回相似度
     Diff_mean = round(mean(Diff))
     return 0 if Diff_mean >= 255 else (255 if Diff_mean <= 0 else 255-Diff_mean)
@@ -200,7 +200,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
         ])
         ###
         subdestdir = ospath.dirname(i).strip(ospath.sep).replace(rootdir, '').strip(ospath.sep)
-        TC.run_subthread(image_resolve,(i, ospath.join(destdir, subdestdir)), \
+        TC.run_subthread(image_resolve, (i, ospath.join(destdir, subdestdir)), \
             {'callback': callback, 'successcallback': successcallback}, name=f"CBThread:{id(i)}")
 
     RD = Rounder()

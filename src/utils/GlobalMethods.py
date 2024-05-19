@@ -141,7 +141,7 @@ def get_path_authority(path:str):
     :returns: `True` for available while `False` for unavailable;
     :rtype: bool;
     """
-    return os.path.exists(path) and os.access(path,os.X_OK|os.W_OK|os.R_OK)
+    return os.path.exists(path) and os.access(path, os.X_OK|os.W_OK|os.R_OK)
 
 ##### ↓ Stat related ↓ #####
 

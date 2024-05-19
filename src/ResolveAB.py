@@ -59,12 +59,12 @@ class Resource:
         self.monobehaviors:list[MonoBehaviour] = []
         self.__spines:list[Resource.SpineAsset] = []
         self.typelist = [ #[0:TypeName,1:TypeList,2:FileExt,3:ExtractMethod,4:SaveMethod]
-            ['Sprite',self.sprites,'.png',Resource._get_image,MySaver.save_image],
-            ['Texture2D',self.texture2ds,'.png',Resource._get_image,MySaver.save_image],
-            ['TextAsset',self.textassets,'',Resource._get_script,MySaver.save_script],
-            ['AudioClip',self.audioclips,'.wav',Resource._get_samples,MySaver.save_samples],
-            ['Material',self.materials,'',None,None],
-            ['MonoBehaviour',self.monobehaviors,'',None,None]
+            ['Sprite', self.sprites, '.png', Resource._get_image, MySaver.save_image],
+            ['Texture2D', self.texture2ds, '.png', Resource._get_image, MySaver.save_image],
+            ['TextAsset', self.textassets, '', Resource._get_script, MySaver.save_script],
+            ['AudioClip', self.audioclips, '.wav', Resource._get_samples, MySaver.save_samples],
+            ['Material', self.materials, '', None, None],
+            ['MonoBehaviour', self.monobehaviors, '', None, None]
         ]
         ###
         objs = [i for i in env.objects]
@@ -323,7 +323,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     destdir = ospath.normpath(ospath.realpath(destdir))
     flist = [] # All-files list
     flist = get_filelist(rootdir)
-    flist = list(filter(lambda x:ospath.splitext(x)[1] in ['.ab','.AB'], flist))
+    flist = list(filter(lambda x:ospath.splitext(x)[1] in ['.ab', '.AB'], flist))
 
     if dodel:
         print("\n正在清理...", s=1)

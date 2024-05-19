@@ -77,15 +77,14 @@ def run_quickaccess():
     Logger.info("CI: Run quick access.")
     os.system('title ArkUnpacker - Processing')
     destdir = f'Unpacked_{int(time.time())}'
-    ignore = [".vscode","__pycache__",".git"]
     ###
     prt_subtitle('步骤1|资源解包')
     time.sleep(1)
-    AU_Rs.main('.',destdir,threads=config.get("threads_default"))
+    AU_Rs.main('.', destdir, threads=config.get("threads_default"))
     ###
     prt_subtitle('步骤2|合并图片')
     time.sleep(1)
-    AU_Cb.main(destdir,f'Combined_{int(time.time())}',threads=config.get("threads_default"))
+    AU_Cb.main(destdir, f'Combined_{int(time.time())}', threads=config.get("threads_default"))
 
 def run_costm_Rs():
     Logger.info("CI: Customized unpack mode.")
@@ -93,7 +92,7 @@ def run_costm_Rs():
     ###
     print(f'\n请输入要解包的目录后按回车')
     print('  支持相对路径，\".\"表示选择当前目录')
-    rootdir = input_path(f'> ','  该目录似乎不存在\n> ')
+    rootdir = input_path(f'> ', '  该目录似乎不存在\n> ')
     print(f'您选择的解包目录是：', c=2)
     print(f'  {os.path.abspath(rootdir)}', c=6)
     ###
@@ -110,12 +109,12 @@ def run_costm_Rs():
         print(f'\n该导出目录已存在，您要删除它里面的全部文件吗？')
         print(f'  请!慎重!选择：y=删除，n=保留(默认)', c=3)
         dodel = input(f'> ', c=2)
-        dodel = True if dodel in ['y','Y'] else False
+        dodel = True if dodel in ['y', 'Y'] else False
     ###
     print(f'\n您希望用AB文件原名来分类每组文件吗？')
     print(f'  y=是(默认)，n=否', c=3)
     separate = input(f'> ', c=2)
-    separate = False if separate in ['n','N'] else True
+    separate = False if separate in ['n', 'N'] else True
     ###
     print(f'\n请输入要导出的资源类型后按回车')
     print('  可多选：i=图片，t=文本，a=音频')
@@ -127,12 +126,12 @@ def run_costm_Rs():
     ###
     print(f'\n请指定最大线程数（同时执行任务数）：')
     print(f'  建议：{AU_thread_suggest}')
-    ths = input_allow(f'> ', [str(i) for i in range(1,config.get('threads_limit'))], '  请重新输入合理的数字\n> ')
+    ths = input_allow(f'> ', [str(i) for i in range(1, config.get('threads_limit'))], '  请重新输入合理的数字\n> ')
     ths = int(ths)
     ###
     input(f'\n再按一次回车以开始任务...', c=2)
     os.system('title ArkUnpacker - Processing')
-    AU_Rs.main(rootdir,destdir,dodel,doimg,dotxt,doaud,False,separate,ths)
+    AU_Rs.main(rootdir, destdir, dodel, doimg, dotxt, doaud, False, separate, ths)
 
 def run_costm_Cb():
     Logger.info("CI: Customized image combine mode.")
@@ -140,7 +139,7 @@ def run_costm_Cb():
     ###
     print(f'\n请输入存放图片的目录后按回车')
     print('  支持相对路径，\".\"表示选择当前目录')
-    rootdir = input_path(f'> ','  该目录似乎不存在\n> ')
+    rootdir = input_path(f'> ', '  该目录似乎不存在\n> ')
     print(f'您选择的存放图片的目录是：')
     print(f' {os.path.abspath(rootdir)}', c=6)
     ###
@@ -157,16 +156,16 @@ def run_costm_Cb():
         print(f'\n该导出目录已存在，您要删除它里面的全部文件吗？')
         print(f'  请!慎重!选择：y=删除，n=保留(默认)', c=3)
         dodel = input(f'> ', c=2)
-        dodel = True if dodel in ['y','Y'] else False
+        dodel = True if dodel in ['y', 'Y'] else False
     ###
     print(f'\n请指定最大线程数（同时执行任务数）：')
     print(f'  建议：{AU_thread_suggest}')
-    ths = input_allow(f'> ', [str(i) for i in range(1,config.get('threads_limit'))], '  请重新输入合理的数字\n> ')
+    ths = input_allow(f'> ', [str(i) for i in range(1, config.get('threads_limit'))], '  请重新输入合理的数字\n> ')
     ths = int(ths)
     ###
     input(f'\n再按一次回车以开始任务...', c=2)
     os.system('title ArkUnpacker - Processing')
-    AU_Cb.main(rootdir,destdir,dodel,ths)
+    AU_Cb.main(rootdir, destdir, dodel, ths)
 
 def run_arkmodels_unpacking(dirs, destdir):
     Logger.info("CI: ArkModels unpack mode.")
@@ -179,7 +178,7 @@ def run_arkmodels_unpacking(dirs, destdir):
     ###
     print(f'请指定最大线程数（同时执行任务数）：')
     print(f'  建议：{AU_thread_suggest}')
-    ths = input_allow(f'> ', [str(i) for i in range(1,config.get('threads_limit'))], '  请重新输入合理的数字\n> ')
+    ths = input_allow(f'> ', [str(i) for i in range(1, config.get('threads_limit'))], '  请重新输入合理的数字\n> ')
     ths = int(ths)
     ###
     input(f'\n准备就绪，再按一次回车以开始任务...', c=2)
@@ -188,7 +187,7 @@ def run_arkmodels_unpacking(dirs, destdir):
     print(f'正在清理...')
     rmdir(destdir)
     for i in dirs:
-        AU_Rs.main(i,destdir,doimg=False,dotxt=False,doaud=False,dospine=True,threads=ths)
+        AU_Rs.main(i, destdir, doimg=False, dotxt=False, doaud=False, dospine=True, threads=ths)
 
 def run_arkmodels_filtering(dirs, destdirs):
     Logger.info("CI: ArkModels file filter mode.")
@@ -208,7 +207,7 @@ def run_arkmodels_filtering(dirs, destdirs):
     print('\n任务执行完毕', c=2)
     print('\n您希望删除分拣前的解包文件吗？')
     print('  y=是，n=否(默认)', c=3)
-    if input(c=2) in ['y','Y']:
+    if input(c=2) in ['y', 'Y']:
         print('正在清理...')
         print('这可能需要一段时间。您也可以关闭程序，然后手动删除。')
         for i in dirs_:
