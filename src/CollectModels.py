@@ -6,9 +6,6 @@ try:
     from .utils._ImportAllUtils import *
 except:
     from utils._ImportAllUtils import*
-'''
-从ArkUnpacker解包出来的文件中筛选出指定Spine模型（ArkModels仓库定制）
-'''
 
 
 def get_oper_common_name(str):
@@ -69,13 +66,12 @@ def contains_file(dir, filename):
 
 ########## Main-主程序 ##########
 def main(srcdirs:"list[str]", destdirs:"list[str]", dodel:bool=False):
-    '''
-    #### 分别从每个来源文件夹分拣模型到目标文件夹
-    :param srcdirs:    来源文件夹的路径列表;
-    :param destdirs:   目标文件夹的路径列表;
-    :param dodel:      预先删除目标文件夹的所有文件，默认False;
-    :returns: (None);
-    '''
+    """Collects the Spine models from the source directories to the destination directories accordingly.
+    :param srcdirs: Source directories list;
+    :param destdirs: Destination directories list;
+    :param dodel: Whether to delete the existed destination directories fitst, `False` for default;
+    :rtype: None;
+    """
     print("\n正在解析目录...", s=1)
     Logger.info("CollectModels: Reading directories...")
     ospath = os.path

@@ -4,11 +4,9 @@
 import os, json
 from .Logger import *
 
+
 class Config():
-    '''
-    Configuration class for ArkUnpacker
-    配置类
-    '''
+    """Configuration class for ArkUnpacker."""
 
     __config_path = "ArkUnpackerConfig.json"
     __file_encoding = 'UTF-8'
@@ -24,29 +22,22 @@ class Config():
     }
     
     def __init__(self):
-        '''
-        ## Initialized the config system
-        #### 初始化配置文件系统
-        '''
         self.read_config()
         self.save_config()
     
     def get(self, key):
-        '''
-        ## Get the specified config field
-        #### 获取指定的配置字段值
+        """Gets the specified config field.
+
         :param key: The JSON key to the field;
-        :returns:   (Any) None if the key doesn't exist;
-        '''
+        :returns: `None` if the key doesn't exist;
+        :rtype: Any;
+        """
         return self.config[key] if key in self.config.keys() else None
     
     def read_config(self):
-        '''
-        ## Read the config from file
-        #### 读取（反序列化）配置文件
-        Note: Default config will be used if the config file doesn't exist or an error occurs.
-        :returns: (none);
-        '''
+        """Reads the config from file, aka. deserialize the config.
+        Note that Default config will be used if the config file doesn't exist or an error occurs.
+        """
         try:
             self.config = json.load(open(Config.__config_path, 'r', encoding=Config.__file_encoding)) if os.path.exists(Config.__config_path) else Config.__default_config
             Logger.set_instance(self.get('log_file'), self.get('log_level'))
@@ -57,11 +48,7 @@ class Config():
             Logger.error(f"Failed to read or initialize config: {arg}")
     
     def save_config(self):
-        '''
-        ## Save the config to file
-        #### 保存（序列化）配置文件
-        :returns: (none);
-        '''
+        """Saves the config to file, aka. serialize the config."""
         try:
             json.dump(self.config, open(self.__config_path, 'w', encoding=Config.__file_encoding), indent=4, ensure_ascii=False)
             Logger.set_instance(self.get('log_file'), self.get('log_level'))

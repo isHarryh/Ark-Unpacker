@@ -2,59 +2,52 @@
 # Copyright (c) 2022-2023, Harry Huang
 # @ BSD 3-Clause License
 import os, builtins, shutil
-'''
-GlobalMethods
-全局方法
-'''
+
 
 ##### ↓ CLI related ↓ #####
 
 os.system('')
 
 def color(c:int=7, bg:int=0, s:int=0):
-    '''
-    ## Get a color controller string in CLI
-    #### 获得命令行着色字符串
-    :param c:  The color [0=balck,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
+    """Gets a color controller string in interactive CLI.
+
+    :param c: The color [0=balck,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
     :param bg: The background color [0=balck,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
-    :param s:  The style [0=default,1=bold,4=underlined,5=flashing,7=inverted,8=none];
-    :returns:  (str);
-    '''
+    :param s: The style [0=default,1=bold,4=underlined,5=flashing,7=inverted,8=none];
+    :returns: The color controller string.
+    :rtype: str;
+    """
     return f'\033[{s};3{c};4{bg}m'
 
 def input(text:str="", c:int=7, bg:int=0, s:int=0, y:int=0):
-    '''
-    ## Enhanced version of inputting in CLI
-    #### 增强版的命令行界面输入函数
-    :param text: The text to print;
-    :param c:    The color [0=balck,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
-    :param bg:   The background color [0=balck,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
-    :param s:    The style [0=default,1=bold,4=underlined,5=flashing,7=inverted,8=none];
-    :param y:    The y-position of the line to print or overwrite [0=append];
-    :returns:    (str);
-    '''
+    """Enhanced version of inputting in interactive CLI.
+
+    :param text: The text to display;
+    :param c: The color [0=balck,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
+    :param bg: The background color [0=balck,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
+    :param s: The style [0=default,1=bold,4=underlined,5=flashing,7=inverted,8=none];
+    :param y: The y-position of the line to print or overwrite [0=append];
+    :returns: The inputted text;
+    :rtype: str;
+    """
     ctrl = f"\033[K\033[{y};1H" if y > 0 else ""
     return builtins.input(f"{ctrl}{color(c, bg, s)}{text}\033[?25h")
 
 def print(text:str="", c:int=7, bg:int=0, s:int=0, y:int=0):
-    '''
-    ## Enhanced version of printing in CLI
-    #### 增强版的命令行界面打印函数
+    """Enhanced version of printing in interactive CLI.
+
     :param text: The text to print;
-    :param c:    The color [0=balck,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
-    :param bg:   The background color [0=balck,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
-    :param s:    The style [0=default,1=bold,4=underlined,5=flashing,7=inverted,8=none];
-    :param y:    The y-position of the line to print or overwrite [0=append];
-    :returns:    (none);
-    '''
+    :param c: The color [0=balck,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
+    :param bg: The background color [0=balck,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
+    :param s: The style [0=default,1=bold,4=underlined,5=flashing,7=inverted,8=none];
+    :param y: The y-position of the line to print or overwrite [0=append];
+    :rtype: None;
+    """
     ctrl = f'\033[K\033[{y};{1}H' if y > 0 else ''
     builtins.print(f"\033[?25l{ctrl}{color(c, bg, s)}{text}")
 
 def progress_bar(progress:float, length:int):
-    '''
-    ## Get a progress bar string
-    #### 获得代表的进度条字符串
-    '''
+    """Gets a progress bar string."""
     try:
         add_chars = (' ', '▏', '▎', '▍', '▌', '▋', '▊', '▉', '█')
         max_idx = len(add_chars) - 1
@@ -70,12 +63,12 @@ def progress_bar(progress:float, length:int):
 ##### ↓ IO related ↓ #####
 
 def mkdir(path:str):
-    '''
-    ## Create a Dir
-    #### 创建一个文件夹
-    :param path: Path of the dir to create;
-    :returns:    (bool) Execution result;
-    '''
+    """Creates a directory.
+
+    :param path: Path to the directory to be created;
+    :returns: Execution result;
+    :rtype: bool;
+    """
     path = path.strip().strip('/').rstrip('\\')
     try:
         os.makedirs(path, exist_ok=True)
@@ -84,32 +77,21 @@ def mkdir(path:str):
         return False
 
 def mvfile(path_from:str, path_to:str):
-    '''
-    ## Move a File
-    #### 移动一个文件
-    :param path_from: Path from;
-    :param path_to:   Path to;
-    :returns:         (none);
-    '''
+    """Moves a file."""
     mkdir(os.path.dirname(path_to))
     shutil.move(path_from, path_to)
 
 def rmdir(path:str):
-    '''
-    ## Delete a Dir
-    #### 删除一个文件夹
-    :param path: Path of the dir;
-    :returns:    (none);
-    '''
+    """Deletes a directory."""
     shutil.rmtree(path, ignore_errors=True)
 
 def get_dir_size(path:str):
-    '''
-    ## Get the size of a Dir
-    #### 获取一个目录的大小
-    :param path: Path of the dir;
-    :returns:    (int) Size in Byte;
-    '''
+    """Gets the size of the given directory.
+
+    :param path: Path to the directory;
+    :returns: Size in bytes;
+    :rtype: int;
+    """
     size = 0
     lst = get_filelist(path)
     for i in lst:
@@ -118,15 +100,16 @@ def get_dir_size(path:str):
     return size
 
 def get_filelist(path:str, max_depth=0, only_dirs=False):
-    '''
-    ## Get a list containing all the sub dirs (and files) in the given dir
-    #### 获取指定目录中的所有子文件夹（和文件）的列表
-    Note: If `max_depth` is specified to unlimited, `os.walk` (the most efficient) will be used in this method instead of `os.listdir`.
-    :param path:      Path of the specified parent dir;
-    :param max_depth: Max searching depth, 0 for unlimited;
+    """Gets a list containing all the sub dirs (and files) in the given dir.
+    Note that If `max_depth` is specified to unlimited,
+    `os.walk` (the most efficient way) will be used in this method instead of `os.listdir`.
+
+    :param path: Path to the specified parent dir;
+    :param max_depth: Max searching depth, `0` for unlimited;
     :param only_dirs: Whether to exclude files;
-    :returns:         (list) A list of file paths;
-    '''
+    :returns: A list of paths;
+    :rtype: list[str];
+    """
     lst = []
     max_depth = int(max_depth)
     if max_depth <= 0:
@@ -152,23 +135,23 @@ def get_filelist(path:str, max_depth=0, only_dirs=False):
     return lst
 
 def get_path_authority(path:str):
-    '''
-    ## Judge the accessibility of the given path 
-    #### 判断路径可访问性
+    """Judges the accessibility (if it is executable, writable and readable) of the given path.
+
     :param path: Path;
-    :returns:    (bool) True=Available, False=Unavailable;
-    '''
+    :returns: `True` for available while `False` for unavailable;
+    :rtype: bool;
+    """
     return os.path.exists(path) and os.access(path,os.X_OK|os.W_OK|os.R_OK)
 
 ##### ↓ Stat related ↓ #####
 
 def mean(lst:list):
-    '''
-    ## Get the mean value of an array
-    #### 返回数组平均值
+    """Gets the mean value (the average value) of an array.
+
     :param lst: List of values;
-    :returns:   (float) Mean value;
-    '''
+    :returns: Mean value;
+    :rtype: float;
+    """
     if len(lst) == 0:
         return float(0)
     s = 0
@@ -177,12 +160,13 @@ def mean(lst:list):
     return float(s / len(lst))
 
 def trimmean(lst:list, percent:float):
-    '''
-    ## Trim extreme values from the both ends of the list and get the mean
-    #### 去除数组两极的极端值，返回数组平均值
-    :param lst:     List of values;
-    :param percent: (float) Ratio of extreme values of each end;
-    '''
+    """Trims extreme values from the both ends of the list and gets the mean.
+
+    :param lst: List of values;
+    :param percent: Ratio of extreme values of each end;
+    :returns: Mean value;
+    :rtype: float;
+    """
     if len(lst) == 0 or percent < 0 or percent > 1:
         return float(0)
     newlst = lst[:]

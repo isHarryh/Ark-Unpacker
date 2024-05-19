@@ -6,9 +6,6 @@ try:
     from .utils._ImportAllUtils import *
 except:
     from utils._ImportAllUtils import*
-'''
-生成ArkModels仓库使用的JSON数据集
-'''
 
 
 def get_curl(url:str):

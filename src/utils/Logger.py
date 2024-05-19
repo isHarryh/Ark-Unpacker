@@ -4,11 +4,9 @@
 from datetime import datetime
 from threading import Thread
 
+
 class Logger():
-    '''
-    Logger class for ArkUnpacker
-    日志类
-    '''
+    """Logger class for ArkUnpacker"""
 
     __time_format   = '%Y-%m-%d %H:%M:%S'
     __file_encoding = 'UTF-8'
@@ -20,10 +18,7 @@ class Logger():
     LV_DEBUG    = 4
     
     def __init__(self, log_file_path:str, level:int):
-        '''
-        ## Not recommended. Please use the static instance.
-        #### 不推荐直接实例化，请使用日志静态实例
-        '''
+        """Not recommended to use. Please use the static instance."""
         self.log_level = level
         self.log_file_path = log_file_path
         self.file = None
@@ -65,36 +60,33 @@ class Logger():
     
     @staticmethod
     def set_instance(log_file_path:str, level:int=LV_INFO):
-        '''
-        ## Initialize the Logger static instance
-        #### 初始化日志静态实例
-        Note: If the instance has been initialized yet, this method does nothing.
+        """Initializes the Logger static instance.
+        If the instance has been initialized yet, this method does nothing.
+
         :param log_gile_path: The path to the log file;
-        :param level:         The logging level;
-        :returns:             (none);
-        '''
+        :param level: The logging level;
+        :rtype: None;
+        """
         if not Logger.__instance: Logger.set_instance_override(log_file_path, level)
 
     @staticmethod
     def set_instance_override(log_file_path:str, level:int=LV_INFO):
-        '''
-        ## Initialize the Logger static instance forcibly
-        #### 强制初始化日志静态实例
-        Note: If the instance has been initialized yet, this method will override it.
+        """Initializes the Logger static instance forcibly.
+        If the instance has been initialized yet, this method will override it.
+
         :param log_gile_path: The path to the log file;
-        :param level:         The logging level;
-        :returns:             (none);
-        '''
+        :param level: The logging level;
+        :rtype: None;
+        """
         Logger.__instance = Logger(log_file_path, level)
     
     @staticmethod
     def set_level(level:int):
-        '''
-        ## Set the logging level
-        #### 设置日志等级
+        """Sets the logging level
+
         :param level: The new logging level;
-        :returns:     (none);
-        '''
+        :rtype: None;
+        """
         if Logger.__instance: Logger.__instance.__set_level(level)
     
     @staticmethod

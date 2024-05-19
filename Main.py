@@ -7,19 +7,13 @@ from src import ResolveAB       as AU_Rs
 from src import CombineRGBwithA as AU_Cb
 from src import CollectModels   as AU_Cm
 from src import ModelsDataDist  as AU_Mdd
-'''
-ArkUnpacker主程序
-'''
+
 AU_ver = 'v2.7'
 AU_i18n = 'zh-CN'
 AU_thread_suggest = '10-20'
 
 
 def prt_homepage():
-    '''
-    #### 打印主页
-    :returns: (none);
-    '''
     Logger.info("CI: In Homepage.")
     os.system('cls')
     os.chdir('.')
@@ -30,11 +24,6 @@ def prt_homepage():
     print(f'输入序号后按回车即可，\n如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker ')
 
 def prt_subtitle(msg:str):
-    '''
-    #### 打印子标题
-    :param msg: 标题;
-    :returns: (none);
-    '''
     os.system('cls')
     os.chdir('.')
     print(f'{"="*10}', s=1)
@@ -42,43 +31,42 @@ def prt_subtitle(msg:str):
     print(f'{"="*10}\n', s=1)
 
 def prt_continue():
-    '''
-    #### 打印按任意键返回的信息
-    :returns: (none);
-    '''
     input(f'\n按任意键返回', c=2)
 
 def input_allow(msg:str, allow:list, excpt:str):
-    '''
-    #### 获取合规的键盘命令输入
-    :param msg:   提示信息;
-    :param allow: 包含了合规的输入的列表;
-    :param excpt: 输入不合规时的提示信息;
-    :returns:     (str) 一个合规的输入;
-    '''
+    """Gets a legal input text.
+
+    :param msg: Tip text to display;
+    :param allow: Legal values list;
+    :param excpt: Warning text to display when received an illegal value;
+    :returns: The legal input;
+    :rtype: str;
+    """
     inpt = input(msg, c=2)
     while not (inpt in allow):
         inpt = input(excpt, c=2)
     return inpt
 
 def input_path(msg:str, excpt:str):
-    '''
-    #### 获取合规的目录路径输入
-    :param msg:   提示信息;
-    :param excpt: 输入目录不存在时的提示信息;
-    :returns:     (str) 一个合规的输入;
-    '''
+    """Gets a legal input path.
+
+    :param msg: Tip text to display;
+    :param excpt: Warning text to display when received a path that not exists;
+    :returns: The legal input;
+    :rtype: str;
+    """
     inpt = os.path.normpath(input(msg, c=2))
     while not os.path.isdir(inpt):
             inpt = os.path.normpath(input(excpt, c=2))
     return inpt
 
 def get_dirlist(ignore:list=[]):
-    '''
-    #### 获取当前目录下的第一级子目录的列表
-    :param ignore: 可选，忽略名单，精确匹配;
-    :returns:      (list) 子目录的列表;
-    '''
+    """Gets the direct children directories in the current working directory.
+
+    :param ignore: Names to ignore;
+    :returns: The directories list;
+    :rtype: list[str];
+    """
     filelist = []
     for i in os.listdir():
         if os.path.isdir(i) and os.path.basename(i) not in ignore:
@@ -86,10 +74,6 @@ def get_dirlist(ignore:list=[]):
     return filelist
 
 def run_quickaccess():
-    '''
-    #### 启动一键执行模式
-    :returns: (none);
-    '''
     Logger.info("CI: Run quick access.")
     os.system('title ArkUnpacker - Processing')
     destdir = f'Unpacked_{int(time.time())}'
@@ -104,10 +88,6 @@ def run_quickaccess():
     AU_Cb.main(destdir,f'Combined_{int(time.time())}',threads=config.get("threads_default"))
 
 def run_costm_Rs():
-    '''
-    #### 启动自定义资源解包模式
-    :returns: (none);
-    '''
     Logger.info("CI: Customized unpack mode.")
     prt_subtitle('自定义资源解包')
     ###
@@ -155,10 +135,6 @@ def run_costm_Rs():
     AU_Rs.main(rootdir,destdir,dodel,doimg,dotxt,doaud,False,separate,ths)
 
 def run_costm_Cb():
-    '''
-    #### 启动自定义合并图片模式
-    :returns: (none);
-    '''
     Logger.info("CI: Customized image combine mode.")
     prt_subtitle('自定义合并图片')
     ###
@@ -193,10 +169,6 @@ def run_costm_Cb():
     AU_Cb.main(rootdir,destdir,dodel,ths)
 
 def run_arkmodels_unpacking(dirs, destdir):
-    '''
-    #### 以ArkModels仓库的标准执行Spine模型提取
-    :returns: (none);
-    '''
     Logger.info("CI: ArkModels unpack mode.")
     prt_subtitle('ArkModels 模型提取')
     ###
@@ -219,10 +191,6 @@ def run_arkmodels_unpacking(dirs, destdir):
         AU_Rs.main(i,destdir,doimg=False,dotxt=False,doaud=False,dospine=True,threads=ths)
 
 def run_arkmodels_filtering(dirs, destdirs):
-    '''
-    #### 以ArkModels仓库的标准执行Spine模型文件分拣
-    :returns: (none);
-    '''
     Logger.info("CI: ArkModels file filter mode.")
     prt_subtitle('ArkModels 文件分拣')
     ###
@@ -247,11 +215,6 @@ def run_arkmodels_filtering(dirs, destdirs):
             rmdir(i) 
 
 def run_arkmodels_data_dist():
-    '''
-    #### 以ArkModels仓库的标准生成Spine模型数据集
-    此功能专门服务于ArkModels仓库（一个存储明日方舟Spine模型的仓库）。
-    :returns: (none);
-    '''
     Logger.info("CI: ArkModels dataset mode.")
     prt_subtitle('ArkModels 生成数据集')
     ###
@@ -262,11 +225,6 @@ def run_arkmodels_data_dist():
     AU_Mdd.main()
 
 def run_arkmodels_workflow():
-    '''
-    #### 进入ArkModels提取与分拣工具的页面
-    此功能专门服务于ArkModels仓库（一个存储明日方舟Spine模型的仓库）。
-    :returns: (none);
-    '''
     Logger.info("CI: In ArkModels workflow.")
     def prt_arkmodels_menu():
         os.system('cls')

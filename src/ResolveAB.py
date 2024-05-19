@@ -8,57 +8,53 @@ try:
 except:
     from utils._ImportAllUtils import*
     from CombineRGBwithA import combine_rgb_a
-from UnityPy import load as UpyLoad #UnityPy库用于操作Unity文件
+from UnityPy import load as UpyLoad
 from UnityPy import classes as UpyClasses
 from UnityPy import Environment
-'''
-Python批量解包Unity(.ab)资源文件
-明日方舟定制版本
-'''
 
 
 class Resource:
-    '存放env内的资源的类'
+    """The class representing a collection of the objects in an UnityPy Environment."""
     
     @staticmethod
     def _get_image(obj):
-        #### 类内静态方法：获取object中的图片，返回Image实例
+        """Gets the image inner the object."""
         return obj.image
 
     @staticmethod
     def _get_script(obj):
-        #### 类内静态方法：获取object中的文本，返回字节流
+        """Gets the text script inner the object."""
         return bytes(obj.script)
 
     @staticmethod
     def _get_samples(obj):
-        #### 类内静态方法：获取object中的音频，返回音频采样点列表
+        """Gets the audio samples inner the object"""
         return obj.samples.items()
 
     @staticmethod
     def __rename_add_prefix(obj:UpyClasses.GameObject, pre:str):
-        #### 私有静态方法：辅助重命名小人相关文件，为资源名称添加前缀
+        """Adds a prefix to rename the Spine-related files."""
         if len(obj.name) <= len(pre) or obj.name[:len(pre)] != pre:
             obj.name = str(pre + obj.name)
 
     @staticmethod
     def __rename_add_suffix(obj:UpyClasses.GameObject, suf:str):
-        #### 私有静态方法：辅助重命名小人相关文件，为资源名称添加后缀
+        """Adds a suffix to rename the Spine-related files."""
         if len(obj.name) <= len(suf) or obj.name[:-len(suf)]:
             obj.name = str(obj.name + suf)
 
     def __init__(self, env:Environment):
-        '''
-        #### 通过传入一个UnityPy.environment实例，初始化一个resource类
-        :param env: UnityPy.load()创建的environment实例;
-        :returns:   (none);
-        '''
+        """Initializes with the given UnityPy Environment instance.
+
+        :param env: The Environment instance from `UnityPy.load()`;
+        :rtype: None;
+        """
         self.env:Environment = env
-        '''The UnityPy Environment instance'''
+        """The UnityPy Environment instance"""
         self.name:str = env.file.name
-        '''The file name of the UnityPy Environment instance'''
+        """The file name of the UnityPy Environment instance"""
         self.length:int = len(env.objects)
-        '''The count of all objects'''
+        """The count of all objects"""
         ###
         self.sprites:list[UpyClasses.Sprite] = []
         self.texture2ds:list[UpyClasses.Texture2D] = []
@@ -67,7 +63,7 @@ class Resource:
         self.materials:list[UpyClasses.Material] = []
         self.monobehaviors:list[UpyClasses.MonoBehaviour] = []
         self.__spines:list[Resource.SpineAsset] = []
-        self.typelist = [ #[0:类型名称,1:类型列表,2:保存后缀,3:内容提取方法,4:安全保存方法]
+        self.typelist = [ #[0:TypeName,1:TypeList,2:FileExt,3:ExtractMethod,4:SaveMethod]
             ['Sprite',self.sprites,'.png',Resource._get_image,MySaver.save_image],
             ['Texture2D',self.texture2ds,'.png',Resource._get_image,MySaver.save_image],
             ['TextAsset',self.textassets,'',Resource._get_script,MySaver.save_script],
@@ -78,21 +74,21 @@ class Resource:
         ###
         objs = [i for i in env.objects]
         for i in objs:
-            #(i是单个object)
+            #(i stands for an object)
             itypename = i.type.name
             for j in self.typelist:
-                #(j是某资源类型的特征的列表)
+                #(j stands for a type list)
                 if itypename == j[0]:
                     j[1].append(i.read())
                     break
     
     def get_object_by_pathid(self, pathid:"int|dict", search_in:"list|None"=None):
-        '''
-        #### 获取具有指定PathID的GameObject对象
-        :param pathid:     PathID，可以是具体的值，也可以是包含m_PathID字段的字典;
-        :param search_in:  搜索范围，如果是None则表示搜索范围是全部对象;
-        :returns:          (GameObject) 若未找到则返回None;
-        '''
+        """Gets the object with the given PathID.
+
+        :param pathid: PathID in int or a dict containing `m_PathID` field;
+        :param search_in: Searching range, `None` for all objects;
+        :returns: The GameObject, `None` for not found;
+        """
         _key = 'm_PathID'
         pathid:int = pathid[_key] if type(pathid) == dict and _key in pathid.keys() else pathid
         lst:list[UpyClasses.GameObject] = self.env.objects if not search_in else search_in
@@ -102,13 +98,13 @@ class Resource:
         return None
 
     def save_all_the(self, typename:str, intodir:str, callback:staticmethod=None):
-        '''
-        #### 保存Reource类中某个类型的所有文件
-        :param typename: 类型名称;
-        :param intodir:  保存目的地的目录;
-        :param callback: 每保存一个文件后的回调函数;
-        :returns:        (none);
-        '''
+        """Saves every files of the certain type.
+
+        :param typename: Type name;
+        :param intodir: Destination directory;
+        :param callback: Callback for every saved file;
+        :rtype: None;
+        """
         for j in self.typelist:
             #(j是某资源类型的特征的列表)
             if typename == j[0]:
@@ -120,37 +116,37 @@ class Resource:
                 break
     
     def save_skeletons(self, intodir:str, callback:staticmethod=None):
-        '''
-        #### 保存所有找到的Spine动画，请确保已先执行sort_skeletons
-        :param intodir:  保存目的地的目录;
-        :param callback: 每保存一个文件后的回调函数;
-        :returns:        (none);
-        '''
+        """Saves every Spine asset. Note that sort_skeletons should be invoked first.
+
+        :param intodir: Destination directory;
+        :param callback: Callback for every saved file;
+        :rtype: None;
+        """
         for s in self.__spines:
             s.save_spine(intodir, callback)
 
     def sort_skeletons(self):
-        '''
-        #### 整理Spine骨骼动画
-        :returns: (none);
-        '''
+        """Sorts the Spine assets.
+        
+        :rtype: None;
+        """
         spines:list[Resource.SpineAsset] = []
         for mono in self.monobehaviors:
-            #(i是遍历的单个Mono对象)
+            #(i stans for a MonoBehavior)
             success = False
             if mono.serialized_type.nodes:
-                #对骨骼动画对象操作
+                # As asset:
                 tree = mono.read_typetree()
                 if 'skeletonDataAsset' not in tree.keys():
-                    continue #不是骨骼动画对象，跳过
+                    continue # Skip non-skeleton asset
                 mono_sd = self.get_object_by_pathid(tree['skeletonDataAsset'], self.monobehaviors)
                 if mono_sd.serialized_type.nodes:
-                    #对骨骼数据对象操作
+                    # As skeleton data asset:
                     tree_sd = mono_sd.read_typetree()
                     skel = self.get_object_by_pathid(tree_sd['skeletonJSON'], self.textassets)
                     mono_ad = self.get_object_by_pathid(tree_sd['atlasAssets'][0], self.monobehaviors)
                     if mono_ad.serialized_type.nodes:
-                        #对ATLAS数据对象操作
+                        # As atlas data asset:
                         tree_ad = mono_ad.read_typetree()
                         atlas = self.get_object_by_pathid(tree_ad['atlasFile'], self.textassets)
                         list2mat = [self.get_object_by_pathid(i, self.materials) for i in tree_ad['materials']]
@@ -158,7 +154,7 @@ class Resource:
                         for mat in list2mat:
                             tex_rgb, tex_alpha = None, None
                             if mat.serialized_type.nodes:
-                                #对材质对象操作
+                                # As material asset:
                                 tree_mat = mat.read_typetree()
                                 tex_envs = tree_mat['m_SavedProperties']['m_TexEnvs']
                                 for tex in tex_envs:
@@ -167,10 +163,10 @@ class Resource:
                                     elif tex[0] == '_AlphaTex':
                                         tex_alpha = self.get_object_by_pathid(tex[1]['m_Texture'], self.texture2ds)
                             list2tex.append((tex_rgb, tex_alpha))
-                        #封装为SpineAsset对象
+                        # Pack into Spine asset instance
                         spine = Resource.SpineAsset(self, skel, atlas, list2tex)
                         if spine.is_available():
-                            #该骨骼数据解析成功
+                            # Succeeded
                             if len(skel.name) > 4 and skel.name[:4] == 'dyn_':
                                 spine.type = Resource.SpineAsset.DYN_ILLUST
                             elif 'Relax' in tree['_animationName'] or \
@@ -185,12 +181,12 @@ class Resource:
         self.__spines = spines
     
     def rename_skeletons(self):
-        '''
-        #### 重设Spine骨骼动画文件的路径（包括Skel/Atlas/Png）
-        明日方舟的骨骼动画分为三种类型，战斗正面、战斗背面、基建。
-        为了更好地进行区分，需要将它们的导出文件路径更改为与其类型相对应的特定目录。
-        :returns: (none);
-        '''
+        """Renames the Spine assets which includes skel, atlas and png files.
+        Since the Spine in Arknights have 4 or more forms (Building, BattleFront, BattleBack, DynIllust),
+        it is necessary to rename them so that name collisions can be avoid.
+        
+        :rtype: None;
+        """
         for spine in self.__spines:
             prefix = spine.get_common_name() + os.path.sep
             if spine.type == Resource.SpineAsset.BUILDING:
@@ -266,18 +262,18 @@ class Resource:
 def ab_resolve(abfile:str, intodir:str, \
     doimg:bool, dotxt:bool, doaud:bool, dospine:bool, \
     callback:staticmethod=None, subcallback:staticmethod=None):
-    '''
-    #### 解包ab文件env实例
-    :param abfile:      ab文件的路径;
-    :param intodir:     解包目的地的目录;
-    :param doimg:       是否导出图片资源;
-    :param dotxt:       是否导出文本资源;
-    :param doaud:       是否导出音频资源;
-    :param dospine:     是否导出Spine动画，注意Spine动画和图片资源、文本资源有重叠的部分;
-    :param callback:    完成后的回调函数（无参数），默认None;
-    :param subcallback: 每导出一个文件后的回调函数（接受一个布尔参数“是否进行了保存”），默认None;
-    :returns:       (None);
-    '''
+    """Extracts an AB file.
+
+    :param abfile: Path to the AB file;
+    :param intodir: Destination directory;
+    :param doimg: Whether to extract images;
+    :param dotxt: Whether to extract text scripts;
+    :param doaud: Whether to extract audios;
+    :param dospine: Whether to extract Spine assets, note that the Spine assets may have some identical file with the images/scripts;
+    :param callback: Callback `f()`, None for ignore;
+    :param subcallback: Callback `f(whether_saved_this_file:bool)` for every saved file, `None` for ignore;
+    :rtype: None;
+    """
     env = UpyLoad(abfile)
     reso = Resource(env)
     Logger.debug(f'ResolveAB: "{reso.name}" has {reso.length} objects.')
@@ -288,7 +284,7 @@ def ab_resolve(abfile:str, intodir:str, \
         return
     ###
     try:
-        #进行骨骼动画整理和重命名
+        # Preprocess
         reso.sort_skeletons()
         reso.rename_skeletons()
         ###
@@ -302,9 +298,9 @@ def ab_resolve(abfile:str, intodir:str, \
         if doaud:
             reso.save_all_the('AudioClip', intodir, subcallback)
     except BaseException as arg:
-        #错误反馈
+        # Error feedback
         Logger.error(f'ResolveAB: Error occurred while unpacking file "{env.file}": Exception{type(arg)} {arg}')
-        #raise(arg) #调试时使用
+        # raise(arg)
     if callback:
         callback()
 
@@ -312,31 +308,31 @@ def ab_resolve(abfile:str, intodir:str, \
 ########## Main-主程序 ##########
 def main(rootdir:str, destdir:str, dodel:bool=False, 
     doimg:bool=True, dotxt:bool=True, doaud:bool=True, dospine:bool=False, separate:bool=True, threads:int=8):
-    '''
-    #### 批量地从指定目录的ab文件中，导出指定类型的资源
-    :param rootdir:   来源文件夹的根目录的路径;
-    :param destdir:   解包目的地的根目录的路径;
-    :param dodel:     预先删除目的地文件夹的所有文件，默认False;
-    :param doimg:     是否导出图片资源，默认True;
-    :param dotxt:     是否导出文本资源，默认True;
-    :param doaud:     是否导出音频资源，默认True;
-    :param onlyspine: 是否导出Spine动画，注意Spine动画和图片资源、文本资源有重叠的部分，默认False;
-    :param separate:  是否按AB文件分类保存，默认True;
-    :param threads:   最大线程数，默认8;
-    :returns: (None);
-    '''
+    """Extract all the AB files from the given directory.
+
+    :param rootdir: Source directory;
+    :param destdir: Destination directory;
+    :param dodel: Whether to delete the existing files in the destination directory, `False` for default;
+    :param doimg: Whether to extract images;
+    :param dotxt: Whether to extract text scripts;
+    :param doaud: Whether to extract audios;
+    :param onlyspine: Whether to extract Spine assets, note that the Spine assets may have some identical file with the images/scripts;
+    :param separate: Whether to sort the extracted files by their source AB file path.
+    :param threads: Max thread count;
+    :rtype: None;
+    """
     print("\n正在解析目录...", s=1)
     Logger.info("ResolveAB: Reading directories...")
     ospath = os.path
-    rootdir = ospath.normpath(ospath.realpath(rootdir)) #标准化目录名
-    destdir = ospath.normpath(ospath.realpath(destdir)) #标准化目录名
-    flist = [] #目录下所有文件的列表
+    rootdir = ospath.normpath(ospath.realpath(rootdir))
+    destdir = ospath.normpath(ospath.realpath(destdir))
+    flist = [] # All-files list
     flist = get_filelist(rootdir)
-    flist = list(filter(lambda x:ospath.splitext(x)[1] in ['.ab','.AB'], flist)) #初筛
+    flist = list(filter(lambda x:ospath.splitext(x)[1] in ['.ab','.AB'], flist))
 
     if dodel:
         print("\n正在清理...", s=1)
-        rmdir(destdir) #慎用，会预先删除目的地目录的所有内容
+        rmdir(destdir) # Danger zone
     MySaver.reset()
     MySaver.thread_ctrl.set_max_subthread(threads)
     Cprogs = Counter()
@@ -350,9 +346,9 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     UI.reset()
     UI.loop_start()
     for i in flist:
-        #递归处理各个文件(i是文件的路径名)
+        #(i stands for a file's path)
         if not ospath.isfile(i):
-            continue #跳过目录等非文件路径
+            continue # Skip non-file
         TR_p = TR.get_progress()
         TR_r = TR.get_remaining_time()
         UI.request([
@@ -375,7 +371,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     UI.reset()
     UI.loop_stop()
     while TC.count_subthread() or MySaver.thread_ctrl.count_subthread():
-        #等待子进程结束
+        # Waiting for sub threads to terminate
         while TR.get_progress() < 1:
             TR_p = TR.get_progress()
             TR_r = TR.get_remaining_time()

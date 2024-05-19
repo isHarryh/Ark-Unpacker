@@ -7,21 +7,17 @@ try:
 except:
     from utils._ImportAllUtils import*
 from re import findall
-from PIL import Image #PIL库用于操作图像
-'''
-Python批量合并RGB通道图和A通道图
-明日方舟定制版本
-'''
+from PIL import Image
 
 
 def combine_rgb_a(rgb:"str|Image.Image", a:"str|Image.Image"):
-    '''
-    #### 将RGB通道图和A通道图合并
-    此算法更新后速率提升了400%
-    :param fp_rgb: RGB通道图的图片对象或其路径;
-    :param fp_a:   A通道图的图片对象或其路径;
-    :returns:      Image实例;
-    '''
+    """ Merges the RGB image and the Alpha image in an efficient way.
+
+    :param fp_rgb: Instance of RGB image or its file path;
+    :param fp_a: Instance of Alpha image or its file path;
+    :returns: A new image instance;
+    :rtype: Image;
+    """
     IM1 = (rgb if type(rgb) == Image.Image else Image.open(rgb)).convert('RGBA') #RGB通道图实例化
     IM2 = (a if type(a) == Image.Image else Image.open(a)).convert('L') #A通道图实例化(L:灰度模式)
     if not (IM1.size == IM2.size):
@@ -34,11 +30,12 @@ def combine_rgb_a(rgb:"str|Image.Image", a:"str|Image.Image"):
     return IM1
 
 def alpha_resolve(fp:str):
-    ''''
-    #### 找到哪个RGB通道图的能和这个A通道图匹配
-    :param fp: A通道图的文件路径;
-    :returns:  (str|bool) RGB通道图的文件路径，失败返回False;
-    '''
+    """ Finds which RGB image could match this Alpha image.
+
+    :param fp: Path to the Alpha image;
+    :returns: Path to the RGB image, False for failure;
+    :rtype: str|bool;
+    """
     ospath = os.path
     fpdir = ospath.dirname(fp)
     fpfile = ospath.basename(fp)
@@ -75,18 +72,15 @@ def alpha_resolve(fp:str):
             Logger.info(f"CombineRGBwithA: Low confidentiality ({spines[0][1]}) about \"{fp}\" and \"{spines[0][0]}\"")
         return spines[0][0] #成功，返回置信度最高的图片的文件路径
 
-def showimg(fp:str):
-    IM = Image.open(fp)
-    IM.show()
-
 def similarity(fp_rgb:str, fp_a:str, prec:int=150):
-    '''
-    #### 对比RGB通道图和A通道图的相似度
-    :param fp_rgb: RGB通道图的文件路径;
-    :param fp_a:   A通道图的文件路径;
-    :param prec:   判断精度，值越大越精确，不宜过小过大，默认100;
-    :returns:      (int) 介于[0,255]的相似度，值越大越相似;
-    '''
+    """ Compares the similarity between the RGB image and the Alpha image.
+
+    :param fp_rgb: Path to the RGB image;
+    :param fp_a: Path to the Alpha image;
+    :param prec: Precision of the judgement, higher for more precise, `150` for default;
+    :returns: Similarity value in `[0, 255]`, higher for more similar;
+    :rtype: int;
+    """
     IM1 = Image.open(fp_rgb).convert('L') #RGB通道图实例化(L:灰度模式)
     IM2 = Image.open(fp_a).convert('L') #A通道图实例化
     prec = 100 if prec < 0 else prec
@@ -107,15 +101,16 @@ def similarity(fp_rgb:str, fp_a:str, prec:int=150):
     return 0 if Diff_mean >= 255 else (255 if Diff_mean <= 0 else 255-Diff_mean)
 
 def image_resolve(fp:str, intodir:str, callback:staticmethod=None, successcallback:staticmethod=None):
-    '''
-    #### 判断某图片的名称是否包含A通道图的特定命名特征，
-    #### 如果是的话就寻找它的RGB通道图进行合并，然后保存合并的图片
-    :param fp:              图片的文件路径;
-    :param intodir:         保存目的地的目录;
-    :param callback:        完成后的回调函数（无参数），默认None;
-    :param successcallback: 成功导出后的回调函数（接受一个布尔参数“是否进行了保存”），默认None;
-    :returns:               (int) 执行状态代码;
-    '''
+    """ Judges whether the given image may be an Alpha image from its file name,
+    then tries to find an RGB image to merge with it.
+
+    :param fp: Path to the image;
+    :param intodir: Destination directory;
+    :param callback: Callback `f()`, `None` for ignore;
+    :param successcallback: Callback `f(whether_saved_this_file:bool)` for every saved file, `None` for ignore;
+    :returns: Status code;
+    :rtype: int;
+    """
     ospath = os.path
     oridir = ospath.dirname(fp) #原图的目录
     name, ext = ospath.splitext(ospath.basename(fp)) #纯文件名和纯扩展名
@@ -157,14 +152,15 @@ def image_resolve(fp:str, intodir:str, callback:staticmethod=None, successcallba
 
 ########## Main-主程序 ##########
 def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
-    '''
-    #### 批量地从指定目录中，找到名称相互匹配的RGB通道图和A通道图，然后合并图片后保存到另一目录
-    :param rootdir: 来源文件夹的根目录的路径;
-    :param destdir: 解包目的地的根目录的路径;
-    :param dodel:   预先删除目的地文件夹的所有文件，默认False;
-    :param threads: 最大线程数，默认8;
-    :returns: (None);
-    '''
+    """Combines the RGB images and the Alpha images in the given directory automatically according to their file names,
+    then saves the combined images into another given directory.
+
+    :param rootdir: Source directory;
+    :param destdir: Destination directory;
+    :param dodel: Whether to delete the existed destination directory first, `False` for default;
+    :param threads: Max thread count, `8` for default;
+    :rtype: None;
+    """
     print(f'\n正在解析目录...', s=1)
     Logger.info("CombineRGBwithA: Reading directories...")
     ospath = os.path
