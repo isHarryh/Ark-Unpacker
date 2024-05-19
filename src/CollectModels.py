@@ -2,10 +2,7 @@
 # Copyright (c) 2022-2023, Harry Huang
 # @ BSD 3-Clause License
 import os.path, re
-try:
-    from .utils._ImportAllUtils import *
-except:
-    from utils._ImportAllUtils import*
+from .utils import*
 
 
 def get_oper_common_name(str):

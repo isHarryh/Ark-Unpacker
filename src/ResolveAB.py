@@ -2,66 +2,61 @@
 # Copyright (c) 2022-2023, Harry Huang
 # @ BSD 3-Clause License
 import os.path, time
-try:
-    from .utils._ImportAllUtils import *
-    from .CombineRGBwithA import combine_rgb_a
-except:
-    from utils._ImportAllUtils import*
-    from CombineRGBwithA import combine_rgb_a
-from UnityPy import load as UpyLoad
-from UnityPy import classes as UpyClasses
-from UnityPy import Environment
+import UnityPy
+from .utils import *
+from .CombineRGBwithA import combine_rgb_a
+from UnityPy.classes import *
 
 
 class Resource:
     """The class representing a collection of the objects in an UnityPy Environment."""
     
     @staticmethod
-    def _get_image(obj):
+    def _get_image(obj:GameObject):
         """Gets the image inner the object."""
         return obj.image
 
     @staticmethod
-    def _get_script(obj):
+    def _get_script(obj:GameObject):
         """Gets the text script inner the object."""
         return bytes(obj.script)
 
     @staticmethod
-    def _get_samples(obj):
+    def _get_samples(obj:GameObject):
         """Gets the audio samples inner the object"""
         return obj.samples.items()
 
     @staticmethod
-    def __rename_add_prefix(obj:UpyClasses.GameObject, pre:str):
+    def __rename_add_prefix(obj:GameObject, pre:str):
         """Adds a prefix to rename the Spine-related files."""
         if len(obj.name) <= len(pre) or obj.name[:len(pre)] != pre:
             obj.name = str(pre + obj.name)
 
     @staticmethod
-    def __rename_add_suffix(obj:UpyClasses.GameObject, suf:str):
+    def __rename_add_suffix(obj:GameObject, suf:str):
         """Adds a suffix to rename the Spine-related files."""
         if len(obj.name) <= len(suf) or obj.name[:-len(suf)]:
             obj.name = str(obj.name + suf)
 
-    def __init__(self, env:Environment):
+    def __init__(self, env:UnityPy.Environment):
         """Initializes with the given UnityPy Environment instance.
 
         :param env: The Environment instance from `UnityPy.load()`;
         :rtype: None;
         """
-        self.env:Environment = env
+        self.env:UnityPy.Environment = env
         """The UnityPy Environment instance"""
         self.name:str = env.file.name
         """The file name of the UnityPy Environment instance"""
         self.length:int = len(env.objects)
         """The count of all objects"""
         ###
-        self.sprites:list[UpyClasses.Sprite] = []
-        self.texture2ds:list[UpyClasses.Texture2D] = []
-        self.textassets:list[UpyClasses.TextAsset] = []
-        self.audioclips:list[UpyClasses.AudioClip] = []
-        self.materials:list[UpyClasses.Material] = []
-        self.monobehaviors:list[UpyClasses.MonoBehaviour] = []
+        self.sprites:list[Sprite] = []
+        self.texture2ds:list[Texture2D] = []
+        self.textassets:list[TextAsset] = []
+        self.audioclips:list[AudioClip] = []
+        self.materials:list[Material] = []
+        self.monobehaviors:list[MonoBehaviour] = []
         self.__spines:list[Resource.SpineAsset] = []
         self.typelist = [ #[0:TypeName,1:TypeList,2:FileExt,3:ExtractMethod,4:SaveMethod]
             ['Sprite',self.sprites,'.png',Resource._get_image,MySaver.save_image],
@@ -91,7 +86,7 @@ class Resource:
         """
         _key = 'm_PathID'
         pathid:int = pathid[_key] if type(pathid) == dict and _key in pathid.keys() else pathid
-        lst:list[UpyClasses.GameObject] = self.env.objects if not search_in else search_in
+        lst:list[GameObject] = self.env.objects if not search_in else search_in
         for i in lst:
             if i.path_id == pathid:
                 return i
@@ -211,7 +206,7 @@ class Resource:
         BATTLE_BACK = 3
         DYN_ILLUST = 4
 
-        def __init__(self, resource, skel:UpyClasses.TextAsset, atlas:UpyClasses.TextAsset, tex_list:"list[tuple]", type:int=UNKNOWN):
+        def __init__(self, resource, skel:TextAsset, atlas:TextAsset, tex_list:"list[tuple]", type:int=UNKNOWN):
             self.__r:Resource = resource
             self.skel = skel
             self.atlas = atlas
@@ -223,14 +218,14 @@ class Resource:
             return t.count('\nF_') + t.count('\nf_') + t.count('\nC_') + t.count('\nc_') >= t.count('\nB_') + t.count('\nb_')
         
         def is_available(self):
-            if type(self.skel) != UpyClasses.TextAsset or type(self.atlas) != UpyClasses.TextAsset:
+            if type(self.skel) != TextAsset or type(self.atlas) != TextAsset:
                 return False
             if type(self.tex_list) != list or len(self.tex_list) == 0:
                 return False
             return True
         
         def get_common_name(self):
-            if type(self.atlas) == UpyClasses.TextAsset:
+            if type(self.atlas) == TextAsset:
                 return os.path.splitext(os.path.basename(self.atlas.name))[0]
             return "Unknown"
         
@@ -274,7 +269,7 @@ def ab_resolve(abfile:str, intodir:str, \
     :param subcallback: Callback `f(whether_saved_this_file:bool)` for every saved file, `None` for ignore;
     :rtype: None;
     """
-    env = UpyLoad(abfile)
+    env = UnityPy.load(abfile)
     reso = Resource(env)
     Logger.debug(f'ResolveAB: "{reso.name}" has {reso.length} objects.')
     if reso.length >= 10000:

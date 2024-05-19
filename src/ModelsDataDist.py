@@ -2,10 +2,7 @@
 # Copyright (c) 2022-2023, Harry Huang
 # @ BSD 3-Clause License
 import os.path, requests, json, warnings, re
-try:
-    from .utils._ImportAllUtils import *
-except:
-    from utils._ImportAllUtils import*
+from .utils import*
 
 
 def get_curl(url:str):
@@ -292,7 +289,3 @@ def main():
     Logger.info("ModelsDataDist: Succeeded.")
     print("\t完成", c=2)
     return True
-
-if __name__ == '__main__':
-    main()
-    input("按Enter退出...")
