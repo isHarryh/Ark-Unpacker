@@ -1,9 +1,11 @@
-/*
+/*/
 __pycache__/
 venv/
 !.vscode/
 !build/
 !docs/
 !src/
-*.exe
-*.evb
+/*.exe
+/*.evb
+/*.json
+/*.log

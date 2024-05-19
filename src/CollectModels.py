@@ -66,7 +66,7 @@ def main(srcdirs:"list[str]", destdirs:"list[str]", dodel:bool=False):
     """Collects the Spine models from the source directories to the destination directories accordingly.
     :param srcdirs: Source directories list;
     :param destdirs: Destination directories list;
-    :param dodel: Whether to delete the existed destination directories fitst, `False` for default;
+    :param dodel: Whether to delete the existed destination directories first, `False` for default;
     :rtype: None;
     """
     print("\n正在解析目录...", s=1)
@@ -123,7 +123,7 @@ def main(srcdirs:"list[str]", destdirs:"list[str]", dodel:bool=False):
                         mvfile(m, ospath.join(dest, newname))
                         cont_f += 1
         except BaseException as arg:
-            Logger.error(f'CollectModels: Error occurred while handleing "{dir2}": Exception{type(arg)} {arg}')
+            Logger.error(f'CollectModels: Error occurred while handling "{dir2}": Exception{type(arg)} {arg}')
         TR.update()
         cont_p = TR.get_progress()
 

@@ -11,8 +11,8 @@ os.system('')
 def color(c:int=7, bg:int=0, s:int=0):
     """Gets a color controller string in interactive CLI.
 
-    :param c: The color [0=balck,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
-    :param bg: The background color [0=balck,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
+    :param c: The color [0=black,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
+    :param bg: The background color [0=black,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
     :param s: The style [0=default,1=bold,4=underlined,5=flashing,7=inverted,8=none];
     :returns: The color controller string.
     :rtype: str;
@@ -23,8 +23,8 @@ def input(text:str="", c:int=7, bg:int=0, s:int=0, y:int=0):
     """Enhanced version of inputting in interactive CLI.
 
     :param text: The text to display;
-    :param c: The color [0=balck,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
-    :param bg: The background color [0=balck,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
+    :param c: The color [0=black,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
+    :param bg: The background color [0=black,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
     :param s: The style [0=default,1=bold,4=underlined,5=flashing,7=inverted,8=none];
     :param y: The y-position of the line to print or overwrite [0=append];
     :returns: The inputted text;
@@ -37,8 +37,8 @@ def print(text:str="", c:int=7, bg:int=0, s:int=0, y:int=0):
     """Enhanced version of printing in interactive CLI.
 
     :param text: The text to print;
-    :param c: The color [0=balck,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
-    :param bg: The background color [0=balck,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
+    :param c: The color [0=black,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
+    :param bg: The background color [0=black,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
     :param s: The style [0=default,1=bold,4=underlined,5=flashing,7=inverted,8=none];
     :param y: The y-position of the line to print or overwrite [0=append];
     :rtype: None;

@@ -97,12 +97,12 @@ def similarity(fp_rgb:str, fp_a:str, prec:int=150):
     Diff_mean = round(mean(Diff))
     return 0 if Diff_mean >= 255 else (255 if Diff_mean <= 0 else 255-Diff_mean)
 
-def image_resolve(fp:str, intodir:str, callback:staticmethod=None, successcallback:staticmethod=None):
+def image_resolve(fp:str, destdir:str, callback:staticmethod=None, successcallback:staticmethod=None):
     """ Judges whether the given image may be an Alpha image from its file name,
     then tries to find an RGB image to merge with it.
 
     :param fp: Path to the image;
-    :param intodir: Destination directory;
+    :param destdir: Destination directory;
     :param callback: Callback `f()`, `None` for ignore;
     :param successcallback: Callback `f(whether_saved_this_file:bool)` for every saved file, `None` for ignore;
     :returns: Status code;
@@ -139,7 +139,7 @@ def image_resolve(fp:str, intodir:str, callback:staticmethod=None, successcallba
     IM = combine_rgb_a(fp2, fp)
     if IM:
         Logger.debug(f"CombineRGBwithA: \"{fp}\" -> \"{fp2}\"")
-        MySaver.save_image(IM, intodir, real, '.png', successcallback) #保存新图
+        MySaver.save_image(IM, destdir, real, '.png', successcallback) #保存新图
         if callback: callback()
     else:
         Logger.warn(f"CombineRGBwithA: Failed to combine \"{fp}\" with \"{fp2}\"")

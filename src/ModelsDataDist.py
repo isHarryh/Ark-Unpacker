@@ -15,7 +15,7 @@ def get_curl(url:str):
             Logger.debug(f"ModelsDataDist: Fetching was success, content length: {len(r.content)} Bytes.")
             return r.text
         else:
-            Logger.error(f"ModelsDataDist: Failed to fetch \"{url}\": Responce code {r.status_code}")
+            Logger.error(f"ModelsDataDist: Failed to fetch \"{url}\": Response code {r.status_code}")
             print(f"\t下载数据错误，返回码：{r.status_code}", c=3)
     except BaseException as arg:
         Logger.error(f"ModelsDataDist: Failed to fetch \"{url}\": {arg}")

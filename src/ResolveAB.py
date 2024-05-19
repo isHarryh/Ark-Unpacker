@@ -92,11 +92,11 @@ class Resource:
                 return i
         return None
 
-    def save_all_the(self, typename:str, intodir:str, callback:staticmethod=None):
+    def save_all_the(self, typename:str, destdir:str, callback:staticmethod=None):
         """Saves every files of the certain type.
 
         :param typename: Type name;
-        :param intodir: Destination directory;
+        :param destdir: Destination directory;
         :param callback: Callback for every saved file;
         :rtype: None;
         """
@@ -106,19 +106,19 @@ class Resource:
                 for i in j[1]:
                     #(i是单个object)
                     data = j[3](i) #内容提取
-                    j[4](data, intodir, i.name, j[2], callback) #保存
+                    j[4](data, destdir, i.name, j[2], callback) #保存
                     Logger.debug(f"ResolveAB: \"{self.name}\" -> \"{i.name}{j[2]}\"")
                 break
     
-    def save_skeletons(self, intodir:str, callback:staticmethod=None):
+    def save_skeletons(self, destdir:str, callback:staticmethod=None):
         """Saves every Spine asset. Note that sort_skeletons should be invoked first.
 
-        :param intodir: Destination directory;
+        :param destdir: Destination directory;
         :param callback: Callback for every saved file;
         :rtype: None;
         """
         for s in self.__spines:
-            s.save_spine(intodir, callback)
+            s.save_spine(destdir, callback)
 
     def sort_skeletons(self):
         """Sorts the Spine assets.
@@ -229,7 +229,7 @@ class Resource:
                 return os.path.splitext(os.path.basename(self.atlas.name))[0]
             return "Unknown"
         
-        def save_spine(self, intodir:str, callback:staticmethod=None):
+        def save_spine(self, destdir:str, callback:staticmethod=None):
             if self.is_available():
                 for i in self.tex_list:
                     if i[0]:
@@ -239,14 +239,14 @@ class Resource:
                         else:
                             Logger.info(f"ResolveAB: Spine asset \"{i[0].name}\" has no Alpha texture.")
                             rgba = rgb
-                        if MySaver.save_image(rgba, intodir, i[0].name):
+                        if MySaver.save_image(rgba, destdir, i[0].name):
                             Logger.debug(f"ResolveAB: Spine asset \"{i[0].name}\" saved.")
                             if callback:
                                 callback(True)
                     else:
                         Logger.warn(f"ResolveAB: Spine asset \"{i[0].name}\" texture lost.")
                 for i in (self.atlas, self.skel):
-                    if MySaver.save_script(Resource._get_script(i), intodir, i.name):
+                    if MySaver.save_script(Resource._get_script(i), destdir, i.name):
                         Logger.debug(f"ResolveAB: Spine asset \"{i.name}\" saved.")
                         if callback:
                             callback(True)
@@ -254,13 +254,13 @@ class Resource:
     #EndClass
 
 
-def ab_resolve(abfile:str, intodir:str, \
+def ab_resolve(abfile:str, destdir:str, \
     doimg:bool, dotxt:bool, doaud:bool, dospine:bool, \
     callback:staticmethod=None, subcallback:staticmethod=None):
     """Extracts an AB file.
 
     :param abfile: Path to the AB file;
-    :param intodir: Destination directory;
+    :param destdir: Destination directory;
     :param doimg: Whether to extract images;
     :param dotxt: Whether to extract text scripts;
     :param doaud: Whether to extract audios;
@@ -284,14 +284,14 @@ def ab_resolve(abfile:str, intodir:str, \
         reso.rename_skeletons()
         ###
         if dospine:
-            reso.save_skeletons(intodir, subcallback)
+            reso.save_skeletons(destdir, subcallback)
         if doimg:
-            reso.save_all_the('Sprite', intodir, subcallback)
-            reso.save_all_the('Texture2D', intodir, subcallback)
+            reso.save_all_the('Sprite', destdir, subcallback)
+            reso.save_all_the('Texture2D', destdir, subcallback)
         if dotxt:
-            reso.save_all_the('TextAsset', intodir, subcallback)
+            reso.save_all_the('TextAsset', destdir, subcallback)
         if doaud:
-            reso.save_all_the('AudioClip', intodir, subcallback)
+            reso.save_all_the('AudioClip', destdir, subcallback)
     except BaseException as arg:
         # Error feedback
         Logger.error(f'ResolveAB: Error occurred while unpacking file "{env.file}": Exception{type(arg)} {arg}')

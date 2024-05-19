@@ -63,7 +63,7 @@ class Logger():
         """Initializes the Logger static instance.
         If the instance has been initialized yet, this method does nothing.
 
-        :param log_gile_path: The path to the log file;
+        :param log_file_path: The path to the log file;
         :param level: The logging level;
         :rtype: None;
         """
@@ -74,7 +74,7 @@ class Logger():
         """Initializes the Logger static instance forcibly.
         If the instance has been initialized yet, this method will override it.
 
-        :param log_gile_path: The path to the log file;
+        :param log_file_path: The path to the log file;
         :param level: The logging level;
         :rtype: None;
         """

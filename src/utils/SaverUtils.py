@@ -31,27 +31,27 @@ class SafeSaver():
         MySaver.total_requested = Counter()
 
     @staticmethod
-    def save(data:bytes, intodir:str, name:str, ext:str, callback:staticmethod):
+    def save(data:bytes, destdir:str, name:str, ext:str, callback:staticmethod):
         """Saves a binary data to a file.
 
         :param data: Bytes data;
-        :param intodir: Destination directory;
+        :param destdir: Destination directory;
         :param name: File name (without the extension);
         :param ext: File extension;
-        :param callbak: Callback `f(whether_saved_this_file)`;
+        :param callback: Callback `f(whether_saved_this_file)`;
         :rtype: None;
         """
-        MySaver.thread_ctrl.run_subthread(MySaver._save, (data, intodir, name, ext, callback), name=f"SaverThread:{id(data)}")
+        MySaver.thread_ctrl.run_subthread(MySaver._save, (data, destdir, name, ext, callback), name=f"SaverThread:{id(data)}")
     
     @staticmethod
-    def _save(data:bytes, intodir:str, name:str, ext:str, callback:staticmethod):
+    def _save(data:bytes, destdir:str, name:str, ext:str, callback:staticmethod):
         MySaver.total_requested.update()
         try:
-            dest = os.path.join(intodir, name)
+            dest = os.path.join(destdir, name)
             name = os.path.basename(dest)
-            intodir = os.path.dirname(dest)
-            if SafeSaver.__is_unique(data, intodir, name, ext):
-                dest = SafeSaver.__no_namesake(intodir, name, ext)
+            destdir = os.path.dirname(dest)
+            if SafeSaver.__is_unique(data, destdir, name, ext):
+                dest = SafeSaver.__no_namesake(destdir, name, ext)
                 SafeSaver._save_bytes(data, dest)
                 if callback:
                     callback(True)
@@ -75,22 +75,22 @@ class SafeSaver():
         return True if bytes(data) == bytes(cache) else False
 
     @staticmethod
-    def __is_unique(data:bytes, intodir:str, name:str, ext:str):
-        if os.path.isdir(intodir):
+    def __is_unique(data:bytes, destdir:str, name:str, ext:str):
+        if os.path.isdir(destdir):
             lenname = len(name)
-            flist = os.listdir(intodir)
+            flist = os.listdir(destdir)
             flist = list(filter(lambda x:(name == x[:lenname] and ext in x), flist)) #初筛
             for i in flist:
-                if SafeSaver.__is_same(data, os.path.join(intodir, i)):
+                if SafeSaver.__is_same(data, os.path.join(destdir, i)):
                     return False
         return True
 
     @staticmethod
-    def __no_namesake(intodir:str, name:str, ext:str):
+    def __no_namesake(destdir:str, name:str, ext:str):
         tmp = 0
-        dest = os.path.join(intodir, f'{name}{ext}')
+        dest = os.path.join(destdir, f'{name}{ext}')
         while os.path.isfile(dest):
-            dest = os.path.join(intodir, f'{name}_#{tmp}{ext}')
+            dest = os.path.join(destdir, f'{name}_#{tmp}{ext}')
             tmp += 1
         return dest
     #EndClass
@@ -99,11 +99,11 @@ class MySaver(SafeSaver):
     """The implemented saver."""
 
     @staticmethod
-    def save_image(IM:Image.Image, intodir:str, name:str, ext:str='.png', callback:staticmethod=None):
+    def save_image(IM:Image.Image, destdir:str, name:str, ext:str='.png', callback:staticmethod=None):
         """Saves an image.
 
         :param IM: `PIL.Image` instance;
-        :param intodir: Destination directory;
+        :param destdir: Destination directory;
         :param name: File name (without the extension);
         :param ext: File extension;
         :param callback: Callback `f(whether_saved_this_file)`;
@@ -118,15 +118,15 @@ class MySaver(SafeSaver):
         byt = BytesIO()
         IM.save(byt, format = ('PNG' if ext == '.png' else 'JPEG'))
         byt = byt.getvalue()
-        SafeSaver.save(byt, intodir, name, ext, callback)
+        SafeSaver.save(byt, destdir, name, ext, callback)
         return True
 
     @staticmethod
-    def save_script(byt:bytes, intodir:str, name:str, ext:str='', callback:staticmethod=None):
+    def save_script(byt:bytes, destdir:str, name:str, ext:str='', callback:staticmethod=None):
         """Saves a binary file.
 
         :param byt: Bytes data;
-        :param intodir: Destination directory;
+        :param destdir: Destination directory;
         :param name: File name (without the extension);
         :param ext: File extension;
         :param callback: Callback `f(whether_saved_this_file)`;
@@ -136,15 +136,15 @@ class MySaver(SafeSaver):
         ext = ext.lower()
         if not byt:
             return False
-        SafeSaver.save(byt, intodir, name, ext, callback)
+        SafeSaver.save(byt, destdir, name, ext, callback)
         return True
 
     @staticmethod
-    def save_samples(items:bytes, intodir:str, name:str, ext:str='', callback:staticmethod=None):
+    def save_samples(items:bytes, destdir:str, name:str, ext:str='', callback:staticmethod=None):
         """Saves a audio file with the sample items list.
 
         :param items: Audio sample items list;
-        :param intodir: Destination directory;
+        :param destdir: Destination directory;
         :param name: File name (without the extension);
         :param ext: File extension;
         :param callback: Callback `f(whether_saved_this_file)`;
@@ -157,6 +157,6 @@ class MySaver(SafeSaver):
             byt += d
         if not byt:
             return False
-        SafeSaver.save(byt, intodir, name, ext, callback)
+        SafeSaver.save(byt, destdir, name, ext, callback)
         return True
     #EndClass
