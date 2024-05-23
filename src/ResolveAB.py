@@ -10,33 +10,6 @@ from UnityPy.classes import *
 
 class Resource:
     """The class representing a collection of the objects in an UnityPy Environment."""
-    
-    @staticmethod
-    def _get_image(obj:GameObject):
-        """Gets the image inner the object."""
-        return obj.image
-
-    @staticmethod
-    def _get_script(obj:GameObject):
-        """Gets the text script inner the object."""
-        return bytes(obj.script)
-
-    @staticmethod
-    def _get_samples(obj:GameObject):
-        """Gets the audio samples inner the object"""
-        return obj.samples.items()
-
-    @staticmethod
-    def __rename_add_prefix(obj:GameObject, pre:str):
-        """Adds a prefix to rename the Spine-related files."""
-        if len(obj.name) <= len(pre) or obj.name[:len(pre)] != pre:
-            obj.name = str(pre + obj.name)
-
-    @staticmethod
-    def __rename_add_suffix(obj:GameObject, suf:str):
-        """Adds a suffix to rename the Spine-related files."""
-        if len(obj.name) <= len(suf) or obj.name[:-len(suf)]:
-            obj.name = str(obj.name + suf)
 
     def __init__(self, env:UnityPy.Environment):
         """Initializes with the given UnityPy Environment instance.
@@ -57,25 +30,21 @@ class Resource:
         self.audioclips:list[AudioClip] = []
         self.materials:list[Material] = []
         self.monobehaviors:list[MonoBehaviour] = []
-        self.__spines:list[Resource.SpineAsset] = []
-        self.typelist = [ #[0:TypeName,1:TypeList,2:FileExt,3:ExtractMethod,4:SaveMethod]
-            ['Sprite', self.sprites, '.png', Resource._get_image, MySaver.save_image],
-            ['Texture2D', self.texture2ds, '.png', Resource._get_image, MySaver.save_image],
-            ['TextAsset', self.textassets, '', Resource._get_script, MySaver.save_script],
-            ['AudioClip', self.audioclips, '.wav', Resource._get_samples, MySaver.save_samples],
-            ['Material', self.materials, '', None, None],
-            ['MonoBehaviour', self.monobehaviors, '', None, None]
-        ]
+        self.spines:list[Resource.SpineAsset] = []
         ###
-        objs = [i for i in env.objects]
-        for i in objs:
-            #(i stands for an object)
-            itypename = i.type.name
-            for j in self.typelist:
-                #(j stands for a type list)
-                if itypename == j[0]:
-                    j[1].append(i.read())
-                    break
+        for i in [o.read() for o in env.objects]:
+            if isinstance(i, Sprite):
+                self.sprites.append(i)
+            elif isinstance(i, Texture2D):
+                self.texture2ds.append(i)
+            elif isinstance(i, TextAsset):
+                self.textassets.append(i)
+            elif isinstance(i, AudioClip):
+                self.audioclips.append(i)
+            elif isinstance(i, Material):
+                self.materials.append(i)
+            elif isinstance(i, MonoBehaviour):
+                self.materials.append(i)
     
     def get_object_by_pathid(self, pathid:"int|dict", search_in:"list|None"=None):
         """Gets the object with the given PathID.
@@ -91,34 +60,6 @@ class Resource:
             if i.path_id == pathid:
                 return i
         return None
-
-    def save_all_the(self, typename:str, destdir:str, callback:staticmethod=None):
-        """Saves every files of the certain type.
-
-        :param typename: Type name;
-        :param destdir: Destination directory;
-        :param callback: Callback for every saved file;
-        :rtype: None;
-        """
-        for j in self.typelist:
-            #(j是某资源类型的特征的列表)
-            if typename == j[0]:
-                for i in j[1]:
-                    #(i是单个object)
-                    data = j[3](i) #内容提取
-                    j[4](data, destdir, i.name, j[2], callback) #保存
-                    Logger.debug(f"ResolveAB: \"{self.name}\" -> \"{i.name}{j[2]}\"")
-                break
-    
-    def save_skeletons(self, destdir:str, callback:staticmethod=None):
-        """Saves every Spine asset. Note that sort_skeletons should be invoked first.
-
-        :param destdir: Destination directory;
-        :param callback: Callback for every saved file;
-        :rtype: None;
-        """
-        for s in self.__spines:
-            s.save_spine(destdir, callback)
 
     def sort_skeletons(self):
         """Sorts the Spine assets.
@@ -159,7 +100,7 @@ class Resource:
                                         tex_alpha = self.get_object_by_pathid(tex[1]['m_Texture'], self.texture2ds)
                             list2tex.append((tex_rgb, tex_alpha))
                         # Pack into Spine asset instance
-                        spine = Resource.SpineAsset(self, skel, atlas, list2tex)
+                        spine = Resource.SpineAsset(skel, atlas, list2tex)
                         if spine.is_available():
                             # Succeeded
                             if len(skel.name) > 4 and skel.name[:4] == 'dyn_':
@@ -173,7 +114,7 @@ class Resource:
                             success = True
             if not success:
                 Logger.warn(f'ResolveAB: Failed to handle skeletonDataAsset at pathId {mono.path_id} of {self.name}.')
-        self.__spines = spines
+        self.spines = spines
     
     def rename_skeletons(self):
         """Renames the Spine assets which includes skel, atlas and png files.
@@ -182,7 +123,7 @@ class Resource:
         
         :rtype: None;
         """
-        for spine in self.__spines:
+        for spine in self.spines:
             prefix = spine.get_common_name() + os.path.sep
             if spine.type == Resource.SpineAsset.BUILDING:
                 prefix = 'Building' + os.path.sep + prefix
@@ -199,6 +140,12 @@ class Resource:
                     if j:
                         self.__rename_add_prefix(j, prefix)
 
+    @staticmethod
+    def __rename_add_prefix(obj:GameObject, pre:str):
+        """Adds a prefix to rename the Spine-related files."""
+        if len(obj.name) <= len(pre) or obj.name[:len(pre)] != pre:
+            obj.name = str(pre + obj.name)
+
     class SpineAsset:
         UNKNOWN = 0
         BUILDING = 1
@@ -206,8 +153,7 @@ class Resource:
         BATTLE_BACK = 3
         DYN_ILLUST = 4
 
-        def __init__(self, resource, skel:TextAsset, atlas:TextAsset, tex_list:"list[tuple]", type:int=UNKNOWN):
-            self.__r:Resource = resource
+        def __init__(self, skel:TextAsset, atlas:TextAsset, tex_list:"list[tuple[Texture2D]]", type:int=UNKNOWN):
             self.skel = skel
             self.atlas = atlas
             self.tex_list = tex_list
@@ -233,30 +179,26 @@ class Resource:
             if self.is_available():
                 for i in self.tex_list:
                     if i[0]:
-                        rgb = Resource._get_image(i[0])
+                        rgb = i[0].image
                         if i[1]:
-                            rgba = combine_rgb_a(rgb, Resource._get_image(i[1]))
+                            rgba = combine_rgb_a(rgb, i[1].image)
                         else:
-                            Logger.info(f"ResolveAB: Spine asset \"{i[0].name}\" has no Alpha texture.")
+                            Logger.info(f"ResolveAB: Spine asset \"{i[0].name}\" found with no Alpha texture.")
                             rgba = rgb
-                        if MySaver.save_image(rgba, destdir, i[0].name):
-                            Logger.debug(f"ResolveAB: Spine asset \"{i[0].name}\" saved.")
-                            if callback:
-                                callback(True)
+                        if SafeSaver.save_image(rgba, destdir, i[0].name, callback=callback):
+                            Logger.debug(f"ResolveAB: Spine asset \"{i[0].name}\" found.")
                     else:
-                        Logger.warn(f"ResolveAB: Spine asset \"{i[0].name}\" texture lost.")
+                        Logger.warn(f"ResolveAB: Spine asset RGB texture missing.")
                 for i in (self.atlas, self.skel):
-                    if MySaver.save_script(Resource._get_script(i), destdir, i.name):
-                        Logger.debug(f"ResolveAB: Spine asset \"{i.name}\" saved.")
-                        if callback:
-                            callback(True)
+                    SafeSaver.save_object(i, destdir, i.name, callback)
+                    Logger.debug(f"ResolveAB: Spine asset \"{i.name}\" found.")
         #EndClass
     #EndClass
 
 
 def ab_resolve(abfile:str, destdir:str, \
     doimg:bool, dotxt:bool, doaud:bool, dospine:bool, \
-    callback:staticmethod=None, subcallback:staticmethod=None):
+    callback:staticmethod, subcallback:staticmethod):
     """Extracts an AB file.
 
     :param abfile: Path to the AB file;
@@ -265,33 +207,34 @@ def ab_resolve(abfile:str, destdir:str, \
     :param dotxt: Whether to extract text scripts;
     :param doaud: Whether to extract audios;
     :param dospine: Whether to extract Spine assets, note that the Spine assets may have some identical file with the images/scripts;
-    :param callback: Callback `f()`, None for ignore;
-    :param subcallback: Callback `f(whether_saved_this_file:bool)` for every saved file, `None` for ignore;
+    :param callback: Callback `f()` for finished, `None` for ignore;
+    :param subcallback: Callback `f(game_object_name, file_path_or_none_for_not_saved)` for every saving trail, `None` for ignore;
     :rtype: None;
     """
     env = UnityPy.load(abfile)
-    reso = Resource(env)
-    Logger.debug(f'ResolveAB: "{reso.name}" has {reso.length} objects.')
-    if reso.length >= 10000:
-        Logger.info(f'ResolveAB: Too many objects in file "{reso.name}", unpacking it may take a long time.')
-    elif reso.length == 0:
-        Logger.info(f'ResolveAB: No object in file "{reso.name}", skipped it.')
+    res = Resource(env)
+    Logger.debug(f'ResolveAB: "{res.name}" has {res.length} objects.')
+    if res.length >= 10000:
+        Logger.info(f'ResolveAB: Too many objects in file "{res.name}", unpacking it may take a long time.')
+    elif res.length == 0:
+        Logger.info(f'ResolveAB: No object in file "{res.name}", skipped it.')
         return
     ###
     try:
         # Preprocess
-        reso.sort_skeletons()
-        reso.rename_skeletons()
+        res.sort_skeletons()
+        res.rename_skeletons()
         ###
         if dospine:
-            reso.save_skeletons(destdir, subcallback)
+            for i in res.spines:
+                i.save_spine(destdir, subcallback)
         if doimg:
-            reso.save_all_the('Sprite', destdir, subcallback)
-            reso.save_all_the('Texture2D', destdir, subcallback)
+            SafeSaver.save_objects(res.sprites, destdir, subcallback)
+            SafeSaver.save_objects(res.texture2ds, destdir, subcallback)
         if dotxt:
-            reso.save_all_the('TextAsset', destdir, subcallback)
+            SafeSaver.save_objects(res.textassets, destdir, subcallback)
         if doaud:
-            reso.save_all_the('AudioClip', destdir, subcallback)
+            SafeSaver.save_objects(res.audioclips, destdir, subcallback)
     except BaseException as arg:
         # Error feedback
         Logger.error(f'ResolveAB: Error occurred while unpacking file "{env.file}": Exception{type(arg)} {arg}')
@@ -328,15 +271,15 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     if dodel:
         print("\n正在清理...", s=1)
         rmdir(destdir) # Danger zone
-    MySaver.reset()
-    MySaver.thread_ctrl.set_max_subthread(threads)
+    SafeSaver.reset()
+    SafeSaver.thread_ctrl.set_max_subthread(threads)
     Cprogs = Counter()
     Cfiles = Counter()
     TC = ThreadCtrl(threads)
     UI = UICtrl(0.5)
     TR = TimeRecorder(len(flist))
     callback = lambda: (Cprogs.update(), TR.update())
-    subcallback = lambda x: (Cfiles.update(x))
+    subcallback = lambda x, y: (Cfiles.update(1 if y else 0), Logger.debug(f"ResolveAB: \"{x}\" -> \"{y}\""))
 
     UI.reset()
     UI.loop_start()
@@ -365,7 +308,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     RD = Rounder()
     UI.reset()
     UI.loop_stop()
-    while TC.count_subthread() or MySaver.thread_ctrl.count_subthread():
+    while TC.count_subthread() or SafeSaver.thread_ctrl.count_subthread():
         # Waiting for sub threads to terminate
         while TR.get_progress() < 1:
             TR_p = TR.get_progress()

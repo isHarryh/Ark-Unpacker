@@ -139,7 +139,7 @@ def image_resolve(fp:str, destdir:str, callback:staticmethod=None, successcallba
     IM = combine_rgb_a(fp2, fp)
     if IM:
         Logger.debug(f"CombineRGBwithA: \"{fp}\" -> \"{fp2}\"")
-        MySaver.save_image(IM, destdir, real, '.png', successcallback) #保存新图
+        SafeSaver.save_image(IM, destdir, real, callback=successcallback) #保存新图
         if callback: callback()
     else:
         Logger.warn(f"CombineRGBwithA: Failed to combine \"{fp}\" with \"{fp2}\"")
@@ -171,15 +171,15 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
     if dodel:
         print("\n正在清理...", s=1)
         rmdir(destdir) #慎用，会预先删除目的地目录的所有内容
-    MySaver.reset()
-    MySaver.thread_ctrl.set_max_subthread(threads)
+    SafeSaver.reset()
+    SafeSaver.thread_ctrl.set_max_subthread(threads)
     Cprogs = Counter()
     Cfiles = Counter()
     TC = ThreadCtrl(threads)
     UI = UICtrl(0.5)
     TR = TimeRecorder(len(flist))
     callback = lambda: (Cprogs.update(), TR.update())
-    successcallback = lambda x: (Cfiles.update(x))
+    successcallback = lambda x: Cfiles.update(1 if x else 0)
 
     UI.reset()
     UI.loop_start()
@@ -206,7 +206,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
     RD = Rounder()
     UI.reset()
     UI.loop_stop()
-    while TC.count_subthread() or MySaver.thread_ctrl.count_subthread():
+    while TC.count_subthread() or SafeSaver.thread_ctrl.count_subthread():
         #等待子进程结束
         while TR.get_progress() < 1:
             TR_p = TR.get_progress()
