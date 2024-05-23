@@ -245,7 +245,7 @@ def ab_resolve(abfile:str, destdir:str, \
 
 ########## Main-主程序 ##########
 def main(rootdir:str, destdir:str, dodel:bool=False, 
-    doimg:bool=True, dotxt:bool=True, doaud:bool=True, dospine:bool=False, separate:bool=True, threads:int=8):
+    doimg:bool=True, dotxt:bool=True, doaud:bool=True, dospine:bool=False, separate:bool=True):
     """Extract all the AB files from the given directory.
 
     :param rootdir: Source directory;
@@ -256,7 +256,6 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     :param doaud: Whether to extract audios;
     :param onlyspine: Whether to extract Spine assets, note that the Spine assets may have some identical file with the images/scripts;
     :param separate: Whether to sort the extracted files by their source AB file path.
-    :param threads: Max thread count;
     :rtype: None;
     """
     print("\n正在解析目录...", s=1)
@@ -272,10 +271,10 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
         print("\n正在清理...", s=1)
         rmdir(destdir) # Danger zone
     SafeSaver.reset()
-    SafeSaver.thread_ctrl.set_max_subthread(threads)
+    SafeSaver.thread_ctrl.set_max_subthread(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
     Cprogs = Counter()
     Cfiles = Counter()
-    TC = ThreadCtrl(threads)
+    TC = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
     UI = UICtrl(0.5)
     TR = TimeRecorder(len(flist))
     callback = lambda: (Cprogs.update(), TR.update())

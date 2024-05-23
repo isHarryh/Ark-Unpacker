@@ -10,7 +10,6 @@ from src import ModelsDataDist  as AU_Mdd
 
 AU_ver = 'v2.7'
 AU_i18n = 'zh-CN'
-AU_thread_suggest = '10-20'
 
 
 def prt_homepage():
@@ -80,11 +79,11 @@ def run_quickaccess():
     ###
     prt_subtitle('步骤1|资源解包')
     time.sleep(1)
-    AU_Rs.main('.', destdir, threads=config.get("threads_default"))
+    AU_Rs.main('.', destdir)
     ###
     prt_subtitle('步骤2|合并图片')
     time.sleep(1)
-    AU_Cb.main(destdir, f'Combined_{int(time.time())}', threads=config.get("threads_default"))
+    AU_Cb.main(destdir, f'Combined_{int(time.time())}')
 
 def run_costm_Rs():
     Logger.info("CI: Customized unpack mode.")
@@ -124,14 +123,9 @@ def run_costm_Rs():
     dotxt = True if 't' in dothem or 'T' in dothem else False
     doaud = True if 'a' in dothem or 'A' in dothem else False
     ###
-    print(f'\n请指定最大线程数（同时执行任务数）：')
-    print(f'  建议：{AU_thread_suggest}')
-    ths = input_allow(f'> ', [str(i) for i in range(1, config.get('threads_limit'))], '  请重新输入合理的数字\n> ')
-    ths = int(ths)
-    ###
     input(f'\n再按一次回车以开始任务...', c=2)
     os.system('title ArkUnpacker - Processing')
-    AU_Rs.main(rootdir, destdir, dodel, doimg, dotxt, doaud, False, separate, ths)
+    AU_Rs.main(rootdir, destdir, dodel, doimg, dotxt, doaud, False, separate)
 
 def run_costm_Cb():
     Logger.info("CI: Customized image combine mode.")
@@ -158,14 +152,9 @@ def run_costm_Cb():
         dodel = input(f'> ', c=2)
         dodel = True if dodel in ['y', 'Y'] else False
     ###
-    print(f'\n请指定最大线程数（同时执行任务数）：')
-    print(f'  建议：{AU_thread_suggest}')
-    ths = input_allow(f'> ', [str(i) for i in range(1, config.get('threads_limit'))], '  请重新输入合理的数字\n> ')
-    ths = int(ths)
-    ###
     input(f'\n再按一次回车以开始任务...', c=2)
     os.system('title ArkUnpacker - Processing')
-    AU_Cb.main(rootdir, destdir, dodel, ths)
+    AU_Cb.main(rootdir, destdir, dodel)
 
 def run_arkmodels_unpacking(dirs, destdir):
     Logger.info("CI: ArkModels unpack mode.")
@@ -175,19 +164,13 @@ def run_arkmodels_unpacking(dirs, destdir):
         if not os.path.exists(i):
             print(f'在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是本程序版本与您的资源版本不再兼容，可尝试获取新版程序。', c=3)
             return
-    ###
-    print(f'请指定最大线程数（同时执行任务数）：')
-    print(f'  建议：{AU_thread_suggest}')
-    ths = input_allow(f'> ', [str(i) for i in range(1, config.get('threads_limit'))], '  请重新输入合理的数字\n> ')
-    ths = int(ths)
-    ###
     input(f'\n准备就绪，再按一次回车以开始任务...', c=2)
     os.system('title ArkUnpacker - Processing')
     ###
     print(f'正在清理...')
     rmdir(destdir)
     for i in dirs:
-        AU_Rs.main(i, destdir, doimg=False, dotxt=False, doaud=False, dospine=True, threads=ths)
+        AU_Rs.main(i, destdir, doimg=False, dotxt=False, doaud=False, dospine=True)
 
 def run_arkmodels_filtering(dirs, destdirs):
     Logger.info("CI: ArkModels file filter mode.")
@@ -257,8 +240,7 @@ def run_arkmodels_workflow():
             return
 
 if __name__ == '__main__':
-    config = Config()
-    Logger.set_instance(config.get('log_file'), config.get('log_level'))
+    Logger.set_instance(Config.get('log_file'), Config.get('log_level'))
     try:
         Logger.info("Initialized")
         while True:

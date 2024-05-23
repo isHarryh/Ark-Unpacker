@@ -5,54 +5,98 @@ import os, json
 from .Logger import *
 
 
+class PerformanceLevel():
+    """Enumeration class for performance level."""
+
+    MINIMAL = 0
+    LOW = 1
+    STANDARD = 2
+    HIGH = 3
+
+    __CPU = max(1, os.cpu_count() if os.cpu_count != None else 1)
+    __MAP = {
+        MINIMAL: 1,
+        LOW: __CPU,
+        STANDARD: __CPU * 2,
+        HIGH: __CPU * 4
+    }
+
+    @staticmethod
+    def get_thread_limit(performance_level:int):
+        """Gets the maximum thread count according to the given performance level."""
+        return PerformanceLevel.__MAP.get(performance_level, PerformanceLevel.__MAP[PerformanceLevel.STANDARD])
+
 class Config():
     """Configuration class for ArkUnpacker."""
 
+    __instance = None
     __config_path = "ArkUnpackerConfig.json"
     __file_encoding = 'UTF-8'
     __default_config = {
-        'log_file': "ArkUnpackerLogs.log", #日志文件名称
-        'log_level': Logger.LV_INFO, #日志等级
-        'threads_limit': 48, #可指定的最大线程数限制
-        'threads_default': 16, #默认线程数
+        'log_file': "ArkUnpackerLogs.log",
+        'log_level': Logger.LV_INFO,
+        'performance_level': PerformanceLevel.STANDARD,
         'ark_models_constants': {
-            'src_prefix': "https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master", #资源地址前缀
-            'src_server': "zh_CN", #游戏服务器地区（例如zh_CN）
+            'src_prefix': "https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master",
+            'src_server': "zh_CN",
         }
     }
     
     def __init__(self):
-        self.read_config()
-        self.save_config()
+        """Not recommended to use. Please use the static methods."""
+        self.config = {}
     
-    def get(self, key):
-        """Gets the specified config field.
-
-        :param key: The JSON key to the field;
-        :returns: `None` if the key doesn't exist;
-        :rtype: Any;
-        """
-        return self.config[key] if key in self.config.keys() else None
+    def __get(self, key):
+        return self.config.get(key, None)
     
-    def read_config(self):
-        """Reads the config from file, aka. deserialize the config.
-        Note that Default config will be used if the config file doesn't exist or an error occurs.
-        """
+    def __read_config(self):
         try:
-            self.config = json.load(open(Config.__config_path, 'r', encoding=Config.__file_encoding)) if os.path.exists(Config.__config_path) else Config.__default_config
+            if os.path.isfile(Config.__config_path):
+                loaded_config = json.load(open(Config.__config_path, 'r', encoding=Config.__file_encoding))
+                if isinstance(loaded_config, dict):
+                    for k in Config.__default_config.keys():
+                        default_val = Config.__default_config[k]
+                        self.config[k] = loaded_config[k] if isinstance(loaded_config.get(k, None), type(default_val)) else default_val
             Logger.set_instance(self.get('log_file'), self.get('log_level'))
-            Logger.info(f"Succeeded in reading config.")
+            Logger.info(f"Parsed config.")
         except Exception as arg:
             self.config = Config.__default_config
             Logger.set_instance(self.get('log_file'), self.get('log_level'))
-            Logger.error(f"Failed to read or initialize config: {arg}")
+            Logger.error(f"Failed to parsing config, now using default config, cause: {arg}")
     
-    def save_config(self):
-        """Saves the config to file, aka. serialize the config."""
+    def __save_config(self):
         try:
             json.dump(self.config, open(self.__config_path, 'w', encoding=Config.__file_encoding), indent=4, ensure_ascii=False)
-            Logger.set_instance(self.get('log_file'), self.get('log_level'))
-            Logger.info(f"Succeeded in saving config.")
+            Logger.info(f"Saved config.")
         except Exception as arg:
-            Logger.set_instance(self.get('log_file'), self.get('log_level'))
-            Logger.error(f"Failed to save config: {arg}")
+            Logger.error(f"Failed to save config, cause: {arg}")
+    
+    @staticmethod
+    def __get_instance():
+        if not Config.__instance:
+            Config.__instance = Config()
+            Config.__instance.__read_config()
+        return Config.__instance
+    
+    @staticmethod
+    def get(key):
+        """Gets the specified config field.
+
+        :param key: The JSON key to the field;
+        :returns: The value of the field, `None` if the key doesn't exist;
+        :rtype: Any;
+        """
+        return Config.__get_instance().__get(key)
+    
+    @staticmethod
+    def read_config():
+        """Reads the config from file, aka. deserialize the config.
+        The default config will be used if the config file doesn't exist or an error occurs.
+        The logging level of `Logger` class will be updated according to the config.
+        """
+        return Config.__get_instance().__read_config()
+    
+    @staticmethod
+    def save_config():
+        """Saves the config to file, aka. serialize the config."""
+        return Config.__get_instance().__save_config()

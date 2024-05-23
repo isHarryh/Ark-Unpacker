@@ -148,14 +148,13 @@ def image_resolve(fp:str, destdir:str, callback:staticmethod=None, successcallba
 
 
 ########## Main-主程序 ##########
-def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
+def main(rootdir:str, destdir:str, dodel:bool=False):
     """Combines the RGB images and the Alpha images in the given directory automatically according to their file names,
     then saves the combined images into another given directory.
 
     :param rootdir: Source directory;
     :param destdir: Destination directory;
     :param dodel: Whether to delete the existed destination directory first, `False` for default;
-    :param threads: Max thread count, `8` for default;
     :rtype: None;
     """
     print(f'\n正在解析目录...', s=1)
@@ -172,10 +171,10 @@ def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
         print("\n正在清理...", s=1)
         rmdir(destdir) #慎用，会预先删除目的地目录的所有内容
     SafeSaver.reset()
-    SafeSaver.thread_ctrl.set_max_subthread(threads)
+    SafeSaver.thread_ctrl.set_max_subthread(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
     Cprogs = Counter()
     Cfiles = Counter()
-    TC = ThreadCtrl(threads)
+    TC = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
     UI = UICtrl(0.5)
     TR = TimeRecorder(len(flist))
     callback = lambda: (Cprogs.update(), TR.update())
