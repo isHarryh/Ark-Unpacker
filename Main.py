@@ -85,7 +85,7 @@ def run_quickaccess():
     time.sleep(1)
     AU_Cb.main(destdir, f'Combined_{int(time.time())}')
 
-def run_costm_Rs():
+def run_custom_Rs():
     Logger.info("CI: Customized unpack mode.")
     prt_subtitle('自定义资源解包')
     ###
@@ -127,7 +127,7 @@ def run_costm_Rs():
     os.system('title ArkUnpacker - Processing')
     AU_Rs.main(rootdir, destdir, dodel, doimg, dotxt, doaud, False, separate)
 
-def run_costm_Cb():
+def run_custom_Cb():
     Logger.info("CI: Customized image combine mode.")
     prt_subtitle('自定义合并图片')
     ###
@@ -251,10 +251,10 @@ if __name__ == '__main__':
                 run_quickaccess()
                 prt_continue()
             elif order == '2':
-                run_costm_Rs()
+                run_custom_Rs()
                 prt_continue()
             elif order == '3':
-                run_costm_Cb()
+                run_custom_Cb()
                 prt_continue()
             elif order == '4':
                 run_arkmodels_workflow()

@@ -18,7 +18,7 @@ class Logger():
     LV_DEBUG    = 4
     
     def __init__(self, log_file_path:str, level:int):
-        """Not recommended to use. Please use the static instance."""
+        """Not recommended to use. Please use the singleton instance."""
         self.log_level = level
         self.log_file_path = log_file_path
         self.file = None

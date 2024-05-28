@@ -254,7 +254,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     :param doimg: Whether to extract images;
     :param dotxt: Whether to extract text scripts;
     :param doaud: Whether to extract audios;
-    :param onlyspine: Whether to extract Spine assets, note that the Spine assets may have some identical file with the images/scripts;
+    :param dospine: Whether to extract Spine assets, note that the Spine assets may have some identical file with the images/scripts;
     :param separate: Whether to sort the extracted files by their source AB file path.
     :rtype: None;
     """

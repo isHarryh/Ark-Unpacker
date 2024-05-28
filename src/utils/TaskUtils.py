@@ -18,13 +18,13 @@ class ThreadCtrl():
         """Sets the max number of sub threads."""
         self.__max:int = max(1, max_subthread)
     
-    def get_max_sub_thread(self):
+    def get_max_subthread(self):
         """Gets the max number of sub threads."""
         return self.__max
     
     def get_idle_ratio(self):
         """Gets the idle ratio."""
-        return self.count_subthread() - self.get_max_sub_thread()
+        return self.count_subthread() - self.get_max_subthread()
     
     def count_subthread(self):
         """Gets the number of alive sub threads."""

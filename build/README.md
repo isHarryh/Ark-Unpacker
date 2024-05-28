@@ -4,7 +4,7 @@ ArkUnpacker构建指引
 
 # 构建流程
 使用预编写的构建脚本进行快速构建，并利用EVB打包的具体步骤如下：
-1. 打开脚本`Build,py`，更改变量`app_info`中的基本设置（例如版本号）。
+1. 打开脚本`Build.py`，更改变量`app_info`中的基本设置（例如版本号）。
 2. 运行脚本`Build.py`，此时会创建`venv`虚拟环境文件夹并进行相关生成操作。
 3. 上一步成功完成后，[下载安装](https://enigmaprotector.com/en/downloads.html)并打开EVB软件。
 4. 在EVB窗口中，将`venv/dist/Main/Main.exe`设为输入路径，然后填写任意输出路径。
