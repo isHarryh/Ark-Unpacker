@@ -7,22 +7,30 @@ A tool that can unpack Arknights AB assets automatically.
 
 ## 介绍 <sub>Intro</sub>
 #### 实现的功能
-1. 批量解包UnityAB文件中的图片、文本、音频
-    1. 解包时对战斗小人的正背面的文件进行初步区分
-    2. 解包时可以将文件按AB文件名分目录存放
-2. 批量合并RGB通道图和A通道图
-3. 提供命令行式的人性化界面实现上述的功能
-4. 支持以多线程模式运行
+1. 批量解包《明日方舟》Unity AssetBundle(AB) 文件中的资源对象。
+    1. 解包时可对基建小人、动态立绘和战斗小人的Spine模型文件进行区分；
+    2. 解包时可以将文件按源AB文件的名称分目录存放。
+2. 批量合并RGB通道图和A通道图。
+3. 提供交互式命令行界面进行操作。
 
-#### 更新日志
-想了解此版本的ArkUnpacker的新特性？
-[查看CHANGELOG](./CHANGELOG.md)
+#### 支持的类型
+| Unity类型 | 描述 | 导出格式 |
+|:---|:---|:---|
+| Sprite | 精灵图 | PNG图片 |
+| Texture2D | 二维纹理图 | PNG图片 |
+| AudioClip | 音频剪辑 | WAV音频 |
+| TextAsset | 文本或字节数据 | 未指定 |
+
+#### 相关文档
+- 更新日志 > [点击查看](./CHANGELOG.md)
+- 配置文件指引 > [点击查看](docs/ConfigFile.md)
+- 游戏资源查找指南 > [点击查看](docs/AssetsGuide.md)
 
 
 ## 使用方法 <sub>Usage</sub>
 
 ### 1.资源准备
-无论您是想要使用我们的发行版本还是源代码来解包明日方舟的游戏资源，您都需要先获取到明日方舟的资源文件。明日方舟是基于Unity开发的游戏，它的游戏资源会全部打包到一种**AssetBundle文件**（`.ab`，下简称"AB文件"）中。
+无论您是想要使用我们的发行版本还是源代码来解包明日方舟的游戏资源，您都需要先获取到明日方舟的资源文件。明日方舟是基于Unity开发的游戏，它的游戏资源会全部打包到一种**AssetBundle文件**（后缀名 `.ab`，下简称“AB文件”）中。
 
 下面将以**Android安卓系统**为例讲述**如何获取到明日方舟的AB文件**。明日方舟的游戏资源有**2个部分**：
 - 一部分是通过**安装包**（`.apk`）提供的，从明日方舟[**官网**](https://ak.hypergryph.com)将其下载到本地后，使用压缩文件查看工具打开（后缀名改成`.zip`后打开），然后把里面的`assets\AB\Android`文件夹解压出来；
@@ -33,10 +41,10 @@ A tool that can unpack Arknights AB assets automatically.
 
 最后，将`Android(2)`文件夹里的内容复制到`Android`中，并**覆盖**同名文件，就能得到完整的游戏资源。合并后的文件夹约有6GB大小，在这之后，您就可以使用我们的程序来解包其中的游戏资源了。
 
-当然，您也可以只复制`Android`里的部分文件夹出来进行处理。为了方便您找到想要的资源的AB文件，我们整理并列出了各个子目录储存的资源的内容，[前往此页面](docs/AssetsGuide.md)以查看详情。
+当然，您也可以只复制`Android`里的部分文件夹出来进行处理。为了方便您找到想要的资源的AB文件，我们整理并列出了各个子目录储存的资源的内容，浏览[此文档](docs/AssetsGuide.md)以查看详情。
 
 ### 2.下载ArkUnpacker
-为了方便普通用户使用，我们推出了针对`Windows`64位操作系统（暂不支持其他操作系统）的发行版本(Release Version)，它是一个采用文件虚拟化技术打包的可执行文件(`.exe`)。
+为了方便一般用户使用，我们推出了针对`Windows`64位操作系统（暂不支持其他操作系统）的发行版本(Release Version)，它是一个采用文件虚拟化技术打包的可执行文件(`.exe`)。
 
 请进入Releases页面下载exe文件 `ArkUnpacker-vx.x.x_x64.exe`：[前往下载](https://github.com/isHarryh/Ark-Unpacker/releases)
 
@@ -52,7 +60,7 @@ A tool that can unpack Arknights AB assets automatically.
 > ├─charpack (可以选择解包部分文件夹)  
 > └─ArkUnpacker.exe  
 
-然后运行exe，弹出一个小黑框（内容如下），这时候只需要依据提示操作即可：
+然后运行exe，弹出交互式命令行界面如下，依据其提示操作即可：
 > 欢迎使用ArkUnpacker  
 > 模式选择：  
 > 1: 一键执行  
@@ -63,8 +71,8 @@ A tool that can unpack Arknights AB assets automatically.
 > 输入序号后按回车即可，如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)
 
 各模式的功能概述如下：
-- “一键执行” 模式下，默认以16线程处理任务。此模式下，解包完成的文件（如图片、文本、音频）默认放置在`Unpacked_xxxx`文件夹中，合并完成的图片默认放置在`Combined_xxxx`文件夹中。
-- 若您选择 “自定义资源解包” 或 “自定义图片合并”，还可以**自定义**解包目标、保存目的地、最大执行线程数等内容。
+- “一键执行” 模式下，解包完成的文件（如图片、文本、音频）默认放置在`Unpacked_xxxx`文件夹中，合并完成的图片默认放置在`Combined_xxxx`文件夹中。
+- 若您选择 “自定义资源解包” 或 “自定义图片合并”，还可以**自定义**解包的文件类型和保存位置等内容。
 - 关于 “ArkModels提取与分拣工具”，请参阅[此文档](docs/ArkModelsRepoKit.md)了解详情。
 
 此外，运行程序后，工作目录会生成配置文件`ArkUnpackerConfig.json` 与日志文件`ArkUnpackerLogs.log`。有关配置文件的字段说明，请参阅[此文档](docs/ConfigFile.md)了解详情。
@@ -72,7 +80,7 @@ A tool that can unpack Arknights AB assets automatically.
 
 ## 注意事项 <sub>Notice</sub>
 1. 使用一键执行模式时，不会解包与exe**同一目录**下的ab文件，只会解包子文件夹里的ab文件。
-2. 本程序对电脑性能（尤其是CPU和硬盘性能）有一定要求，配置过低的电脑在运行时可能会卡顿。
+2. 本程序会根据设备CPU核心数自动调整多线程数量，并且对设备性能（尤其是CPU和硬盘性能）有一定要求，配置过低的电脑在运行时可能会卡顿。
 3. Windows命令行基本常识：
     1. 快捷键`Ctrl+C`用于强行终止程序，若想复制文本，请用鼠标选取文本后再按此快捷键。
     2. 左键单击小黑窗会进入“文本选取”模式，此时主程序会暂停执行。

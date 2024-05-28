@@ -1,13 +1,16 @@
 ArkUnpacker附加说明文档
 # 开发者指引
 
-如果您是高级用户或开发者，希望实现一些额外功能，以下内容可能会帮助到你：  
+如果您是高级用户或开发者，希望实现一些额外功能，以下内容可能会帮助到你： 
+
+> **注意：**  
+> 此文档可能有时效性限制，请以源程序内容为准。
 
 ## 依赖
-1. **Python：** 源代码使用**Python3**编写和调试，您需要先安装[Python](https://www.python.org/downloads)。  
+1. **Python：** 源代码使用**Python3**编写和调试，您需要先安装[Python](https://www.python.org/downloads)。推荐的IDE是VS Code。
 2. **外部库：** 本项目依赖于以下**外部库**，调试前请确保您已安装过：
-    * [UnityPy](https://github.com/K0lb3/UnityPy)
-    * [Pillow](https://github.com/python-pillow/Pillow)
+    - [UnityPy](https://github.com/K0lb3/UnityPy)
+    - [Pillow](https://github.com/python-pillow/Pillow)
 
     本项目的完整依赖表如下：
     ```
@@ -32,16 +35,16 @@ ArkUnpacker附加说明文档
     pip install unitypy -i https://mirrors.aliyun.com/pypi/simple
     ```
 
-## 原理
-本项目的代码结构分为3个层次：
-* 命令行界面(CLI)层（`Main.py`）
-* 操作层
-* 辅助工具层
+## 结构
+本程序通过交互式命令行界面(Interactive CLI)与用户进行交互。
 
-当您运行了`Main.py`时CLI层会负责显示出操作提示。在您向CLI层输入指令后，其会调用操作层来完成指令。
+本项目的代码可分为3个层次：
+- 表现层（入口点`Main.py`）
+- 操作层（软件包`src`）
+- 工具层（软件包`src.utils`）
 
 ## 示例
-如果您不想使用我们的CLI层的功能，只想利用操作层中的代码，来实现一些您自定义的功能，您可以在您的程序中这样写：
+如果您不想使用我们的表现层的功能，只想利用操作层中的代码，来实现一些您自定义的功能，您可以这样做：
 ```Python
 from src import ResolveAB
 from src import CombineRGBwithA
@@ -49,33 +52,35 @@ ResolveAB.main('Android', 'Unpacked') # (a)
 CombineRGBwithA.main('Unpacked', 'Combined') # (b)
 ```
 
-以上(a)(b)两个衔接层的函数还有其他可选的参数，具体的用法已在函数声明的代码注释中非常详尽地给出了，如下：
+以上(a)(b)两个方法还有其他可选的参数，具体的用法已在函数声明的代码注释中非常详尽地给出了，如下：
 ```Python
 # File: src/ResolveAB.py
 def main(rootdir:str, destdir:str, dodel:bool=False, 
-    doimg:bool=True, dotxt:bool=True, doaud:bool=True, dospine:bool=False, separate:bool=True, threads:int=8):
-    '''
-    #### 批量地从指定目录的ab文件中，导出指定类型的资源
-    :param rootdir:   来源文件夹的根目录的路径;
-    :param destdir:   解包目的地的根目录的路径;
-    :param dodel:     预先删除目的地文件夹的所有文件，默认False;
-    :param doimg:     是否导出图片资源，默认True;
-    :param dotxt:     是否导出文本资源，默认True;
-    :param doaud:     是否导出音频资源，默认True;
-    :param onlyspine: 是否导出Spine动画，注意Spine动画和图片资源、文本资源有重叠的部分，默认False;
-    :param separate:  是否按AB文件分类保存，默认True;
-    :param threads:   最大线程数，默认8;
-    :returns: (None);
-    '''
+    doimg:bool=True, dotxt:bool=True, doaud:bool=True, dospine:bool=False, separate:bool=True):
+    """Extract all the AB files from the given directory.
+
+    :param rootdir: Source directory;
+    :param destdir: Destination directory;
+    :param dodel: Whether to delete the existing files in the destination directory, `False` for default;
+    :param doimg: Whether to extract images;
+    :param dotxt: Whether to extract text scripts;
+    :param doaud: Whether to extract audios;
+    :param dospine: Whether to extract Spine assets, note that the Spine assets may have some identical file with the images/scripts;
+    :param separate: Whether to sort the extracted files by their source AB file path.
+    :rtype: None;
+    """
 
 # File: src/CombineRGBwithA.py
-def main(rootdir:str, destdir:str, dodel:bool=False, threads:int=8):
-    '''
-    #### 批量地从指定目录中，找到名称相互匹配的RGB通道图和A通道图，然后合并图片后保存到另一目录
-    :param rootdir: 来源文件夹的根目录的路径;
-    :param destdir: 解包目的地的根目录的路径;
-    :param dodel:   预先删除目的地文件夹的所有文件，默认False;
-    :param threads: 最大线程数，默认8;
-    :returns: (None);
-    '''
+def main(rootdir:str, destdir:str, dodel:bool=False):
+    """Combines the RGB images and the Alpha images in the given directory automatically according to their file names,
+    then saves the combined images into another given directory.
+
+    :param rootdir: Source directory;
+    :param destdir: Destination directory;
+    :param dodel: Whether to delete the existed destination directory first, `False` for default;
+    :rtype: None;
+    """
 ```
+
+## 构建
+关于软件的构建，请参阅[此文档](../build/README.md)。
