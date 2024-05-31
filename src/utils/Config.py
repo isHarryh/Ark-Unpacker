@@ -50,26 +50,34 @@ class Config():
         return self.config.get(key, None)
     
     def __read_config(self):
-        try:
-            if os.path.isfile(Config.__config_path):
+        if os.path.isfile(Config.__config_path):
+            try:
                 loaded_config = json.load(open(Config.__config_path, 'r', encoding=Config.__file_encoding))
                 if isinstance(loaded_config, dict):
                     for k in Config.__default_config.keys():
                         default_val = Config.__default_config[k]
                         self.config[k] = loaded_config[k] if isinstance(loaded_config.get(k, None), type(default_val)) else default_val
-            Logger.set_instance(self.get('log_file'), self.get('log_level'))
-            Logger.info(f"Parsed config.")
-        except Exception as arg:
+                Logger.set_instance(self.get('log_file'), self.get('log_level'))
+                Logger.set_level(self.get('log_level'))
+                Logger.info(f"Config: Applied config.")
+            except Exception as arg:
+                self.config = Config.__default_config
+                Logger.set_instance(self.get('log_file'), self.get('log_level'))
+                Logger.set_level(self.get('log_level'))
+                Logger.error(f"Config: Failed to parsing config, now using default config, cause: {arg}")
+        else:
             self.config = Config.__default_config
             Logger.set_instance(self.get('log_file'), self.get('log_level'))
-            Logger.error(f"Failed to parsing config, now using default config, cause: {arg}")
+            Logger.set_level(self.get('log_level'))
+            Logger.info(f"Config: Applied default config.")
+            self.save_config()
     
     def __save_config(self):
         try:
             json.dump(self.config, open(self.__config_path, 'w', encoding=Config.__file_encoding), indent=4, ensure_ascii=False)
-            Logger.info(f"Saved config.")
+            Logger.info(f"Config: Saved config.")
         except Exception as arg:
-            Logger.error(f"Failed to save config, cause: {arg}")
+            Logger.error(f"Config: Failed to save config, cause: {arg}")
     
     @staticmethod
     def __get_instance():
