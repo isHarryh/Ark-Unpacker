@@ -20,7 +20,7 @@ ArkUnpacker附加说明文档
     }
 }
 ```
-- `log_file`：字符串。日志文件的存储路径，设为`""`以禁用日志文件写入。
+- `log_file`：字符串。日志文件的存储路径，设为 `""` 以禁用日志文件写入。
 - `log_level`：整数。日志等级，`0=None` `1=Error` `2=Warn` `3=Info` `4=Debug`。
 - `performance_level`：整数。性能等级，数值越大性能消耗越多，`0=Minimal` `1=Low` `2=Standard` `3=High`。
 - `ark_models_constants`: 字典对象。ArkModels提取与分拣工具所使用的相关常量。

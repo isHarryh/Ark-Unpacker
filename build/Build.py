@@ -4,6 +4,10 @@
 import os, time, shutil
 
 if __name__ == '__main__':
+    if os.getenv('os') != 'Windows_NT':
+        input(f"× Invalid os platform.")
+        exit()
+    
     # Settings
     app_info = {
         'name': 'ArkUnpacker',
@@ -77,7 +81,7 @@ VarFileInfo([VarStruct(u'Translation', [2052, 1200])])
         os.chdir(build_dir) # Work Dir: Build Dir
         shutil.rmtree(venv_dir, ignore_errors=True)
     
-        print('Generateing environment...')
+        print('Generating environment...')
         run_cmd(f"python -m venv {venv_dir}")
         os.chdir(venv_dir) # Work Dir: Venv Dir
 
@@ -91,7 +95,7 @@ VarFileInfo([VarStruct(u'Translation', [2052, 1200])])
             elif os.path.isfile(src):
                 shutil.copy(src, src_name)
 
-        print(f"Generateing version file... ({app_info['version']})")
+        print(f"Generating version file... ({app_info['version']})")
         file_version = 'version.txt'
         with open(file_version, 'w', encoding='UTF-8') as f:
             f.write(get_version_file_content(app_info))
