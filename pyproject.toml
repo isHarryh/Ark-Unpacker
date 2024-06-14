@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "ArkUnpacker"
+version = "3.0.0"
+description = "Arknights Assets Unpacker"
+authors = ["Harry Huang <harryhuang2652@qq.com>"]
+license = "BSD-3-Clause"
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "3.8.10"
+Pillow = "8.4.0"
+requests = "2.26.0"
+UnityPy = "1.8.9"
+
+[tool.poetry.dev-dependencies]
+pyinstaller = "6.8.0"
+
+[[tool.poetry.source]]
+name = "PyPI-Tsinghua"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+priority = "primary"
+
+[tool.build]
+build-dir = "$project$\\build"
+entry = "$project$\\Main.py"
+icon = "$project$\\ArkUnpacker.ico"
+add-binary = "$venv$\\Lib\\site-packages\\UnityPy\\lib\\FMOD:UnityPy\\lib\\FMOD"
+log-level = "WARN"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

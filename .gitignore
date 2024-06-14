@@ -1,11 +1,11 @@
+# Exclude
 /*/
 __pycache__/
-venv/
-!.vscode/
-!build/
-!docs/
-!src/
 /*.exe
-/*.evb
 /*.json
 /*.log
+
+# Include
+!.vscode/
+!docs/
+!src/
