@@ -8,7 +8,7 @@ from src import CombineRGBwithA as AU_Cb
 from src import CollectModels   as AU_Cm
 from src import ModelsDataDist  as AU_Mdd
 
-AU_ver = 'v2.7'
+AU_ver = 'v3.0'
 AU_i18n = 'zh-CN'
 
 

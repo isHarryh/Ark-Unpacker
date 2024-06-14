@@ -1,9 +1,22 @@
-Ark-Unpacker
-==========
-A tool that can unpack Arknights AB assets automatically.  
-明日方舟游戏资源批量解包器  **` v2.7 `**  
+<!-- 欢迎阅读 Ark-Unpacker 说明文档 -->
+<!-- 仓库：https://github.com/isHarryh/Ark-Unpacker -->
 
-<sup> This project only supports Chinese docs. If you are an English user, feel free to contact us. </sup>
+<!--suppress HtmlDeprecatedAttribute -->
+<div align="center" style="text-align:center">
+   <h1> Ark-Unpacker </h1>
+   <img alt="ArkUnpacker icon" width="64" src="https://raw.githubusercontent.com/isHarryh/Ark-Unpacker/v3.x/ArkUnpacker.ico"/>
+   <p>
+      Arknights Assets Unpacker | 明日方舟游戏资源批量解包器 <br>
+      <code><b> v3.0 </b></code>
+   </p>
+   <p>
+      <img alt="GitHub Top Language" src="https://img.shields.io/github/languages/top/isHarryh/Ark-Unpacker?label=Python">
+      <img alt="GitHub License" src="https://img.shields.io/github/license/isHarryh/Ark-Unpacker?label=License"/>
+   </p>
+   <sub>
+      <i> This project only supports Chinese docs. If you are an English user, feel free to contact us. </i>
+   </sub>
+</div>
 
 ## 介绍 <sub>Intro</sub>
 #### 实现的功能
