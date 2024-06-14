@@ -6,7 +6,7 @@
     "configurations": [
         {
             "name": "Python: ArkUnpacker",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "Main.py",
             "console": "integratedTerminal",
@@ -14,7 +14,7 @@
         },
         {
             "name": "Python: Current File",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
@@ -22,9 +22,9 @@
         },
         {
             "name": "Build: ArkUnpacker",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
-            "program": "build${pathSeparator}Build.py",
+            "program": "Build.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }
