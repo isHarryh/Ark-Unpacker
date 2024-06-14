@@ -1,127 +1,134 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2023, Harry Huang
 # @ BSD 3-Clause License
-import os, sys, time, shutil
+import os, configparser
+
+def __get_venv_dir():
+    import re, subprocess
+    rst = subprocess.run(['poetry', 'env', 'info'], capture_output=True, text=True)
+    
+    if rst.returncode == 0:
+        for l in rst.stdout.splitlines():
+            match = re.search(r'Path:\s+(.+)', l)
+            if match:
+                path = match.group(1).strip()
+                if os.path.isdir(path):
+                    return path
+        print("× Failed to parse poetry output to query venv dir.")
+    else:
+        print(f"× Failed to run poetry to query venv dir. Returned code: {rst.returncode}")
+    print("- Please check the compatibility of poetry version.")
+    print("- Please check the poetry status and the venv info.")
+    raise Exception("venv dir not found or poetry config failed")
+
+def __get_proj_info():
+    try:
+        parser = configparser.ConfigParser()
+        parser.read('pyproject.toml', encoding='UTF-8')
+        config = parser['tool.poetry']
+        return {
+            'name': config['name'].strip("'\""),
+            'version': config['version'].strip("'\""),
+            'description': config['description'].strip("'\""),
+            'author': config['authors'].strip("'\"[]").split('<')[0].strip(),
+            'license': config['license'].strip("'\"").replace('\\\\', '\\')
+        }
+    except Exception as arg:
+        print("× Failed to parse poetry project info.")
+        raise arg
+
+def __get_build_def():
+    try:
+        parser = configparser.ConfigParser()
+        parser.read('pyproject.toml', encoding='UTF-8')
+        config = parser['tool.build']
+        return {
+            'entry': config['entry'].strip("'\""),
+            'icon': config['icon'].strip("'\""),
+            'add-binary': config['add-binary'].strip("'\""),
+            'build-dir': config['build-dir'].strip("'\""),
+            'log-level': config['log-level'].strip("'\"")
+        }
+    except Exception as arg:
+        print("× Failed to parse build definition fields.")
+        raise arg
 
 def __main():
-    # Settings
-    app_info = {
-        'name': 'ArkUnpacker',
-        'version': '3.0.0',
-        'company': 'by Harry Huang',
-        'copyright': '©Harry Huang @BSD 3-Clause License'
-    }
-    venv_dir = '.venv'
-    requirements_file = 'requirements.txt'
-    entry_file = 'Main.py'
-    icon_file = 'ArkUnpacker.ico'
-    post_copy = {
-        os.path.join('build', 'dlls', 'FMOD'): os.path.join(venv_dir, 'dist', 'Main', 'UnityPy', 'lib', 'FMOD')
-    }
-    pip_source = 'https://pypi.tuna.tsinghua.edu.cn/simple'
-    __build(venv_dir, app_info, entry_file, icon_file, post_copy=post_copy)
-    for i in sys.argv[1:]:
-        if i == 'clear':
-            __clear(venv_dir)
-            exit()
-        elif i == 'setup':
-            __setup(venv_dir, requirements_file, pip_source=pip_source)
-            exit()
-        elif i == 'build':
-            __build(venv_dir, app_info, entry_file, icon_file, post_copy=post_copy)
-            exit()
-    print("× Argument required. Argument = [clear|setup|build]")
-    exit()
+    venv_dir = __get_venv_dir()
+    proj_info = __get_proj_info()
+    build_def = __get_build_def()
+    print(f"Project: {proj_info['name']}|{proj_info['version']}|{proj_info['author']}|{proj_info['license']}")
+    print(f"Venv: {venv_dir}")
+    print("")
+    __build(venv_dir, proj_info, build_def)
+    exit(0)
 
 def __exec(cmd):
     rst = os.system(cmd)
     if rst == 0:
-        print(f"[Done] <- {cmd}")
+        print(f"\n[Done] <- {cmd}")
     else:
-        print(f"[Error] <- {cmd}")
+        print(f"\n[Error] <- {cmd}")
         print(f"× Execution failed! Returned code: {rst}")
-        exit()
+        exit(1)
 
-def __clear(venv_dir):
-    shutil.rmtree(venv_dir, ignore_errors=True)
-    print("√ Cleared!")
-
-def __setup(venv_dir, requirements_file, pip_source=None):
+def __build(venv_dir, proj_info, build_def):
+    import time, shutil
     t1 = time.time()
-    if os.path.isdir(venv_dir):
-        print("Venv dir existed")
-    else:
-        print("Generating venv dir...")
-        __exec(f"python -m venv {venv_dir}")
+    proj_dir = os.path.dirname(os.path.abspath(__file__))
+    for k, v in build_def.items():
+        build_def[k] = v.replace('\\\\', '\\').replace('$project$', proj_dir).replace('$venv$', venv_dir)
     
-    print("Solving dependencies...")
-    cmd_activate = os.path.join(venv_dir, 'Scripts' if os.name == 'nt' else 'bin', 'activate')
-    cmd_pip = f"pip install -r {requirements_file}{f' -i {pip_source}' if pip_source else ''}"
-    __exec(f"{cmd_activate} && {cmd_pip}")
-    
-    print(f"√ Setup finished in {round(time.time() - t1, 1)}s!")
+    print(f"Removing build dir...")
+    os.chdir(proj_dir)
+    build_dir = build_def['build-dir']
+    shutil.rmtree(build_dir, ignore_errors=True)
 
-def __build(venv_dir, app_info, entry_file, icon_file, post_copy={}):
-    t1 = time.time()
-    try:
-        if not os.path.isdir(venv_dir):
-            print("No venv dir exists. Run setup first.")
-            raise FileNotFoundError(f"{venv_dir} dir not found")
-        
-        print(f"Generating version file... ({app_info['version']})")
-        version_file = 'version.txt'
-        with open(version_file, 'w', encoding='UTF-8') as f:
-            version_split = app_info['version'].split('.')
-            f.write(f'''# UTF-8
+    print(f"Creating build dir...")
+    os.mkdir(build_dir)
+    os.chdir(build_dir)
+    
+    print(f"Creating version file...")
+    version_file = 'version.txt'
+    with open(version_file, 'w', encoding='UTF-8') as f:
+        f.write(f'''# UTF-8
 VSVersionInfo(
   ffi=FixedFileInfo(
-filevers=({version_split[0]},{version_split[1]},{version_split[2]}, 0),
-prodvers=(0, 0, 0, 0),
+filevers=({proj_info['version'].replace('.',',')},0),
+prodvers=({proj_info['version'].replace('.',',')},0),
 mask=0x3f,
 flags=0x0,
 OS=0x4,
 fileType=0x1,
 subtype=0x0,
-date=(0, 0)
+date=(0,0)
 ),
   kids=[
-StringFileInfo(
-  [
+StringFileInfo([
   StringTable(
     u'040904B0',
-    [StringStruct(u'CompanyName', u'{app_info['company']}'),
-    StringStruct(u'FileDescription', u'{app_info['name']}'),
-    StringStruct(u'FileVersion', u'{version_split[0]}.{version_split[1]}'),
-    StringStruct(u'LegalCopyright', u'{app_info['copyright']}'),
-    StringStruct(u'ProductName', u'{app_info['name']}'),
-    StringStruct(u'ProductVersion', u'{version_split[0]}.{version_split[1]}')])
-  ]),
-VarFileInfo([VarStruct(u'Translation', [2052, 1200])])
-  ]
-)
+    [StringStruct(u'CompanyName', u'{proj_info['author']}'),
+    StringStruct(u'FileDescription', u'{proj_info['description']}'),
+    StringStruct(u'FileVersion', u'{proj_info['version']}'),
+    StringStruct(u'LegalCopyright', u'©{proj_info['author']} @{proj_info['license']} License'),
+    StringStruct(u'ProductName', u'{proj_info['name']}'),
+    StringStruct(u'ProductVersion', u'{proj_info['version']}')])
+  ])
+])
 ''') # End f.write
-        
-        print('Running pyinstaller...')
-        cmd_activate = os.path.join(venv_dir, 'Scripts' if os.name == 'nt' else 'bin', 'activate')
-        cmd_pyinstaller = f"pyinstaller -D -i {icon_file} --version-file={version_file} {entry_file}"
-        __exec(f"{cmd_activate} && {cmd_pyinstaller}")
+    
+    print('Running pyinstaller...')
+    cmd_pyinstaller = f"poetry run pyinstaller -F"
+    cmd_pyinstaller += f" -i \"{build_def['icon']}\""
+    cmd_pyinstaller += f" --name \"{proj_info['name']}-v{proj_info['version']}\""
+    cmd_pyinstaller += f" --version-file {version_file}"
+    cmd_pyinstaller += f" --add-binary \"{build_def['add-binary']}\""
+    cmd_pyinstaller += f" --log-level {build_def['log-level']}"
+    cmd_pyinstaller += f" \"{build_def['entry']}\""
+    __exec(cmd_pyinstaller)
 
-        print('Copying additional files...')
-        for src in post_copy.keys():
-            if os.path.isdir(src):
-                shutil.rmtree(post_copy[src], ignore_errors=True)
-                shutil.copytree(src, post_copy[src])
-            elif os.path.isfile(src):
-                shutil.copy(src, post_copy[src])
-            else:
-                print("Additional file or dir not found.")
-                raise FileNotFoundError(f"{src} not found")
-
-        
-        print(f"√ Build finished in {round(time.time() - t1, 1)}s!")
-    except Exception as arg:
-        print(f"× Build failed! Python exception: {arg}")
-        raise arg
+    print(f"√ Build finished in {round(time.time() - t1, 1)}s!")
+    print(f"- Dist files see: {os.path.join(build_dir, 'dist')}")
 
 if __name__ == '__main__':
     __main()

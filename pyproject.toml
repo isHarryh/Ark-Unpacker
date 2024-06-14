@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "arkunpacker"
+name = "ArkUnpacker"
 version = "3.0.0"
 description = "Arknights Assets Unpacker"
 authors = ["Harry Huang <harryhuang2652@qq.com>"]
@@ -20,6 +20,13 @@ pyinstaller = "6.8.0"
 name = "PyPI-Tsinghua"
 url = "https://pypi.tuna.tsinghua.edu.cn/simple"
 priority = "primary"
+
+[tool.build]
+build-dir = "$project$\\build"
+entry = "$project$\\Main.py"
+icon = "$project$\\ArkUnpacker.ico"
+add-binary = "$venv$\\Lib\\site-packages\\UnityPy\\lib\\FMOD:UnityPy\\lib\\FMOD"
+log-level = "WARN"
 
 [build-system]
 requires = ["poetry-core"]

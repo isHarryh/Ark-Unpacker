@@ -16,6 +16,21 @@
                 "runOn": "folderOpen",
                 "instanceLimit": 1
             }
+        },
+        {
+            "label": "Build Dist",
+            "type": "shell",
+            "command": "python Build.py",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "icon": {
+                "id": "project"
+            },
+            "runOptions": {
+                "instanceLimit": 1
+            }
         }
     ]
 }
