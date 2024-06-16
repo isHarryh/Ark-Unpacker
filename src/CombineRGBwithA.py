@@ -170,8 +170,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     if dodel:
         print("\n正在清理...", s=1)
         rmdir(destdir) #慎用，会预先删除目的地目录的所有内容
-    SafeSaver.reset()
-    SafeSaver.thread_ctrl.set_max_subthread(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
+    SafeSaver.get_instance().reset_counter()
     Cprogs = Counter()
     Cfiles = Counter()
     TC = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
@@ -205,7 +204,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     RD = Rounder()
     UI.reset()
     UI.loop_stop()
-    while TC.count_subthread() or SafeSaver.thread_ctrl.count_subthread():
+    while TC.count_subthread() or not SafeSaver.get_instance().completed():
         #等待子进程结束
         while TR.get_progress() < 1:
             TR_p = TR.get_progress()

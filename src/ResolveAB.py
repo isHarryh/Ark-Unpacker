@@ -265,8 +265,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     if dodel:
         print("\n正在清理...", s=1)
         rmdir(destdir) # Danger zone
-    SafeSaver.reset()
-    SafeSaver.thread_ctrl.set_max_subthread(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
+    SafeSaver.get_instance().reset_counter()
     Cprogs = Counter()
     Cfiles = Counter()
     TC = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
@@ -302,7 +301,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     RD = Rounder()
     UI.reset()
     UI.loop_stop()
-    while TC.count_subthread() or SafeSaver.thread_ctrl.count_subthread():
+    while TC.count_subthread() or not SafeSaver.get_instance().completed():
         # Waiting for sub threads to terminate
         while TR.get_progress() < 1:
             TR_p = TR.get_progress()

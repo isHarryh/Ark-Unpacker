@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2023, Harry Huang
 # @ BSD 3-Clause License
-import time
+import time, queue
 from threading import Thread
 from .GlobalMethods import *
 
@@ -39,6 +39,81 @@ class ThreadCtrl():
         self.__sts.append(ts)
         ts.start()
     #EndClass
+
+class WorkerCtrl():
+    """Controller for Permanent Worker Threads."""
+
+    def __init__(self, handler:staticmethod, max_workers:int=1, name:str=""):
+        """Initializes a Worker Controller.
+
+        :param handler: The handler function of the workers;
+        :param max_workers: The maximum number of workers;
+        :param name: The optional name for the workers;
+        """
+        if max_workers < 1:
+            raise ValueError("max_workers should not be less than 1")
+        self.__queue = queue.Queue()
+        self.__handler = handler
+        self.__opened = True
+        self.__workers = []
+        self._total_requested = Counter()
+        self._total_processed = Counter()
+        for i in range(max_workers):
+            t = Thread(target=self._loop, name=f"Worker:{name}#{i}")
+            self.__workers.append(t)
+            t.start()
+
+    def submit(self, data:tuple):
+        """Submits new data to workers.
+
+        :param data: A tuple that contains the arguments that the handler required;
+        :rtype: None;
+        """
+        if self.__opened:
+            self.__queue.put(data)
+            self._total_requested.update()
+        else:
+            raise RuntimeError("The worker controller has terminated")
+    
+    def terminate(self, block:bool=False):
+        """Requests the workers to terminate and stop receiving new data.
+
+        :param block: Whether to wait for workers to complete.
+        :rtype: None;
+        """
+        if self.__opened:
+            self.__opened == False
+            if block:
+                self.__queue.join()
+    
+    def completed(self):
+        """Returns `True` if there is no data in queue or in handler.
+
+        :rtype: bool;
+        """
+        return self._total_requested.get_sum() == self._total_processed.get_sum()
+    
+    def get_total_requested(self):
+        return self._total_requested.get_sum()
+    
+    def get_total_processed(self):
+        return self._total_processed.get_sum()
+
+    def reset_counter(self):
+        if self.completed():
+            self._total_requested = Counter()
+            self._total_processed = Counter()
+        else:
+            raise RuntimeError("Cannot reset counter while the workers are busy")
+
+    def _loop(self):
+        while self.__opened or not self.__queue.empty():
+            args = self.__queue.get()
+            try:
+                self.__handler(*args)
+            finally:
+                self.__queue.task_done()
+                self._total_processed.update()
 
 class UICtrl():
     """UI Controller in the separated thread."""

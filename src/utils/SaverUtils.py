@@ -5,35 +5,30 @@ import os
 from io import BytesIO
 from PIL import Image
 from UnityPy.classes import *
+from .Config import *
 from .GlobalMethods import *
 from .Logger import *
 from .TaskUtils import *
 
 
-class SafeSaver():
+class SafeSaver(WorkerCtrl):
     """The base class for file saver which is able to avoid name collision."""
-    thread_ctrl = ThreadCtrl(1)
-    total_processed = Counter()
-    total_requested = Counter()
 
+    __instance = None
     __ext_image = 'png'
     __ext_audio = 'wav'
     __ext_raw = ''
 
-    @staticmethod
-    def get_progress():
-        """Gets the progress, aka. the saver thread idle ratio.
-
-        :returns: The progress in `[0.0, 1.0]`;
-        :rtype: float;
-        """
-        return 1 - SafeSaver.thread_ctrl.get_idle_ratio()
+    def __init__(self):
+        """Not recommended to use. Please use the static methods."""
+        max_workers = PerformanceLevel.get_thread_limit(Config.get('performance_level'))
+        super(SafeSaver, self).__init__(self._save, max_workers=max_workers, name="Saver")
 
     @staticmethod
-    def reset():
-        """Resets the recording status."""
-        SafeSaver.total_processed = Counter()
-        SafeSaver.total_requested = Counter()
+    def get_instance():
+        if not SafeSaver.__instance:
+            SafeSaver.__instance = SafeSaver()
+        return SafeSaver.__instance
 
     @staticmethod
     def save(data:bytes, destdir:str, name:str, ext:str, callback:staticmethod=None):
@@ -46,7 +41,7 @@ class SafeSaver():
         :param callback: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
         :rtype: None;
         """
-        SafeSaver.thread_ctrl.run_subthread(SafeSaver._save, (data, destdir, name, ext, callback), name=f"SaverThread:{id(data)}")
+        SafeSaver.get_instance().submit((data, destdir, name, ext, callback))
     
     @staticmethod
     def save_image(img:Image.Image, destdir:str, name:str, ext:str=__ext_image, callback:staticmethod=None):
@@ -118,7 +113,6 @@ class SafeSaver():
     
     @staticmethod
     def _save(data:bytes, destdir:str, name:str, ext:str, callback:staticmethod):
-        SafeSaver.total_requested.update()
         try:
             dest = os.path.join(destdir, name)
             name = os.path.basename(dest)
@@ -133,7 +127,6 @@ class SafeSaver():
                     callback(None)
         except Exception as arg:
             Logger.error(f"Saver: Failed to save file {dest} because: Exception{type(arg)} {arg}")
-        SafeSaver.total_processed.update()
 
     @staticmethod
     def _save_bytes(data:bytes, dest:str):
