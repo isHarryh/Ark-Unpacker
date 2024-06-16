@@ -18,11 +18,8 @@ class Resource:
         :rtype: None;
         """
         self.env:UnityPy.Environment = env
-        """The UnityPy Environment instance"""
         self.name:str = env.file.name
-        """The file name of the UnityPy Environment instance"""
         self.length:int = len(env.objects)
-        """The count of all objects"""
         ###
         self.sprites:list[Sprite] = []
         self.texture2ds:list[Texture2D] = []
@@ -211,14 +208,12 @@ def ab_resolve(abfile:str, destdir:str, \
     :param subcallback: Callback `f(game_object_name, file_path_or_none_for_not_saved)` for every saving trail, `None` for ignore;
     :rtype: None;
     """
-    env = UnityPy.load(abfile)
-    res = Resource(env)
-    Logger.debug(f'ResolveAB: "{res.name}" has {res.length} objects.')
+    res = Resource(UnityPy.load(abfile))
+    Logger.debug(f"ResolveAB: \"{res.name}\" has {res.length} objects.")
     if res.length >= 10000:
-        Logger.info(f'ResolveAB: Too many objects in file "{res.name}", unpacking it may take a long time.')
+        Logger.info(f"ResolveAB: Too many objects in file \"{res.name}\", unpacking it may take a long time.")
     elif res.length == 0:
-        Logger.info(f'ResolveAB: No object in file "{res.name}", skipped it.')
-        return
+        Logger.info(f"ResolveAB: No object in file \"{res.name}\".")
     ###
     try:
         # Preprocess
@@ -237,7 +232,7 @@ def ab_resolve(abfile:str, destdir:str, \
             SafeSaver.save_objects(res.audioclips, destdir, subcallback)
     except BaseException as arg:
         # Error feedback
-        Logger.error(f'ResolveAB: Error occurred while unpacking file "{env.file}": Exception{type(arg)} {arg}')
+        Logger.error(f"ResolveAB: Error occurred while unpacking file \"{res.name}\": Exception{type(arg)} {arg}")
         # raise(arg)
     if callback:
         callback()
@@ -301,8 +296,8 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
         subdestdir = ospath.dirname(i).strip(ospath.sep).replace(rootdir, '').strip(ospath.sep)
         curdestdir = os.path.join(destdir, subdestdir, ospath.splitext(ospath.basename(i))[0]) \
             if separate else os.path.join(destdir, subdestdir)
-        TC.run_subthread(ab_resolve, (i, curdestdir, doimg, dotxt, doaud, dospine), \
-            {'callback': callback, 'subcallback': subcallback}, name=f"RsThread:{id(i)}")
+        TC.run_subthread(ab_resolve, (i, curdestdir, doimg, dotxt, doaud, dospine, callback, subcallback), \
+            name=f"RsThread:{id(i)}")
 
     RD = Rounder()
     UI.reset()
