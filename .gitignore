@@ -1,11 +1,16 @@
 # Exclude
 /*/
 __pycache__/
-/*.exe
-/*.json
-/*.log
+upk/
+cmb/
+*.exe
+*.json
+*.log
+*.csv
 
 # Include
+!.github/
 !.vscode/
 !docs/
 !src/
+!test/

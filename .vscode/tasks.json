@@ -31,6 +31,21 @@
             "runOptions": {
                 "instanceLimit": 1
             }
+        },
+        {
+            "label": "Test",
+            "type": "shell",
+            "command": "python Test.py",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "icon": {
+                "id": "project"
+            },
+            "runOptions": {
+                "instanceLimit": 1
+            }
         }
     ]
 }
