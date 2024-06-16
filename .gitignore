@@ -6,6 +6,7 @@ __pycache__/
 /*.log
 
 # Include
+!.github/
 !.vscode/
 !docs/
 !src/

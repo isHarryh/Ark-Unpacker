@@ -1,0 +1,41 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Print ref
+        run: |
+          echo "Current ref: ${{  github.ref  }}"
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8.10'
+
+      - name: Setup Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python -
+
+      - name: Install dependencies
+        run: |
+          poetry install
+
+      - name: Run build script
+        run: |
+          python Build.py
+
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: build/dist/*.exe
