@@ -5,7 +5,7 @@ import os, configparser
 
 def __get_venv_dir():
     import re, subprocess
-    rst = subprocess.run(['poetry', 'env', 'info'], capture_output=True, text=True)
+    rst = subprocess.run(['poetry', 'env', 'info'], capture_output=True)
     
     if rst.returncode == 0:
         for l in rst.stdout.splitlines():
@@ -17,6 +17,8 @@ def __get_venv_dir():
         print("× Failed to parse poetry output to query venv dir.")
     else:
         print(f"× Failed to run poetry to query venv dir. Returned code: {rst.returncode}")
+        print(f"- StdErr: {rst.stderr}")
+        print(f"- StdOut: {rst.stdout}")
     print("- Please check the compatibility of poetry version.")
     print("- Please check the poetry status and the venv info.")
     raise Exception("venv dir not found or poetry config failed")

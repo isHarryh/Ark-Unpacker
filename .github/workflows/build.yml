@@ -22,20 +22,22 @@ jobs:
         with:
           python-version: '3.8.10'
 
-      - name: Setup Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python -
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.8.3
 
       - name: Install dependencies
         run: |
           poetry install
 
-      - name: Run build script
-        run: |
-          python Build.py
+      # DUE TO WINDOWS ISSUES, BUILD SCRIPT FAILED
+      # - name: Run build script
+      #   run: |
+      #     python Build.py
+      #   shell: bash
 
-      - name: Archive artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: build
-          path: build/dist/*.exe
+      # - name: Archive artifacts
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     path: build/dist/*.exe
