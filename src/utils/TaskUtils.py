@@ -18,14 +18,6 @@ class ThreadCtrl():
         """Sets the max number of sub threads."""
         self.__max:int = max(1, max_subthread)
     
-    def get_max_subthread(self):
-        """Gets the max number of sub threads."""
-        return self.__max
-    
-    def get_idle_ratio(self):
-        """Gets the idle ratio."""
-        return self.count_subthread() - self.get_max_subthread()
-    
     def count_subthread(self):
         """Gets the number of alive sub threads."""
         self.__sts = list(filter(lambda x:x.is_alive(), self.__sts))
@@ -91,13 +83,13 @@ class WorkerCtrl():
 
         :rtype: bool;
         """
-        return self._total_requested.get_sum() == self._total_processed.get_sum()
+        return self._total_requested.now() == self._total_processed.now()
     
     def get_total_requested(self):
-        return self._total_requested.get_sum()
+        return self._total_requested.now()
     
     def get_total_processed(self):
-        return self._total_processed.get_sum()
+        return self._total_processed.now()
 
     def reset_counter(self):
         if self.completed():
@@ -194,14 +186,17 @@ class Counter():
     def update(self, val:"int|bool"=1):
         """Updates the counter.
 
-        :param val: Delta value;
+        :param val: Delta value in int or bool (`True` for 1 and `False` for 0);
         :returns: Current value;
         :rtype: int;
         """
-        self.__s += int(val)
+        if type(val) == int:
+            self.__s += val
+        elif val:
+            self.__s += 1
         return self.__s
     
-    def get_sum(self):
+    def now(self):
         """Gets the current value.
 
         :returns: Current value;
@@ -270,8 +265,8 @@ class TimeRecorder():
         return time.time() - self.t_rec[0][0]
     #EndClass
 
-class Rounder():
-    """Loading Rounder."""
+class LineSpinner():
+    """Line Spinner for loading operations."""
 
     char = ('/', '-', '\\', '|')
 

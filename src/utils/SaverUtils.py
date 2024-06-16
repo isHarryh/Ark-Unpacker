@@ -14,10 +14,10 @@ from .TaskUtils import *
 class SafeSaver(WorkerCtrl):
     """The base class for file saver which is able to avoid name collision."""
 
-    __instance = None
+    __instance  = None
     __ext_image = 'png'
     __ext_audio = 'wav'
-    __ext_raw = ''
+    __ext_raw   = ''
 
     def __init__(self):
         """Not recommended to use. Please use the static methods."""
@@ -31,7 +31,7 @@ class SafeSaver(WorkerCtrl):
         return SafeSaver.__instance
 
     @staticmethod
-    def save(data:bytes, destdir:str, name:str, ext:str, callback:staticmethod=None):
+    def save_bytes(data:bytes, destdir:str, name:str, ext:str, callback:staticmethod=None):
         """Saves a binary data to a file.
 
         :param data: Bytes data;
@@ -56,7 +56,7 @@ class SafeSaver(WorkerCtrl):
         """
         bio = BytesIO()
         img.save(bio, format=ext)
-        SafeSaver.save(bio.getvalue(), destdir, name, ext, callback)
+        SafeSaver.save_bytes(bio.getvalue(), destdir, name, ext, callback)
     
     @staticmethod
     def save_object(obj:GameObject, destdir:str, name:str, callback:staticmethod=None):
@@ -82,12 +82,12 @@ class SafeSaver(WorkerCtrl):
                 byte = bytes()
                 for _, d in obj.samples.items():
                     byte += d
-                SafeSaver.save(byte, destdir, name, SafeSaver.__ext_audio, callback)
+                SafeSaver.save_bytes(byte, destdir, name, SafeSaver.__ext_audio, callback)
                 return
         elif isinstance(obj, TextAsset):
             # As raw file:
             byte = bytes(obj.script)
-            SafeSaver.save(byte, destdir, name, SafeSaver.__ext_raw, callback)
+            SafeSaver.save_bytes(byte, destdir, name, SafeSaver.__ext_raw, callback)
             return
         else:
             # Not an exportable type:
