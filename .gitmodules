@@ -1,0 +1,4 @@
+[submodule "src/fbs"]
+	path = src/fbs
+	url = https://github.com/isHarryh/Ark-FBS-Py.git
+    branch = dist
