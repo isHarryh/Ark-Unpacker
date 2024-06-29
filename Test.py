@@ -22,7 +22,7 @@ def test_unit_1():
                     doaud=True,
                     dospine=True
                     )
-        if __count_files('test/upk') != 1269:
+        if __count_files('test/upk') != 1307:
             raise AssertionError("Upk files count error")
         return time.time() - t
     except BaseException as arg:
@@ -35,7 +35,7 @@ def test_unit_2():
                             'test/cmb',
                             dodel=False
                             )
-        if __count_files('test/cmb') != 112:
+        if __count_files('test/cmb') != 113:
             raise AssertionError("Cmb files count error")
         return time.time() - t
     except BaseException as arg:
