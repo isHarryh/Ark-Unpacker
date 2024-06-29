@@ -157,14 +157,13 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     :param dodel: Whether to delete the existed destination directory first, `False` for default;
     :rtype: None;
     """
-    print(f'\n正在解析目录...', s=1)
-    Logger.info("CombineRGBwithA: Reading directories...")
-    rootdir = os.path.normpath(os.path.realpath(rootdir)) #标准化目录名
-    destdir = os.path.normpath(os.path.realpath(destdir)) #标准化目录名
-    flist = [] #目录下所有文件的列表
+    print(f'\n正在解析路径...', s=1)
+    Logger.info("CombineRGBwithA: Retrieving file paths...")
+    rootdir = os.path.normpath(os.path.realpath(rootdir))
+    destdir = os.path.normpath(os.path.realpath(destdir))
     flist = get_filelist(rootdir)
-    flist = list(filter(lambda x:'alpha' in os.path.basename(x), flist)) #初筛
-    flist = list(filter(lambda x:os.path.splitext(x)[1].lower() in ['.png', '.jpg', '.jpeg', '.bmp'], flist)) #初筛
+    flist = list(filter(lambda x:'alpha' in os.path.basename(x), flist))
+    flist = list(filter(lambda x:os.path.splitext(x)[1].lower() in ['.png', '.jpg', '.jpeg', '.bmp'], flist))
 
     if dodel:
         print("\n正在清理...", s=1)

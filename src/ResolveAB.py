@@ -239,11 +239,11 @@ def ab_resolve(abfile:str, destdir:str, \
 
 
 ########## Main-主程序 ##########
-def main(rootdir:str, destdir:str, dodel:bool=False, 
+def main(src:str, destdir:str, dodel:bool=False, 
     doimg:bool=True, dotxt:bool=True, doaud:bool=True, dospine:bool=False, separate:bool=True):
-    """Extract all the AB files from the given directory.
+    """Extract all the AB files from the given directory or extract a given AB file.
 
-    :param rootdir: Source directory;
+    :param src: Source directory or file;
     :param destdir: Destination directory;
     :param dodel: Whether to delete the existing files in the destination directory, `False` for default;
     :param doimg: Whether to extract images;
@@ -253,12 +253,11 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     :param separate: Whether to sort the extracted files by their source AB file path.
     :rtype: None;
     """
-    print("\n正在解析目录...", s=1)
-    Logger.info("ResolveAB: Reading directories...")
-    rootdir = os.path.normpath(os.path.realpath(rootdir))
+    print("\n正在解析路径...", s=1)
+    Logger.info("ResolveAB: Retrieving file paths...")
+    src = os.path.normpath(os.path.realpath(src))
     destdir = os.path.normpath(os.path.realpath(destdir))
-    flist = [] # All-files list
-    flist = get_filelist(rootdir)
+    flist = [src] if os.path.isfile(src) else get_filelist(src)
     flist = list(filter(lambda x:os.path.splitext(x)[1] in ['.ab', '.AB'], flist))
 
     if dodel:
@@ -291,9 +290,10 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
             f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
         ])
         ###
-        subdestdir = os.path.dirname(i).strip(os.path.sep).replace(rootdir, '').strip(os.path.sep)
-        curdestdir = os.path.join(destdir, subdestdir, os.path.splitext(os.path.basename(i))[0]) \
-            if separate else os.path.join(destdir, subdestdir)
+        subdestdir = os.path.dirname(i).strip(os.path.sep).replace(src, '').strip(os.path.sep)
+        curdestdir = destdir if os.path.samefile(i, src) else \
+            os.path.join(destdir, subdestdir, os.path.splitext(os.path.basename(i))[0]) if separate else \
+            os.path.join(destdir, subdestdir)
         TC.run_subthread(ab_resolve, (i, curdestdir, doimg, dotxt, doaud, dospine, callback, subcallback), \
             name=f"RsThread:{id(i)}")
 

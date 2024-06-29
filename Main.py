@@ -55,7 +55,7 @@ def input_path(msg:str, excpt:str):
     :rtype: str;
     """
     inpt = os.path.normpath(input(msg, c=2))
-    while not os.path.isdir(inpt):
+    while not os.path.exists(inpt):
             inpt = os.path.normpath(input(excpt, c=2))
     return inpt
 
@@ -89,18 +89,18 @@ def run_custom_Rs():
     Logger.info("CI: Customized unpack mode.")
     prt_subtitle('自定义资源解包')
     ###
-    print(f'\n请输入要解包的目录后按回车')
+    print(f'\n请输入要解包的目录或文件路径')
     print('  支持相对路径，\".\"表示选择当前目录')
-    rootdir = input_path(f'> ', '  该目录似乎不存在\n> ')
-    print(f'您选择的解包目录是：', c=2)
-    print(f'  {os.path.abspath(rootdir)}', c=6)
+    src = input_path(f'> ', '  该路径似乎不存在\n> ')
+    print(f'解包目标路径：', c=2)
+    print(f'  {os.path.abspath(src)}', c=6)
     ###
-    print(f'\n请输入导出的目的地后按回车')
+    print(f'\n请输入导出目录的路径')
     print('  支持相对路径，留空表示自动创建')
     destdir = input(f'> ', c=2)
     if not destdir:
         destdir = f'Unpacked_{int(time.time())}'
-    print(f'您选择的导出目录是：', c=2)
+    print(f'导出目录路径：', c=2)
     print(f'  {os.path.abspath(destdir)}', c=6)
     ###
     dodel = False
@@ -110,10 +110,12 @@ def run_custom_Rs():
         dodel = input(f'> ', c=2)
         dodel = True if dodel in ['y', 'Y'] else False
     ###
-    print(f'\n您希望用AB文件原名来分类每组文件吗？')
-    print(f'  y=是(默认)，n=否', c=3)
-    separate = input(f'> ', c=2)
-    separate = False if separate in ['n', 'N'] else True
+    separate = True
+    if not os.path.isfile(src):
+        print(f'\n您希望用AB文件原名来分类每组文件吗？')
+        print(f'  y=是(默认)，n=否', c=3)
+        separate = input(f'> ', c=2)
+        separate = False if separate in ['n', 'N'] else True
     ###
     print(f'\n请输入要导出的资源类型后按回车')
     print('  可多选：i=图片，t=文本，a=音频')
@@ -125,7 +127,7 @@ def run_custom_Rs():
     ###
     input(f'\n再按一次回车以开始任务...', c=2)
     os.system('title ArkUnpacker - Processing')
-    AU_Rs.main(rootdir, destdir, dodel, doimg, dotxt, doaud, False, separate)
+    AU_Rs.main(src, destdir, dodel, doimg, dotxt, doaud, False, separate)
 
 def run_custom_Cb():
     Logger.info("CI: Customized image combine mode.")
