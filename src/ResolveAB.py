@@ -255,12 +255,11 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     """
     print("\n正在解析目录...", s=1)
     Logger.info("ResolveAB: Reading directories...")
-    ospath = os.path
-    rootdir = ospath.normpath(ospath.realpath(rootdir))
-    destdir = ospath.normpath(ospath.realpath(destdir))
+    rootdir = os.path.normpath(os.path.realpath(rootdir))
+    destdir = os.path.normpath(os.path.realpath(destdir))
     flist = [] # All-files list
     flist = get_filelist(rootdir)
-    flist = list(filter(lambda x:ospath.splitext(x)[1] in ['.ab', '.AB'], flist))
+    flist = list(filter(lambda x:os.path.splitext(x)[1] in ['.ab', '.AB'], flist))
 
     if dodel:
         print("\n正在清理...", s=1)
@@ -278,22 +277,22 @@ def main(rootdir:str, destdir:str, dodel:bool=False,
     UI.loop_start()
     for i in flist:
         #(i stands for a file's path)
-        if not ospath.isfile(i):
+        if not os.path.isfile(i):
             continue # Skip non-file
         TR_p = TR.get_progress()
         TR_r = TR.get_remaining_time()
         UI.request([
             f'正在批量解包...',
             f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
-            f'当前目录：\t{ospath.basename(ospath.dirname(i))}',
-            f'当前文件：\t{ospath.basename(i)}',
+            f'当前目录：\t{os.path.basename(os.path.dirname(i))}',
+            f'当前文件：\t{os.path.basename(i)}',
             f'累计解包：\t{Cprogs.now()}',
             f'累计导出：\t{Cfiles.now()}',
             f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
         ])
         ###
-        subdestdir = ospath.dirname(i).strip(ospath.sep).replace(rootdir, '').strip(ospath.sep)
-        curdestdir = os.path.join(destdir, subdestdir, ospath.splitext(ospath.basename(i))[0]) \
+        subdestdir = os.path.dirname(i).strip(os.path.sep).replace(rootdir, '').strip(os.path.sep)
+        curdestdir = os.path.join(destdir, subdestdir, os.path.splitext(os.path.basename(i))[0]) \
             if separate else os.path.join(destdir, subdestdir)
         TC.run_subthread(ab_resolve, (i, curdestdir, doimg, dotxt, doaud, dospine, callback, subcallback), \
             name=f"RsThread:{id(i)}")

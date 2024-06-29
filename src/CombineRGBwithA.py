@@ -159,13 +159,12 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     """
     print(f'\n正在解析目录...', s=1)
     Logger.info("CombineRGBwithA: Reading directories...")
-    ospath = os.path
-    rootdir = ospath.normpath(ospath.realpath(rootdir)) #标准化目录名
-    destdir = ospath.normpath(ospath.realpath(destdir)) #标准化目录名
+    rootdir = os.path.normpath(os.path.realpath(rootdir)) #标准化目录名
+    destdir = os.path.normpath(os.path.realpath(destdir)) #标准化目录名
     flist = [] #目录下所有文件的列表
     flist = get_filelist(rootdir)
-    flist = list(filter(lambda x:'alpha' in ospath.basename(x), flist)) #初筛
-    flist = list(filter(lambda x:ospath.splitext(x)[1].lower() in ['.png', '.jpg', '.jpeg', '.bmp'], flist)) #初筛
+    flist = list(filter(lambda x:'alpha' in os.path.basename(x), flist)) #初筛
+    flist = list(filter(lambda x:os.path.splitext(x)[1].lower() in ['.png', '.jpg', '.jpeg', '.bmp'], flist)) #初筛
 
     if dodel:
         print("\n正在清理...", s=1)
@@ -183,22 +182,22 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     UI.loop_start()
     for i in flist:
         #递归处理各个文件(i是文件的路径名)
-        if not ospath.isfile(i):
+        if not os.path.isfile(i):
             continue #跳过目录等非文件路径
         TR_p = TR.get_progress()
         TR_r = TR.get_remaining_time()
         UI.request([
             f'正在批量合并图片...',
             f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
-            f'当前目录：\t{ospath.basename(ospath.dirname(i))}',
-            f'当前文件：\t{ospath.basename(i)}',
+            f'当前目录：\t{os.path.basename(os.path.dirname(i))}',
+            f'当前文件：\t{os.path.basename(i)}',
             f'累计处理：\t{Cprogs.now()}',
             f'累计导出：\t{Cfiles.now()}',
             f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
         ])
         ###
-        subdestdir = ospath.dirname(i).strip(ospath.sep).replace(rootdir, '').strip(ospath.sep)
-        TC.run_subthread(image_resolve, (i, ospath.join(destdir, subdestdir)), \
+        subdestdir = os.path.dirname(i).strip(os.path.sep).replace(rootdir, '').strip(os.path.sep)
+        TC.run_subthread(image_resolve, (i, os.path.join(destdir, subdestdir)), \
             {'callback': callback, 'successcallback': successcallback}, name=f"CBThread:{id(i)}")
 
     spin = LineSpinner()
