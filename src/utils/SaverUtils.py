@@ -2,6 +2,7 @@
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
 import os
+import threading
 from io import BytesIO
 from PIL import Image
 from UnityPy.classes import *
@@ -18,6 +19,7 @@ class SafeSaver(WorkerCtrl):
     __ext_image = 'png'
     __ext_audio = 'wav'
     __ext_raw   = ''
+    _LOCK = threading.Lock()
 
     def __init__(self):
         """Not recommended to use. Please use the static methods."""
@@ -117,46 +119,32 @@ class SafeSaver(WorkerCtrl):
             dest = os.path.join(destdir, name)
             name = os.path.basename(dest)
             destdir = os.path.dirname(dest)
-            if SafeSaver._is_unique(data, destdir, name, ext):
+            with SafeSaver._LOCK:
                 dest = SafeSaver._no_namesake(destdir, name, ext)
-                SafeSaver._save_bytes(data, dest)
-                if callback:
-                    callback(dest)
-            else:
-                if callback:
-                    callback(None)
+                SafeSaver._preoccupy(dest)
+            SafeSaver._save_bytes(data, dest)
+            if callback:
+                callback(dest)
         except Exception as arg:
             Logger.error(f"Saver: Failed to save file {dest} because: Exception{type(arg)} {arg}")
 
     @staticmethod
     def _save_bytes(data:bytes, dest:str):
-        mkdir(os.path.dirname(dest))
         with open(dest, 'wb') as f:
             f.write(data)
-
-    @staticmethod
-    def _is_same(data:bytes, fp:str):
-        with open(fp, 'rb') as f:
-            cache = f.read()
-        return True if bytes(data) == bytes(cache) else False
-
-    @staticmethod
-    def _is_unique(data:bytes, destdir:str, name:str, ext:str):
-        if os.path.isdir(destdir):
-            lenname = len(name)
-            flist = os.listdir(destdir)
-            flist = list(filter(lambda x:(name == x[:lenname] and ext in x), flist)) #初筛
-            for i in flist:
-                if SafeSaver._is_same(data, os.path.join(destdir, i)):
-                    return False
-        return True
 
     @staticmethod
     def _no_namesake(destdir:str, name:str, ext:str):
         tmp = 0
         dest = os.path.join(destdir, f'{name}.{ext}')
         while os.path.isfile(dest):
-            dest = os.path.join(destdir, f'{name}_#{tmp}.{ext}')
+            dest = os.path.join(destdir, f'{name}${tmp}.{ext}')
             tmp += 1
         return dest
+    
+    @staticmethod
+    def _preoccupy(dest:str):
+        mkdir(os.path.dirname(dest))
+        with open(dest, 'wb') as f:
+            f.write(b'0')
     #EndClass
