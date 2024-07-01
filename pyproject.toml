@@ -9,6 +9,7 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "3.8.10"
+flatbuffers = "24.3.25"
 Pillow = "8.4.0"
 requests = "2.26.0"
 UnityPy = "1.8.9"
