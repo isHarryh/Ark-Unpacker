@@ -41,7 +41,7 @@ class Resource:
             elif isinstance(i, Material):
                 self.materials.append(i)
             elif isinstance(i, MonoBehaviour):
-                self.materials.append(i)
+                self.monobehaviors.append(i)
     
     def get_object_by_pathid(self, pathid:"int|dict", search_in:"list|None"=None):
         """Gets the object with the given PathID.
@@ -182,12 +182,12 @@ class Resource:
                         else:
                             Logger.info(f"ResolveAB: Spine asset \"{i[0].name}\" found with no Alpha texture.")
                             rgba = rgb
-                        if SafeSaver.save_image(rgba, destdir, i[0].name, callback=callback):
+                        if SafeSaver.save_image(rgba, destdir, i[0].name, callback=lambda x: callback(i.name, x)):
                             Logger.debug(f"ResolveAB: Spine asset \"{i[0].name}\" found.")
                     else:
                         Logger.warn(f"ResolveAB: Spine asset RGB texture missing.")
                 for i in (self.atlas, self.skel):
-                    SafeSaver.save_object(i, destdir, i.name, callback)
+                    SafeSaver.save_object(i, destdir, i.name, callback=lambda x: callback(i.name, x))
                     Logger.debug(f"ResolveAB: Spine asset \"{i.name}\" found.")
         #EndClass
     #EndClass
