@@ -83,22 +83,25 @@ def run_custom_Rs():
     ###
     separate = True
     if not os.path.isfile(src):
-        print("\n您希望用AB文件原名来分类每组文件吗？")
+        print("\n是否对导出的文件按来源进行分组？")
         print("  [y]是(默认)，[n]否", c=3)
         separate = UserInput.request_yes_or_no(True)
     ###
     print("\n请输入要导出的资源类型")
-    print("  [i]图片，[t]文本，[a]音频")
+    print("  [i]图片，[t]文本，[a]音频", c=3)
+    print("  [s]Spine动画模型", c=3)
     print("  示例输入：\"ita\"，\"ia\"")
-    dothem = input("> ", c=2)
-    doimg = True if "i" in dothem or "I" in dothem else False
-    dotxt = True if "t" in dothem or "T" in dothem else False
-    doaud = True if "a" in dothem or "A" in dothem else False
+    dothem = input("> ", c=2).lower()
+    doimg = True if "i" in dothem else False
+    dotxt = True if "t" in dothem else False
+    doaud = True if "a" in dothem else False
+    dospi = True if "s" in dothem else False
     print(f"  [{'√' if doimg else '×'}]图片，[{'√' if dotxt else '×'}]文本，[{'√' if doaud else '×'}]音频", c=6)
+    print(f"  [{'√' if dospi else '×'}]Spine动画模型", c=6)
     ###
     prt_continue()
     title("ArkUnpacker - Processing")
-    AU_Rs.main(src, destdir, dodel, doimg, dotxt, doaud, False, separate)
+    AU_Rs.main(src, destdir, dodel, doimg, dotxt, doaud, dospi, separate)
 
 def run_custom_Cb():
     Logger.info("CI: Customized image combine mode.")
