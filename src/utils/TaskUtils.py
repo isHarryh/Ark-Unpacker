@@ -163,7 +163,7 @@ class UICtrl():
     
     def reset(self):
         """Clears the content."""
-        os.system('cls')
+        clear()
         self.__lines = []
         self.__cache_lines = []
     

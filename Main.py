@@ -14,7 +14,7 @@ AU_i18n = 'zh-CN'
 
 def prt_homepage():
     Logger.info("CI: In Homepage.")
-    os.system('cls')
+    clear()
     os.chdir('.')
     print(f"欢迎使用ArkUnpacker {AU_ver}", s=1)
     print("=" * 20)
@@ -23,7 +23,7 @@ def prt_homepage():
     print("输入序号后按回车即可，\n如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker ")
 
 def prt_subtitle(msg:str):
-    os.system('cls')
+    clear()
     os.chdir('.')
     print("=" * 10, s=1)
     print(msg, s=1)
@@ -75,7 +75,7 @@ def get_dirlist(ignore:list=[]):
 
 def run_quickaccess():
     Logger.info("CI: Run quick access.")
-    os.system("title ArkUnpacker - Processing")
+    title("ArkUnpacker - Processing")
     destdir = f'Unpacked_{int(time.time())}'
     ###
     prt_subtitle("步骤1|资源解包")
@@ -128,7 +128,7 @@ def run_custom_Rs():
     print(f"  [{'√' if doimg else '×'}]图片，[{'√' if dotxt else '×'}]文本，[{'√' if doaud else '×'}]音频", c=6)
     ###
     input("\n再按一次回车以开始任务...", c=2)
-    os.system("title ArkUnpacker - Processing")
+    title("ArkUnpacker - Processing")
     AU_Rs.main(src, destdir, dodel, doimg, dotxt, doaud, False, separate)
 
 def run_custom_Cb():
@@ -157,7 +157,7 @@ def run_custom_Cb():
         dodel = True if dodel in ['y', 'Y'] else False
     ###
     input("\n再按一次回车以开始任务...", c=2)
-    os.system("title ArkUnpacker - Processing")
+    title("ArkUnpacker - Processing")
     AU_Cb.main(rootdir, destdir, dodel)
 
 def run_arkmodels_unpacking(dirs, destdir):
@@ -169,7 +169,7 @@ def run_arkmodels_unpacking(dirs, destdir):
             print(f"在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是本程序版本与您的资源版本不再兼容，可尝试获取新版程序。", c=3)
             return
     input("\n准备就绪，再按一次回车以开始任务...", c=2)
-    os.system("title ArkUnpacker - Processing")
+    title("ArkUnpacker - Processing")
     ###
     print("正在清理...")
     rmdir(destdir)
@@ -213,7 +213,7 @@ def run_arkmodels_data_dist():
 def run_arkmodels_workflow():
     Logger.info("CI: In ArkModels workflow.")
     def prt_arkmodels_menu():
-        os.system('cls')
+        clear()
         os.chdir('.')
         print("ArkModels提取与分拣工具", s=1)
         print("="*20)
@@ -222,7 +222,7 @@ def run_arkmodels_workflow():
         print("1: 干员基建模型提取（skinpack，chararts）\n2: 敌方战斗模型提取（battle/prefabs/enemies）\n3: 动态立绘模型提取（arts/dynchars）\n4: 模型分拣\n5: 生成数据集\n0: 返回", c=6)
         print("输入序号后按回车即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker ")
     while True:
-        os.system("title ArkUnpacker")
+        title("ArkUnpacker")
         prt_arkmodels_menu()
         order = input("> ", c=2)
         if order == '1':
@@ -248,7 +248,7 @@ if __name__ == '__main__':
     try:
         Logger.info("Initialized")
         while True:
-            os.system("title ArkUnpacker")
+            title("ArkUnpacker")
             prt_homepage()
             order = input("> ", c=2)
             if order == '1':

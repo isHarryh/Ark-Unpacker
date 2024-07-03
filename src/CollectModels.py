@@ -92,7 +92,7 @@ def main(srcdirs:"list[str]", destdirs:"list[str]", dodel:bool=False):
             rmdir(i) #慎用，会预先删除目的地目录的所有内容
     TR = TimeRecorder(len(flist))
 
-    os.system('cls')
+    clear()
     for dir2, dir1, dest in flist:
         #递归处理各个目录(i是元组(sub-srcdir, destdir))
         print(f'正在分拣模型...', y=1)
@@ -127,7 +127,7 @@ def main(srcdirs:"list[str]", destdirs:"list[str]", dodel:bool=False):
         TR.update()
         cont_p = TR.get_progress()
 
-    os.system('cls')
+    clear()
     print(f'\n分拣模型结束!', s=1)
     print(f'  累计分拣 {cont_f} 套模型')
     print(f'  此项用时 {round(TR.get_consumed_time())} 秒')

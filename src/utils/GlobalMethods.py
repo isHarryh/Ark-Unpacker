@@ -46,6 +46,25 @@ def print(text:str="", c:int=7, bg:int=0, s:int=0, y:int=0):
     ctrl = f'\033[K\033[{y};{1}H' if y > 0 else ''
     builtins.print(f"\033[?25l{ctrl}{color(c, bg, s)}{text}")
 
+def clear(use_ansi:bool=False):
+    """Clears the CLI output.
+    
+    rtype: None;
+    """
+    if use_ansi:
+        builtins.print('\033[2J')
+    else:
+        os.system('cls' if os.name == 'nt' else 'clear')
+
+def title(text:str):
+    """Sets the CLI window title. Windows only.
+    
+    :param text: The text of the title;
+    rtype: None;
+    """
+    if os.name == 'nt':
+        os.system(f'title {text}')
+
 def progress_bar(progress:float, length:int):
     """Gets a progress bar string."""
     try:
