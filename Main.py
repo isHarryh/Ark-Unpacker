@@ -20,7 +20,7 @@ def prt_homepage():
     print("=" * 20)
     print("模式选择：")
     print("1: 一键执行\n2: 自定义资源解包\n3: 自定义图片合并\n4: ArkModels提取与分拣工具\n0: 退出", c=6)
-    print("输入序号后按回车即可，\n如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker ")
+    print("输入序号后按Enter即可，\n如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker ")
 
 def prt_subtitle(msg:str):
     clear()
@@ -28,37 +28,9 @@ def prt_subtitle(msg:str):
     print("=" * 10, s=1)
     print(msg, s=1)
     print("=" * 10, s=1)
-    print()
 
 def prt_continue():
-    input("\n按任意键返回", c=2)
-
-def input_allow(msg:str, allow:list, excpt:str):
-    """Gets a legal input text.
-
-    :param msg: Tip text to display;
-    :param allow: Legal values list;
-    :param excpt: Warning text to display when received an illegal value;
-    :returns: The legal input;
-    :rtype: str;
-    """
-    inpt = input(msg, c=2)
-    while not (inpt in allow):
-        inpt = input(excpt, c=2)
-    return inpt
-
-def input_path(msg:str, excpt:str):
-    """Gets a legal input path.
-
-    :param msg: Tip text to display;
-    :param excpt: Warning text to display when received a path that not exists;
-    :returns: The legal input;
-    :rtype: str;
-    """
-    inpt = os.path.normpath(input(msg, c=2))
-    while not os.path.exists(inpt):
-            inpt = os.path.normpath(input(excpt, c=2))
-    return inpt
+    UserInput.request("\n> 按Enter以继续...")
 
 def get_dirlist(ignore:list=[]):
     """Gets the direct children directories in the current working directory.
@@ -91,8 +63,7 @@ def run_custom_Rs():
     prt_subtitle("自定义资源解包")
     ###
     print("\n请输入要解包的目录或文件路径")
-    print("  支持相对路径，\".\"表示选择当前目录")
-    src = input_path("> ", "  该路径似乎不存在\n> ")
+    src = UserInput.request_path()
     print("解包目标路径：", c=2)
     print(f"  {os.path.abspath(src)}", c=6)
     ###
@@ -108,15 +79,13 @@ def run_custom_Rs():
     if os.path.isdir(destdir):
         print("\n该导出目录已存在，您要删除它里面的全部文件吗？")
         print("  请!慎重!选择：[y]删除，[n]保留(默认)", c=3)
-        dodel = input("> ", c=2)
-        dodel = True if dodel in ['y', 'Y'] else False
+        dodel = UserInput.request_yes_or_no(False)
     ###
     separate = True
     if not os.path.isfile(src):
         print("\n您希望用AB文件原名来分类每组文件吗？")
         print("  [y]是(默认)，[n]否", c=3)
-        separate = input("> ", c=2)
-        separate = False if separate in ['n', 'N'] else True
+        separate = UserInput.request_yes_or_no(True)
     ###
     print("\n请输入要导出的资源类型")
     print("  [i]图片，[t]文本，[a]音频")
@@ -127,7 +96,7 @@ def run_custom_Rs():
     doaud = True if "a" in dothem or "A" in dothem else False
     print(f"  [{'√' if doimg else '×'}]图片，[{'√' if dotxt else '×'}]文本，[{'√' if doaud else '×'}]音频", c=6)
     ###
-    input("\n再按一次回车以开始任务...", c=2)
+    prt_continue()
     title("ArkUnpacker - Processing")
     AU_Rs.main(src, destdir, dodel, doimg, dotxt, doaud, False, separate)
 
@@ -136,10 +105,9 @@ def run_custom_Cb():
     prt_subtitle("自定义合并图片")
     ###
     print("\n请输入导出目录的路径")
-    print("  支持相对路径，\".\"表示选择当前目录")
-    rootdir = input_path("> ", "  该目录似乎不存在\n> ")
+    rootdir = UserInput.request_path()
     print("您选择的存放图片的目录是：")
-    print(f" {os.path.abspath(rootdir)}", c=6)
+    print(f"  {os.path.abspath(rootdir)}", c=6)
     ###
     print("\n请输入导出的目的地")
     print("  支持相对路径，留空表示自动创建")
@@ -153,10 +121,9 @@ def run_custom_Cb():
     if os.path.isdir(destdir):
         print("\n该导出目录已存在，您要删除它里面的全部文件吗？")
         print("  请!慎重!选择：[y]删除，[n]保留(默认)", c=3)
-        dodel = input("> ", c=2)
-        dodel = True if dodel in ['y', 'Y'] else False
+        dodel = UserInput.request_yes_or_no(False)
     ###
-    input("\n再按一次回车以开始任务...", c=2)
+    prt_continue()
     title("ArkUnpacker - Processing")
     AU_Cb.main(rootdir, destdir, dodel)
 
@@ -168,7 +135,7 @@ def run_arkmodels_unpacking(dirs, destdir):
         if not os.path.exists(i):
             print(f"在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是本程序版本与您的资源版本不再兼容，可尝试获取新版程序。", c=3)
             return
-    input("\n准备就绪，再按一次回车以开始任务...", c=2)
+    prt_continue()
     title("ArkUnpacker - Processing")
     ###
     print("正在清理...")
@@ -194,7 +161,7 @@ def run_arkmodels_filtering(dirs, destdirs):
     print("\n任务执行完毕", c=2)
     print("\n您希望删除分拣前的解包文件吗？")
     print("  [y]是，[n]否(默认)", c=3)
-    if input(c=2) in ['y', 'Y']:
+    if UserInput.request_yes_or_no(False):
         print("正在清理...")
         print("这可能需要一段时间。您也可以关闭程序，然后手动删除。")
         for i in dirs_:
@@ -220,7 +187,7 @@ def run_arkmodels_workflow():
         print("ArkModels是作者建立的明日方舟Spine模型仓库（https://github.com/isHarryh/Ark-Models），以下功能专门为ArkModels仓库的更新而设计。")
         print("运行部分功能之前，需要将括号内所示的资源文件夹放到程序所在目录中。\n执行步骤选择：")
         print("1: 干员基建模型提取（skinpack，chararts）\n2: 敌方战斗模型提取（battle/prefabs/enemies）\n3: 动态立绘模型提取（arts/dynchars）\n4: 模型分拣\n5: 生成数据集\n0: 返回", c=6)
-        print("输入序号后按回车即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker ")
+        print("输入序号后按Enter即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker ")
     while True:
         title("ArkUnpacker")
         prt_arkmodels_menu()
@@ -243,30 +210,68 @@ def run_arkmodels_workflow():
         elif order == '0':
             return
 
+class UserInput:
+    CANCEL_CMD = '*'
+    
+    @staticmethod
+    def request(prompt:str="> "):
+        uin = input(prompt, c=2)
+        if uin == UserInput.CANCEL_CMD:
+            print("  已取消任务", c=3)
+            raise InterruptedError("User cancelled")
+        return uin
+
+    @staticmethod
+    def request_options(options:list):
+        print(f"  输入符号 \"{UserInput.CANCEL_CMD}\" 以取消任务")
+        uin = UserInput.request()
+        while uin not in options:
+            print('  输入的选项不合法', c=3)
+            uin = UserInput.request()
+        return uin
+
+    @staticmethod
+    def request_path():
+        print(f"  输入符号 \"{UserInput.CANCEL_CMD}\" 以取消任务，支持输入相对路径")
+        uin = os.path.normpath(UserInput.request())
+        while not os.path.exists(uin):
+            print('  输入的路径不存在', c=3)
+            uin = os.path.normpath(UserInput.request())
+        return uin
+
+    @staticmethod
+    def request_yes_or_no(default:bool):
+        print(f"  输入符号 \"{UserInput.CANCEL_CMD}\" 以取消任务")
+        uin = UserInput.request().strip().lower()
+        if default:
+            return False if uin == 'n' else True
+        else:
+            return True if uin == 'y' else False
+
 if __name__ == '__main__':
     Logger.set_instance(Config.get('log_file'), Config.get('log_level'))
     try:
         Logger.info("Initialized")
         while True:
-            title("ArkUnpacker")
-            prt_homepage()
-            order = input("> ", c=2)
-            if order == '1':
-                run_quickaccess()
-                prt_continue()
-            elif order == '2':
-                run_custom_Rs()
-                prt_continue()
-            elif order == '3':
-                run_custom_Cb()
-                prt_continue()
-            elif order == '4':
-                run_arkmodels_workflow()
-            elif order == '0':
-                break
-        
-    except InterruptedError as arg:
-        Logger.info("CI: Program was interrupted.")
+            try:
+                title("ArkUnpacker")
+                prt_homepage()
+                order = input("> ", c=2)
+                if order == '1':
+                    run_quickaccess()
+                    prt_continue()
+                elif order == '2':
+                    run_custom_Rs()
+                    prt_continue()
+                elif order == '3':
+                    run_custom_Cb()
+                    prt_continue()
+                elif order == '4':
+                    run_arkmodels_workflow()
+                elif order == '0':
+                    break
+            except InterruptedError as arg:
+                Logger.info("CI: Program was interrupted.")
     except SystemExit as arg:
         Logger.info(f"CI: Program was exited explicitly with code {arg.code}.")
     except BaseException as arg:
