@@ -1,0 +1,257 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2022-2024, Harry Huang
+# @ BSD 3-Clause License
+import os, json
+import pkgutil
+import importlib.util
+import numpy as np
+from .utils import *
+
+class PackageHelper:
+    """Helper class for dynamic package inspection."""
+    from types import ModuleType
+
+    @staticmethod
+    def get_modules_from_package(package:ModuleType):
+        walk_result = pkgutil.walk_packages(package.__path__, package.__name__ + '.')
+        module_names = [name for _, name, is_pkg in walk_result if not is_pkg]
+        return [importlib.import_module(name) for name in module_names]
+    
+    @staticmethod
+    def get_modules_from_package_name(package_name:str):
+        package = importlib.import_module(package_name)
+        return PackageHelper.get_modules_from_package(package)
+
+class ArkFBOLibrary:
+    """Helper class for Arknights FlatBuffers Objects decoding."""
+    CN = PackageHelper.get_modules_from_package_name('src.fbs.CN')
+    _AUTO_GUESS_ROOT_TYPE = None
+
+    @staticmethod
+    def is_binary_file(path:str, guess_encoding:str='UTF-8'):
+        try:
+            with open(path, encoding=guess_encoding) as f:
+                f.read()
+            return False
+        except UnicodeError:
+            return True
+    
+    @staticmethod
+    def guess_root_type(path:str):
+        target = os.path.basename(path)
+        for m in ArkFBOLibrary.CN:
+            name = m.__name__.split('.')[-1]
+            if name in target:
+                return getattr(m, 'ROOT_TYPE', None)
+        return None
+
+    @staticmethod
+    def decode(path:str, root_type:type=_AUTO_GUESS_ROOT_TYPE):
+        if not root_type:
+            root_type = ArkFBOLibrary.guess_root_type(path)
+        if not root_type:
+            raise AssertionError("Failed to guess root type")
+        with open(path, 'rb') as f:
+            data = bytearray(f.read())[128:]
+            handle = FBOHandler(data, root_type)
+            return handle.to_json_dict()
+
+class FBOHandler:
+    """Handler for FlatBuffers Objects, implementing conversion to Python dict type."""
+    def __init__(self, data:bytearray, root_type:type):
+        self._root = root_type.GetRootAs(data, 0)
+    
+    @staticmethod
+    def _to_literal(obj:object):
+        if obj is None:
+            return None
+        if type(obj) == bytes:
+            return str(obj, encoding='UTF-8')
+        if type(obj) == np.ndarray:
+            return obj.tolist()
+        if not isinstance(obj, (bool, int, float, str, dict, list)):
+            return FBOHandler._to_json_dict(obj)
+        return obj
+
+    @staticmethod
+    def _to_json_dict(obj:object):
+        if obj == None:
+            return None
+        data = {}
+        if 'Key' in dir(obj) and 'Value' in dir(obj):
+            # As key-value table:
+            val = None
+            val_len_method = getattr(obj, 'ValueLength', None)
+            if val_len_method:
+                # As key-array table
+                val = [FBOHandler._to_literal(obj.Value(i)) for i in range(val_len_method())]
+            else:
+                val = FBOHandler._to_literal(obj.Value())
+            data[FBOHandler._to_literal(obj.Key())] = val
+        else:
+            # As general object:
+            for field_name in dir(obj):
+                # For each fields in the object
+                # Exclude FBO universal fields
+                if field_name in ('Init'):
+                    continue
+                if field_name.startswith(('_', 'GetRootAs')):
+                    continue
+                if field_name.endswith(('IsNone', 'Length')):
+                    continue
+                # Collect field data from callable
+                field = getattr(obj, field_name)
+                if callable(field):
+                    val = None
+                    # Try as none
+                    is_none_method = getattr(obj, f'{field_name}IsNone', None)
+                    if is_none_method and is_none_method():
+                        continue
+                    # Try as table
+                    field_len_method = getattr(obj, f'{field_name}Length', None)
+                    if field_len_method:
+                        # As table:
+                        field_len = field_len_method()
+                        if field_len:
+                            if 'Key' in dir(field(0)):
+                                # As key-value table:
+                                val = {}
+                                for i in range(field_len):
+                                    val.update(FBOHandler._to_json_dict(field(i)))
+                            else:
+                                # As general table:
+                                val = []
+                                for i in range(field_len):
+                                    val.append(FBOHandler._to_literal(field(i)))
+                        else:
+                            # TODO handle empty table
+                            pass
+                    else:
+                        # As other literal field:
+                        val = FBOHandler._to_literal(field())
+                    # Add this field to the object data
+                    data[field_name] = val
+        # Return the whole object data
+        return data
+    
+    def to_json_dict(self):
+        return FBOHandler._to_json_dict(self._root)
+
+def fbo_resolve(fp:str, destdir:str, callback:staticmethod=None, successcallback:staticmethod=None):
+    """Decodes the give Arknights FlatBuffers binary file if it is a Arknights FlatBuffers binary file,
+    otherwise does nothing.
+
+    :param fp: Path to the file;
+    :param destdir: Destination directory;
+    :param callback: Callback `f()`, `None` for ignore;
+    :param successcallback: Callback `f(whether_decoded_this_file:bool)` for every decoded file, `None` for ignore;
+    :rtype: None;
+    """
+    try:
+        typ = ArkFBOLibrary.guess_root_type(fp)
+        if typ and ArkFBOLibrary.is_binary_file(fp):
+            dic = ArkFBOLibrary.decode(fp, typ)
+            byt = bytes(json.dumps(dic, ensure_ascii=False, indent=4), encoding='UTF-8')
+            Logger.debug(f"ResolveFBO: \"{fp}\" decoded, using {typ}")
+            SafeSaver.save_bytes(byt, destdir, os.path.basename(fp), 'json', successcallback)
+    except Exception as arg:
+        Logger.error(f"ResolveFBO: Failed to handle \"{fp}\": Exception{type(arg)} {arg}")
+    if callback:
+        callback()
+
+########## Main-主程序 ##########
+def main(rootdir:str, destdir:str, dodel:bool=False):
+    """Decodes the possible Arknights FlatBuffers binary files in the specified directory
+    then saves the decoded data into another given directory.
+
+    :param rootdir: Source directory;
+    :param destdir: Destination directory;
+    :param dodel: Whether to delete the existed destination directory first, `False` for default;
+    :rtype: None;
+    """
+    print(f'\n正在解析路径...', s=1)
+    Logger.info("ResolveFBO: Retrieving file paths...")
+    rootdir = os.path.normpath(os.path.realpath(rootdir))
+    destdir = os.path.normpath(os.path.realpath(destdir))
+    flist = get_filelist(rootdir)
+
+    if dodel:
+        print("\n正在清理...", s=1)
+        rmdir(destdir)
+    SafeSaver.get_instance().reset_counter()
+    Cprogs = Counter()
+    Cfiles = Counter()
+    TC = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
+    UI = UICtrl(0.5)
+    TR = TimeRecorder(len(flist))
+    callback = lambda: (Cprogs.update(), TR.update())
+    successcallback = lambda x: Cfiles.update(x)
+
+    UI.reset()
+    UI.loop_start()
+    for i in flist:
+        if not os.path.isfile(i):
+            continue
+        TR_p = TR.get_progress()
+        TR_r = TR.get_remaining_time()
+        UI.request([
+            f'正在批量解码FlatBuffers数据...',
+            f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
+            f'当前目录：\t{os.path.basename(os.path.dirname(i))}',
+            f'当前搜索：\t{os.path.basename(i)}',
+            f'累计搜索：\t{Cprogs.now()}',
+            f'累计解码：\t{Cfiles.now()}',
+            f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
+        ])
+        ###
+        subdestdir = os.path.dirname(i).strip(os.path.sep).replace(rootdir, '').strip(os.path.sep)
+        TC.run_subthread(fbo_resolve, (i, os.path.join(destdir, subdestdir)), \
+            {'callback': callback, 'successcallback': successcallback}, name=f"RFThread:{id(i)}")
+
+    spin = LineSpinner()
+    UI.reset()
+    UI.loop_stop()
+    while TC.count_subthread() or not SafeSaver.get_instance().completed():
+        #等待子进程结束
+        while TR.get_progress() < 1:
+            TR_p = TR.get_progress()
+            TR_r = TR.get_remaining_time()
+            UI.request([
+                f'正在批量解码FlatBuffers数据...',
+                f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
+                f'累计搜索：\t{Cprogs.now()}',
+                f'累计解码：\t{Cfiles.now()}',
+                f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
+            ])
+            UI.refresh(post_delay=0.2)
+        UI.request([
+            '正在批量解码FlatBuffers数据...',
+            f'|正在等待子进程结束| {color(2, 0, 1)}{spin.next()}',
+            f'累计搜索：\t{Cprogs.now()}',
+            f'累计解码：\t{Cfiles.now()}',
+            f'剩余时间：\t--',
+        ])
+        UI.refresh(post_delay=0.2)
+
+    UI.reset()
+    print(f'\n批量解码FlatBuffers数据结束!', s=1)
+    print(f'  累计解码 {Cfiles.now()} 个文件')
+    print(f'  此项用时 {round(TR.get_consumed_time())} 秒')
+    time.sleep(2)
+
+####### TestOnly-调试专用 #######
+if __name__ == "__main__":
+    for root, _, files in os.walk('test/upk'):
+        for f in files:
+            try:
+                file_path = os.path.join(root, f)
+                dic = ArkFBOLibrary.decode(file_path)
+                os.makedirs('test/fbo', exist_ok=True)
+                with open(f'test/fbo/{f}.json', 'w', encoding='UTF-8') as g:
+                    g.write(json.dumps(dic, indent=4, ensure_ascii=False))
+                print("Success", f)
+            except AssertionError:
+                pass
+                # print("AssertionError", f)
+            except TypeError:
+                print("TypeError", f)

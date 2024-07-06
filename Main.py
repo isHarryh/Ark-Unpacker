@@ -4,6 +4,7 @@
 import os, time
 from src.utils import *
 from src import ResolveAB       as AU_Rs
+from src import ResolveFBO      as AU_Fb
 from src import CombineRGBwithA as AU_Cb
 from src import CollectModels   as AU_Cm
 from src import ModelsDataDist  as AU_Mdd
@@ -18,8 +19,13 @@ def prt_homepage():
     os.chdir('.')
     print(f"欢迎使用ArkUnpacker {AU_ver}", s=1)
     print("=" * 20)
-    print("模式选择：")
-    print("1: 一键执行\n2: 自定义资源解包\n3: 自定义图片合并\n4: ArkModels提取与分拣工具\n0: 退出", c=6)
+    print("""模式选择：
+1: 一键执行
+2: 自定义资源解包
+3: 自定义图片合并
+4: FlatBuffers数据解码
+5: ArkModels提取与分拣工具
+0: 退出""", c=6)
     print("输入序号后按Enter即可，\n如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker ")
 
 def prt_subtitle(msg:str):
@@ -129,6 +135,36 @@ def run_custom_Cb():
     prt_continue()
     title("ArkUnpacker - Processing")
     AU_Cb.main(rootdir, destdir, dodel)
+
+def run_custom_Fb():
+    Logger.info("CI: Customized flatbuffers decoding mode.")
+    prt_subtitle("FlatBuffers数据解码")
+    ###
+    print("Arknights游戏内部分数据文件采用FlatBuffers格式存储。")
+    print("在资源解包后需要对这些文件进行解码才可得到游戏数据。")
+    print("\n请输入源文件目录的路径")
+    print("若您不清楚哪些文件是FlatBuffers格式，请选择整个解包后的目录。")
+    rootdir = UserInput.request_path()
+    print(" 源文件的目录是：")
+    print(f"  {os.path.abspath(rootdir)}", c=6)
+    ###
+    print("\n请输入导出的目的地")
+    print("  支持相对路径，留空表示自动创建")
+    destdir = input("> ", c=2)
+    if not destdir:
+        destdir = f'Combined_{int(time.time())}'
+    print("您选择的导出目录是：")
+    print(f"  {os.path.abspath(destdir)}", c=6)
+    ###
+    dodel = False
+    if os.path.isdir(destdir):
+        print("\n该导出目录已存在，您要删除它里面的全部文件吗？")
+        print("  请!慎重!选择：[y]删除，[n]保留(默认)", c=3)
+        dodel = UserInput.request_yes_or_no(False)
+    ###
+    prt_continue()
+    title("ArkUnpacker - Processing")
+    AU_Fb.main(rootdir, destdir, dodel)
 
 def run_arkmodels_unpacking(dirs, destdir):
     Logger.info("CI: ArkModels unpack mode.")
@@ -270,6 +306,8 @@ if __name__ == '__main__':
                     run_custom_Cb()
                     prt_continue()
                 elif order == '4':
+                    run_custom_Fb()
+                elif order == '5':
                     run_arkmodels_workflow()
                 elif order == '0':
                     break
