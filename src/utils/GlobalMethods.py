@@ -153,15 +153,6 @@ def get_filelist(path:str, max_depth=0, only_dirs=False):
                 lst.append(i)
     return lst
 
-def get_path_authority(path:str):
-    """Judges the accessibility (if it is executable, writable and readable) of the given path.
-
-    :param path: Path;
-    :returns: `True` for available while `False` for unavailable;
-    :rtype: bool;
-    """
-    return os.path.exists(path) and os.access(path, os.X_OK|os.W_OK|os.R_OK)
-
 _EXT_IMAGE = ('.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tiff')
 
 def is_image_file(path:str):

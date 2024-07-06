@@ -71,7 +71,6 @@ def main(srcdirs:"list[str]", destdirs:"list[str]", dodel:bool=False):
     """
     print("\n正在解析目录...", s=1)
     Logger.info("CollectModels: Reading directories...")
-    ospath = os.path
     if len(srcdirs) != len(destdirs):
         print("参数错误", c=3)
         return
@@ -102,25 +101,25 @@ def main(srcdirs:"list[str]", destdirs:"list[str]", dodel:bool=False):
         print(f'剩余时间：\t{round(TR.get_remaining_time() / 60, 1)}min', y=5)
         ###
         try:
-            dir1_base = ospath.basename(dir1)
-            dir2_base = ospath.basename(dir2)
+            dir1_base = os.path.basename(dir1)
+            dir2_base = os.path.basename(dir2)
             models = get_filelist(dir2, only_dirs=True, max_depth=1)
             if (dir2_base in ['Building']) and 'char_' in dir1_base:
                 for m in models:
-                    newname = get_oper_common_name(ospath.basename(m)+'.')
-                    mvfile(m, ospath.join(dest, newname))
+                    newname = get_oper_common_name(os.path.basename(m)+'.')
+                    mvfile(m, os.path.join(dest, newname))
                     cont_f += 1
             elif 'enemy_' in dir1_base:
                 for m in models:
-                    newname = get_enemy_common_name(ospath.basename(m)+'.')
-                    mvfile(m, ospath.join(dest, newname))
+                    newname = get_enemy_common_name(os.path.basename(m)+'.')
+                    mvfile(m, os.path.join(dest, newname))
                     cont_f += 1
             elif (dir2_base in ['DynIllust']) and 'char_' in dir1_base:
                 for m in models:
-                    m_base = ospath.basename(m)
+                    m_base = os.path.basename(m)
                     if '_start' not in m_base.lower() and 'dyn_illust_' in m_base.lower():
                         newname = get_dyn_illust_common_name(m_base+'.')
-                        mvfile(m, ospath.join(dest, newname))
+                        mvfile(m, os.path.join(dest, newname))
                         cont_f += 1
         except BaseException as arg:
             Logger.error(f'CollectModels: Error occurred while handling "{dir2}": Exception{type(arg)} {arg}')

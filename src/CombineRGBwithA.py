@@ -33,9 +33,9 @@ def alpha_resolve(fp:str):
     :returns: Path to the RGB image, False for failure;
     :rtype: str|bool;
     """
-    ospath = os.path
-    fpdir = ospath.dirname(fp)
-    fpfile = ospath.basename(fp)
+    os.path = os.path
+    fpdir = os.path.dirname(fp)
+    fpfile = os.path.basename(fp)
     fpreal = findall(r'.+\[alpha\]', fpfile)
     if len(fpreal) == 0:
         return False #输入不合法，退出
@@ -48,14 +48,14 @@ def alpha_resolve(fp:str):
     spines = [] #[filepath,confidence]
     for i in flist:
         #(i是初筛后的文件名)
-        iname, iext = ospath.splitext(i)
+        iname, iext = os.path.splitext(i)
         if not iext.lower() == '.png':
             continue #不是png图片文件，跳过
         ireal = findall(r'.+_#', iname)
         ireal = iname if len(ireal) == 0 else ireal[0][:-2]
         if ireal == fpreal:
-            i = ospath.join(fpdir, i) #i变成初筛后的路径名
-            if ospath.isfile(i):
+            i = os.path.join(fpdir, i) #i变成初筛后的路径名
+            if os.path.isfile(i):
                 #找到了一个疑似的图片
                 spines.append([i, similarity(i, fp)])
     if len(spines) == 0:
@@ -108,9 +108,8 @@ def image_resolve(fp:str, destdir:str, callback:staticmethod=None, successcallba
     :returns: Status code;
     :rtype: int;
     """
-    ospath = os.path
-    oridir = ospath.dirname(fp) #原图的目录
-    name, ext = ospath.splitext(ospath.basename(fp)) #纯文件名和纯扩展名
+    oridir = os.path.dirname(fp) #原图的目录
+    name, ext = os.path.splitext(os.path.basename(fp)) #纯文件名和纯扩展名
     if not ext.lower() == '.png':
         if callback: callback()
         return 1 #不是png图片文件，退出
@@ -122,17 +121,17 @@ def image_resolve(fp:str, destdir:str, callback:staticmethod=None, successcallba
             return 2 #匹配不到，退出
         real = findall(r'.+\[alpha\]', name)[0][:-7]
     elif name[-6:] == '_alpha': #xxx_alpha.png形式
-        fp2 = ospath.join(oridir, name[:-6] + ext)
+        fp2 = os.path.join(oridir, name[:-6] + ext)
         real = name[:-6]
     else:
         if callback: callback()
         return 3 #不是指定的A通道图，退出
     ###
-    if not ospath.isfile(fp):
+    if not os.path.isfile(fp):
         Logger.warn(f"CombineRGBwithA: Alpha-image not found: \"{fp}\"")
         if callback: callback()
         return 4 #找不到对应的A通道图，退出
-    if not ospath.isfile(fp2):
+    if not os.path.isfile(fp2):
         Logger.warn(f"CombineRGBwithA: RGB-image not found: \"{fp}\"")
         if callback: callback()
         return 5 #找不到对应的RGB通道图，退出
@@ -182,7 +181,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     for i in flist:
         #递归处理各个文件(i是文件的路径名)
         if not os.path.isfile(i):
-            continue #跳过目录等非文件路径
+            continue
         TR_p = TR.get_progress()
         TR_r = TR.get_remaining_time()
         UI.request([
