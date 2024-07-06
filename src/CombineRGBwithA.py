@@ -110,7 +110,7 @@ def image_resolve(fp:str, destdir:str, callback:staticmethod=None, successcallba
     """
     oridir = os.path.dirname(fp) #原图的目录
     name, ext = os.path.splitext(os.path.basename(fp)) #纯文件名和纯扩展名
-    if not ext.lower() == '.png':
+    if not ext.lower() == '.png' or not os.path.isfile(fp):
         if callback: callback()
         return 1 #不是png图片文件，退出
     ###
@@ -180,8 +180,6 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     UI.loop_start()
     for i in flist:
         #递归处理各个文件(i是文件的路径名)
-        if not os.path.isfile(i):
-            continue
         TR_p = TR.get_progress()
         TR_r = TR.get_remaining_time()
         UI.request([

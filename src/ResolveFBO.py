@@ -148,12 +148,13 @@ def fbo_resolve(fp:str, destdir:str, callback:staticmethod=None, successcallback
     :rtype: None;
     """
     try:
-        typ = ArkFBOLibrary.guess_root_type(fp)
-        if typ and ArkFBOLibrary.is_binary_file(fp):
-            dic = ArkFBOLibrary.decode(fp, typ)
-            byt = bytes(json.dumps(dic, ensure_ascii=False, indent=4), encoding='UTF-8')
-            Logger.debug(f"ResolveFBO: \"{fp}\" decoded, using {typ}")
-            SafeSaver.save_bytes(byt, destdir, os.path.basename(fp), 'json', successcallback)
+        if os.path.isfile(fp):
+            typ = ArkFBOLibrary.guess_root_type(fp)
+            if typ and ArkFBOLibrary.is_binary_file(fp):
+                dic = ArkFBOLibrary.decode(fp, typ)
+                byt = bytes(json.dumps(dic, ensure_ascii=False, indent=4), encoding='UTF-8')
+                Logger.debug(f"ResolveFBO: \"{fp}\" decoded, using {typ}")
+                SafeSaver.save_bytes(byt, destdir, os.path.basename(fp), 'json', successcallback)
     except Exception as arg:
         Logger.error(f"ResolveFBO: Failed to handle \"{fp}\": Exception{type(arg)} {arg}")
     if callback:
@@ -192,8 +193,6 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     UI.reset()
     UI.loop_start()
     for i in flist:
-        if not os.path.isfile(i):
-            continue
         TR_p = TR.get_progress()
         TR_r = TR.get_remaining_time()
         UI.request([

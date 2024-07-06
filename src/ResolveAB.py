@@ -208,6 +208,11 @@ def ab_resolve(abfile:str, destdir:str, \
     :param subcallback: Callback `f(game_object_name, file_path_or_none_for_not_saved)` for every saving trail, `None` for ignore;
     :rtype: None;
     """
+    if not os.path.isfile(abfile):
+        if callback:
+            callback()
+        return
+    ###
     res = Resource(UnityPy.load(abfile))
     Logger.debug(f"ResolveAB: \"{res.name}\" has {res.length} objects.")
     if res.length >= 10000:
@@ -276,8 +281,6 @@ def main(src:str, destdir:str, dodel:bool=False,
     UI.loop_start()
     for i in flist:
         #(i stands for a file's path)
-        if not os.path.isfile(i):
-            continue # Skip non-file
         TR_p = TR.get_progress()
         TR_r = TR.get_remaining_time()
         UI.request([
