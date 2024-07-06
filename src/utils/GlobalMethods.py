@@ -162,6 +162,38 @@ def get_path_authority(path:str):
     """
     return os.path.exists(path) and os.access(path, os.X_OK|os.W_OK|os.R_OK)
 
+_EXT_IMAGE = ('.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tiff')
+
+def is_image_file(path:str):
+    """Returns `True` if the given file is an image judging from its path.
+    
+    :param path: Path;
+    :returns: `True` if the file is an image;
+    :rtype: bool;
+    """
+    return any(path.lower().endswith(ext) for ext in _EXT_IMAGE)
+
+_EXT_KNOWN = ('.atlas', '.skel', '.wav', '.mp3', '.m4a', '.mp4', '.avi', '.mov', '.mkv', '.flv')
+
+def is_known_asset_file(path:str):
+    """Returns `True` if the given file is a known asset type from its path.
+    Images, audios, videos and Spine are all known asset types.
+    
+    :param path: Path;
+    :returns: `True` if the file is a known asset type;
+    :rtype: bool;
+    """
+    return is_image_file(path) or any(path.lower().endswith(ext) for ext in _EXT_KNOWN)
+
+def is_ab_file(path:str):
+    """Returns `True` if the given file is an asset bundle judging from its path.
+
+    :param path: Path;
+    :returns: `True` if the file is an asset bundle;
+    :rtype: bool;
+    """
+    return path.lower().endswith('.ab')
+
 ##### ↓ Stat related ↓ #####
 
 def mean(lst:list):

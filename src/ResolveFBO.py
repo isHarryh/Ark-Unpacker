@@ -174,6 +174,8 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     rootdir = os.path.normpath(os.path.realpath(rootdir))
     destdir = os.path.normpath(os.path.realpath(destdir))
     flist = get_filelist(rootdir)
+    flist = list(filter(lambda x:not is_known_asset_file(x), flist))
+    flist = list(filter(lambda x:not is_ab_file(x), flist))
 
     if dodel:
         print("\n正在清理...", s=1)

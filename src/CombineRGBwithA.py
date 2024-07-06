@@ -163,7 +163,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     destdir = os.path.normpath(os.path.realpath(destdir))
     flist = get_filelist(rootdir)
     flist = list(filter(lambda x:'alpha' in os.path.basename(x), flist))
-    flist = list(filter(lambda x:os.path.splitext(x)[1].lower() in ['.png', '.jpg', '.jpeg', '.bmp'], flist))
+    flist = list(filter(lambda x:is_image_file(x), flist))
 
     if dodel:
         print("\n正在清理...", s=1)

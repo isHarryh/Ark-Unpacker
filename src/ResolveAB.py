@@ -140,7 +140,7 @@ class Resource:
     @staticmethod
     def __rename_add_prefix(obj:GameObject, pre:str):
         """Adds a prefix to rename the Spine-related files."""
-        if len(obj.name) <= len(pre) or obj.name[:len(pre)] != pre:
+        if not obj.name.startswith(pre):
             obj.name = str(pre + obj.name)
 
     class SpineAsset:
@@ -258,7 +258,7 @@ def main(src:str, destdir:str, dodel:bool=False,
     src = os.path.normpath(os.path.realpath(src))
     destdir = os.path.normpath(os.path.realpath(destdir))
     flist = [src] if os.path.isfile(src) else get_filelist(src)
-    flist = list(filter(lambda x:os.path.splitext(x)[1] in ['.ab', '.AB'], flist))
+    flist = list(filter(lambda x:is_ab_file(x), flist))
 
     if dodel:
         print("\n正在清理...", s=1)
