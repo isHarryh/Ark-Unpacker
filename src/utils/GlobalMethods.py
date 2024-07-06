@@ -118,30 +118,43 @@ def get_dir_size(path:str):
             size += os.path.getsize(i)
     return size
 
-def get_filelist(path:str, max_depth=0, only_dirs=False):
-    """Gets a list containing all the sub dirs (and files) in the given dir.
+def get_filelist(path:str, max_depth=0):
+    """Gets a list containing all the files in the given dir and its sub dirs.
     Note that If `max_depth` is specified to unlimited,
     `os.walk` (the most efficient way) will be used in this method instead of `os.listdir`.
 
     :param path: Path to the specified parent dir;
     :param max_depth: Max searching depth, `0` for unlimited;
-    :param only_dirs: Whether to exclude files;
     :returns: A list of paths;
     :rtype: list[str];
     """
     lst = []
     max_depth = int(max_depth)
     if max_depth <= 0:
-        if only_dirs:
-            for root, dirs, files in os.walk(path):
-                for dir in dirs:
-                    lst.append(os.path.join(root, dir))
-        else:
-            for root, dirs, files in os.walk(path):
-                for dir in dirs:
-                    lst.append(os.path.join(root, dir))
-                for file in files:
-                    lst.append(os.path.join(root, file))
+        for root, _, files in os.walk(path):
+            for file in files:
+                lst.append(os.path.join(root, file))
+    else:
+        for i in os.listdir(path):
+            lst.append(os.path.join(path, i))
+    return lst
+
+def get_dirlist(path:str, max_depth=0):
+    """Gets a list containing all the sub dirs in the given dir.
+    Note that If `max_depth` is specified to unlimited,
+    `os.walk` (the most efficient way) will be used in this method instead of `os.listdir`.
+
+    :param path: Path to the specified parent dir;
+    :param max_depth: Max searching depth, `0` for unlimited;
+    :returns: A list of paths;
+    :rtype: list[str];
+    """
+    lst = []
+    max_depth = int(max_depth)
+    if max_depth <= 0:
+        for root, dirs, _ in os.walk(path):
+            for dir in dirs:
+                lst.append(os.path.join(root, dir))
     else:
         for i in os.listdir(path):
             i = os.path.join(path, i)
@@ -149,8 +162,6 @@ def get_filelist(path:str, max_depth=0, only_dirs=False):
                 lst.append(i)
                 if max_depth != 1:
                     lst.extend(get_filelist(i, max_depth - 1))
-            elif not only_dirs:
-                lst.append(i)
     return lst
 
 _EXT_IMAGE = ('.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tiff')

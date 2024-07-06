@@ -78,8 +78,8 @@ def main(srcdirs:"list[str]", destdirs:"list[str]", dodel:bool=False):
     flist = [] #[(subsub-srcdir, sub-srcdir, destdir),...]
     for src, dest in zip(srcdirs, destdirs):
         print("\t正在读取目录 "+src)
-        for dir1 in get_filelist(src, only_dirs=True, max_depth=1):
-            for dir2 in get_filelist(dir1, only_dirs=True, max_depth=1):
+        for dir1 in get_dirlist(src, max_depth=1):
+            for dir2 in get_dirlist(dir1, max_depth=1):
                 flist.append((dir2, dir1, dest))
     
     cont_f = 0 #已分拣模型计数
@@ -103,7 +103,7 @@ def main(srcdirs:"list[str]", destdirs:"list[str]", dodel:bool=False):
         try:
             dir1_base = os.path.basename(dir1)
             dir2_base = os.path.basename(dir2)
-            models = get_filelist(dir2, only_dirs=True, max_depth=1)
+            models = get_dirlist(dir2, max_depth=1)
             if (dir2_base in ['Building']) and 'char_' in dir1_base:
                 for m in models:
                     newname = get_oper_common_name(os.path.basename(m)+'.')

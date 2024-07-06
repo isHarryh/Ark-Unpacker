@@ -204,7 +204,7 @@ def main():
     print("解析动态立绘信息...")
     addition = {}
     if os.path.isdir(models_dir['DynIllust']):
-        for i in get_filelist(models_dir['DynIllust'], max_depth=1, only_dirs=True):
+        for i in get_dirlist(models_dir['DynIllust'], max_depth=1):
             #(i是每个动态立绘的文件夹)
             base = os.path.basename(i)
             if len(base) > 4 and base[:4] == 'dyn_':
