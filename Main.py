@@ -113,9 +113,9 @@ def run_custom_Cb():
     Logger.info("CI: Customized image combine mode.")
     prt_subtitle("自定义合并图片")
     ###
-    print("\n请输入导出目录的路径")
+    print("\n请输入源图片目录的路径")
     rootdir = UserInput.request_path()
-    print("您选择的存放图片的目录是：")
+    print("源图片目录路径：")
     print(f"  {os.path.abspath(rootdir)}", c=6)
     ###
     print("\n请输入导出的目的地")
@@ -191,7 +191,8 @@ def run_arkmodels_filtering(dirs, destdirs):
     for i, j in zip(dirs, destdirs):
         #TODO 检查二者长度相等
         if not os.path.exists(i):
-            input(f"在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是您事先没有进行\"模型提取\"的步骤。按Enter以尝试继续。", c=3)
+            print(f"在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是您事先没有进行\"模型提取\"的步骤。", c=3)
+            UserInput.request("> 输入符号 \"*\" 以取消任务，或直接按Enter以强制继续")
         else:
             dirs_.append(i)
             destdirs_.append(j)
@@ -212,7 +213,8 @@ def run_arkmodels_data_dist():
     ###
     for i in ["models", "models_enemies"]:
         if not os.path.exists(i):
-            print(f"在工作目录下找不到 {i}，请确认您先前已运行了\"文件分拣\"。按Enter以忽略此错误继续。", c=3)
+            print(f"在工作目录下找不到 {i}，请确认您先前已运行了\"文件分拣\"。", c=3)
+            UserInput.request("> 输入符号 \"*\" 以取消任务，或直接按Enter以强制继续")
             return
     AU_Mdd.main()
 
@@ -223,25 +225,34 @@ def run_arkmodels_workflow():
         os.chdir('.')
         print("ArkModels提取与分拣工具", s=1)
         print("="*20)
-        print("ArkModels是作者建立的明日方舟Spine模型仓库（https://github.com/isHarryh/Ark-Models），以下功能专门为ArkModels仓库的更新而设计。")
-        print("运行部分功能之前，需要将括号内所示的资源文件夹放到程序所在目录中。\n执行步骤选择：")
-        print("1: 干员基建模型提取（skinpack，chararts）\n2: 敌方战斗模型提取（battle/prefabs/enemies）\n3: 动态立绘模型提取（arts/dynchars）\n4: 模型分拣\n5: 生成数据集\n0: 返回", c=6)
-        print("输入序号后按Enter即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker ")
+        print("""ArkModels是作者建立的明日方舟Spine模型仓库（https://github.com/isHarryh/Ark-Models），以下功能专门为ArkModels仓库的更新而设计。
+运行部分功能之前，需要确保括号内所示的资源文件夹已位于程序所在目录中。""")
+        print("""功能选择：
+1: 干员基建模型提取（skinpack，chararts）
+2: 敌方战斗模型提取（battle）
+3: 动态立绘模型提取（arts）
+4: 模型分拣
+5: 生成数据集（gamedata）
+0: 返回""", c=6)
+        print("输入序号后按Enter即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker")
+    TEMP_DIR_1 = 'temp/am_upk_operator'
+    TEMP_DIR_2 = 'temp/am_upk_enemy'
+    TEMP_DIR_3 = 'temp/am_upk_dynillust'
     while True:
         title("ArkUnpacker")
         prt_arkmodels_menu()
         order = input("> ", c=2)
         if order == '1':
-            run_arkmodels_unpacking(['chararts', 'skinpack'], 'temp_arkmodels')
+            run_arkmodels_unpacking(['chararts', 'skinpack'], TEMP_DIR_1)
             prt_continue()
         elif order == '2':
-            run_arkmodels_unpacking(['enemies'], 'temp_arkmodels_enemies')
+            run_arkmodels_unpacking(['battle/prefabs/enemies'], TEMP_DIR_2)
             prt_continue()
         elif order == '3':
-            run_arkmodels_unpacking(['dynchars'], 'temp_arkmodels_dynchars')
+            run_arkmodels_unpacking(['arts/dynchars'], TEMP_DIR_3)
             prt_continue()
         elif order == '4':
-            run_arkmodels_filtering(['temp_arkmodels', 'temp_arkmodels_enemies', 'temp_arkmodels_dynchars'], ['models', 'models_enemies', 'models_illust'])
+            run_arkmodels_filtering([TEMP_DIR_1, TEMP_DIR_2, TEMP_DIR_3], ['models', 'models_enemies', 'models_illust'])
             prt_continue()
         elif order == '5':
             run_arkmodels_data_dist()
