@@ -16,9 +16,9 @@ class PerformanceLevel():
     __CPU = max(1, os.cpu_count() if os.cpu_count != None else 1)
     __MAP = {
         MINIMAL: 1,
-        LOW: __CPU,
-        STANDARD: __CPU * 2,
-        HIGH: __CPU * 4
+        LOW: max(2, __CPU // 2),
+        STANDARD: max(4, __CPU),
+        HIGH: max(8, __CPU * 2)
     }
 
     @staticmethod
