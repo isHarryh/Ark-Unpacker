@@ -35,11 +35,7 @@ class Config():
     __default_config = {
         'log_file': "ArkUnpackerLogs.log",
         'log_level': Logger.LV_INFO,
-        'performance_level': PerformanceLevel.STANDARD,
-        'ark_models_constants': {
-            'src_prefix': "https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/master",
-            'src_server': "zh_CN",
-        }
+        'performance_level': PerformanceLevel.STANDARD
     }
     
     def __init__(self):
