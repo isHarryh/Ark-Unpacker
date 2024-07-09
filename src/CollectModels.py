@@ -16,8 +16,8 @@ def get_oper_common_name(str):
         if len(rst): #char_000_xxx(_xx).
             rst = re.findall(r'_.+\.', rst[0]) 
             if len(rst): #_000_xxx(_xx).
-                if len(re.findall(r'_.+_#', rst[0])):
-                    rst = re.findall(r'_.+_#', rst[0][1:])
+                if len(re.findall(r'_.+$', rst[0])):
+                    rst = re.findall(r'_.+$', rst[0][1:])
                     if len(rst):
                         return rst[0][1:-2]
                 elif len(re.findall(r'_.+\.', rst[0])):
@@ -39,8 +39,8 @@ def get_enemy_common_name(str):
         if len(rst): #enemy_000_xxx(_xx).
             rst = re.findall(r'_.+\.', rst[0]) 
             if len(rst): #_000_xxx(_xx).
-                if len(re.findall(r'_.+_#', rst[0])):
-                    rst = re.findall(r'_.+_#', rst[0][1:])
+                if len(re.findall(r'_.+$', rst[0])):
+                    rst = re.findall(r'_.+$', rst[0][1:])
                     if len(rst):
                         return rst[0][1:-2]
                 elif len(re.findall(r'_.+\.', rst[0])):

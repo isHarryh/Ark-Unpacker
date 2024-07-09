@@ -51,7 +51,7 @@ def alpha_resolve(fp:str):
         iname, iext = os.path.splitext(i)
         if not iext.lower() == '.png':
             continue #不是png图片文件，跳过
-        ireal = findall(r'.+_#', iname)
+        ireal = findall(r'.+$', iname)
         ireal = iname if len(ireal) == 0 else ireal[0][:-2]
         if ireal == fpreal:
             i = os.path.join(fpdir, i) #i变成初筛后的路径名
