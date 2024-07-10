@@ -296,16 +296,3 @@ class TimeRecorder():
             s += k * len(v)
         return s
     #EndClass
-
-class LineSpinner():
-    """Line Spinner for loading operations."""
-
-    char = ('/', '-', '\\', '|')
-
-    def __init__(self):
-        self.__n = 0
-
-    def next(self):
-        self.__n = 0 if self.__n >= len(self.char)-1 else self.__n+1
-        return self.char[self.__n]
-    #EndClass

@@ -302,28 +302,17 @@ def main(src:str, destdir:str, dodel:bool=False,
         TC.run_subthread(ab_resolve, (i, curdestdir, doimg, dotxt, doaud, dospine, on_processed, on_file_queued, on_file_saved), \
             name=f"RsThread:{id(i)}")
 
-    spin = LineSpinner()
     UI.reset()
     UI.loop_stop()
-    while TC.count_subthread() or not SafeSaver.get_instance().completed():
-        # Waiting for sub threads to terminate
-        while TR.get_progress() < 1:
-            TR_p = TR.get_progress()
-            TR_r = TR.get_remaining_time()
-            UI.request([
-                f'正在批量解包...',
-                f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
-                f'累计解包：\t{TR.get_done_of(10)}',
-                f'累计导出：\t{TR.get_done_of(1)}',
-                f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
-            ])
-            UI.refresh(post_delay=0.2)
+    while TC.count_subthread() or not SafeSaver.get_instance().completed() or TR.get_progress() < 1:
+        TR_p = TR.get_progress()
+        TR_r = TR.get_remaining_time()
         UI.request([
             f'正在批量解包...',
-            f'|正在等待子进程结束| {color(2, 0, 1)}{spin.next()}',
+            f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
             f'累计解包：\t{TR.get_done_of(10)}',
             f'累计导出：\t{TR.get_done_of(1)}',
-            f'剩余时间：\t--',
+            f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
         ])
         UI.refresh(post_delay=0.2)
 
