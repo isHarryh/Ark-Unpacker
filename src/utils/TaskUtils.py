@@ -2,6 +2,7 @@
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
 import time, queue
+import threading
 from threading import Thread
 from .GlobalMethods import *
 
@@ -207,21 +208,33 @@ class Counter():
 class TimeRecorder():
     """Tasking Time Recorder."""
 
-    def __init__(self, dest:int):
+    def __init__(self):
         """Initializes a Tasking Time Recorder.
-
-        :param dest: The destination value of the task;
         """
         self.t_init = time.time()
-        self.t_rec = [[self.t_init, 0]] #[curTime,Time(Seconds)OfEach]
-        self.n_dest = dest
-        self.n_cur = 0
+        self.done = {}
+        self.dest = {}
+        self._LOCK = threading.Lock()
 
-    def update(self):
+    def update_dest(self, weight:int, count:int=1):
+        if weight <= 0:
+            raise ValueError("Arg weight should be positive")
+        with self._LOCK:
+            self.dest[weight] = self.dest.get(weight, 0) + count
+
+    def done_once(self, weight:int):
         """Updates the current value of the task."""
-        self.n_cur += 1
-        t_cur = time.time()
-        self.t_rec.append([t_cur, t_cur-self.t_rec[len(self.t_rec)-1][0]])
+        with self._LOCK:
+            if weight in self.done.keys():
+                self.done[weight].append(time.time())
+            else:
+                self.done[weight] = [time.time()]
+    
+    def get_dest_of(self, weight:int):
+        return len(self.dest[weight]) if weight in self.dest.keys() else 0
+    
+    def get_done_of(self, weight:int):
+        return len(self.done[weight]) if weight in self.done.keys() else 0
     
     def get_progress(self):
         """Gets the current progress.
@@ -229,23 +242,29 @@ class TimeRecorder():
         :returns: The progress in `[0.0, 1.0]`;
         :rtype: float;
         """
-        return self.n_cur / self.n_dest
+        return self._get_total_done_weight() / self._get_total_dest_weight()
     
     def get_speed(self, basis:int=100):
         """Gets the processing speed.
 
-        :param basis: How many records do we use to calculate the speed;
-        :returns: Items per second;
+        :param basis: The max records used to calculate the speed;
+        :returns: Weight per second;
         :rtype: float;
         """
-        sum = []
-        for i in range(len(self.t_rec)-1, -1, -1):
-            if i+basis < self.n_cur:
-                break
-            if self.t_rec[i][1]:
-                sum.append(self.t_rec[i][1])
-        rst = trimmean(sum, 0.05)
-        return 1 / rst if rst != 0 else 0
+        items = []
+        for k, v in self.done.items():
+            length = min(len(v), basis)
+            if length <= 2:
+                continue
+            for i in range(length):
+                items.append((k, v[-i - 1]))
+        length = min(len(items), basis)
+        if length <= 2:
+            return 0
+        items.sort(key=lambda x:x[1])
+        sum_weight = sum([x[0] for x in items[:length]])
+        delta_time = items[-1][1] - items[-len(items)][1]
+        return sum_weight / delta_time if delta_time != 0 else 0
     
     def get_remaining_time(self, basis:int=100):
         """Gets the time remaining.
@@ -254,7 +273,8 @@ class TimeRecorder():
         :returns: Time in seconds;
         :rtype: float;
         """
-        return (self.n_dest-self.n_cur) / self.get_speed(basis) if self.get_speed(basis) != 0 else 0
+        return (self._get_total_dest_weight() - self._get_total_done_weight()) / self.get_speed(basis) \
+            if self.get_speed(basis) != 0 else 0
     
     def get_consumed_time(self):
         """Gets the used time from the first record to now.
@@ -262,7 +282,19 @@ class TimeRecorder():
         :returns: Time in seconds;
         :rtype: float;
         """
-        return time.time() - self.t_rec[0][0]
+        return time.time() - self.t_init
+    
+    def _get_total_dest_weight(self):
+        s = 0
+        for k, v in self.dest.items():
+            s += k * v
+        return s
+    
+    def _get_total_done_weight(self):
+        s = 0
+        for k, v in self.done.items():
+            s += k * len(v)
+        return s
     #EndClass
 
 class LineSpinner():

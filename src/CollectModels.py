@@ -89,7 +89,8 @@ def main(srcdirs:"list[str]", destdirs:"list[str]", dodel:bool=False):
         for i in destdirs:
             print("\t正在清理目录 "+i)
             rmdir(i) #慎用，会预先删除目的地目录的所有内容
-    TR = TimeRecorder(len(flist))
+    TR = TimeRecorder()
+    TR.update_dest(1, len(flist))
 
     clear()
     for dir2, dir1, dest in flist:
@@ -123,7 +124,7 @@ def main(srcdirs:"list[str]", destdirs:"list[str]", dodel:bool=False):
                         cont_f += 1
         except BaseException as arg:
             Logger.error(f'CollectModels: Error occurred while handling "{dir2}": Exception{type(arg)} {arg}')
-        TR.update()
+        TR.done_once(1)
         cont_p = TR.get_progress()
 
     clear()

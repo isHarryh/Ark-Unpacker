@@ -172,7 +172,7 @@ class Resource:
                 return os.path.splitext(os.path.basename(self.atlas.name))[0]
             return "Unknown"
         
-        def save_spine(self, destdir:str, callback:staticmethod=None):
+        def save_spine(self, destdir:str, on_queued:staticmethod, on_saved:staticmethod):
             if self.is_available():
                 for i in self.tex_list:
                     if i[0]:
@@ -182,20 +182,20 @@ class Resource:
                         else:
                             Logger.info(f"ResolveAB: Spine asset \"{i[0].name}\" found with no Alpha texture.")
                             rgba = rgb
-                        if SafeSaver.save_image(rgba, destdir, i[0].name, callback=lambda x: callback(i.name, x)):
+                        if SafeSaver.save_image(rgba, destdir, i[0].name, on_queued=on_queued, on_saved=on_saved):
                             Logger.debug(f"ResolveAB: Spine asset \"{i[0].name}\" found.")
                     else:
                         Logger.warn(f"ResolveAB: Spine asset RGB texture missing.")
                 for i in (self.atlas, self.skel):
-                    SafeSaver.save_object(i, destdir, i.name, callback=lambda x: callback(i.name, x))
+                    SafeSaver.save_object(i, destdir, i.name, on_queued, on_saved)
                     Logger.debug(f"ResolveAB: Spine asset \"{i.name}\" found.")
         #EndClass
     #EndClass
 
 
 def ab_resolve(abfile:str, destdir:str, \
-    doimg:bool, dotxt:bool, doaud:bool, dospine:bool, \
-    callback:staticmethod, subcallback:staticmethod):
+               doimg:bool, dotxt:bool, doaud:bool, dospine:bool, \
+               on_processed:staticmethod=None, on_file_queued:staticmethod=None, on_file_saved:staticmethod=None):
     """Extracts an AB file.
 
     :param abfile: Path to the AB file;
@@ -204,13 +204,14 @@ def ab_resolve(abfile:str, destdir:str, \
     :param dotxt: Whether to extract text scripts;
     :param doaud: Whether to extract audios;
     :param dospine: Whether to extract Spine assets, note that the Spine assets may have some identical file with the images/scripts;
-    :param callback: Callback `f()` for finished, `None` for ignore;
-    :param subcallback: Callback `f(game_object_name, file_path_or_none_for_not_saved)` for every saving trail, `None` for ignore;
+    :param on_processed: Callback `f()` for finished, `None` for ignore;
+    :param on_file_queued: Callback `f()` invoked when a file was queued, `None` for ignore;
+    :param on_file_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
     :rtype: None;
     """
     if not os.path.isfile(abfile):
-        if callback:
-            callback()
+        if on_processed:
+            on_processed()
         return
     ###
     res = Resource(UnityPy.load(abfile))
@@ -227,20 +228,20 @@ def ab_resolve(abfile:str, destdir:str, \
         ###
         if dospine:
             for i in res.spines:
-                i.save_spine(destdir, subcallback)
+                i.save_spine(destdir, on_file_queued, on_file_saved)
         if doimg:
-            SafeSaver.save_objects(res.sprites, destdir, subcallback)
-            SafeSaver.save_objects(res.texture2ds, destdir, subcallback)
+            SafeSaver.save_objects(res.sprites, destdir, on_file_queued, on_file_saved)
+            SafeSaver.save_objects(res.texture2ds, destdir, on_file_queued, on_file_saved)
         if dotxt:
-            SafeSaver.save_objects(res.textassets, destdir, subcallback)
+            SafeSaver.save_objects(res.textassets, destdir, on_file_queued, on_file_saved)
         if doaud:
-            SafeSaver.save_objects(res.audioclips, destdir, subcallback)
+            SafeSaver.save_objects(res.audioclips, destdir, on_file_queued, on_file_saved)
     except BaseException as arg:
         # Error feedback
         Logger.error(f"ResolveAB: Error occurred while unpacking file \"{res.name}\": Exception{type(arg)} {arg}")
         # raise(arg)
-    if callback:
-        callback()
+    if on_processed:
+        on_processed()
 
 
 ########## Main-主程序 ##########
@@ -269,13 +270,14 @@ def main(src:str, destdir:str, dodel:bool=False,
         print("\n正在清理...", s=1)
         rmdir(destdir) # Danger zone
     SafeSaver.get_instance().reset_counter()
-    Cprogs = Counter()
-    Cfiles = Counter()
     TC = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
     UI = UICtrl(0.5)
-    TR = TimeRecorder(len(flist))
-    callback = lambda: (Cprogs.update(), TR.update())
-    subcallback = lambda x, y: (Cfiles.update(y), Logger.debug(f"ResolveAB: \"{x}\" -> \"{y}\""))
+    TR = TimeRecorder()
+    TR.update_dest(10, len(flist))
+    on_processed = lambda: TR.done_once(10)
+    on_file_queued = lambda: TR.update_dest(1)
+    on_file_saved = lambda x: (TR.done_once(1) if x else TR.update_dest(1, -1), \
+                               Logger.debug(f"ResolveAB: Saved \"{x}\"") if x else None)
 
     UI.reset()
     UI.loop_start()
@@ -288,8 +290,8 @@ def main(src:str, destdir:str, dodel:bool=False,
             f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
             f'当前目录：\t{os.path.basename(os.path.dirname(i))}',
             f'当前文件：\t{os.path.basename(i)}',
-            f'累计解包：\t{Cprogs.now()}',
-            f'累计导出：\t{Cfiles.now()}',
+            f'累计解包：\t{TR.get_done_of(10)}',
+            f'累计导出：\t{TR.get_done_of(1)}',
             f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
         ])
         ###
@@ -297,7 +299,7 @@ def main(src:str, destdir:str, dodel:bool=False,
         curdestdir = destdir if os.path.samefile(i, src) else \
             os.path.join(destdir, subdestdir, os.path.splitext(os.path.basename(i))[0]) if separate else \
             os.path.join(destdir, subdestdir)
-        TC.run_subthread(ab_resolve, (i, curdestdir, doimg, dotxt, doaud, dospine, callback, subcallback), \
+        TC.run_subthread(ab_resolve, (i, curdestdir, doimg, dotxt, doaud, dospine, on_processed, on_file_queued, on_file_saved), \
             name=f"RsThread:{id(i)}")
 
     spin = LineSpinner()
@@ -311,23 +313,23 @@ def main(src:str, destdir:str, dodel:bool=False,
             UI.request([
                 f'正在批量解包...',
                 f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
-                f'累计解包：\t{Cprogs.now()}',
-                f'累计导出：\t{Cfiles.now()}',
+                f'累计解包：\t{TR.get_done_of(10)}',
+                f'累计导出：\t{TR.get_done_of(1)}',
                 f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
             ])
             UI.refresh(post_delay=0.2)
         UI.request([
             f'正在批量解包...',
             f'|正在等待子进程结束| {color(2, 0, 1)}{spin.next()}',
-            f'累计解包：\t{Cprogs.now()}',
-            f'累计导出：\t{Cfiles.now()}',
+            f'累计解包：\t{TR.get_done_of(10)}',
+            f'累计导出：\t{TR.get_done_of(1)}',
             f'剩余时间：\t--',
         ])
         UI.refresh(post_delay=0.2)
 
     UI.reset()
     print(f'\n批量解包结束!', s=1)
-    print(f'  累计解包 {Cprogs.now()} 个文件')
-    print(f'  累计导出 {Cfiles.now()} 个文件')
+    print(f'  累计解包 {TR.get_done_of(10)} 个文件')
+    print(f'  累计导出 {TR.get_done_of(1)} 个文件')
     print(f'  此项用时 {round(TR.get_consumed_time())} 秒')
     time.sleep(2)

@@ -137,14 +137,15 @@ class FBOHandler:
     def to_json_dict(self):
         return FBOHandler._to_json_dict(self._root)
 
-def fbo_resolve(fp:str, destdir:str, callback:staticmethod=None, successcallback:staticmethod=None):
+def fbo_resolve(fp:str, destdir:str, on_processed:staticmethod, on_file_queued:staticmethod, on_file_saved:staticmethod):
     """Decodes the give Arknights FlatBuffers binary file if it is a Arknights FlatBuffers binary file,
     otherwise does nothing.
 
     :param fp: Path to the file;
     :param destdir: Destination directory;
-    :param callback: Callback `f()`, `None` for ignore;
-    :param successcallback: Callback `f(whether_decoded_this_file:bool)` for every decoded file, `None` for ignore;
+    :param on_processed: Callback `f()` for finished, `None` for ignore;
+    :param on_file_queued: Callback `f()` invoked when a file was queued, `None` for ignore;
+    :param on_file_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
     :rtype: None;
     """
     try:
@@ -154,11 +155,11 @@ def fbo_resolve(fp:str, destdir:str, callback:staticmethod=None, successcallback
                 dic = ArkFBOLibrary.decode(fp, typ)
                 byt = bytes(json.dumps(dic, ensure_ascii=False, indent=4), encoding='UTF-8')
                 Logger.debug(f"ResolveFBO: \"{fp}\" decoded, using {typ}")
-                SafeSaver.save_bytes(byt, destdir, os.path.basename(fp), 'json', successcallback)
+                SafeSaver.save_bytes(byt, destdir, os.path.basename(fp), 'json', on_file_queued, on_file_saved)
     except Exception as arg:
         Logger.error(f"ResolveFBO: Failed to handle \"{fp}\": Exception{type(arg)} {arg}")
-    if callback:
-        callback()
+    if on_processed:
+        on_processed()
 
 ########## Main-主程序 ##########
 def main(rootdir:str, destdir:str, dodel:bool=False):
@@ -182,13 +183,13 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
         print("\n正在清理...", s=1)
         rmdir(destdir)
     SafeSaver.get_instance().reset_counter()
-    Cprogs = Counter()
-    Cfiles = Counter()
     TC = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
     UI = UICtrl(0.5)
-    TR = TimeRecorder(len(flist))
-    callback = lambda: (Cprogs.update(), TR.update())
-    successcallback = lambda x: Cfiles.update(x)
+    TR = TimeRecorder()
+    TR.update_dest(2, len(flist))
+    on_processed = lambda: TR.done_once(2)
+    on_file_queued = lambda: TR.update_dest(1)
+    on_file_saved = lambda x: TR.done_once(1) if x else TR.update_dest(1, -1)
 
     UI.reset()
     UI.loop_start()
@@ -200,14 +201,14 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
             f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
             f'当前目录：\t{os.path.basename(os.path.dirname(i))}',
             f'当前搜索：\t{os.path.basename(i)}',
-            f'累计搜索：\t{Cprogs.now()}',
-            f'累计解码：\t{Cfiles.now()}',
+            f'累计搜索：\t{TR.get_done_of(2)}',
+            f'累计解码：\t{TR.get_done_of(1)}',
             f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
         ])
         ###
         subdestdir = os.path.dirname(i).strip(os.path.sep).replace(rootdir, '').strip(os.path.sep)
-        TC.run_subthread(fbo_resolve, (i, os.path.join(destdir, subdestdir)), \
-            {'callback': callback, 'successcallback': successcallback}, name=f"RFThread:{id(i)}")
+        TC.run_subthread(fbo_resolve, (i, os.path.join(destdir, subdestdir), on_processed, on_file_queued, on_file_saved), \
+            name=f"RFThread:{id(i)}")
 
     spin = LineSpinner()
     UI.reset()
@@ -220,23 +221,23 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
             UI.request([
                 f'正在批量解码FlatBuffers数据...',
                 f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
-                f'累计搜索：\t{Cprogs.now()}',
-                f'累计解码：\t{Cfiles.now()}',
+                f'累计搜索：\t{TR.get_done_of(2)}',
+                f'累计解码：\t{TR.get_done_of(1)}',
                 f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
             ])
             UI.refresh(post_delay=0.2)
         UI.request([
             '正在批量解码FlatBuffers数据...',
             f'|正在等待子进程结束| {color(2, 0, 1)}{spin.next()}',
-            f'累计搜索：\t{Cprogs.now()}',
-            f'累计解码：\t{Cfiles.now()}',
+            f'累计搜索：\t{TR.get_done_of(2)}',
+            f'累计解码：\t{TR.get_done_of(1)}',
             f'剩余时间：\t--',
         ])
         UI.refresh(post_delay=0.2)
 
     UI.reset()
     print(f'\n批量解码FlatBuffers数据结束!', s=1)
-    print(f'  累计解码 {Cfiles.now()} 个文件')
+    print(f'  累计解码 {TR.get_done_of(2)} 个文件')
     print(f'  此项用时 {round(TR.get_consumed_time())} 秒')
     time.sleep(2)
 

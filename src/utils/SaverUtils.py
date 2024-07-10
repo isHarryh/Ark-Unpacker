@@ -2,6 +2,7 @@
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
 import os
+import re
 import threading
 from io import BytesIO
 from PIL import Image
@@ -33,41 +34,46 @@ class SafeSaver(WorkerCtrl):
         return SafeSaver.__instance
 
     @staticmethod
-    def save_bytes(data:bytes, destdir:str, name:str, ext:str, callback:staticmethod=None):
+    def save_bytes(data:bytes, destdir:str, name:str, ext:str, on_queued:staticmethod=None, on_saved:staticmethod=None):
         """Saves a binary data to a file.
 
         :param data: Bytes data;
         :param destdir: Destination directory;
         :param name: File name (without the extension);
         :param ext: File extension;
-        :param callback: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
+        :param on_queued: Callback `f()` invoked when the file was queued, `None` for ignore;
+        :param on_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
         :rtype: None;
         """
-        SafeSaver.get_instance().submit((data, destdir, name, ext, callback))
+        if on_queued:
+            on_queued()
+        SafeSaver.get_instance().submit((data, destdir, name, ext, on_saved))
     
     @staticmethod
-    def save_image(img:Image.Image, destdir:str, name:str, ext:str=__ext_image, callback:staticmethod=None):
+    def save_image(img:Image.Image, destdir:str, name:str, ext:str=__ext_image, on_queued:staticmethod=None, on_saved:staticmethod=None):
         """Saves an image to a file.
 
         :param img: Image instance;
         :param destdir: Destination directory;
         :param name: File name (without the extension);
         :param ext: File extension, `png` for default;
-        :param callback: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
+        :param on_queued: Callback `f()` invoked when the file was queued, `None` for ignore;
+        :param on_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
         :rtype: None;
         """
         bio = BytesIO()
         img.save(bio, format=ext)
-        SafeSaver.save_bytes(bio.getvalue(), destdir, name, ext, callback)
+        SafeSaver.save_bytes(bio.getvalue(), destdir, name, ext, on_queued, on_saved)
     
     @staticmethod
-    def save_object(obj:GameObject, destdir:str, name:str, callback:staticmethod=None):
+    def save_object(obj:GameObject, destdir:str, name:str, on_queued:staticmethod=None, on_saved:staticmethod=None):
         """Saves the given Unity GameObject as a file. If a GameObject is not exportable, it does nothing.
 
         :param obj: The GameObject to save as file;
         :param destdir: Destination directory;
         :param name: File name (without the extension);
-        :param callback: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
+        :param on_queued: Callback `f()` invoked when the file was queued, `None` for ignore;
+        :param on_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
         :rtype: None;
         """
         if obj.byte_size == 0:
@@ -76,7 +82,7 @@ class SafeSaver(WorkerCtrl):
         elif isinstance(obj, (Sprite, Texture2D)):
             # As image file:
             if obj.image.width > 0 and obj.image.height > 0:
-                SafeSaver.save_image(obj.image, destdir, name, SafeSaver.__ext_image, callback)
+                SafeSaver.save_image(obj.image, destdir, name, SafeSaver.__ext_image, on_queued, on_saved)
                 return
         elif isinstance(obj, AudioClip):
             # As audio file:
@@ -84,47 +90,47 @@ class SafeSaver(WorkerCtrl):
                 byte = bytes()
                 for _, d in obj.samples.items():
                     byte += d
-                SafeSaver.save_bytes(byte, destdir, name, SafeSaver.__ext_audio, callback)
+                SafeSaver.save_bytes(byte, destdir, name, SafeSaver.__ext_audio, on_queued, on_saved)
                 return
         elif isinstance(obj, TextAsset):
             # As raw file:
             byte = bytes(obj.script)
-            SafeSaver.save_bytes(byte, destdir, name, SafeSaver.__ext_raw, callback)
+            SafeSaver.save_bytes(byte, destdir, name, SafeSaver.__ext_raw, on_queued, on_saved)
             return
         else:
             # Not an exportable type:
             pass
-        if callback:
-            callback(None)
     
     @staticmethod
-    def save_objects(lst:"list[GameObject]", destdir:str, callback:staticmethod):
+    def save_objects(lst:"list[GameObject]", destdir:str, on_queued:staticmethod=None, on_saved:staticmethod=None):
         """Saves all the Unity GameObjects in the given list as files. If a GameObject is not exportable, it does nothing.
 
         :param lst: The GameObjects list;
         :param destdir: Destination directory;
-        :param callback: Callback `f(game_object_name, file_path_or_none_for_not_saved)` for every saving trail, `None` for ignore;
+        :param on_queued: Callback `f()` invoked when the file was queued, `None` for ignore;
+        :param on_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
         :rtype: None;
         """
-        if callback:
-            for i in lst:
-                SafeSaver.save_object(i, destdir, i.name, lambda x: callback(i.name, x))
-        else:
-            for i in lst:
-                SafeSaver.save_object(i, destdir, i.name)
+        for i in lst:
+            SafeSaver.save_object(i, destdir, i.name, on_queued, on_saved)
     
     @staticmethod
-    def _save(data:bytes, destdir:str, name:str, ext:str, callback:staticmethod):
+    def _save(data:bytes, destdir:str, name:str, ext:str, on_saved:staticmethod):
         try:
             dest = os.path.join(destdir, name)
             name = os.path.basename(dest)
             destdir = os.path.dirname(dest)
+            # Preoccupy the file to prevent overwriting
             with SafeSaver._LOCK:
                 dest = SafeSaver._no_namesake(destdir, name, ext)
                 SafeSaver._preoccupy(dest)
-            SafeSaver._save_bytes(data, dest)
-            if callback:
-                callback(dest)
+            # Ensure this file is unique to prevent duplication
+            if SafeSaver._is_unique(data, dest):
+                SafeSaver._save_bytes(data, dest)
+            else:
+                os.unlink(dest)
+            if on_saved:
+                on_saved(dest)
         except Exception as arg:
             Logger.error(f"Saver: Failed to save file {dest} because: Exception{type(arg)} {arg}")
 
@@ -147,4 +153,20 @@ class SafeSaver(WorkerCtrl):
         mkdir(os.path.dirname(dest))
         with open(dest, 'wb') as f:
             f.write(b'0')
+
+    @staticmethod
+    def _is_unique(data:bytes, dest:str):
+        destdir = os.path.dirname(dest)
+        name, ext = os.path.splitext(os.path.basename(dest))
+        name = name[:name.rindex('$')] if '$' in name else name
+        flist = os.listdir(destdir)
+        flist = filter(lambda x:x.startswith(name) and x.endswith(ext), flist)
+        for i in flist:
+            if i == dest:
+                continue
+            with open(os.path.join(destdir, i), 'rb') as f:
+                if f.read() == data:
+                    Logger.debug(f"Saver: File \"{i}\" duplication was prevented, size {len(data)}")
+                    return False
+        return True
     #EndClass
