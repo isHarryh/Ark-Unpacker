@@ -4,7 +4,7 @@
 import os.path, time
 import UnityPy
 from .utils import *
-from .CombineRGBwithA import combine_rgb_a
+from .CombineRGBwithA import *
 from UnityPy.classes import *
 
 
@@ -178,7 +178,7 @@ class Resource:
                     if i[0]:
                         rgb = i[0].image
                         if i[1]:
-                            rgba = combine_rgb_a(rgb, i[1].image)
+                            rgba = AlphaRGBCombiner(i[1].image).combine_with(rgb)
                         else:
                             Logger.info(f"ResolveAB: Spine asset \"{i[0].name}\" found with no Alpha texture.")
                             rgba = rgb
