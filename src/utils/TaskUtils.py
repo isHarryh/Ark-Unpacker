@@ -5,6 +5,7 @@ import time, queue
 import threading
 from threading import Thread
 from .GlobalMethods import *
+from .Logger import *
 
 
 class ThreadCtrl():
@@ -35,6 +36,8 @@ class ThreadCtrl():
 
 class WorkerCtrl():
     """Controller for Permanent Worker Threads."""
+    LAYOFF_INTERVAL = 5
+    BACKUP_THRESHOLD = 5
 
     def __init__(self, handler:staticmethod, max_workers:int=1, name:str=""):
         """Initializes a Worker Controller.
@@ -49,12 +52,13 @@ class WorkerCtrl():
         self.__handler = handler
         self.__opened = True
         self.__workers = []
+        self.__idle_timestamp = time.time()
+        self.__max_workers = max_workers
+        self._name = name
         self._total_requested = Counter()
         self._total_processed = Counter()
-        for i in range(max_workers):
-            t = Thread(target=self._loop, name=f"Worker:{name}#{i}")
-            self.__workers.append(t)
-            t.start()
+        self._backup_worker()
+        Logger.debug(f"Worker: Workers are ready to work for {name}!")
 
     def submit(self, data:tuple):
         """Submits new data to workers.
@@ -87,12 +91,24 @@ class WorkerCtrl():
         return self._total_requested.now() == self._total_processed.now()
     
     def get_total_requested(self):
+        """Gets the total number of requested tasks.
+        
+        :rtype: int;
+        """
         return self._total_requested.now()
     
     def get_total_processed(self):
+        """Gets the total number of processed tasks.
+        
+        :rtype: int;
+        """
         return self._total_processed.now()
 
     def reset_counter(self):
+        """Resets the counter of requested tasks and processed tasks.
+        
+        :rtype: None;
+        """
         if self.completed():
             self._total_requested = Counter()
             self._total_processed = Counter()
@@ -101,12 +117,43 @@ class WorkerCtrl():
 
     def _loop(self):
         while self.__opened or not self.__queue.empty():
-            args = self.__queue.get()
+            # Intelligent scheduling
+            if self.__queue.empty():
+                if self.__idle_timestamp <= 0:
+                    self.__idle_timestamp = time.time()
+                elif self.__idle_timestamp + WorkerCtrl.LAYOFF_INTERVAL < time.time():
+                    cur_worker = threading.current_thread()
+                    if cur_worker in self.__workers and self.__workers.index(cur_worker) != 0:
+                        self._layoff_worker(cur_worker)
+                        break
+            else:
+                self.__idle_timestamp = 0
+                if self.__queue.qsize() > WorkerCtrl.BACKUP_THRESHOLD:
+                    self._backup_worker()
+            # Task receiving
             try:
-                self.__handler(*args)
-            finally:
-                self.__queue.task_done()
-                self._total_processed.update()
+                args = self.__queue.get(timeout=WorkerCtrl.LAYOFF_INTERVAL)
+                try:
+                    self.__handler(*args)
+                finally:
+                    self.__queue.task_done()
+                    self._total_processed.update()
+            except queue.Empty:
+                pass
+    
+    def _backup_worker(self):
+        if len(self.__workers) < self.__max_workers:
+            t = Thread(target=self._loop, name=f"Worker:{self._name}", daemon=True)
+            self.__workers.append(t)
+            t.start()
+            if len(self.__workers) >= self.__max_workers:
+                Logger.debug(f"Worker: Workers are in full load, slogging guts out!")
+
+    def _layoff_worker(self, worker:Thread):
+        if worker in self.__workers:
+            self.__workers.remove(worker)
+            if len(self.__workers) <= 1:
+                Logger.debug(f"Worker: Workers nodded off, sleeping for new tasks!")
 
 class UICtrl():
     """UI Controller in the separated thread."""
@@ -130,7 +177,7 @@ class UICtrl():
         """Starts auto-refresh."""
         self.__status = True
         self.__cache_lines = []
-        Thread(target=self.__loop, daemon=False, name=UICtrl.THREAD_NAME).start()
+        Thread(target=self.__loop, daemon=True, name=UICtrl.THREAD_NAME).start()
 
     def loop_stop(self):
         """Stops auto-refresh."""

@@ -303,7 +303,7 @@ class UserInput:
 if __name__ == '__main__':
     Logger.set_instance(Config.get('log_file'), Config.get('log_level'))
     try:
-        Logger.info("Initialized")
+        Logger.info("CI: Initialized")
         while True:
             try:
                 title("ArkUnpacker")
@@ -325,9 +325,10 @@ if __name__ == '__main__':
                 elif order == '0':
                     break
             except InterruptedError as arg:
-                Logger.info("CI: Program was interrupted.")
+                Logger.warn("CI: Program was interrupted.")
     except SystemExit as arg:
-        Logger.info(f"CI: Program was exited explicitly with code {arg.code}.")
+        Logger.info(f"CI: Program received explicit exit code {arg.code}")
     except BaseException as arg:
         Logger.error(f"CI: Oops! Unexpected error occurred: Exception{type(arg)} {arg}")
         raise arg
+    Logger.info(f"CI: Terminated")
