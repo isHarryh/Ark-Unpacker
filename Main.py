@@ -174,7 +174,6 @@ def run_arkmodels_unpacking(dirs, destdir):
         if not os.path.exists(i):
             print(f"在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是本程序版本与您的资源版本不再兼容，可尝试获取新版程序。", c=3)
             return
-    prt_continue()
     title("ArkUnpacker - Processing")
     ###
     print("正在清理...")
@@ -219,6 +218,8 @@ def run_arkmodels_data_dist():
     AU_Mdd.main()
 
 def run_arkmodels_workflow():
+    def visual(fp:str, default_c:int=6):
+        return f"{color(2 if os.path.exists(fp) else 3)}{fp}{color(default_c)}"
     Logger.info("CI: In ArkModels workflow.")
     def prt_arkmodels_menu():
         clear()
@@ -227,12 +228,13 @@ def run_arkmodels_workflow():
         print("="*20)
         print("""ArkModels是作者建立的明日方舟Spine模型仓库（https://github.com/isHarryh/Ark-Models），以下功能专门为ArkModels仓库的更新而设计。
 运行部分功能之前，需要确保括号内所示的资源文件夹已位于程序所在目录中。""")
-        print("""功能选择：
-1: 干员基建模型提取（skinpack，chararts）
-2: 敌方战斗模型提取（battle）
-3: 动态立绘模型提取（arts）
-4: 模型分拣
-5: 生成数据集（gamedata）
+        print(f"""功能选择：
+1: 一键执行
+2: 干员基建模型提取 ({visual('chararts')}, {visual('skinpack')})
+3: 敌方战斗模型提取 ({visual('battle')})
+4: 动态立绘模型提取 ({visual('arts')})
+5: 模型分拣
+6: 生成数据集 ({visual('gamedata')})
 0: 返回""", c=6)
         print("输入序号后按Enter即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker")
     TEMP_DIR_1 = 'temp/am_upk_operator'
@@ -242,22 +244,22 @@ def run_arkmodels_workflow():
         title("ArkUnpacker")
         prt_arkmodels_menu()
         order = input("> ", c=2)
+        wildcard = False
         if order == '1':
+            wildcard = True
+        if order == '2' or wildcard:
             run_arkmodels_unpacking(['chararts', 'skinpack'], TEMP_DIR_1)
-            prt_continue()
-        elif order == '2':
+        if order == '3' or wildcard:
             run_arkmodels_unpacking(['battle/prefabs/enemies'], TEMP_DIR_2)
-            prt_continue()
-        elif order == '3':
+        if order == '4' or wildcard:
             run_arkmodels_unpacking(['arts/dynchars'], TEMP_DIR_3)
-            prt_continue()
-        elif order == '4':
+        if order == '5' or wildcard:
             run_arkmodels_filtering([TEMP_DIR_1, TEMP_DIR_2, TEMP_DIR_3], ['models', 'models_enemies', 'models_illust'])
-            prt_continue()
-        elif order == '5':
+        if order == '6' or wildcard:
             run_arkmodels_data_dist()
+        if order in ['1', '2', '3', '4', '5', '6']:
             prt_continue()
-        elif order == '0':
+        if order == '0':
             return
 
 class UserInput:
