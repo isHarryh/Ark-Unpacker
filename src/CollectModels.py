@@ -17,7 +17,7 @@ def collect_models(upkdir:str, destdir:str, dodel:bool, on_finished:staticmethod
             if not model.islower():
                 # To solve model typo caused by Arknights side
                 model = model.lower()
-                Logger.warn(f"CollectModels: \"{model_dir}\" may has a typo name")
+                Logger.info(f"CollectModels: \"{model_dir}\" may has a typo name")
             try:
                 newname = None
                 if model_type.startswith('Building') and re.match(r'(build_)?char_', model):

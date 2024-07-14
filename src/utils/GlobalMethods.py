@@ -95,11 +95,6 @@ def mkdir(path:str):
     except:
         return False
 
-def mvfile(path_from:str, path_to:str):
-    """Moves a file."""
-    mkdir(os.path.dirname(path_to))
-    shutil.move(path_from, path_to)
-
 def rmdir(path:str):
     """Deletes a directory."""
     shutil.rmtree(path, ignore_errors=True)

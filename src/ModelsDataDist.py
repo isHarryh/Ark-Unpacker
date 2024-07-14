@@ -102,10 +102,10 @@ class ModelsDist:
         return rst + [additional] if additional else rst
 
     def update_operator_data(self):
-        Logger.debug(f"ModelsDataDist: Decoding operator data.")
+        Logger.info(f"ModelsDataDist: Decoding operator data.")
         print("解析干员信息...")
         raw:"dict[str,dict]" = self.get_gamedata(('character_table',))
-        Logger.debug(f"ModelsDataDist: Parsing operator data.")
+        Logger.info(f"ModelsDataDist: Parsing operator data.")
         collected = {}
         for k, v in raw['Characters'].items():
             if k.startswith('char_') and not v.get('IsNotObtainable', None):
@@ -113,14 +113,14 @@ class ModelsDist:
                 collected[key_char] = self.get_item_data(f'build_char_{key_char}', 'Operator', 'BuildingDefault', self.get_operator_sort_tags(v),
                         v['Name'], v['Appellation'], 'DEFAULT', '默认服装')
         self.data['data'].update(collected)
-        Logger.debug(f"ModelsDataDist: Found {len(collected)} operators.")
+        Logger.info(f"ModelsDataDist: Found {len(collected)} operators.")
         print(f"\t找到 {len(collected)} 位干员", c=2)
 
     def update_skin_data(self):
-        Logger.debug(f"ModelsDataDist: Decoding skin data.")
+        Logger.info(f"ModelsDataDist: Decoding skin data.")
         print("解析干员皮肤信息...")
         raw:"dict[str,dict]" = self.get_gamedata(('skin_table',))
-        Logger.debug(f"ModelsDataDist: Parsing skin data.")
+        Logger.info(f"ModelsDataDist: Parsing skin data.")
         collected = {}
         for k, v in raw['CharSkins'].items():
             if v.get('BuildingId', None):
@@ -138,14 +138,14 @@ class ModelsDist:
                     Logger.warn(f"ModelsDataDist: The operator-key of the skin \"{k}\" not found.")
                     print(f"\t皮肤 {k} 找不到对应的干员Key", c=3)
         self.data['data'].update(collected)
-        Logger.debug(f"ModelsDataDist: Found {len(collected)} skins.")
+        Logger.info(f"ModelsDataDist: Found {len(collected)} skins.")
         print(f"\t找到 {len(collected)} 件干员皮肤", c=2)
 
     def update_enemy_data(self):
-        Logger.debug(f"ModelsDataDist: Decoding enemy data.")
+        Logger.info(f"ModelsDataDist: Decoding enemy data.")
         print("解析敌方单位信息...")
         raw:"dict[str,list]" = self.get_gamedata(('enemydata', 'enemy_database'))
-        Logger.debug(f"ModelsDataDist: Parsing enemy data.")
+        Logger.info(f"ModelsDataDist: Parsing enemy data.")
         collected = {}
         for k, v in raw['Enemies'].items():
             if k.startswith('enemy_'):
@@ -154,11 +154,11 @@ class ModelsDist:
                 collected[key_enemy] = self.get_item_data(f"enemy_{key_enemy}", "Enemy", None, tags,
                         v[0]['EnemyData']['Name']['MValue'], None, tags[-1], self.data['sortTags'][tags[-1]])
         self.data['data'].update(collected)
-        Logger.debug(f"ModelsDataDist: Found {len(collected)} enemies.")
+        Logger.info(f"ModelsDataDist: Found {len(collected)} enemies.")
         print(f"\t找到 {len(collected)} 个敌方单位", c=2)
     
     def update_dynillust_data(self):
-        Logger.debug(f"ModelsDataDist: Parsing dynillust data.")
+        Logger.info(f"ModelsDataDist: Parsing dynillust data.")
         print("分析动态立绘信息...")
         collected = {}
         if os.path.isdir(self.data['storageDirectory']['DynIllust']):
@@ -185,11 +185,11 @@ class ModelsDist:
             Logger.warn(f"ModelsDataDist: The directory of dyn illust not found.")
             print("\t动态立绘根文件夹未找到", c=3)
         self.data['data'].update(collected)
-        Logger.debug(f"ModelsDataDist: Found {len(collected)} dynillusts.")
+        Logger.info(f"ModelsDataDist: Found {len(collected)} dynillusts.")
         print(f"\t找到 {len(collected)} 套动态立绘", c=2)
     
     def verify_models(self):
-        Logger.debug("ModelsDataDist: Validating models files.")
+        Logger.info("ModelsDataDist: Validating models files.")
         print("校验模型文件...")
         cur_done = 0
         cur_fail = 0
@@ -217,7 +217,7 @@ class ModelsDist:
                         elif len(asset_list_specified) == 1:
                             asset_list_pending[j] = asset_list_specified[0]
                         else:
-                            Logger.info(f"ModelsDataDist: The {j} asset of \"{k}\" is multiple, see in \"{dir}\".")
+                            Logger.debug(f"ModelsDataDist: The {j} asset of \"{k}\" is multiple, see in \"{dir}\".")
                             asset_list_specified.sort()
                             asset_list_pending[j] = asset_list_specified
                     if not fail_flag:
@@ -240,7 +240,7 @@ class ModelsDist:
         print(f"\n\t校验完成：{color(2)}成功{cur_done - cur_fail}{color(7)}，失败{cur_fail}")
     
     def export_json(self):
-        Logger.debug("ModelsDataDist: Writing to json.")
+        Logger.info("ModelsDataDist: Writing to json.")
         with open('models_data.json', 'w', encoding='UTF-8') as f:
             json.dump(self.data, f, ensure_ascii=False, indent=4)
         Logger.info("ModelsDataDist: Succeeded in writing to json.")
@@ -254,4 +254,3 @@ def main():
     md.update_dynillust_data()
     md.verify_models()
     md.export_json()
-    input("\n\t已完成，按Enter返回...", c=2)
