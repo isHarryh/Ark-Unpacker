@@ -211,7 +211,7 @@ class ModelsDist:
                         asset_list_specified = [x.lower() for x in asset_list_specified]
                         if len(asset_list_specified) == 0:
                             Logger.info(f"ModelsDataDist: The {j} asset of \"{k}\" not found, see in \"{dir}\".")
-                            print(f"[{k}] {v['name']}（{v['type']}）：{j} 文件缺失")
+                            print(f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：{color(1)}{j}{color(7)} 文件缺失")
                             fail_flag = True
                             break
                         elif len(asset_list_specified) == 1:

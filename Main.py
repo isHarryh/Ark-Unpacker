@@ -38,19 +38,6 @@ def prt_subtitle(msg:str):
 def prt_continue():
     UserInput.request("\n> 按Enter以继续...")
 
-def get_dirlist(ignore:list=[]):
-    """Gets the direct children directories in the current working directory.
-
-    :param ignore: Names to ignore;
-    :returns: The directories list;
-    :rtype: list[str];
-    """
-    filelist = []
-    for i in os.listdir():
-        if os.path.isdir(i) and os.path.basename(i) not in ignore:
-            filelist.append(i)
-    return filelist
-
 def run_quickaccess():
     Logger.info("CI: Run quick access.")
     title("ArkUnpacker - Processing")
@@ -152,7 +139,7 @@ def run_custom_Fb():
     print("  支持相对路径，留空表示自动创建")
     destdir = input("> ", c=2)
     if not destdir:
-        destdir = f'Combined_{int(time.time())}'
+        destdir = f'FlatBuffers_{int(time.time())}'
     print("您选择的导出目录是：")
     print(f"  {os.path.abspath(destdir)}", c=6)
     ###
@@ -188,7 +175,6 @@ def run_arkmodels_filtering(dirs, destdirs):
     dirs_ = []
     destdirs_ = []
     for i, j in zip(dirs, destdirs):
-        #TODO 检查二者长度相等
         if not os.path.exists(i):
             print(f"在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是您事先没有进行\"模型提取\"的步骤。", c=3)
             UserInput.request("> 输入符号 \"*\" 以取消任务，或直接按Enter以强制继续")
@@ -197,14 +183,6 @@ def run_arkmodels_filtering(dirs, destdirs):
             destdirs_.append(j)
     ###
     AU_Cm.main(dirs_, destdirs_)
-    print("\n任务执行完毕", c=2)
-    print("\n您希望删除分拣前的解包文件吗？")
-    print("  [y]是，[n]否(默认)", c=3)
-    if UserInput.request_yes_or_no(False):
-        print("正在清理...")
-        print("这可能需要一段时间。您也可以关闭程序，然后手动删除。")
-        for i in dirs_:
-            rmdir(i) 
 
 def run_arkmodels_data_dist():
     Logger.info("CI: ArkModels dataset mode.")
