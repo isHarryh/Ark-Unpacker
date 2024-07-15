@@ -282,29 +282,32 @@ if __name__ == '__main__':
     try:
         Logger.set_instance(Config.get('log_file'), Config.get('log_level'))
         Logger.info("CI: Initialized")
-        while True:
-            title("ArkUnpacker")
-            prt_homepage()
-            order = input("> ", c=2)
-            if order == '1':
-                run_quickaccess()
-                prt_continue()
-            elif order == '2':
-                run_custom_Rs()
-                prt_continue()
-            elif order == '3':
-                run_custom_Cb()
-                prt_continue()
-            elif order == '4':
-                run_custom_Fb()
-            elif order == '5':
-                run_arkmodels_workflow()
-            elif order == '0':
-                break
+        try:
+            while True:
+                title("ArkUnpacker")
+                prt_homepage()
+                order = input("> ", c=2)
+                if order == '1':
+                    run_quickaccess()
+                    prt_continue()
+                elif order == '2':
+                    run_custom_Rs()
+                    prt_continue()
+                elif order == '3':
+                    run_custom_Cb()
+                    prt_continue()
+                elif order == '4':
+                    run_custom_Fb()
+                elif order == '5':
+                    run_arkmodels_workflow()
+                elif order == '0':
+                    break
+        except InterruptedError as arg:
+            Logger.warn("CI: Program was slightly interrupted by user.")
     except SystemExit as arg:
         Logger.info(f"CI: Program received explicit exit code {arg.code}")
     except KeyboardInterrupt as arg:
-        Logger.error("CI: Program was interrupted by user.")
+        Logger.error("CI: Program was forcibly interrupted by user.")
     except BaseException as arg:
         Logger.error(f"CI: Oops! Unexpected error occurred: {stacktrace()}")
         print(f"\n发生了未处理的异常", c=1)
