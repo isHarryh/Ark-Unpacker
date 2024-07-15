@@ -35,6 +35,9 @@ def __get_proj_info():
             'author': config['authors'].strip("'\"[]").split('<')[0].strip(),
             'license': config['license'].strip("'\"").replace('\\\\', '\\')
         }
+    except KeyError as arg:
+        print(f"x Required field missing, {arg}")
+        raise arg
     except Exception as arg:
         print("× Failed to parse poetry project info.")
         raise arg

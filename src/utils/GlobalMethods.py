@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
-import os, builtins, shutil
+import os, builtins, shutil, traceback
 
 
 ##### ↓ CLI related ↓ #####
@@ -78,6 +78,9 @@ def progress_bar(progress:float, length:int):
         return bar
     except:
         return ''
+
+def stacktrace():
+    return traceback.format_exc()
 
 ##### ↓ IO related ↓ #####
 
