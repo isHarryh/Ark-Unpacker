@@ -27,6 +27,8 @@ build-dir = "$project$\\build"
 entry = "$project$\\Main.py"
 icon = "$project$\\ArkUnpacker.ico"
 add-binary = "$venv$\\Lib\\site-packages\\UnityPy\\lib\\FMOD:UnityPy\\lib\\FMOD"
+add-data = "$project$\\src\\fbs\\CN:src\\fbs\\CN"
+hidden-import = "flatbuffers"
 log-level = "WARN"
 
 [build-system]

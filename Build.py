@@ -9,7 +9,7 @@ def __get_venv_dir():
     
     if rst.returncode == 0:
         for l in rst.stdout.splitlines():
-            match = re.search(r'Path:\s+(.+)', l)
+            match = re.search(r'Path:\s+(.+)', str(l, encoding='UTF-8'))
             if match:
                 path = match.group(1).strip()
                 if os.path.isdir(path):
@@ -42,30 +42,26 @@ def __get_proj_info():
         print("× Failed to parse poetry project info.")
         raise arg
 
-def __get_build_def():
+def __get_build_def(proj_dir, venv_dir):
     try:
         parser = configparser.ConfigParser()
         parser.read('pyproject.toml', encoding='UTF-8')
-        config = parser['tool.build']
-        return {
-            'entry': config['entry'].strip("'\""),
-            'icon': config['icon'].strip("'\""),
-            'add-binary': config['add-binary'].strip("'\""),
-            'build-dir': config['build-dir'].strip("'\""),
-            'log-level': config['log-level'].strip("'\"")
-        }
+        return {k: v.strip("'\"").replace('\\\\', '\\').replace('$project$', proj_dir).replace('$venv$', venv_dir) \
+                for k, v in parser['tool.build'].items()}
     except Exception as arg:
         print("× Failed to parse build definition fields.")
         raise arg
 
 def __main():
+    proj_dir = os.path.dirname(os.path.abspath(__file__))
     venv_dir = __get_venv_dir()
     proj_info = __get_proj_info()
-    build_def = __get_build_def()
+    build_def = __get_build_def(proj_dir, venv_dir)
     print(f"Project: {proj_info['name']}|{proj_info['version']}|{proj_info['author']}|{proj_info['license']}")
+    print(f"Root: {proj_dir}")
     print(f"Venv: {venv_dir}")
     print("")
-    __build(venv_dir, proj_info, build_def)
+    __build(proj_info, proj_dir, build_def)
     exit(0)
 
 def __exec(cmd):
@@ -77,17 +73,15 @@ def __exec(cmd):
         print(f"× Execution failed! Returned code: {rst}")
         exit(1)
 
-def __build(venv_dir, proj_info, build_def):
+def __build(proj_info, proj_dir, build_def):
     import time, shutil
     t1 = time.time()
-    proj_dir = os.path.dirname(os.path.abspath(__file__))
-    for k, v in build_def.items():
-        build_def[k] = v.replace('\\\\', '\\').replace('$project$', proj_dir).replace('$venv$', venv_dir)
     
     print(f"Removing build dir...")
     os.chdir(proj_dir)
     build_dir = build_def['build-dir']
-    shutil.rmtree(build_dir, ignore_errors=True)
+    if os.path.exists(build_dir):
+        shutil.rmtree(build_dir, ignore_errors=False)
 
     print(f"Creating build dir...")
     os.mkdir(build_dir)
@@ -124,11 +118,13 @@ StringFileInfo([
     
     print('Running pyinstaller...')
     cmd_pyinstaller = f"poetry run pyinstaller -F"
-    cmd_pyinstaller += f" -i \"{build_def['icon']}\""
     cmd_pyinstaller += f" --name \"{proj_info['name']}-v{proj_info['version']}\""
     cmd_pyinstaller += f" --version-file {version_file}"
-    cmd_pyinstaller += f" --add-binary \"{build_def['add-binary']}\""
-    cmd_pyinstaller += f" --log-level {build_def['log-level']}"
+    cmd_pyinstaller += f" --icon \"{build_def['icon']}\"" if 'icon' in build_def.keys() else ""
+    cmd_pyinstaller += f" --add-binary \"{build_def['add-binary']}\"" if 'add-binary' in build_def.keys() else ""
+    cmd_pyinstaller += f" --add-data \"{build_def['add-data']}\"" if 'add-data' in build_def.keys() else ""
+    cmd_pyinstaller += f" --hidden-import {build_def['hidden-import']}" if 'hidden-import' in build_def.keys() else ""
+    cmd_pyinstaller += f" --log-level {build_def['log-level']}" if 'log-level' in build_def.keys() else ""
     cmd_pyinstaller += f" \"{build_def['entry']}\""
     __exec(cmd_pyinstaller)
 

@@ -50,6 +50,8 @@ class ArkFBOLibrary:
         if not root_type:
             root_type = ArkFBOLibrary.guess_root_type(path)
         if not root_type:
+            Logger.error(f"ResolveFBO: Failed to guess root type of \"{path}\"")
+            Logger.error(f"ResolveFBO: CN lib data = {ArkFBOLibrary.CN}")
             raise AssertionError("Failed to guess root type")
         with open(path, 'rb') as f:
             data = bytearray(f.read())[128:]
