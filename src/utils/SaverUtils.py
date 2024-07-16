@@ -117,12 +117,12 @@ class SafeSaver(WorkerCtrl):
     @staticmethod
     def _save(data:bytes, destdir:str, name:str, ext:str, on_saved:staticmethod):
         try:
-            dest = os.path.join(destdir, name)
+            dest = os.path.join(destdir, f'{name}.{ext}' if ext and len(ext) else name)
             name = os.path.basename(dest)
             destdir = os.path.dirname(dest)
             # Preoccupy the file to prevent overwriting
             with SafeSaver._LOCK:
-                dest = SafeSaver._no_namesake(destdir, name, ext)
+                dest = SafeSaver._no_namesake(destdir, dest)
                 SafeSaver._preoccupy(dest)
             # Ensure this file is unique to prevent duplication
             if SafeSaver._is_unique(data, dest):
@@ -140,11 +140,12 @@ class SafeSaver(WorkerCtrl):
             f.write(data)
 
     @staticmethod
-    def _no_namesake(destdir:str, name:str, ext:str):
+    def _no_namesake(destdir:str, dest:str):
         tmp = 0
-        dest = os.path.join(destdir, f'{name}.{ext}')
+        name, ext = os.path.splitext(dest)
+        dest = os.path.join(destdir, name + ext)
         while os.path.isfile(dest):
-            dest = os.path.join(destdir, f'{name}${tmp}.{ext}')
+            dest = os.path.join(destdir, f'{name}${tmp}{ext}')
             tmp += 1
         return dest
     

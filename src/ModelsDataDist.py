@@ -207,8 +207,7 @@ class ModelsDist:
                     file_list = os.listdir(dir)
                     for j in ('.atlas', '.png', '.skel'):
                         #(j是资源文件扩展名)
-                        asset_list_specified = filter(lambda x:x.lower().endswith(j), file_list)
-                        asset_list_specified = [x.lower() for x in asset_list_specified]
+                        asset_list_specified = list(filter(lambda x:x.lower().endswith(j), file_list))
                         if len(asset_list_specified) == 0:
                             Logger.info(f"ModelsDataDist: The {j} asset of \"{k}\" not found, see in \"{dir}\".")
                             print(f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：{color(1)}{j}{color(7)} 文件缺失")
