@@ -141,15 +141,23 @@ class SafeSaver(WorkerCtrl):
     def _save(data:bytes, destdir:str, name:str, ext:str, on_saved:staticmethod):
         try:
             dest = os.path.join(destdir, name + ext)
-            # Ensure this file is unique to prevent duplication
             with TestRT('lock'):
+                # Ensure files with identical name cannot be saved simultaneously
                 with EntryLock(dest):
+                    # Ensure this new file is unique to prevent duplication
                     if SafeSaver._is_unique(data, dest):
+                        # Modify the file name to avoid namesake
                         dest = SafeSaver._no_namesake(dest)
+                        # Save the file eventually
                         mkdir(os.path.dirname(dest))
                         SafeSaver._save_bytes(data, dest)
-            if on_saved:
-                on_saved(dest)
+                        # Invoke callback with destination path as argument
+                        if on_saved:
+                            on_saved(dest)
+                    else:
+                        # Invoke call back with `None` indicating the file was not saved
+                        if on_saved:
+                            on_saved(None)
         except Exception as arg:
             Logger.error(f"Saver: Failed to save file {dest} because: Exception{type(arg)} {arg}")
 
