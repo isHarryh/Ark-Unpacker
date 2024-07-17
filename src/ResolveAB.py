@@ -180,7 +180,7 @@ class Resource:
                         if i[1]:
                             rgba = AlphaRGBCombiner(i[1].image).combine_with(rgb)
                         else:
-                            Logger.info(f"ResolveAB: Spine asset \"{i[0].name}\" found with no Alpha texture.")
+                            Logger.debug(f"ResolveAB: Spine asset \"{i[0].name}\" found with no Alpha texture.")
                             rgba = rgb
                         if SafeSaver.save_image(rgba, destdir, i[0].name, on_queued=on_queued, on_saved=on_saved):
                             Logger.debug(f"ResolveAB: Spine asset \"{i[0].name}\" found.")
@@ -273,8 +273,8 @@ def main(src:str, destdir:str, dodel:bool=False,
     TC = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
     UI = UICtrl(0.5)
     TR = TimeRecorder()
-    TR.update_dest(10, len(flist))
-    on_processed = lambda: TR.done_once(10)
+    TR.update_dest(4, len(flist))
+    on_processed = lambda: TR.done_once(4)
     on_file_queued = lambda: TR.update_dest(1)
     on_file_saved = lambda x: (TR.done_once(1) if x else TR.update_dest(1, -1), \
                                Logger.debug(f"ResolveAB: Saved \"{x}\"") if x else None)
@@ -290,7 +290,7 @@ def main(src:str, destdir:str, dodel:bool=False,
             f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
             f'当前目录：\t{os.path.basename(os.path.dirname(i))}',
             f'当前文件：\t{os.path.basename(i)}',
-            f'累计解包：\t{TR.get_done_of(10)}',
+            f'累计解包：\t{TR.get_done_of(4)}',
             f'累计导出：\t{TR.get_done_of(1)}',
             f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
         ])
@@ -310,7 +310,7 @@ def main(src:str, destdir:str, dodel:bool=False,
         UI.request([
             f'正在批量解包...',
             f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
-            f'累计解包：\t{TR.get_done_of(10)}',
+            f'累计解包：\t{TR.get_done_of(4)}',
             f'累计导出：\t{TR.get_done_of(1)}',
             f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
         ])
@@ -318,7 +318,7 @@ def main(src:str, destdir:str, dodel:bool=False,
 
     UI.reset()
     print(f'\n批量解包结束!', s=1)
-    print(f'  累计解包 {TR.get_done_of(10)} 个文件')
+    print(f'  累计解包 {TR.get_done_of(4)} 个文件')
     print(f'  累计导出 {TR.get_done_of(1)} 个文件')
     print(f'  此项用时 {round(TR.get_consumed_time())} 秒')
     time.sleep(2)
