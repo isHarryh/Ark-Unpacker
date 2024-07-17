@@ -282,8 +282,8 @@ if __name__ == '__main__':
     try:
         Logger.set_instance(Config.get('log_file'), Config.get('log_level'))
         Logger.info("CI: Initialized")
-        try:
-            while True:
+        while True:
+            try:
                 title("ArkUnpacker")
                 prt_homepage()
                 order = input("> ", c=2)
@@ -302,8 +302,8 @@ if __name__ == '__main__':
                     run_arkmodels_workflow()
                 elif order == '0':
                     break
-        except InterruptedError as arg:
-            Logger.warn("CI: Program was slightly interrupted by user.")
+            except InterruptedError as arg:
+                Logger.warn("CI: Program was slightly interrupted by user.")
     except SystemExit as arg:
         Logger.info(f"CI: Program received explicit exit code {arg.code}")
     except KeyboardInterrupt as arg:
