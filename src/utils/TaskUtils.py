@@ -248,7 +248,8 @@ class Counter():
         """Gets the current value.
 
         :returns: Current value;
-        :rtype: int;"""
+        :rtype: int;
+        """
         return self.__s
     #EndClass
 
@@ -270,7 +271,11 @@ class TimeRecorder():
             self.dest[weight] = self.dest.get(weight, 0) + count
 
     def done_once(self, weight:int):
-        """Updates the current value of the task."""
+        """Updates the current value of the specified task wight by `1`.
+
+        :param weight: The task weight whose current value should be updated;
+        :rtype: None;
+        """
         with self._LOCK:
             if weight in self.done.keys():
                 self.done[weight].append(time.time())
@@ -278,9 +283,21 @@ class TimeRecorder():
                 self.done[weight] = [time.time()]
     
     def get_dest_of(self, weight:int):
+        """Get the destination value of the specified task weight.
+
+        :param weight: The task weight whose destination value should be returned;
+        :returns: The destination value;
+        :rtype: int;
+        """
         return len(self.dest[weight]) if weight in self.dest.keys() else 0
     
     def get_done_of(self, weight:int):
+        """Get the current value of the specified task weight.
+
+        :param weight: The task weight whose current value should be returned;
+        :returns: The current value;
+        :rtype: int;
+        """
         return len(self.done[weight]) if weight in self.done.keys() else 0
     
     def get_progress(self):
@@ -310,14 +327,14 @@ class TimeRecorder():
             return 0
         items.sort(key=lambda x:x[1])
         sum_weight = sum([x[0] for x in items[:length]])
-        delta_time = items[-1][1] - items[-len(items)][1]
+        delta_time = items[-1][1] - items[-length][1]
         return sum_weight / delta_time if delta_time != 0 else 0
     
     def get_remaining_time(self, basis:int=100):
         """Gets the time remaining.
 
         :param basis: How many records do we use to calculate the speed;
-        :returns: Time in seconds;
+        :returns: Remaining time in seconds;
         :rtype: float;
         """
         return (self._get_total_dest_weight() - self._get_total_done_weight()) / self.get_speed(basis) \
