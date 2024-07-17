@@ -88,15 +88,13 @@ def mkdir(path:str):
     """Creates a directory.
 
     :param path: Path to the directory to be created;
-    :returns: Execution result;
-    :rtype: bool;
+    :rtype: None;
     """
-    path = path.strip().strip('/').rstrip('\\')
     try:
+        path = path.strip().strip('/\\')
         os.makedirs(path, exist_ok=True)
-        return True
     except:
-        return False
+        pass
 
 def rmdir(path:str):
     """Deletes a directory."""

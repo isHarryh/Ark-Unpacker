@@ -2,25 +2,48 @@
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
 import os
-import re
 import threading
 from io import BytesIO
 from PIL import Image
+from contextlib import ContextDecorator
 from UnityPy.classes import *
 from .Config import *
 from .GlobalMethods import *
 from .Logger import *
 from .TaskUtils import *
+from .AnalyUtils import *
 
+
+class EntryLock(ContextDecorator):
+    """The entry lock class to prevent simultaneous access to the same entry."""
+    
+    _ENTRIES = set()
+    _INTERNAL_LOCK = threading.Condition()
+
+    def __init__(self, entry):
+        self.entry = entry
+
+    def __enter__(self):
+        with EntryLock._INTERNAL_LOCK:
+            while self.entry in EntryLock._ENTRIES:
+                Logger.debug(f"EntryLock: Waiting \"{self.entry}\"")
+                EntryLock._INTERNAL_LOCK.wait()
+                Logger.debug(f"EntryLock: Ended waiting \"{self.entry}\"")
+            EntryLock._ENTRIES.add(self.entry)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        with EntryLock._INTERNAL_LOCK:
+            EntryLock._ENTRIES.discard(self.entry)
+            EntryLock._INTERNAL_LOCK.notify_all()
+    #EndClass
 
 class SafeSaver(WorkerCtrl):
-    """The base class for file saver which is able to avoid name collision."""
+    """The file saver class to save file and avoid file name collision."""
 
     __instance  = None
-    __ext_image = 'png'
-    __ext_audio = 'wav'
+    __ext_image = '.png'
+    __ext_audio = '.wav'
     __ext_raw   = ''
-    _LOCK = threading.Lock()
 
     def __init__(self):
         """Not recommended to use. Please use the static methods."""
@@ -62,7 +85,7 @@ class SafeSaver(WorkerCtrl):
         :rtype: None;
         """
         bio = BytesIO()
-        img.save(bio, format=ext)
+        img.save(bio, format=ext.lstrip('.'))
         SafeSaver.save_bytes(bio.getvalue(), destdir, name, ext, on_queued, on_saved)
     
     @staticmethod
@@ -117,18 +140,14 @@ class SafeSaver(WorkerCtrl):
     @staticmethod
     def _save(data:bytes, destdir:str, name:str, ext:str, on_saved:staticmethod):
         try:
-            dest = os.path.join(destdir, f'{name}.{ext}' if ext and len(ext) else name)
-            name = os.path.basename(dest)
-            destdir = os.path.dirname(dest)
-            # Preoccupy the file to prevent overwriting
-            with SafeSaver._LOCK:
-                dest = SafeSaver._no_namesake(destdir, dest)
-                SafeSaver._preoccupy(dest)
+            dest = os.path.join(destdir, name + ext)
             # Ensure this file is unique to prevent duplication
-            if SafeSaver._is_unique(data, dest):
-                SafeSaver._save_bytes(data, dest)
-            else:
-                os.unlink(dest)
+            with TestRT('lock'):
+                with EntryLock(dest):
+                    if SafeSaver._is_unique(data, dest):
+                        dest = SafeSaver._no_namesake(dest)
+                        mkdir(os.path.dirname(dest))
+                        SafeSaver._save_bytes(data, dest)
             if on_saved:
                 on_saved(dest)
         except Exception as arg:
@@ -140,34 +159,26 @@ class SafeSaver(WorkerCtrl):
             f.write(data)
 
     @staticmethod
-    def _no_namesake(destdir:str, dest:str):
-        tmp = 0
-        name, ext = os.path.splitext(dest)
-        dest = os.path.join(destdir, name + ext)
-        while os.path.isfile(dest):
-            dest = os.path.join(destdir, f'{name}${tmp}{ext}')
-            tmp += 1
-        return dest
-    
-    @staticmethod
-    def _preoccupy(dest:str):
-        mkdir(os.path.dirname(dest))
-        with open(dest, 'wb') as f:
-            f.write(b'0')
-
-    @staticmethod
     def _is_unique(data:bytes, dest:str):
         destdir = os.path.dirname(dest)
         name, ext = os.path.splitext(os.path.basename(dest))
-        name = name[:name.rindex('$')] if '$' in name else name
-        flist = os.listdir(destdir)
-        flist = filter(lambda x:x.startswith(name) and x.endswith(ext), flist)
+        if not os.path.isdir(destdir):
+            return True
+        flist = filter(lambda x:x.startswith(name) and x.endswith(ext), os.listdir(destdir))
         for i in flist:
-            if i == dest:
-                continue
             with open(os.path.join(destdir, i), 'rb') as f:
                 if f.read() == data:
                     Logger.debug(f"Saver: File \"{i}\" duplication was prevented, size {len(data)}")
                     return False
         return True
+    
+    @staticmethod
+    def _no_namesake(dest:str):
+        destdir = os.path.dirname(dest)
+        name, ext = os.path.splitext(os.path.basename(dest))
+        tmp = 0
+        while os.path.isfile(dest):
+            dest = os.path.join(destdir, f'{name}${tmp}{ext}')
+            tmp += 1
+        return dest
     #EndClass
