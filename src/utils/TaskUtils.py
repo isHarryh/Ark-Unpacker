@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
-import time, queue
+import time
+import queue
 import threading
-from threading import Thread
 from .GlobalMethods import *
 from .Logger import *
 
@@ -13,7 +13,7 @@ class ThreadCtrl():
 
     def __init__(self, max_subthread):
         """Initializes a tool for multi threading."""
-        self.__sts:list[Thread] = []
+        self.__sts:list[threading.Thread] = []
         self.set_max_subthread(max_subthread)
     
     def set_max_subthread(self, max_subthread:int):
@@ -29,7 +29,7 @@ class ThreadCtrl():
         """Creates a sub thread and run it."""
         while self.count_subthread() >= self.__max:
             pass
-        ts = Thread(target=fun, args=args, kwargs=kwargs, daemon=False, name=name)
+        ts = threading.Thread(target=fun, args=args, kwargs=kwargs, daemon=False, name=name)
         self.__sts.append(ts)
         ts.start()
     #EndClass
@@ -143,13 +143,13 @@ class WorkerCtrl():
     
     def _backup_worker(self):
         if len(self.__workers) < self.__max_workers:
-            t = Thread(target=self._loop, name=f"Worker:{self._name}", daemon=True)
+            t = threading.Thread(target=self._loop, name=f"Worker:{self._name}", daemon=True)
             self.__workers.append(t)
             t.start()
             if len(self.__workers) >= self.__max_workers:
                 Logger.debug(f"Worker: Workers are in full load, slogging guts out!")
 
-    def _layoff_worker(self, worker:Thread):
+    def _layoff_worker(self, worker:threading.Thread):
         if worker in self.__workers:
             self.__workers.remove(worker)
             if len(self.__workers) <= 1:
@@ -177,7 +177,7 @@ class UICtrl():
         """Starts auto-refresh."""
         self.__status = True
         self.__cache_lines = []
-        Thread(target=self.__loop, daemon=True, name=UICtrl.THREAD_NAME).start()
+        threading.Thread(target=self.__loop, daemon=True, name=UICtrl.THREAD_NAME).start()
 
     def loop_stop(self):
         """Stops auto-refresh."""
