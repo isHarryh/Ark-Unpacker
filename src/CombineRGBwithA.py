@@ -112,7 +112,7 @@ class AlphaRGBCombiner:
             for x in range(prec):
                 diff.append((((px_rgb[x, y] if px_rgb[x, y] < 255 else 0) - px_a[x, y]) ** 2) / 256)
         # Return the similarity
-        diff_mean = round(mean(diff))
+        diff_mean = round(sum(diff) / len(diff))
         return 0 if diff_mean >= 255 else (255 if diff_mean <= 0 else 255 - diff_mean)
 
 def image_resolve(fp:str, destdir:str, \

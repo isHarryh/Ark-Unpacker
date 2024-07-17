@@ -191,38 +191,3 @@ def is_ab_file(path:str):
     :rtype: bool;
     """
     return path.lower().endswith('.ab')
-
-##### ↓ Stat related ↓ #####
-
-def mean(lst:list):
-    """Gets the mean value (the average value) of an array.
-
-    :param lst: List of values;
-    :returns: Mean value;
-    :rtype: float;
-    """
-    if len(lst) == 0:
-        return float(0)
-    s = 0
-    for i in lst:
-        s += i
-    return float(s / len(lst))
-
-def trimmean(lst:list, percent:float):
-    """Trims extreme values from the both ends of the list and gets the mean.
-
-    :param lst: List of values;
-    :param percent: Ratio of extreme values of each end;
-    :returns: Mean value;
-    :rtype: float;
-    """
-    if len(lst) == 0 or percent < 0 or percent > 1:
-        return float(0)
-    newlst = lst[:]
-    newlst.sort()
-    blocked = int(len(lst) * percent)
-    newlst = newlst[blocked:-blocked]
-    if len(newlst) == 0:
-        return mean(lst)
-    else:
-        return mean(newlst)
