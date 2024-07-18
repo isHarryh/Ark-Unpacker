@@ -283,16 +283,16 @@ class TimeRecorder():
                 self.done[weight] = [time.time()]
     
     def get_dest_of(self, weight:int):
-        """Get the destination value of the specified task weight.
+        """Gets the destination value of the specified task weight.
 
         :param weight: The task weight whose destination value should be returned;
         :returns: The destination value;
         :rtype: int;
         """
-        return len(self.dest[weight]) if weight in self.dest.keys() else 0
+        return self.dest[weight] if weight in self.dest.keys() else 0
     
     def get_done_of(self, weight:int):
-        """Get the current value of the specified task weight.
+        """Gets the current value of the specified task weight.
 
         :param weight: The task weight whose current value should be returned;
         :returns: The current value;
