@@ -1,8 +1,6 @@
 # Exclude
 /*/
 __pycache__/
-upk/
-cmb/
 *.exe
 *.json
 *.log
@@ -13,4 +11,4 @@ cmb/
 !.vscode/
 !docs/
 !src/
-!test/
+!test/res
