@@ -157,7 +157,9 @@ def fbo_resolve(fp:str, destdir:str, on_processed:staticmethod, on_file_queued:s
                 dic = ArkFBOLibrary.decode(fp, typ)
                 byt = bytes(json.dumps(dic, ensure_ascii=False, indent=4), encoding='UTF-8')
                 Logger.debug(f"ResolveFBO: \"{fp}\" decoded, using {typ}")
-                SafeSaver.save_bytes(byt, destdir, os.path.basename(fp), 'json', on_file_queued, on_file_saved)
+                SafeSaver.save_bytes(byt, destdir, os.path.basename(fp), '.json', on_file_queued, on_file_saved)
+            else:
+                Logger.debug(f"ResolveFBO: \"{fp}\" not a binary file")
     except Exception as arg:
         Logger.error(f"ResolveFBO: Failed to handle \"{fp}\": Exception{type(arg)} {arg}")
     if on_processed:
@@ -224,7 +226,8 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
 
     UI.reset()
     print(f'\n批量解码FlatBuffers数据结束!', s=1)
-    print(f'  累计解码 {TR.get_done_of(2)} 个文件')
+    print(f'  累计搜索 {TR.get_done_of(2)} 个文件')
+    print(f'  累计解码 {TR.get_done_of(1)} 个文件')
     print(f'  此项用时 {round(TR.get_rt(), 1)} 秒')
     time.sleep(2)
 

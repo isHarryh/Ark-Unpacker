@@ -298,19 +298,25 @@ if __name__ == '__main__':
                     prt_continue()
                 elif order == '4':
                     run_custom_Fb()
+                    prt_continue()
                 elif order == '5':
                     run_arkmodels_workflow()
                 elif order == '0':
+                    print("\n用户退出")
                     break
             except InterruptedError as arg:
                 Logger.warn("CI: Program was slightly interrupted by user.")
+                print("\n[InterruptedError] 用户轻度中止", c=3)
     except SystemExit as arg:
         Logger.info(f"CI: Program received explicit exit code {arg.code}")
+        print("\n[SystemExit] 显式退出程序", c=3)
     except KeyboardInterrupt as arg:
         Logger.error("CI: Program was forcibly interrupted by user.")
+        print("\n[KeyboardInterrupt] 用户强制中止", c=1, s=7)
+        print(stacktrace(), c=3)
     except BaseException as arg:
         Logger.error(f"CI: Oops! Unexpected error occurred: {stacktrace()}")
-        print(f"\n发生了未处理的异常", c=1)
+        print(f"\n[{type(arg).__name__}] 发生了未处理的异常", c=1, s=7)
         print(stacktrace(), c=3)
-        input()
+        input("> 按Enter退出...", c=1)
     Logger.info(f"CI: Terminated")

@@ -263,7 +263,7 @@ class TimeRecorder():
         self.done = {}
         self.dest = {}
         self._LOCK = threading.Lock()
-        self._cache_p = -1
+        self._cache_p = -1.0
 
     def update_dest(self, weight:int, advance:int=1):
         """Updates the destination value of the specified task weight.
@@ -314,9 +314,7 @@ class TimeRecorder():
         :returns: A string that can be printed to CLI;
         :rtype: str;
         """
-        done = self.get_done_of(weight)
-        dest = self.get_dest_of(weight)
-        return f"{color(7 if done < dest or done == 0 else 2)}{done}/{dest}"
+        return f"{self.get_done_of(weight)}/{self.get_dest_of(weight)}"
 
     def get_progress(self, force_inc:bool=True):
         """Gets the current progress.
@@ -325,7 +323,7 @@ class TimeRecorder():
         :returns: The progress in `[0.0, 1.0]`;
         :rtype: float;
         """
-        p = self._get_total_done_weight() / self._get_total_dest_weight()
+        p = self._get_total_done_weight() / self._get_total_dest_weight() if self._get_total_dest_weight() else 1.0
         p = self._cache_p if p < self._cache_p and force_inc else p
         self._cache_p = p
         return p
@@ -371,7 +369,7 @@ class TimeRecorder():
         :rtype: float;
         """
         speed = self.get_speed(basis)
-        return (self._get_total_dest_weight() - self._get_total_done_weight()) / speed if speed != 0 else 0
+        return (self._get_total_dest_weight() - self._get_total_done_weight()) / speed if speed else 0
 
     def get_eta_str(self, basis:int=500):
         """Gets a string representing the estimated time of arrival.
