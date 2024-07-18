@@ -186,7 +186,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
         rmdir(destdir)
     SafeSaver.get_instance().reset_counter()
     TC = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
-    UI = UICtrl(0.5)
+    UI = UICtrl()
     TR = TimeRecorder()
     TR.update_dest(2, len(flist))
     on_processed = lambda: TR.done_once(2)
@@ -196,16 +196,14 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     UI.reset()
     UI.loop_start()
     for i in flist:
-        TR_p = TR.get_progress()
-        TR_r = TR.get_remaining_time()
         UI.request([
             f'正在批量解码FlatBuffers数据...',
-            f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
+            TR.get_progress_str(),
             f'当前目录：\t{os.path.basename(os.path.dirname(i))}',
             f'当前搜索：\t{os.path.basename(i)}',
-            f'累计搜索：\t{TR.get_done_of(2)}',
-            f'累计解码：\t{TR.get_done_of(1)}',
-            f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
+            f'累计搜索：\t{TR.get_done_dest_str_of(2)}',
+            f'累计解码：\t{TR.get_done_dest_str_of(1)}',
+            f'剩余时间：\t{TR.get_eta_str()}',
         ])
         ###
         subdestdir = os.path.dirname(i).strip(os.path.sep).replace(rootdir, '').strip(os.path.sep)
@@ -215,21 +213,19 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     UI.reset()
     UI.loop_stop()
     while TC.count_subthread() or not SafeSaver.get_instance().completed() or TR.get_progress() < 1:
-        TR_p = TR.get_progress()
-        TR_r = TR.get_remaining_time()
         UI.request([
             f'正在批量解码FlatBuffers数据...',
-            f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
-            f'累计搜索：\t{TR.get_done_of(2)}',
-            f'累计解码：\t{TR.get_done_of(1)}',
-            f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
+            TR.get_progress_str(),
+            f'累计搜索：\t{TR.get_done_dest_str_of(2)}',
+            f'累计解码：\t{TR.get_done_dest_str_of(1)}',
+            f'剩余时间：\t{TR.get_eta_str()}',
         ])
-        UI.refresh(post_delay=0.2)
+        UI.refresh(post_delay=0.1)
 
     UI.reset()
     print(f'\n批量解码FlatBuffers数据结束!', s=1)
     print(f'  累计解码 {TR.get_done_of(2)} 个文件')
-    print(f'  此项用时 {round(TR.get_consumed_time())} 秒')
+    print(f'  此项用时 {round(TR.get_rt(), 1)} 秒')
     time.sleep(2)
 
 ####### TestOnly-调试专用 #######

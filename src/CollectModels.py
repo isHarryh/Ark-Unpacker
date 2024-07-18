@@ -77,7 +77,7 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
     
     TC = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
     collected = Counter()
-    UI = UICtrl(0.5)
+    UI = UICtrl()
     TR = TimeRecorder()
     TR.update_dest(1, len(flist))
     on_finished = lambda: TR.done_once(1)
@@ -87,14 +87,12 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
     UI.loop_start()
     for upkdir, destdir in flist:
         #(i stands for a source dir's path)
-        TR_p = TR.get_progress()
-        TR_r = TR.get_remaining_time()
         UI.request([
             f'正在分拣模型...',
-            f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
+            TR.get_progress_str(),
             f'当前搜索：\t{os.path.basename(upkdir)}',
             f'累计分拣：\t{collected.now()}',
-            f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
+            f'剩余时间：\t{TR.get_eta_str()}',
         ])
         ###
         TC.run_subthread(collect_models, (upkdir, destdir, True, on_finished, on_collected), \
@@ -103,19 +101,17 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
     UI.reset()
     UI.loop_stop()
     while TC.count_subthread() or not SafeSaver.get_instance().completed() or TR.get_progress() < 1:
-        TR_p = TR.get_progress()
-        TR_r = TR.get_remaining_time()
         UI.request([
             f'正在分拣模型...',
-            f'|{progress_bar(TR_p, 25)}| {color(2, 0, 1)}{round(TR_p*100, 1)}%',
+            TR.get_progress_str(),
             f'累计分拣：\t{collected.now()}',
-            f'剩余时间：\t{f"{round(TR_r / 60, 1)}min" if TR_r > 0 else "计算中"}',
+            f'剩余时间：\t{TR.get_eta_str()}',
         ])
-        UI.refresh(post_delay=0.2)
+        UI.refresh(post_delay=0.1)
 
     UI.loop_stop()
     UI.reset()
     print(f'\n分拣模型结束!', s=1)
     print(f'  累计分拣 {collected.now()} 套模型')
-    print(f'  此项用时 {round(TR.get_consumed_time())} 秒')
+    print(f'  此项用时 {round(TR.get_rt(), 1)} 秒')
     time.sleep(2)

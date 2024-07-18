@@ -65,20 +65,6 @@ def title(text:str):
     if os.name == 'nt':
         os.system(f'title {text}')
 
-def progress_bar(progress:float, length:int):
-    """Gets a progress bar string."""
-    try:
-        add_chars = (' ', '▏', '▎', '▍', '▌', '▋', '▊', '▉', '█')
-        max_idx = len(add_chars) - 1
-        bar = ''
-        unit = 1 / length
-        for i in range(length):
-            ratio = (progress - i * unit) / unit
-            bar += add_chars[max(0, min(max_idx, round(ratio * max_idx)))]
-        return bar
-    except:
-        return ''
-
 def stacktrace():
     return traceback.format_exc()
 

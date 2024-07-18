@@ -159,7 +159,7 @@ class UICtrl():
     """UI Controller in the separated thread."""
     THREAD_NAME = 'UIThread'
 
-    def __init__(self, interval:float):
+    def __init__(self, interval:float=0.1):
         """Initializes a UI Controller.
 
         :param interval: Auto-refresh interval (seconds);
@@ -263,12 +263,19 @@ class TimeRecorder():
         self.done = {}
         self.dest = {}
         self._LOCK = threading.Lock()
+        self._cache_p = -1
 
-    def update_dest(self, weight:int, count:int=1):
+    def update_dest(self, weight:int, advance:int=1):
+        """Updates the destination value of the specified task weight.
+        
+        :param weight: The task weight whose destination value should be updated;
+        :param count: The advance value;
+        :rtype: None;
+        """
         if weight <= 0:
             raise ValueError("Arg weight should be positive")
         with self._LOCK:
-            self.dest[weight] = self.dest.get(weight, 0) + count
+            self.dest[weight] = self.dest.get(weight, 0) + advance
 
     def done_once(self, weight:int):
         """Updates the current value of the specified task wight by `1`.
@@ -300,15 +307,41 @@ class TimeRecorder():
         """
         return len(self.done[weight]) if weight in self.done.keys() else 0
     
-    def get_progress(self):
+    def get_done_dest_str_of(self, weight:int):
+        """Gets a string representing the done and destination of the specified task weight.
+        
+        :param weight: The task weight to inspect;
+        :returns: A string that can be printed to CLI;
+        :rtype: str;
+        """
+        done = self.get_done_of(weight)
+        dest = self.get_dest_of(weight)
+        return f"{color(7 if done < dest or done == 0 else 2)}{done}/{dest}"
+
+    def get_progress(self, force_inc:bool=True):
         """Gets the current progress.
 
+        :param force_inc: Whether prevent the progress to decrease;
         :returns: The progress in `[0.0, 1.0]`;
         :rtype: float;
         """
-        return self._get_total_done_weight() / self._get_total_dest_weight()
+        p = self._get_total_done_weight() / self._get_total_dest_weight()
+        p = self._cache_p if p < self._cache_p and force_inc else p
+        self._cache_p = p
+        return p
+
+    def get_progress_str(self, force_inc:bool=True, length:int=25):
+        """Gets a string representing the current progress.
+        
+        :param force_inc: Whether prevent the progress to decrease;
+        :param length: The length of the progress bar;
+        :returns: A progress bar string that can be printed to CLI;
+        :rtype: str;
+        """
+        p = self.get_progress(force_inc)
+        return f"[{TimeRecorder._get_progress_bar_str(p, length)}] {color(2, 0, 1)}{p:.1%}"
     
-    def get_speed(self, basis:int=100):
+    def get_speed(self, basis:int=500):
         """Gets the processing speed.
 
         :param basis: The max records used to calculate the speed;
@@ -330,18 +363,35 @@ class TimeRecorder():
         delta_time = items[-1][1] - items[-length][1]
         return sum_weight / delta_time if delta_time != 0 else 0
     
-    def get_remaining_time(self, basis:int=100):
-        """Gets the time remaining.
+    def get_eta(self, basis:int=500):
+        """Gets the estimated time of arrival.
 
         :param basis: How many records do we use to calculate the speed;
         :returns: Remaining time in seconds;
         :rtype: float;
         """
-        return (self._get_total_dest_weight() - self._get_total_done_weight()) / self.get_speed(basis) \
-            if self.get_speed(basis) != 0 else 0
+        speed = self.get_speed(basis)
+        return (self._get_total_dest_weight() - self._get_total_done_weight()) / speed if speed != 0 else 0
+
+    def get_eta_str(self, basis:int=500):
+        """Gets a string representing the estimated time of arrival.
+
+        :param basis: How many records do we use to calculate the speed;
+        :returns: A human-readable string;
+        :rtype: str;
+        """
+        eta = self.get_eta(basis)
+        h = int(eta / 3600)
+        m = int(eta % 3600 / 60)
+        s = int(eta % 60)
+        if h != 0:
+            return f'{h}:{m:02}:{s:02}'
+        if eta != 0:
+            return f'{m:02}:{s:02}'
+        return '--:--'
     
-    def get_consumed_time(self):
-        """Gets the used time from the first record to now.
+    def get_rt(self):
+        """Gets the running time since this instance was initialized.
 
         :returns: Time in seconds;
         :rtype: float;
@@ -359,4 +409,18 @@ class TimeRecorder():
         for k, v in self.done.items():
             s += k * len(v)
         return s
+    
+    @staticmethod
+    def _get_progress_bar_str(progress:float, length:int):
+        try:
+            add_chars = (' ', '▏', '▎', '▍', '▌', '▋', '▊', '▉', '█')
+            max_idx = len(add_chars) - 1
+            bar = ''
+            unit = 1 / length
+            for i in range(length):
+                ratio = (progress - i * unit) / unit
+                bar += add_chars[max(0, min(max_idx, round(ratio * max_idx)))]
+            return bar
+        except:
+            return ''
     #EndClass
