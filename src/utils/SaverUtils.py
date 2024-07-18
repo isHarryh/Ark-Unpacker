@@ -154,12 +154,12 @@ class SafeSaver(WorkerCtrl):
                         # Invoke callback with destination path as argument
                         if on_saved:
                             on_saved(dest)
-                    else:
-                        # Invoke call back with `None` indicating the file was not saved
-                        if on_saved:
-                            on_saved(None)
+                            return
         except Exception as arg:
             Logger.error(f"Saver: Failed to save file {dest} because: Exception{type(arg)} {arg}")
+        # Invoke call back with `None` indicating the file was not saved
+        if on_saved:
+            on_saved(None)
 
     @staticmethod
     def _save_bytes(data:bytes, dest:str):
