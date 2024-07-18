@@ -5,6 +5,9 @@ on:
     branches:
       - '**'
 
+env:
+  PYTHONIOENCODING: "UTF-8"
+
 jobs:
   build:
     strategy:
