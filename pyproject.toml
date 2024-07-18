@@ -29,7 +29,7 @@ icon = "$project$\\ArkUnpacker.ico"
 add-binary = "$venv$\\Lib\\site-packages\\UnityPy\\lib\\FMOD:UnityPy\\lib\\FMOD"
 add-data = "$project$\\src\\fbs\\CN:src\\fbs\\CN"
 hidden-import = "flatbuffers"
-log-level = "INFO"
+log-level = "WARN"
 
 [build-system]
 requires = ["poetry-core"]
