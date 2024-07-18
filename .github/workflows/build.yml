@@ -1,0 +1,38 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8.10"]
+        poetry-version: ["1.8.3"]
+        os: [windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ matrix.poetry-version }}
+      - name: Install dependencies
+        run: |
+          poetry install
+      - name: Build distributable
+        run: |
+          poetry run python Build.py
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ArkUnpacker-${{ github.ref_name }}
+          path: build/dist/*.*
