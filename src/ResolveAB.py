@@ -4,9 +4,9 @@
 import os.path as osp
 import time
 import UnityPy
+import UnityPy.classes as uc
 from .utils import *
 from .CombineRGBwithA import *
-from UnityPy.classes import *
 
 
 class Resource:
@@ -22,26 +22,26 @@ class Resource:
         self.name:str = env.file.name
         self.length:int = len(env.objects)
         ###
-        self.sprites:list[Sprite] = []
-        self.texture2ds:list[Texture2D] = []
-        self.textassets:list[TextAsset] = []
-        self.audioclips:list[AudioClip] = []
-        self.materials:list[Material] = []
-        self.monobehaviors:list[MonoBehaviour] = []
+        self.sprites:list[uc.Sprite] = []
+        self.texture2ds:list[uc.Texture2D] = []
+        self.textassets:list[uc.TextAsset] = []
+        self.audioclips:list[uc.AudioClip] = []
+        self.materials:list[uc.Material] = []
+        self.monobehaviors:list[uc.MonoBehaviour] = []
         self.spines:list[Resource.SpineAsset] = []
         ###
         for i in [o.read() for o in env.objects]:
-            if isinstance(i, Sprite):
+            if isinstance(i, uc.Sprite):
                 self.sprites.append(i)
-            elif isinstance(i, Texture2D):
+            elif isinstance(i, uc.Texture2D):
                 self.texture2ds.append(i)
-            elif isinstance(i, TextAsset):
+            elif isinstance(i, uc.TextAsset):
                 self.textassets.append(i)
-            elif isinstance(i, AudioClip):
+            elif isinstance(i, uc.AudioClip):
                 self.audioclips.append(i)
-            elif isinstance(i, Material):
+            elif isinstance(i, uc.Material):
                 self.materials.append(i)
-            elif isinstance(i, MonoBehaviour):
+            elif isinstance(i, uc.MonoBehaviour):
                 self.monobehaviors.append(i)
     
     def get_object_by_pathid(self, pathid:"int|dict", search_in:"list|None"=None):
@@ -53,7 +53,7 @@ class Resource:
         """
         _key = 'm_PathID'
         pathid:int = pathid[_key] if type(pathid) == dict and _key in pathid.keys() else pathid
-        lst:list[GameObject] = self.env.objects if not search_in else search_in
+        lst:list[uc.GameObject] = self.env.objects if not search_in else search_in
         for i in lst:
             if i.path_id == pathid:
                 return i
@@ -139,7 +139,7 @@ class Resource:
                         self.__rename_add_prefix(j, prefix)
 
     @staticmethod
-    def __rename_add_prefix(obj:GameObject, pre:str):
+    def __rename_add_prefix(obj:uc.GameObject, pre:str):
         """Adds a prefix to rename the Spine-related files."""
         if not obj.name.startswith(pre):
             obj.name = str(pre + obj.name)
@@ -151,7 +151,7 @@ class Resource:
         BATTLE_BACK = 3
         DYN_ILLUST = 4
 
-        def __init__(self, skel:TextAsset, atlas:TextAsset, tex_list:"list[tuple[Texture2D]]", type:int=UNKNOWN):
+        def __init__(self, skel:uc.TextAsset, atlas:uc.TextAsset, tex_list:"list[tuple[uc.Texture2D]]", type:int=UNKNOWN):
             self.skel = skel
             self.atlas = atlas
             self.tex_list = tex_list
@@ -162,14 +162,14 @@ class Resource:
             return t.count('\nF_') + t.count('\nf_') + t.count('\nC_') + t.count('\nc_') >= t.count('\nB_') + t.count('\nb_')
         
         def is_available(self):
-            if type(self.skel) != TextAsset or type(self.atlas) != TextAsset:
+            if type(self.skel) != uc.TextAsset or type(self.atlas) != uc.TextAsset:
                 return False
             if type(self.tex_list) != list or len(self.tex_list) == 0:
                 return False
             return True
         
         def get_common_name(self):
-            if type(self.atlas) == TextAsset:
+            if type(self.atlas) == uc.TextAsset:
                 return osp.splitext(osp.basename(self.atlas.name))[0]
             return "Unknown"
         

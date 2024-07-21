@@ -4,10 +4,10 @@
 import os
 import os.path as osp
 import threading
+import UnityPy.classes as uc
 from io import BytesIO
 from PIL import Image
 from contextlib import ContextDecorator
-from UnityPy.classes import *
 from .Config import *
 from .GlobalMethods import *
 from .Logger import *
@@ -90,7 +90,7 @@ class SafeSaver(WorkerCtrl):
         SafeSaver.save_bytes(bio.getvalue(), destdir, name, ext, on_queued, on_saved)
     
     @staticmethod
-    def save_object(obj:GameObject, destdir:str, name:str, on_queued:staticmethod=None, on_saved:staticmethod=None):
+    def save_object(obj:uc.GameObject, destdir:str, name:str, on_queued:staticmethod=None, on_saved:staticmethod=None):
         """Saves the given Unity GameObject as a file. If a GameObject is not exportable, it does nothing.
 
         :param obj: The GameObject to save as file;
@@ -103,12 +103,12 @@ class SafeSaver(WorkerCtrl):
         if obj.byte_size == 0:
             # No data:
             pass
-        elif isinstance(obj, (Sprite, Texture2D)):
+        elif isinstance(obj, (uc.Sprite, uc.Texture2D)):
             # As image file:
             if obj.image.width > 0 and obj.image.height > 0:
                 SafeSaver.save_image(obj.image, destdir, name, SafeSaver.__ext_image, on_queued, on_saved)
                 return
-        elif isinstance(obj, AudioClip):
+        elif isinstance(obj, uc.AudioClip):
             # As audio file:
             if len(obj.samples) > 0:
                 byte = bytes()
@@ -116,7 +116,7 @@ class SafeSaver(WorkerCtrl):
                     byte += d
                 SafeSaver.save_bytes(byte, destdir, name, SafeSaver.__ext_audio, on_queued, on_saved)
                 return
-        elif isinstance(obj, TextAsset):
+        elif isinstance(obj, uc.TextAsset):
             # As raw file:
             byte = bytes(obj.script)
             SafeSaver.save_bytes(byte, destdir, name, SafeSaver.__ext_raw, on_queued, on_saved)
@@ -126,7 +126,7 @@ class SafeSaver(WorkerCtrl):
             pass
     
     @staticmethod
-    def save_objects(lst:"list[GameObject]", destdir:str, on_queued:staticmethod=None, on_saved:staticmethod=None):
+    def save_objects(lst:"list[uc.GameObject]", destdir:str, on_queued:staticmethod=None, on_saved:staticmethod=None):
         """Saves all the Unity GameObjects in the given list as files. If a GameObject is not exportable, it does nothing.
 
         :param lst: The GameObjects list;
