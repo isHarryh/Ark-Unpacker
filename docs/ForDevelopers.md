@@ -17,7 +17,10 @@ ArkUnpacker附加说明文档
 4. **子模块：** 本项目使用 [ArkFBSPy](https://github.com/isHarryh/Ark-FBS-Py) 模块来实现 FlatBuffers 的数据解码，该模块是以 Git Submodule 的形式存储在仓库中的。
 
 ## 项目初始化
-1. 使用 Git 克隆仓库到本地，然后使用 IDE 打开项目文件夹。需要注意的是，由于采用了 Git Submodule，您可能需要运行 `git submodule --init --recursive` 来初始化子模块。
+1. 使用 Git 克隆仓库到本地，然后使用 IDE 打开项目文件夹。
+    > 由于仓库使用了 Git Submodule，因此：  
+    > - 在初始化仓库时，您需要运行 `git submodule update --init --recursive` 来初始化子模块。
+    > - 当子模块的远程仓库有更新时，您需要运行 `git submodule update --remote --recursive` 来更新本地的子模块。
 2. 在 VS Code 中启动 `Project Setup` 终端任务（通常情况下，每次打开项目都会自动运行这一任务）；或者命令行运行 `poetry install`。这将激活 Poetry 并在虚拟环境中安装依赖项。本项目的主要依赖项可在 `pyproject.toml` 文件中查看。
 3. 选择 Python 解释器为 Poetry 虚拟环境中的解释器（命令行运行 `poetry env info` 即可查看解释器路径）。
 4. 在 VS Code 中启动 `Python: ArkUnpacker` 运行，即可开始调试主程序。
