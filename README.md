@@ -12,6 +12,7 @@
    <p>
       <img alt="GitHub Top Language" src="https://img.shields.io/github/languages/top/isHarryh/Ark-Unpacker?label=Python">
       <img alt="GitHub License" src="https://img.shields.io/github/license/isHarryh/Ark-Unpacker?label=License"/>
+      <img alt="GitHub Actions" src="https://github.com/isHarryh/Ark-Unpacker/actions/workflows/build.yml/badge.svg">
    </p>
    <sub>
       <i> This project only supports Chinese docs. If you are an English user, feel free to contact us. </i>
@@ -20,11 +21,12 @@
 
 ## 介绍 <sub>Intro</sub>
 #### 实现的功能
-1. 批量解包《明日方舟》Unity AssetBundle(AB) 文件中的资源对象。
-    1. 解包时可对基建小人、动态立绘和战斗小人的Spine模型文件进行区分；
-    2. 解包时可以将文件按源AB文件的名称分目录存放。
-2. 批量合并RGB通道图和A通道图。
-3. 提供交互式命令行界面进行操作。
+1. 批量解包《明日方舟》Unity AssetBundle(AB) 文件中的游戏资源对象。
+    1. 解包时可对基建小人、动态立绘和战斗小人的 Spine 模型文件进行区分；
+    2. 解包时可以将文件按源 AB 文件的名称分目录存放。
+2. 批量合并 RGB 通道图和 Alpha 通道图。
+3. 批量解码 FlatBuffers 数据文件。
+4. 提供交互式命令行界面进行操作。
 
 #### 支持的类型
 | Unity类型 | 描述 | 导出格式 |
@@ -43,23 +45,23 @@
 ## 使用方法 <sub>Usage</sub>
 
 ### 1.资源准备
-无论您是想要使用我们的发行版本还是源代码来解包明日方舟的游戏资源，您都需要先获取到明日方舟的资源文件。明日方舟是基于Unity开发的游戏，它的游戏资源会全部打包到一种**AssetBundle文件**（后缀名 `.ab`，下简称“AB文件”）中。
+无论您是想要使用我们的发行版本还是源代码来解包明日方舟的游戏资源，您都需要先获取到明日方舟的资源文件。明日方舟是基于Unity开发的游戏，它的游戏资源会全部打包到一种 **AssetBundle文件**（后缀名 `.ab`，下简称“AB文件”）中。
 
-下面将以**Android安卓系统**为例讲述**如何获取到明日方舟的AB文件**。明日方舟的游戏资源有**2个部分**：
+下面将以 **Android 安卓系统** 为例讲述**如何获取到明日方舟的 AB 文件**。明日方舟的游戏资源有 **2 个部分**：
 - 一部分是通过**安装包**（`.apk`）提供的，从明日方舟[**官网**](https://ak.hypergryph.com)将其下载到本地后，使用压缩文件查看工具打开（后缀名改成 `.zip` 后打开），然后把里面的 `assets\AB\Android` 文件夹解压出来；
-- 另一部分是通过**热更新**提供的，首先确保您的安卓手机上的明日方舟更新到了最新版本，然后（推荐使用USB数据线）将手机存储的 `Android\data\com.hypergryph.arknights\files\AB\Android` 文件夹（一般情况下是这个路径）复制到电脑上（重命名为 `Android(2)`）。至此，我们的目录结构大致如下：
+- 另一部分是通过**热更新**提供的，首先确保您的安卓手机上的明日方舟更新到了最新版本，然后（推荐使用 USB 数据线）将手机存储的 `Android\data\com.hypergryph.arknights\files\AB\Android` 文件夹（一般情况下是这个路径）复制到电脑上（重命名为 `Android(2)`）。至此，我们的目录结构大致如下：
 > **你的目录**  
 > ├─Android  
 > └─Android(2)  
 
 最后，将 `Android(2)` 文件夹里的内容复制到 `Android` 中，并**覆盖**同名文件，就能得到完整的游戏资源。在这之后，您就可以使用我们的程序来解包其中的游戏资源了。
 
-当然，您也可以将 `Android` 里的部分文件夹复制出来进行处理，以解包特定的资源。为了便于您找到特定资源的AB文件位置，我们整理并列出了各个子目录储存的资源的内容，浏览[此文档](docs/AssetsGuide.md)以查看详情。
+当然，您也可以将 `Android` 里的部分文件夹复制出来进行处理，以解包特定的资源。为了便于您找到特定资源的 AB 文件位置，我们整理并列出了各个子目录储存的资源的内容，浏览[此文档](docs/AssetsGuide.md)以查看详情。
 
 ### 2.下载ArkUnpacker
-为了方便一般用户使用，我们推出了针对 Windows 64位操作系统（暂不支持其他操作系统）打包的可执行文件。
+为了方便一般用户使用，我们推出了适用于 Windows 64位操作系统（暂不支持其他操作系统）的可执行文件。
 
-请进入Releases页面下载exe文件 `ArkUnpacker-vx.x.x_x64.exe`：[前往下载](https://github.com/isHarryh/Ark-Unpacker/releases)
+请进入 Releases 页面下载 exe 文件 `ArkUnpacker-vx.x.x_x64.exe`：[前往下载](https://github.com/isHarryh/Ark-Unpacker/releases)
 
 ### 3.必备知识
 在正式地使用本程序前，您最好对以下内容有初步了解：
@@ -67,13 +69,13 @@
 - [Spine动画小人](docs/Essentials.md#spine动画小人)
 
 ### 4.示例
-首先，将需要解包的文件夹（可以是多个）放到与exe相同的目录下，至此，我们的目录结构大致如下：
+首先，将需要解包的文件夹（可以是多个）放到与 exe 相同的目录下，至此，我们的目录结构大致如下：
 > **你的目录**  
 > ├─Android (解包整个目录需要很久)  
 > ├─charpack (可以选择解包部分文件夹)  
 > └─ArkUnpacker.exe  
 
-然后运行exe，弹出交互式命令行界面如下，依据其提示操作即可：
+然后运行 exe，弹出交互式命令行界面如下，依据其提示操作即可：
 > 欢迎使用ArkUnpacker  
 > 模式选择：  
 > 1: 一键执行  
@@ -94,9 +96,9 @@
 
 
 ## 注意事项 <sub>Notice</sub>
-1. 使用一键执行模式时，不会解包与exe**同一目录**下的ab文件，只会解包子文件夹里的ab文件。
-2. 本程序会根据设备CPU核心数自动调整多线程数量，并且对设备性能（尤其是CPU和硬盘性能）有一定要求，配置过低的电脑在运行时可能会卡顿。
-3. Windows命令行基本常识：
+1. 使用一键执行模式时，不会解包**直接**位于程序所在目录中的 AB 文件，只会解包子文件夹里的 AB 文件。
+2. 程序会根据设备 CPU 核心数自动调整多线程策略，并且对设备性能（尤其是 CPU 和硬盘性能）有一定要求，配置过低的电脑在运行时可能会缓慢。
+3. Windows 命令行基本常识：
     1. 快捷键 `Ctrl+C` 用于强行终止程序，若想复制文本，请用鼠标选取文本后再按此快捷键。
     2. 左键单击小黑窗会进入“文本选取”模式，此时主程序会暂停执行。
     3. 右键单击小黑窗可以粘贴文本，也可用于退出“文本选取”模式。
@@ -105,4 +107,4 @@
 
 
 ## 许可证 <sub>Licensing</sub>
-本项目基于**BSD3协议**。任何人都可以自由地使用和修改项目内的源代码，前提是要在源代码或版权声明中保留作者说明和原有协议，且不可以使用本项目名称或作者名称进行宣传推广。
+本项目基于 **BSD-3 开源协议**。任何人都可以自由地使用和修改项目内的源代码，前提是要在源代码或版权声明中保留作者说明和原有协议，且不可以使用本项目名称或作者名称进行宣传推广。
