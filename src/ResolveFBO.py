@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
-import os, json
+import os
+import os.path as osp
+import json
 import pkgutil
 import importlib.util
 import numpy as np
 from .utils import *
+
 
 class PackageHelper:
     """Helper class for dynamic package inspection."""
@@ -38,7 +41,7 @@ class ArkFBOLibrary:
     
     @staticmethod
     def guess_root_type(path:str):
-        target = os.path.basename(path)
+        target = osp.basename(path)
         for m in ArkFBOLibrary.CN:
             name = m.__name__.split('.')[-1]
             if name in target:
@@ -151,13 +154,13 @@ def fbo_resolve(fp:str, destdir:str, on_processed:staticmethod, on_file_queued:s
     :rtype: None;
     """
     try:
-        if os.path.isfile(fp):
+        if osp.isfile(fp):
             typ = ArkFBOLibrary.guess_root_type(fp)
             if typ and ArkFBOLibrary.is_binary_file(fp):
                 dic = ArkFBOLibrary.decode(fp, typ)
                 byt = bytes(json.dumps(dic, ensure_ascii=False, indent=4), encoding='UTF-8')
                 Logger.debug(f"ResolveFBO: \"{fp}\" decoded, using {typ}")
-                SafeSaver.save_bytes(byt, destdir, os.path.basename(fp), '.json', on_file_queued, on_file_saved)
+                SafeSaver.save_bytes(byt, destdir, osp.basename(fp), '.json', on_file_queued, on_file_saved)
             else:
                 Logger.debug(f"ResolveFBO: \"{fp}\" not a binary file")
     except Exception as arg:
@@ -177,8 +180,8 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     """
     print(f'\n正在解析路径...', s=1)
     Logger.info("ResolveFBO: Retrieving file paths...")
-    rootdir = os.path.normpath(os.path.realpath(rootdir))
-    destdir = os.path.normpath(os.path.realpath(destdir))
+    rootdir = osp.normpath(osp.realpath(rootdir))
+    destdir = osp.normpath(osp.realpath(destdir))
     flist = get_filelist(rootdir)
     flist = list(filter(lambda x:not is_known_asset_file(x), flist))
     flist = list(filter(lambda x:not is_ab_file(x), flist))
@@ -201,15 +204,15 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
         UI.request([
             f'正在批量解码FlatBuffers数据...',
             TR.get_progress_str(),
-            f'当前目录：\t{os.path.basename(os.path.dirname(i))}',
-            f'当前搜索：\t{os.path.basename(i)}',
+            f'当前目录：\t{osp.basename(osp.dirname(i))}',
+            f'当前搜索：\t{osp.basename(i)}',
             f'累计搜索：\t{TR.get_done_dest_str_of(2)}',
             f'累计解码：\t{TR.get_done_dest_str_of(1)}',
             f'剩余时间：\t{TR.get_eta_str()}',
         ])
         ###
-        subdestdir = os.path.dirname(i).strip(os.path.sep).replace(rootdir, '').strip(os.path.sep)
-        TC.run_subthread(fbo_resolve, (i, os.path.join(destdir, subdestdir), on_processed, on_file_queued, on_file_saved), \
+        subdestdir = osp.dirname(i).strip(osp.sep).replace(rootdir, '').strip(osp.sep)
+        TC.run_subthread(fbo_resolve, (i, osp.join(destdir, subdestdir), on_processed, on_file_queued, on_file_saved), \
             name=f"RFThread:{id(i)}")
 
     UI.reset()
@@ -236,7 +239,7 @@ if __name__ == "__main__":
     for root, _, files in os.walk('test/upk'):
         for f in files:
             try:
-                file_path = os.path.join(root, f)
+                file_path = osp.join(root, f)
                 dic = ArkFBOLibrary.decode(file_path)
                 os.makedirs('test/fbo', exist_ok=True)
                 with open(f'test/fbo/{f}.json', 'w', encoding='UTF-8') as g:

@@ -2,6 +2,7 @@
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
 import os
+import os.path as osp
 import threading
 from io import BytesIO
 from PIL import Image
@@ -140,7 +141,7 @@ class SafeSaver(WorkerCtrl):
     @staticmethod
     def _save(data:bytes, destdir:str, name:str, ext:str, on_saved:staticmethod):
         try:
-            dest = os.path.join(destdir, name + ext)
+            dest = osp.join(destdir, name + ext)
             with TestRT('lock'):
                 # Ensure files with identical name cannot be saved simultaneously
                 with EntryLock(dest):
@@ -149,7 +150,7 @@ class SafeSaver(WorkerCtrl):
                         # Modify the file name to avoid namesake
                         dest = SafeSaver._no_namesake(dest)
                         # Save the file eventually
-                        mkdir(os.path.dirname(dest))
+                        mkdir(osp.dirname(dest))
                         SafeSaver._save_bytes(data, dest)
                         # Invoke callback with destination path as argument
                         if on_saved:
@@ -168,13 +169,13 @@ class SafeSaver(WorkerCtrl):
 
     @staticmethod
     def _is_unique(data:bytes, dest:str):
-        destdir = os.path.dirname(dest)
-        name, ext = os.path.splitext(os.path.basename(dest))
-        if not os.path.isdir(destdir):
+        destdir = osp.dirname(dest)
+        name, ext = osp.splitext(osp.basename(dest))
+        if not osp.isdir(destdir):
             return True
         flist = filter(lambda x:x.startswith(name) and x.endswith(ext), os.listdir(destdir))
         for i in flist:
-            with open(os.path.join(destdir, i), 'rb') as f:
+            with open(osp.join(destdir, i), 'rb') as f:
                 if f.read() == data:
                     Logger.debug(f"Saver: File \"{i}\" duplication was prevented, size {len(data)}")
                     return False
@@ -182,11 +183,11 @@ class SafeSaver(WorkerCtrl):
     
     @staticmethod
     def _no_namesake(dest:str):
-        destdir = os.path.dirname(dest)
-        name, ext = os.path.splitext(os.path.basename(dest))
+        destdir = osp.dirname(dest)
+        name, ext = osp.splitext(osp.basename(dest))
         tmp = 0
-        while os.path.isfile(dest):
-            dest = os.path.join(destdir, f'{name}${tmp}{ext}')
+        while osp.isfile(dest):
+            dest = osp.join(destdir, f'{name}${tmp}{ext}')
             tmp += 1
         return dest
     #EndClass

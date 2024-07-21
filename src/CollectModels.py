@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
-import os.path, re, shutil
+import os.path as osp
+import re, shutil
 from .utils import*
 
 
@@ -11,9 +12,9 @@ def collect_models(upkdir:str, destdir:str, dodel:bool, on_finished:staticmethod
     """
     error_occurred = False
     for model_type_dir in get_dirlist(upkdir, max_depth=1):
-        model_type:str = os.path.basename(model_type_dir) # Sub dir of one model type
+        model_type:str = osp.basename(model_type_dir) # Sub dir of one model type
         for model_dir in get_dirlist(model_type_dir, max_depth=1):
-            model:str = os.path.basename(model_dir) # Sub dir of one determined model
+            model:str = osp.basename(model_dir) # Sub dir of one determined model
             if not model.islower():
                 # To solve model typo caused by Arknights side
                 model = model.lower()
@@ -28,7 +29,7 @@ def collect_models(upkdir:str, destdir:str, dodel:bool, on_finished:staticmethod
                     newname = "dyn_illust_" + re.match(r'dyn_illust_char_(\d+_[0-9a-zA-Z]+(_[0-9a-zA-Z#]+)?)', model).group(1)
                 if newname:
                     # Move to 
-                    dest = os.path.join(destdir, newname)
+                    dest = osp.join(destdir, newname)
                     Logger.debug(f"CollectModels: \"{model_dir}\" -> \"{dest}\"")
                     shutil.copytree(model_dir, dest, dirs_exist_ok=True)
                     rmdir(model_dir)
@@ -90,7 +91,7 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
         UI.request([
             f'正在分拣模型...',
             TR.get_progress_str(),
-            f'当前搜索：\t{os.path.basename(upkdir)}',
+            f'当前搜索：\t{osp.basename(upkdir)}',
             f'累计分拣：\t{collected.now()}',
             f'剩余时间：\t{TR.get_eta_str()}',
         ])

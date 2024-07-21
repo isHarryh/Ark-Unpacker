@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
-import os.path, re, json, datetime
+import os.path as osp
+import re, json, datetime
 from .ResolveAB import *
 from .ResolveFBO import *
 from .utils import*
@@ -53,7 +54,7 @@ class ModelsDist:
     def get_gamedata(self, alias:tuple):
         def basename_startswith(path:str, alias:tuple):
             for a in alias:
-                if os.path.basename(path).startswith(a):
+                if osp.basename(path).startswith(a):
                     return True
             return False
         for i in get_filelist(ModelsDist.GAMEDATA_DIR):
@@ -161,10 +162,10 @@ class ModelsDist:
         Logger.info(f"ModelsDataDist: Parsing dynillust data.")
         print("分析动态立绘信息...")
         collected = {}
-        if os.path.isdir(self.data['storageDirectory']['DynIllust']):
+        if osp.isdir(self.data['storageDirectory']['DynIllust']):
             for i in get_dirlist(self.data['storageDirectory']['DynIllust'], max_depth=1):
                 #(i是每个动态立绘的文件夹)
-                base = os.path.basename(i)
+                base = osp.basename(i)
                 if base.startswith('dyn_'):
                     key = base.lower()
                     key_char = re.findall(r'[0-9]+.+', key)
@@ -200,9 +201,9 @@ class ModelsDist:
             asset_list = {}
             if v['type'] in self.data['storageDirectory'].keys():
                 #如果其type在模型存放目录预设中有对应值
-                dir = os.path.join(self.data['storageDirectory'][v['type']], k)
+                dir = osp.join(self.data['storageDirectory'][v['type']], k)
                 asset_list_pending = {}
-                if os.path.isdir(dir):
+                if osp.isdir(dir):
                     #如果预期的目录存在
                     file_list = os.listdir(dir)
                     for j in ('.atlas', '.png', '.skel'):

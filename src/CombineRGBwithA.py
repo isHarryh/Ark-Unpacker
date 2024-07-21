@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
-import os.path, re, time
+import os.path as osp
+import re, time
 from .utils import *
 from PIL import Image
 
@@ -45,12 +46,12 @@ class AlphaRGBCombiner:
             raise ValueError("Not a recognized alpha image name")
         if not is_image_file(fp_alpha):
             raise ValueError("Not a image file path")
-        ext = os.path.splitext(fp_alpha)[1]
-        dirname = os.path.dirname(fp_alpha)
+        ext = osp.splitext(fp_alpha)[1]
+        dirname = osp.dirname(fp_alpha)
         flist = os.listdir(dirname)
         flist = list(filter(lambda x:is_image_file(x), flist))
         flist = list(filter(lambda x:x == real + ext or (x.startswith(real) and '$' in x), flist))
-        flist = [os.path.join(dirname, x) for x in flist]
+        flist = [osp.join(dirname, x) for x in flist]
         if len(flist) == 0:
             Logger.info(f"CombineRGBwithA: No RGB-image could be matched to \"{fp_alpha}\"")
             raise NoRGBImageMatchedError(fp_alpha)
@@ -75,7 +76,7 @@ class AlphaRGBCombiner:
     
     @staticmethod
     def get_real_name(fp_alpha:str):
-        basename, ext = os.path.splitext(os.path.basename(fp_alpha))
+        basename, ext = osp.splitext(osp.basename(fp_alpha))
         for i in AlphaRGBCombiner.PATTERNS:
             m = i.fullmatch(basename)
             if m:
@@ -152,8 +153,8 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     """
     print(f'\n正在解析路径...', s=1)
     Logger.info("CombineRGBwithA: Retrieving file paths...")
-    rootdir = os.path.normpath(os.path.realpath(rootdir))
-    destdir = os.path.normpath(os.path.realpath(destdir))
+    rootdir = osp.normpath(osp.realpath(rootdir))
+    destdir = osp.normpath(osp.realpath(destdir))
     flist = get_filelist(rootdir)
     flist = list(filter(lambda x:is_image_file(x), flist))
     flist = list(filter(lambda x:AlphaRGBCombiner.get_real_name(x) != None, flist))
@@ -177,15 +178,15 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
         UI.request([
             f'正在批量合并图片...',
             TR.get_progress_str(),
-            f'当前目录：\t{os.path.basename(os.path.dirname(i))}',
-            f'当前文件：\t{os.path.basename(i)}',
+            f'当前目录：\t{osp.basename(osp.dirname(i))}',
+            f'当前文件：\t{osp.basename(i)}',
             f'累计搜索：\t{TR.get_done_dest_str_of(2)}',
             f'累计导出：\t{TR.get_done_dest_str_of(1)}',
             f'剩余时间：\t{TR.get_eta_str()}',
         ])
         ###
-        subdestdir = os.path.dirname(i).strip(os.path.sep).replace(rootdir, '').strip(os.path.sep)
-        TC.run_subthread(image_resolve, (i, os.path.join(destdir, subdestdir), on_processed, on_file_queued, on_file_saved), \
+        subdestdir = osp.dirname(i).strip(osp.sep).replace(rootdir, '').strip(osp.sep)
+        TC.run_subthread(image_resolve, (i, osp.join(destdir, subdestdir), on_processed, on_file_queued, on_file_saved), \
             name=f"CBThread:{id(i)}")
 
     UI.reset()

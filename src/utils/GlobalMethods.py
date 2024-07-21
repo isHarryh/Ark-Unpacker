@@ -2,6 +2,7 @@
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
 import os, builtins, shutil, traceback
+import os.path as osp
 
 
 ##### ↓ CLI related ↓ #####
@@ -96,8 +97,8 @@ def get_dir_size(path:str):
     size = 0
     lst = get_filelist(path)
     for i in lst:
-        if os.path.isfile(i):
-            size += os.path.getsize(i)
+        if osp.isfile(i):
+            size += osp.getsize(i)
     return size
 
 def get_filelist(path:str, max_depth=0):
@@ -115,10 +116,10 @@ def get_filelist(path:str, max_depth=0):
     if max_depth <= 0:
         for root, _, files in os.walk(path):
             for file in files:
-                lst.append(os.path.join(root, file))
+                lst.append(osp.join(root, file))
     else:
         for i in os.listdir(path):
-            lst.append(os.path.join(path, i))
+            lst.append(osp.join(path, i))
     return lst
 
 def get_dirlist(path:str, max_depth=0):
@@ -136,11 +137,11 @@ def get_dirlist(path:str, max_depth=0):
     if max_depth <= 0:
         for root, dirs, _ in os.walk(path):
             for dir in dirs:
-                lst.append(os.path.join(root, dir))
+                lst.append(osp.join(root, dir))
     else:
         for i in os.listdir(path):
-            i = os.path.join(path, i)
-            if os.path.isdir(i):
+            i = osp.join(path, i)
+            if osp.isdir(i):
                 lst.append(i)
                 if max_depth != 1:
                     lst.extend(get_filelist(i, max_depth - 1))

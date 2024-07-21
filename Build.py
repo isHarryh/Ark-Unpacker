@@ -2,6 +2,7 @@
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
 import os, configparser
+import os.path as osp
 
 def __get_venv_dir():
     import re, subprocess
@@ -12,7 +13,7 @@ def __get_venv_dir():
             match = re.search(r'Path:\s+(.+)', str(l, encoding='UTF-8'))
             if match:
                 path = match.group(1).strip()
-                if os.path.isdir(path):
+                if osp.isdir(path):
                     return path
         print("× Failed to parse poetry output to query venv dir.")
     else:
@@ -53,7 +54,7 @@ def __get_build_def(proj_dir, venv_dir):
         raise arg
 
 def __main():
-    proj_dir = os.path.dirname(os.path.abspath(__file__))
+    proj_dir = osp.dirname(osp.abspath(__file__))
     venv_dir = __get_venv_dir()
     proj_info = __get_proj_info()
     build_def = __get_build_def(proj_dir, venv_dir)
@@ -80,7 +81,7 @@ def __build(proj_info, proj_dir, build_def):
     print(f"Removing build dir...")
     os.chdir(proj_dir)
     build_dir = build_def['build-dir']
-    if os.path.exists(build_dir):
+    if osp.exists(build_dir):
         shutil.rmtree(build_dir, ignore_errors=False)
 
     print(f"Creating build dir...")
@@ -129,7 +130,7 @@ StringFileInfo([
     __exec(cmd_pyinstaller)
 
     print(f"√ Build finished in {round(time.time() - t1, 1)}s!")
-    print(f"- Dist files see: {os.path.join(build_dir, 'dist')}")
+    print(f"- Dist files see: {osp.join(build_dir, 'dist')}")
 
 if __name__ == '__main__':
     __main()

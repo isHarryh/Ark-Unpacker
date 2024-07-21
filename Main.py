@@ -2,6 +2,7 @@
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
 import os, time
+import os.path as osp
 from src.utils import *
 from src import ResolveAB       as AU_Rs
 from src import ResolveFBO      as AU_Fb
@@ -58,7 +59,7 @@ def run_custom_Rs():
     print("\n请输入要解包的目录或文件路径")
     src = UserInput.request_path()
     print("解包目标路径：", c=2)
-    print(f"  {os.path.abspath(src)}", c=6)
+    print(f"  {osp.abspath(src)}", c=6)
     ###
     print("\n请输入导出目录的路径")
     print("  支持相对路径，留空表示自动创建")
@@ -66,16 +67,16 @@ def run_custom_Rs():
     if not destdir:
         destdir = f'Unpacked_{int(time.time())}'
     print("导出目录路径：", c=2)
-    print(f"  {os.path.abspath(destdir)}", c=6)
+    print(f"  {osp.abspath(destdir)}", c=6)
     ###
     dodel = False
-    if os.path.isdir(destdir):
+    if osp.isdir(destdir):
         print("\n该导出目录已存在，您要删除它里面的全部文件吗？")
         print("  请!慎重!选择：[y]删除，[n]保留(默认)", c=3)
         dodel = UserInput.request_yes_or_no(False)
     ###
     separate = True
-    if not os.path.isfile(src):
+    if not osp.isfile(src):
         print("\n是否对导出的文件按来源进行分组？")
         print("  [y]是(默认)，[n]否", c=3)
         separate = UserInput.request_yes_or_no(True)
@@ -103,7 +104,7 @@ def run_custom_Cb():
     print("\n请输入源图片目录的路径")
     rootdir = UserInput.request_path()
     print("源图片目录路径：")
-    print(f"  {os.path.abspath(rootdir)}", c=6)
+    print(f"  {osp.abspath(rootdir)}", c=6)
     ###
     print("\n请输入导出的目的地")
     print("  支持相对路径，留空表示自动创建")
@@ -111,10 +112,10 @@ def run_custom_Cb():
     if not destdir:
         destdir = f'Combined_{int(time.time())}'
     print("您选择的导出目录是：")
-    print(f"  {os.path.abspath(destdir)}", c=6)
+    print(f"  {osp.abspath(destdir)}", c=6)
     ###
     dodel = False
-    if os.path.isdir(destdir):
+    if osp.isdir(destdir):
         print("\n该导出目录已存在，您要删除它里面的全部文件吗？")
         print("  请!慎重!选择：[y]删除，[n]保留(默认)", c=3)
         dodel = UserInput.request_yes_or_no(False)
@@ -133,7 +134,7 @@ def run_custom_Fb():
     print("若您不清楚哪些文件是FlatBuffers格式，请选择整个解包后的目录。")
     rootdir = UserInput.request_path()
     print(" 源文件的目录是：")
-    print(f"  {os.path.abspath(rootdir)}", c=6)
+    print(f"  {osp.abspath(rootdir)}", c=6)
     ###
     print("\n请输入导出的目的地")
     print("  支持相对路径，留空表示自动创建")
@@ -141,10 +142,10 @@ def run_custom_Fb():
     if not destdir:
         destdir = f'FlatBuffers_{int(time.time())}'
     print("您选择的导出目录是：")
-    print(f"  {os.path.abspath(destdir)}", c=6)
+    print(f"  {osp.abspath(destdir)}", c=6)
     ###
     dodel = False
-    if os.path.isdir(destdir):
+    if osp.isdir(destdir):
         print("\n该导出目录已存在，您要删除它里面的全部文件吗？")
         print("  请!慎重!选择：[y]删除，[n]保留(默认)", c=3)
         dodel = UserInput.request_yes_or_no(False)
@@ -158,7 +159,7 @@ def run_arkmodels_unpacking(dirs, destdir):
     prt_subtitle("ArkModels 模型提取")
     ###
     for i in dirs:
-        if not os.path.exists(i):
+        if not osp.exists(i):
             print(f"在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是本程序版本与您的资源版本不再兼容，可尝试获取新版程序。", c=3)
             return
     title("ArkUnpacker - Processing")
@@ -175,7 +176,7 @@ def run_arkmodels_filtering(dirs, destdirs):
     dirs_ = []
     destdirs_ = []
     for i, j in zip(dirs, destdirs):
-        if not os.path.exists(i):
+        if not osp.exists(i):
             print(f"在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是您事先没有进行\"模型提取\"的步骤。", c=3)
             UserInput.request("> 输入符号 \"*\" 以取消任务，或直接按Enter以强制继续")
         else:
@@ -189,7 +190,7 @@ def run_arkmodels_data_dist():
     prt_subtitle("ArkModels 生成数据集")
     ###
     for i in ["models", "models_enemies"]:
-        if not os.path.exists(i):
+        if not osp.exists(i):
             print(f"在工作目录下找不到 {i}，请确认您先前已运行了\"文件分拣\"。", c=3)
             UserInput.request("> 输入符号 \"*\" 以取消任务，或直接按Enter以强制继续")
             return
@@ -197,7 +198,7 @@ def run_arkmodels_data_dist():
 
 def run_arkmodels_workflow():
     def visual(fp:str, default_c:int=6):
-        return f"{color(2 if os.path.exists(fp) else 3)}{fp}{color(default_c)}"
+        return f"{color(2 if osp.exists(fp) else 3)}{fp}{color(default_c)}"
     Logger.info("CI: In ArkModels workflow.")
     def prt_arkmodels_menu():
         clear()
@@ -263,10 +264,10 @@ class UserInput:
     @staticmethod
     def request_path():
         print(f"  输入符号 \"{UserInput.CANCEL_CMD}\" 以取消任务，支持输入相对路径")
-        uin = os.path.normpath(UserInput.request())
-        while not os.path.exists(uin):
+        uin = osp.normpath(UserInput.request())
+        while not osp.exists(uin):
             print('  输入的路径不存在', c=3)
-            uin = os.path.normpath(UserInput.request())
+            uin = osp.normpath(UserInput.request())
         return uin
 
     @staticmethod

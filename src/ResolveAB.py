@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
-import os.path, time
+import os.path as osp
+import time
 import UnityPy
 from .utils import *
 from .CombineRGBwithA import *
@@ -121,15 +122,15 @@ class Resource:
         :rtype: None;
         """
         for spine in self.spines:
-            prefix = spine.get_common_name() + os.path.sep
+            prefix = spine.get_common_name() + osp.sep
             if spine.type == Resource.SpineAsset.BUILDING:
-                prefix = 'Building' + os.path.sep + prefix
+                prefix = 'Building' + osp.sep + prefix
             elif spine.type == Resource.SpineAsset.BATTLE_FRONT:
-                prefix = 'BattleFront' + os.path.sep + prefix
+                prefix = 'BattleFront' + osp.sep + prefix
             elif spine.type == Resource.SpineAsset.BATTLE_BACK:
-                prefix = 'BattleBack' + os.path.sep + prefix
+                prefix = 'BattleBack' + osp.sep + prefix
             elif spine.type == Resource.SpineAsset.DYN_ILLUST:
-                prefix = 'DynIllust' + os.path.sep + prefix
+                prefix = 'DynIllust' + osp.sep + prefix
             self.__rename_add_prefix(spine.skel, prefix)
             self.__rename_add_prefix(spine.atlas, prefix)
             for i in spine.tex_list:
@@ -169,7 +170,7 @@ class Resource:
         
         def get_common_name(self):
             if type(self.atlas) == TextAsset:
-                return os.path.splitext(os.path.basename(self.atlas.name))[0]
+                return osp.splitext(osp.basename(self.atlas.name))[0]
             return "Unknown"
         
         def save_spine(self, destdir:str, on_queued:staticmethod, on_saved:staticmethod):
@@ -209,7 +210,7 @@ def ab_resolve(abfile:str, destdir:str, \
     :param on_file_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
     :rtype: None;
     """
-    if not os.path.isfile(abfile):
+    if not osp.isfile(abfile):
         if on_processed:
             on_processed()
         return
@@ -261,9 +262,9 @@ def main(src:str, destdir:str, dodel:bool=False,
     """
     print("\n正在解析路径...", s=1)
     Logger.info("ResolveAB: Retrieving file paths...")
-    src = os.path.normpath(os.path.realpath(src))
-    destdir = os.path.normpath(os.path.realpath(destdir))
-    flist = [src] if os.path.isfile(src) else get_filelist(src)
+    src = osp.normpath(osp.realpath(src))
+    destdir = osp.normpath(osp.realpath(destdir))
+    flist = [src] if osp.isfile(src) else get_filelist(src)
     flist = list(filter(lambda x:is_ab_file(x), flist))
 
     if dodel:
@@ -286,17 +287,17 @@ def main(src:str, destdir:str, dodel:bool=False,
         UI.request([
             f'正在批量解包...',
             TR.get_progress_str(),
-            f'当前目录：\t{os.path.basename(os.path.dirname(i))}',
-            f'当前文件：\t{os.path.basename(i)}',
+            f'当前目录：\t{osp.basename(osp.dirname(i))}',
+            f'当前文件：\t{osp.basename(i)}',
             f'累计解包：\t{TR.get_done_dest_str_of(4)}',
             f'累计导出：\t{TR.get_done_dest_str_of(1)}',
             f'剩余时间：\t{TR.get_eta_str()}',
         ])
         ###
-        subdestdir = os.path.dirname(i).strip(os.path.sep).replace(src, '').strip(os.path.sep)
-        curdestdir = destdir if os.path.samefile(i, src) else \
-            os.path.join(destdir, subdestdir, os.path.splitext(os.path.basename(i))[0]) if separate else \
-            os.path.join(destdir, subdestdir)
+        subdestdir = osp.dirname(i).strip(osp.sep).replace(src, '').strip(osp.sep)
+        curdestdir = destdir if osp.samefile(i, src) else \
+            osp.join(destdir, subdestdir, osp.splitext(osp.basename(i))[0]) if separate else \
+            osp.join(destdir, subdestdir)
         TC.run_subthread(ab_resolve, (i, curdestdir, doimg, dotxt, doaud, dospine, on_processed, on_file_queued, on_file_saved), \
             name=f"RsThread:{id(i)}")
 

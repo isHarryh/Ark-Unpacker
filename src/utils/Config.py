@@ -2,6 +2,7 @@
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
 import os, json
+import os.path as osp
 from .Logger import *
 
 
@@ -46,7 +47,7 @@ class Config():
         return self.config.get(key, None)
     
     def __read_config(self):
-        if os.path.isfile(Config.__config_path):
+        if osp.isfile(Config.__config_path):
             try:
                 loaded_config = json.load(open(Config.__config_path, 'r', encoding=Config.__file_encoding))
                 if isinstance(loaded_config, dict):
