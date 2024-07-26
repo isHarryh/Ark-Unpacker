@@ -178,7 +178,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     :param dodel: Whether to delete the existed destination directory first, `False` for default;
     :rtype: None;
     """
-    print(f'\n正在解析路径...', s=1)
+    print(f"\n正在解析路径...", s=1)
     Logger.info("ResolveFBO: Retrieving file paths...")
     rootdir = osp.normpath(osp.realpath(rootdir))
     destdir = osp.normpath(osp.realpath(destdir))
@@ -202,13 +202,13 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     UI.loop_start()
     for i in flist:
         UI.request([
-            f'正在批量解码FlatBuffers数据...',
+            f"正在批量解码FlatBuffers数据...",
             TR.get_progress_str(),
-            f'当前目录：\t{osp.basename(osp.dirname(i))}',
-            f'当前搜索：\t{osp.basename(i)}',
-            f'累计搜索：\t{TR.get_done_dest_str_of(2)}',
-            f'累计解码：\t{TR.get_done_dest_str_of(1)}',
-            f'剩余时间：\t{TR.get_eta_str()}',
+            f"当前目录：\t{osp.basename(osp.dirname(i))}",
+            f"当前搜索：\t{osp.basename(i)}",
+            f"累计搜索：\t{TR.get_done_dest_str_of(2)}",
+            f"累计解码：\t{TR.get_done_dest_str_of(1)}",
+            f"剩余时间：\t{TR.get_eta_str()}",
         ])
         ###
         subdestdir = osp.dirname(i).strip(osp.sep).replace(rootdir, '').strip(osp.sep)
@@ -219,23 +219,23 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     UI.loop_stop()
     while TC.count_subthread() or not SafeSaver.get_instance().completed() or TR.get_progress() < 1:
         UI.request([
-            f'正在批量解码FlatBuffers数据...',
+            f"正在批量解码FlatBuffers数据...",
             TR.get_progress_str(),
-            f'累计搜索：\t{TR.get_done_dest_str_of(2)}',
-            f'累计解码：\t{TR.get_done_dest_str_of(1)}',
-            f'剩余时间：\t{TR.get_eta_str()}',
+            f"累计搜索：\t{TR.get_done_dest_str_of(2)}",
+            f"累计解码：\t{TR.get_done_dest_str_of(1)}",
+            f"剩余时间：\t{TR.get_eta_str()}",
         ])
         UI.refresh(post_delay=0.1)
 
     UI.reset()
-    print(f'\n批量解码FlatBuffers数据结束!', s=1)
-    print(f'  累计搜索 {TR.get_done_of(2)} 个文件')
-    print(f'  累计解码 {TR.get_done_of(1)} 个文件')
-    print(f'  此项用时 {round(TR.get_rt(), 1)} 秒')
+    print(f"\n批量解码FlatBuffers数据结束!", s=1)
+    print(f"  累计搜索 {TR.get_done_of(2)} 个文件")
+    print(f"  累计解码 {TR.get_done_of(1)} 个文件")
+    print(f"  此项用时 {round(TR.get_rt(), 1)} 秒")
     time.sleep(2)
 
 ####### TestOnly-调试专用 #######
-if __name__ == "__main__":
+if __name__ == '__main__':
     for root, _, files in os.walk('test/upk'):
         for f in files:
             try:

@@ -111,7 +111,7 @@ class Resource:
                             spines.append(spine)
                             success = True
             if not success:
-                Logger.warn(f'ResolveAB: Failed to handle skeletonDataAsset at pathId {mono.path_id} of {self.name}.')
+                Logger.warn(f"ResolveAB: Failed to handle skeletonDataAsset at pathId {mono.path_id} of {self.name}.")
         self.spines = spines
     
     def rename_skeletons(self):
@@ -285,13 +285,13 @@ def main(src:str, destdir:str, dodel:bool=False,
     for i in flist:
         #(i stands for a file's path)
         UI.request([
-            f'正在批量解包...',
+            f"正在批量解包...",
             TR.get_progress_str(),
-            f'当前目录：\t{osp.basename(osp.dirname(i))}',
-            f'当前文件：\t{osp.basename(i)}',
-            f'累计解包：\t{TR.get_done_dest_str_of(4)}',
-            f'累计导出：\t{TR.get_done_dest_str_of(1)}',
-            f'剩余时间：\t{TR.get_eta_str()}',
+            f"当前目录：\t{osp.basename(osp.dirname(i))}",
+            f"当前文件：\t{osp.basename(i)}",
+            f"累计解包：\t{TR.get_done_dest_str_of(4)}",
+            f"累计导出：\t{TR.get_done_dest_str_of(1)}",
+            f"剩余时间：\t{TR.get_eta_str()}",
         ])
         ###
         subdestdir = osp.dirname(i).strip(osp.sep).replace(src, '').strip(osp.sep)
@@ -305,17 +305,17 @@ def main(src:str, destdir:str, dodel:bool=False,
     UI.loop_stop()
     while TC.count_subthread() or not SafeSaver.get_instance().completed() or TR.get_progress() < 1:
         UI.request([
-            f'正在批量解包...',
+            f"正在批量解包...",
             TR.get_progress_str(),
-            f'累计解包：\t{TR.get_done_dest_str_of(4)}',
-            f'累计导出：\t{TR.get_done_dest_str_of(1)}',
-            f'剩余时间：\t{TR.get_eta_str()}',
+            f"累计解包：\t{TR.get_done_dest_str_of(4)}",
+            f"累计导出：\t{TR.get_done_dest_str_of(1)}",
+            f"剩余时间：\t{TR.get_eta_str()}",
         ])
         UI.refresh(post_delay=0.1)
 
     UI.reset()
-    print(f'\n批量解包结束!', s=1)
-    print(f'  累计解包 {TR.get_done_of(4)} 个文件')
-    print(f'  累计导出 {TR.get_done_of(1)} 个文件')
-    print(f'  此项用时 {round(TR.get_rt(), 1)} 秒')
+    print(f"\n批量解包结束!", s=1)
+    print(f"  累计解包 {TR.get_done_of(4)} 个文件")
+    print(f"  累计导出 {TR.get_done_of(1)} 个文件")
+    print(f"  此项用时 {round(TR.get_rt(), 1)} 秒")
     time.sleep(2)
