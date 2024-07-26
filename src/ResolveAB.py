@@ -318,4 +318,3 @@ def main(src:str, destdir:str, dodel:bool=False,
     print(f"  累计解包 {TR.get_done_of(4)} 个文件")
     print(f"  累计导出 {TR.get_done_of(1)} 个文件")
     print(f"  此项用时 {round(TR.get_rt(), 1)} 秒")
-    time.sleep(2)

@@ -205,4 +205,3 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     print(f"\n批量合并图片结束!", s=1)
     print(f"  累计导出 {TR.get_done_of(1)} 张照片")
     print(f"  此项用时 {round(TR.get_rt(), 1)} 秒")
-    time.sleep(2)

@@ -115,4 +115,3 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
     print(f"\n分拣模型结束!", s=1)
     print(f"  累计分拣 {collected.now()} 套模型")
     print(f"  此项用时 {round(TR.get_rt(), 1)} 秒")
-    time.sleep(2)

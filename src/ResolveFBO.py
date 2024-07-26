@@ -232,7 +232,6 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     print(f"  累计搜索 {TR.get_done_of(2)} 个文件")
     print(f"  累计解码 {TR.get_done_of(1)} 个文件")
     print(f"  此项用时 {round(TR.get_rt(), 1)} 秒")
-    time.sleep(2)
 
 ####### TestOnly-调试专用 #######
 if __name__ == '__main__':
