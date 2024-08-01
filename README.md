@@ -26,7 +26,7 @@
     2. 解包时可以将文件按源 AB 文件的名称分目录存放。
 2. 批量合并 RGB 通道图和 Alpha 通道图。
 3. 批量解码 FlatBuffers 数据文件。
-4. 提供交互式命令行界面进行操作。
+4. 既提供交互式命令行界面进行操作，也支持直接通过命令行运行。
 
 #### 支持的类型
 | Unity类型 | 描述 | 导出格式 |
@@ -68,7 +68,7 @@
 - [RGB通道图和A通道图](docs/Essentials.md#rgb通道图和a通道图)
 - [Spine动画小人](docs/Essentials.md#spine动画小人)
 
-### 4.示例
+### 4.示例用法
 首先，将需要解包的文件夹（可以是多个）放到与 exe 相同的目录下，至此，我们的目录结构大致如下：
 > **你的目录**  
 > ├─Android (解包整个目录需要很久)  
@@ -94,6 +94,33 @@
 
 此外，运行程序后，工作目录会生成配置文件 `ArkUnpackerConfig.json` 与日志文件 `ArkUnpackerLogs.log`。有关配置文件的字段说明，请参阅[此文档](docs/ConfigFile.md)了解详情。
 
+### 5.命令行用法
+除了上述示例用法展示的**交互式**命令行界面外，程序还支持**直接**通过命令行来运行，以便熟悉命令行调用的用户使用。相关参数如下：
+```
+usage: ArkUnpacker [-h] [-v] [-m {ab,cb,fb}] [-i INPUT] [-o OUTPUT] [-d] [--image] [--text] [--audio] [--spine] [-g] [-l {0,1,2,3,4}]
+  
+Arknights Assets Unpacker. Use no argument to run to enter the interactive CLI mode.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --version         show a version message and exit
+  -m {ab,cb,fb}, --mode {ab,cb,fb}
+                        working mode, ab=resolve-ab, cb=combine-image, fb=decode-flatbuffers
+  -i INPUT, --input INPUT
+                        source file or directory path
+  -o OUTPUT, --output OUTPUT
+                        destination directory path
+  -d, -delete           delete the existed destination directory first
+  --image               in resolve ab mode: export image files
+  --text                in resolve ab mode: export text or binary files
+  --audio               in resolve ab mode: export audio files
+  --spine               in resolve ab mode: export spine asset files
+  -g, --group           in resolve ab mode: group files into separate directories named by their source ab file
+  -l {0,1,2,3,4}, --logging-level {0,1,2,3,4}
+                        logging level, 0=none, 1=error, 2=warn, 3=info, 4=debug
+```
+
+运行 `ArkUnpacker -h` 命令可以显示此帮助信息。如果您使用的命令不带任何参数，那么程序会以交互式命令行界面的模式启动。
 
 ## 注意事项 <sub>Notice</sub>
 1. 使用一键执行模式时，不会解包**直接**位于程序所在目录中的 AB 文件，只会解包子文件夹里的 AB 文件。

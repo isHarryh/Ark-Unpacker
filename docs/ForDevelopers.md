@@ -30,7 +30,7 @@ ArkUnpacker附加说明文档
 2. **构建：** 在 VS Code 中启动 `Build Dist` 终端任务；或者直接运行 `Build.py` 脚本。这将使用 PyInstaller 在项目文件夹的 `build/dist` 目录中自动生成可分发的文件。
 
 ## 代码结构与用例
-本程序通过交互式命令行界面（Interactive CLI）与用户进行交互。
+本程序可以通过交互式命令行界面（Interactive CLI）与用户进行交互，也可以直接使用命令行运行并执行任务。
 
 本项目的代码可分为 3 个层次：
 - 表现层（入口点 `Main.py`）
@@ -46,3 +46,5 @@ CombineRGBwithA.main('Unpacked', 'Combined') # (b)
 ```
 
 以上 (a) (b) 两个方法还有其他可选的参数，具体的用法已在函数声明的代码注释中非常详尽地给出了，请自行阅读。
+
+关于直接使用命令行运行的详细介绍，请参阅 [README](../README.md#5命令行用法)。
