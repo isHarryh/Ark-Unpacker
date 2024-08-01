@@ -2,7 +2,7 @@
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
 import os.path as osp
-import re, time
+import re
 from .utils import *
 from PIL import Image
 

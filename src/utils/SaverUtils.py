@@ -41,9 +41,9 @@ class EntryLock(ContextDecorator):
 class SafeSaver(WorkerCtrl):
     """The file saver class to save file and avoid file name collision."""
 
-    __instance  = None
-    __ext_image = '.png'
-    __ext_raw   = ''
+    __instance = None
+    _EXT_IMAGE = '.png'
+    _EXT_RAW = ''
     _AUDIO_ACCESS_LOCK = threading.Lock()
 
     def __init__(self):
@@ -74,7 +74,7 @@ class SafeSaver(WorkerCtrl):
         SafeSaver.get_instance().submit((data, destdir, name, ext, on_saved))
     
     @staticmethod
-    def save_image(img:Image.Image, destdir:str, name:str, ext:str=__ext_image, on_queued:staticmethod=None, on_saved:staticmethod=None):
+    def save_image(img:Image.Image, destdir:str, name:str, ext:str=_EXT_IMAGE, on_queued:staticmethod=None, on_saved:staticmethod=None):
         """Saves an image to a file.
 
         :param img: Image instance;
@@ -106,7 +106,7 @@ class SafeSaver(WorkerCtrl):
         elif isinstance(obj, (uc.Sprite, uc.Texture2D)):
             # As image file:
             if obj.image.width > 0 and obj.image.height > 0:
-                SafeSaver.save_image(obj.image, destdir, name, SafeSaver.__ext_image, on_queued, on_saved)
+                SafeSaver.save_image(obj.image, destdir, name, SafeSaver._EXT_IMAGE, on_queued, on_saved)
                 return
         elif isinstance(obj, uc.AudioClip):
             # As audio file:
@@ -115,12 +115,12 @@ class SafeSaver(WorkerCtrl):
                 samples = obj.samples
             if samples:
                 for name, byte in samples.items():
-                    SafeSaver.save_bytes(byte, destdir, name, SafeSaver.__ext_raw, on_queued, on_saved)
+                    SafeSaver.save_bytes(byte, destdir, name, SafeSaver._EXT_RAW, on_queued, on_saved)
             return
         elif isinstance(obj, uc.TextAsset):
             # As raw file:
             byte = bytes(obj.script)
-            SafeSaver.save_bytes(byte, destdir, name, SafeSaver.__ext_raw, on_queued, on_saved)
+            SafeSaver.save_bytes(byte, destdir, name, SafeSaver._EXT_RAW, on_queued, on_saved)
             return
         else:
             # Not an exportable type:

@@ -2,7 +2,6 @@
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
 import os.path as osp
-import time
 import UnityPy
 import UnityPy.classes as uc
 from .utils import *
