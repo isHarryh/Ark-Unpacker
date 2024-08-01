@@ -191,14 +191,58 @@ url = "https://pypi.tuna.tsinghua.edu.cn/simple"
 reference = "PyPI-Tsinghua"
 
 [[package]]
+name = "fsspec"
+version = "2024.6.1"
+description = "File-system specification"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "fsspec-2024.6.1-py3-none-any.whl", hash = "sha256:3cb443f8bcd2efb31295a5b9fdb02aee81d8452c80d28f97a6d0959e6cee101e"},
+    {file = "fsspec-2024.6.1.tar.gz", hash = "sha256:fad7d7e209dd4c1208e3bbfda706620e0da5142bebbd9c384afb95b07e798e49"},
+]
+
+[package.extras]
+abfs = ["adlfs"]
+adl = ["adlfs"]
+arrow = ["pyarrow (>=1)"]
+dask = ["dask", "distributed"]
+dev = ["pre-commit", "ruff"]
+doc = ["numpydoc", "sphinx", "sphinx-design", "sphinx-rtd-theme", "yarl"]
+dropbox = ["dropbox", "dropboxdrivefs", "requests"]
+full = ["adlfs", "aiohttp (!=4.0.0a0,!=4.0.0a1)", "dask", "distributed", "dropbox", "dropboxdrivefs", "fusepy", "gcsfs", "libarchive-c", "ocifs", "panel", "paramiko", "pyarrow (>=1)", "pygit2", "requests", "s3fs", "smbprotocol", "tqdm"]
+fuse = ["fusepy"]
+gcs = ["gcsfs"]
+git = ["pygit2"]
+github = ["requests"]
+gs = ["gcsfs"]
+gui = ["panel"]
+hdfs = ["pyarrow (>=1)"]
+http = ["aiohttp (!=4.0.0a0,!=4.0.0a1)"]
+libarchive = ["libarchive-c"]
+oci = ["ocifs"]
+s3 = ["s3fs"]
+sftp = ["paramiko"]
+smb = ["smbprotocol"]
+ssh = ["paramiko"]
+test = ["aiohttp (!=4.0.0a0,!=4.0.0a1)", "numpy", "pytest", "pytest-asyncio (!=0.22.0)", "pytest-benchmark", "pytest-cov", "pytest-mock", "pytest-recording", "pytest-rerunfailures", "requests"]
+test-downstream = ["aiobotocore (>=2.5.4,<3.0.0)", "dask-expr", "dask[dataframe,test]", "moto[server] (>4,<5)", "pytest-timeout", "xarray"]
+test-full = ["adlfs", "aiohttp (!=4.0.0a0,!=4.0.0a1)", "cloudpickle", "dask", "distributed", "dropbox", "dropboxdrivefs", "fastparquet", "fusepy", "gcsfs", "jinja2", "kerchunk", "libarchive-c", "lz4", "notebook", "numpy", "ocifs", "pandas", "panel", "paramiko", "pyarrow", "pyarrow (>=1)", "pyftpdlib", "pygit2", "pytest", "pytest-asyncio (!=0.22.0)", "pytest-benchmark", "pytest-cov", "pytest-mock", "pytest-recording", "pytest-rerunfailures", "python-snappy", "requests", "smbprotocol", "tqdm", "urllib3", "zarr", "zstandard"]
+tqdm = ["tqdm"]
+
+[package.source]
+type = "legacy"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+reference = "PyPI-Tsinghua"
+
+[[package]]
 name = "importlib-metadata"
-version = "8.0.0"
+version = "8.2.0"
 description = "Read metadata from Python packages"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "importlib_metadata-8.0.0-py3-none-any.whl", hash = "sha256:15584cf2b1bf449d98ff8a6ff1abef57bf20f3ac6454f431736cd3e660921b2f"},
-    {file = "importlib_metadata-8.0.0.tar.gz", hash = "sha256:188bd24e4c346d3f0a933f275c2fec67050326a856b9a359881d7c2a697e8812"},
+    {file = "importlib_metadata-8.2.0-py3-none-any.whl", hash = "sha256:11901fa0c2f97919b288679932bb64febaeacf289d18ac84dd68cb2e74213369"},
+    {file = "importlib_metadata-8.2.0.tar.gz", hash = "sha256:72e8d4399996132204f9a16dcc751af254a48f8d1b20b9ff0f98d4a8f901e73d"},
 ]
 
 [package.dependencies]
@@ -418,6 +462,22 @@ url = "https://pypi.tuna.tsinghua.edu.cn/simple"
 reference = "PyPI-Tsinghua"
 
 [[package]]
+name = "pyfmodex"
+version = "0.7.2"
+description = "Python bindings to the Fmod Ex library."
+optional = false
+python-versions = ">=3.6,<4.0"
+files = [
+    {file = "pyfmodex-0.7.2-py3-none-any.whl", hash = "sha256:1c42112b788e80ee7b4b57ae25bbbc0a98eb1e32a8e7c9e1246698cdf72efa9d"},
+    {file = "pyfmodex-0.7.2.tar.gz", hash = "sha256:d9ad3d7841a1c4cf4733cbedc69389f84c58a640d23d0ffa083ad6080f35103c"},
+]
+
+[package.source]
+type = "legacy"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+reference = "PyPI-Tsinghua"
+
+[[package]]
 name = "pyinstaller"
 version = "6.8.0"
 description = "PyInstaller bundles a Python application and all its dependencies into a single package."
@@ -496,18 +556,19 @@ reference = "PyPI-Tsinghua"
 
 [[package]]
 name = "setuptools"
-version = "70.3.0"
+version = "72.1.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "setuptools-70.3.0-py3-none-any.whl", hash = "sha256:fe384da74336c398e0d956d1cae0669bc02eed936cdb1d49b57de1990dc11ffc"},
-    {file = "setuptools-70.3.0.tar.gz", hash = "sha256:f171bab1dfbc86b132997f26a119f6056a57950d058587841a0082e8830f9dc5"},
+    {file = "setuptools-72.1.0-py3-none-any.whl", hash = "sha256:5a03e1860cf56bb6ef48ce186b0e557fdba433237481a9a625176c2831be15d1"},
+    {file = "setuptools-72.1.0.tar.gz", hash = "sha256:8d243eff56d095e5817f796ede6ae32941278f542e0f941867cc05ae52b162ec"},
 ]
 
 [package.extras]
+core = ["importlib-metadata (>=6)", "importlib-resources (>=5.10.2)", "jaraco.text (>=3.7)", "more-itertools (>=8.8)", "ordered-set (>=3.1.1)", "packaging (>=24)", "platformdirs (>=2.6.2)", "tomli (>=2.0.1)", "wheel (>=0.43.0)"]
 doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "pyproject-hooks (!=1.1)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-favicon", "sphinx-inline-tabs", "sphinx-lint", "sphinx-notfound-page (>=1,<2)", "sphinx-reredirects", "sphinxcontrib-towncrier"]
-test = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "importlib-metadata", "ini2toml[lite] (>=0.14)", "jaraco.develop (>=7.21)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "jaraco.test", "mypy (==1.10.0)", "packaging (>=23.2)", "pip (>=19.1)", "pyproject-hooks (!=1.1)", "pytest (>=6,!=8.1.*)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-home (>=0.5)", "pytest-mypy", "pytest-perf", "pytest-ruff (>=0.3.2)", "pytest-subprocess", "pytest-timeout", "pytest-xdist (>=3)", "tomli", "tomli-w (>=1.0.0)", "virtualenv (>=13.0.0)", "wheel"]
+test = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "importlib-metadata", "ini2toml[lite] (>=0.14)", "jaraco.develop (>=7.21)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "jaraco.test", "mypy (==1.11.*)", "packaging (>=23.2)", "pip (>=19.1)", "pyproject-hooks (!=1.1)", "pytest (>=6,!=8.1.*)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-home (>=0.5)", "pytest-mypy", "pytest-perf", "pytest-ruff (<0.4)", "pytest-ruff (>=0.2.1)", "pytest-ruff (>=0.3.2)", "pytest-subprocess", "pytest-timeout", "pytest-xdist (>=3)", "tomli", "tomli-w (>=1.0.0)", "virtualenv (>=13.0.0)", "wheel"]
 
 [package.source]
 type = "legacy"
@@ -603,43 +664,67 @@ reference = "PyPI-Tsinghua"
 
 [[package]]
 name = "unitypy"
-version = "1.8.9"
-description = "A pythonic port of AssetStudio by Perfare"
+version = "1.10.14"
+description = "A Unity extraction and patching package"
 optional = false
-python-versions = "*"
+python-versions = ">=3.6"
 files = [
-    {file = "UnityPy-1.8.9-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:610ae3454acb84da60cef2f13bb1f77b0f327ac0a68a7fa74a766a8b8984e380"},
-    {file = "UnityPy-1.8.9-cp310-cp310-manylinux2014_aarch64.whl", hash = "sha256:c6310e93c213d2794bdf53b2cc50bfa80e28636d99b609a3d7a1b7307300ab7a"},
-    {file = "UnityPy-1.8.9-cp310-cp310-manylinux2014_i686.whl", hash = "sha256:b9f07b08073701f7bc3b0c3a0c8f4e72a20be61c652eef6a13fb5cce24b391c5"},
-    {file = "UnityPy-1.8.9-cp310-cp310-manylinux2014_x86_64.whl", hash = "sha256:b962482e829fc4b77847fe98e790c3ce626496e174427a70bd9b6e32bf0c12db"},
-    {file = "UnityPy-1.8.9-cp310-cp310-win32.whl", hash = "sha256:ab98b29a0333bed02fd45e3ca9439d1fae12710a3e12d667815e8ada390a3a5d"},
-    {file = "UnityPy-1.8.9-cp310-cp310-win_amd64.whl", hash = "sha256:3f7632c50f5041ea30b9b9ffc6d407902d4480f214ba132cf0fcde535f04fbaf"},
-    {file = "UnityPy-1.8.9-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:a3bb16d4745f15589b1f0578c0f171345eb71a4443e932c65c07c5e5851837eb"},
-    {file = "UnityPy-1.8.9-cp37-cp37m-manylinux2014_aarch64.whl", hash = "sha256:9440ef0d5da0e5ba67857cb5ea47e5b243a98cdfad53ce7ac74360ddb67eb01f"},
-    {file = "UnityPy-1.8.9-cp37-cp37m-manylinux2014_i686.whl", hash = "sha256:f7d6afa0ba4e10680f1a39916df729f67cec03c759a8b9969caf66331f8b5dfd"},
-    {file = "UnityPy-1.8.9-cp37-cp37m-manylinux2014_x86_64.whl", hash = "sha256:10aefad3f84bd4d1b1cfec051d629dd8b6c2529074c969ab8188d87c735b7345"},
-    {file = "UnityPy-1.8.9-cp37-cp37m-win32.whl", hash = "sha256:2b34841b26b290dfb42f5eb7e7520efb0f4e1ad10141866194bc2a396e2bf73f"},
-    {file = "UnityPy-1.8.9-cp37-cp37m-win_amd64.whl", hash = "sha256:f02ff6c140ce8afabb08309920a33389df960d93d3327de8265b1647fe20308e"},
-    {file = "UnityPy-1.8.9-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:a88dbfa43142f45de8aef27910b533fe9430dffd07a74f8c74ba812ac0237055"},
-    {file = "UnityPy-1.8.9-cp38-cp38-manylinux2014_aarch64.whl", hash = "sha256:0d2b868888dbf3aa65ee0ff66f49e47d76d110ccee16019713507dd6efa87240"},
-    {file = "UnityPy-1.8.9-cp38-cp38-manylinux2014_i686.whl", hash = "sha256:7623b911b92db1853f933316cdbe0e6d328fff56fc5c9020631aeaca9ddff1f5"},
-    {file = "UnityPy-1.8.9-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:15aec3b33da90f6c118909c436ccc4a85c7a013cfad0947529f5dfabd5cdeed5"},
-    {file = "UnityPy-1.8.9-cp38-cp38-win32.whl", hash = "sha256:cbff09e442bb33b8cc61fda99e849c4e54f583dc86dcf5a9cd73478bf4c02eab"},
-    {file = "UnityPy-1.8.9-cp38-cp38-win_amd64.whl", hash = "sha256:775e9d8f5dd445af84aa1da5d2c639b6825de6e91dc6bd55e0c28bd968d7020b"},
-    {file = "UnityPy-1.8.9-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:3d0c978d83b7f20f180895d43d7d535722f8934601e860217c32b9722b86e6b5"},
-    {file = "UnityPy-1.8.9-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:9e0ae9b347b0fba97cef29634b4e7fa9595b0e28e765257d3ad15cd7e57a526d"},
-    {file = "UnityPy-1.8.9-cp39-cp39-manylinux2014_i686.whl", hash = "sha256:db7a0e543458fa3cc1316f5473b4473ff9b2e244a7e00e4794ac1131613fabf0"},
-    {file = "UnityPy-1.8.9-cp39-cp39-manylinux2014_x86_64.whl", hash = "sha256:4f145b10f6988122d605490bc50ad5cef87d5988744f26be4b8c2989edc47d92"},
-    {file = "UnityPy-1.8.9-cp39-cp39-win32.whl", hash = "sha256:4cca4e411c877bf34bdba4a86b89bef5875eb099f9da39f821ec09df4d4c408b"},
-    {file = "UnityPy-1.8.9-cp39-cp39-win_amd64.whl", hash = "sha256:a8534684596f44c4bc929584f0f91710a630f9cddf06ffb0f8e3b7fb78f3d55c"},
-    {file = "UnityPy-1.8.9.tar.gz", hash = "sha256:0891b6cf7c23bde696731713e62d51aa5eff421f0713ea641bfdcdb39637adf0"},
+    {file = "UnityPy-1.10.14-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:e3cdda6a47e25591f811287586107563192d88f568e1a6053fc8144dbaf80f36"},
+    {file = "UnityPy-1.10.14-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:de905993a09a120467fa0d88861bc0aa7f8634a644ad38dea082dacabd988116"},
+    {file = "UnityPy-1.10.14-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:f7cacbcf8dfc6278061caf37a6441b38fb22ea267b291fd1ca93a3ce6cf604e9"},
+    {file = "UnityPy-1.10.14-cp310-cp310-manylinux_2_17_aarch64.whl", hash = "sha256:61558da58b4df58d69f4f1092dd3deec871f23308f522b093b12a77e3013d152"},
+    {file = "UnityPy-1.10.14-cp310-cp310-manylinux_2_17_i686.whl", hash = "sha256:0109ee5179509baf832d261575064eb4a4c2d567241a007cf47cfff00f4311d9"},
+    {file = "UnityPy-1.10.14-cp310-cp310-manylinux_2_17_x86_64.whl", hash = "sha256:fcad869da5142df6affccd633bcdc61543aef850070fb3304dc3ce34fada97da"},
+    {file = "UnityPy-1.10.14-cp310-cp310-win32.whl", hash = "sha256:af62e98ba37a87cf8469352e99af2670fc3bdf6de87ef50c71d875987f432d8d"},
+    {file = "UnityPy-1.10.14-cp310-cp310-win_amd64.whl", hash = "sha256:de9183b6c5926a8f4587d1e1ffbf06c2ee910a4e5bf8ca8f360785ddf1c08fd5"},
+    {file = "UnityPy-1.10.14-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:7cd235212231c716d138dc7603e914e0a79b8e91c04910c2f9e6265e09e3ca61"},
+    {file = "UnityPy-1.10.14-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:9f73c3f86df53a52de6d9804466c90147d2fd2494971bb3fde1af76daf2923b5"},
+    {file = "UnityPy-1.10.14-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:7db24714706bb02b6c923f8d498131443f5634fd4fc32df0dbdfd26aeaedabc8"},
+    {file = "UnityPy-1.10.14-cp311-cp311-manylinux_2_17_aarch64.whl", hash = "sha256:209a74de443ccedc13dc37fa8e918117b79fac22eaa5abc46a1373f711eb7010"},
+    {file = "UnityPy-1.10.14-cp311-cp311-manylinux_2_17_i686.whl", hash = "sha256:8c6cb4d0d70a9c55c50a55563a6f7e95ee59ac6a9605ff724d498b9e65193b50"},
+    {file = "UnityPy-1.10.14-cp311-cp311-manylinux_2_17_x86_64.whl", hash = "sha256:7d951d14a9bdf834cea03b0413167ace8bf2de3114223ebde074be3117f9778f"},
+    {file = "UnityPy-1.10.14-cp311-cp311-win32.whl", hash = "sha256:c58ba0b6d94a9af48a98c72a652839fdc5fb5cff1e419ad09d15f27c1109992c"},
+    {file = "UnityPy-1.10.14-cp311-cp311-win_amd64.whl", hash = "sha256:508717b71ac21f73b848e2c8c1048454a8a853c5d4f5756cf20a8d886b1a5935"},
+    {file = "UnityPy-1.10.14-cp312-cp312-macosx_10_9_universal2.whl", hash = "sha256:a561877b2e511ab12490272d29865e44d0036f3e9e343d6b4b031e978689ed31"},
+    {file = "UnityPy-1.10.14-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:2d736e80a69d9748da4d235dd818911c81c3a7e8bc01011e789b3897cdffb564"},
+    {file = "UnityPy-1.10.14-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:40a82a07fbf7ccf0f57735a5487e4f77d26c294d86a95f9192d9eacaef7e7561"},
+    {file = "UnityPy-1.10.14-cp312-cp312-manylinux_2_17_aarch64.whl", hash = "sha256:840dc5c719338da061b1d38f551279aea0e155dab23ffc13a5cbc42b64cbb153"},
+    {file = "UnityPy-1.10.14-cp312-cp312-manylinux_2_17_i686.whl", hash = "sha256:7fe35656042f22beabcb6e526db149ccef50d48183ba74a9e6397da57c4a6cc5"},
+    {file = "UnityPy-1.10.14-cp312-cp312-manylinux_2_17_x86_64.whl", hash = "sha256:d5e1ad82e6cadf62f5d513844f439433d88a551be07a42d1a154345bea632499"},
+    {file = "UnityPy-1.10.14-cp312-cp312-win32.whl", hash = "sha256:139409f67dabe986a9497098bafd126c92835bed8e0aae0c03621235ef467321"},
+    {file = "UnityPy-1.10.14-cp312-cp312-win_amd64.whl", hash = "sha256:0e056705db7683c94dc22b16211296558a847c5a77ceab26dbf56a2d1a461122"},
+    {file = "UnityPy-1.10.14-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:bffb4e0c3baca4b023a1741a26bd03a2d390817c1c5df93af3deb437c62b6441"},
+    {file = "UnityPy-1.10.14-cp37-cp37m-manylinux_2_17_aarch64.whl", hash = "sha256:d8eba925b74358028ccee38ce47696c58a41739acac071c146b536fd1e9aa209"},
+    {file = "UnityPy-1.10.14-cp37-cp37m-manylinux_2_17_i686.whl", hash = "sha256:2df6d1696880136ce3f9bd9f83bf71b5ee4b4bcb7028bae720d8d86f7aad4be0"},
+    {file = "UnityPy-1.10.14-cp37-cp37m-manylinux_2_17_x86_64.whl", hash = "sha256:85f8a2988d335c703ce69de91492425965d54f1d0803a6312f0d67bb74f308a5"},
+    {file = "UnityPy-1.10.14-cp37-cp37m-win32.whl", hash = "sha256:187a19c254233d1fe5adc699c85a66f719c22891d597ec35637d32887d97eb42"},
+    {file = "UnityPy-1.10.14-cp37-cp37m-win_amd64.whl", hash = "sha256:00d2d96520f9e48830adfb602120619d749ac21972e3d2ecfa7e8f5c87ab6b75"},
+    {file = "UnityPy-1.10.14-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:6ffcda4a73d03223ff94914c80c158391ffef78f5d80aced44f28bd77504ff99"},
+    {file = "UnityPy-1.10.14-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:5404cf124dbcfa1a76f127d92db295d8883e18452480cda6a1c7266bce9379da"},
+    {file = "UnityPy-1.10.14-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:40830efd0285164d71e759fd4b44b12a8a8752e871b562e3a388cadac7b9f26f"},
+    {file = "UnityPy-1.10.14-cp38-cp38-manylinux_2_17_aarch64.whl", hash = "sha256:661e0706efd16a074374ad21c43d5cc92aefa2d7070f02ceb8b8b74d2fba53e7"},
+    {file = "UnityPy-1.10.14-cp38-cp38-manylinux_2_17_i686.whl", hash = "sha256:cda74f0fd3023aee118be3b5f723a593a46793cae5d44ed135fa61caf6388178"},
+    {file = "UnityPy-1.10.14-cp38-cp38-manylinux_2_17_x86_64.whl", hash = "sha256:ba490d11b85c6f5a3aa58fa618a3bfca114a9f5ad0998b45d20bb3602318c505"},
+    {file = "UnityPy-1.10.14-cp38-cp38-win32.whl", hash = "sha256:d6a9e4bd9253b463584335573f105b22bda2743fe9757d04a6f6b353d00581d6"},
+    {file = "UnityPy-1.10.14-cp38-cp38-win_amd64.whl", hash = "sha256:f3cb509860dcc9ceaa45671e11ad4dac01c158e7eef0b38f034fff6f2c8604a2"},
+    {file = "UnityPy-1.10.14-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:4fde830c41da371809b0bf0add4eb3a3017cef93b3ebaf4f5dbc10b4b84c0836"},
+    {file = "UnityPy-1.10.14-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:d9cc681cb9ee6105edad407f5ed0036743e9c4955d8bb39975f0ca2d4d1f2ee2"},
+    {file = "UnityPy-1.10.14-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:8e2af03fa9378b3a76725d2d24fc81f1a78b1894575b94d710cfa5739264ae51"},
+    {file = "UnityPy-1.10.14-cp39-cp39-manylinux_2_17_aarch64.whl", hash = "sha256:12d6a150721e9d52474c0a5a8daadbb87da341ae67df562ecfbe4ea17cf1b3f1"},
+    {file = "UnityPy-1.10.14-cp39-cp39-manylinux_2_17_i686.whl", hash = "sha256:0bf7be4f1c2cb79641d1e1f688272fb4915b5d2fdcb808a4354168e8c3ab3f71"},
+    {file = "UnityPy-1.10.14-cp39-cp39-manylinux_2_17_x86_64.whl", hash = "sha256:f675a06e4113e1060793bac73804be641e6dbc0d269a760d0be29c45662a210d"},
+    {file = "UnityPy-1.10.14-cp39-cp39-win32.whl", hash = "sha256:dc7848e1f89b4c83673fb4eeae915e15db603fc1d6fd3c564b328f9cf2df9894"},
+    {file = "UnityPy-1.10.14-cp39-cp39-win_amd64.whl", hash = "sha256:b1b1f8fa45f4da97ad9c6714077b9ffd06f30f24b7ad839d605207eb1146c7f3"},
+    {file = "unitypy-1.10.14.tar.gz", hash = "sha256:b6d44a5eae432bbd2589f5c0f80aeccfe66f5a7deadb7b26f75558a763673ada"},
 ]
 
 [package.dependencies]
 brotli = "*"
 etcpak = "*"
+fsspec = "*"
 lz4 = "*"
 Pillow = "*"
+pyfmodex = ">=0.7.1"
 tabulate = "*"
 texture2ddecoder = "*"
 
@@ -671,4 +756,4 @@ reference = "PyPI-Tsinghua"
 [metadata]
 lock-version = "2.0"
 python-versions = "3.8.10"
-content-hash = "62e79ece14169e011511087d9940208213287e78f2768759f74455088fdd744b"
+content-hash = "976bf934cddccea15f07192458d011acbc216aecfcc6f0458e11b848c51622a5"

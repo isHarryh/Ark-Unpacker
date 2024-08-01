@@ -122,8 +122,12 @@ StringFileInfo([
     cmd_pyinstaller += f" --name \"{proj_info['name']}-v{proj_info['version']}\""
     cmd_pyinstaller += f" --version-file {version_file}"
     cmd_pyinstaller += f" --icon \"{build_def['icon']}\"" if 'icon' in build_def.keys() else ""
-    cmd_pyinstaller += f" --add-binary \"{build_def['add-binary']}\"" if 'add-binary' in build_def.keys() else ""
-    cmd_pyinstaller += f" --add-data \"{build_def['add-data']}\"" if 'add-data' in build_def.keys() else ""
+    if 'add-binary' in build_def.keys():
+        for i in build_def['add-binary'].split('|'):
+            cmd_pyinstaller += f" --add-binary \"{i}\"" if i else ""
+    if 'add-data' in build_def.keys():
+        for i in build_def['add-data'].split('|'):
+            cmd_pyinstaller += f" --add-data \"{i}\"" if i else ""
     cmd_pyinstaller += f" --hidden-import {build_def['hidden-import']}" if 'hidden-import' in build_def.keys() else ""
     cmd_pyinstaller += f" --log-level {build_def['log-level']}" if 'log-level' in build_def.keys() else ""
     cmd_pyinstaller += f" \"{build_def['entry']}\""
