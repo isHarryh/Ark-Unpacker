@@ -43,8 +43,8 @@ class SafeSaver(WorkerCtrl):
 
     __instance  = None
     __ext_image = '.png'
-    __ext_audio = '.wav'
     __ext_raw   = ''
+    _AUDIO_ACCESS_LOCK = threading.Lock()
 
     def __init__(self):
         """Not recommended to use. Please use the static methods."""
@@ -110,12 +110,13 @@ class SafeSaver(WorkerCtrl):
                 return
         elif isinstance(obj, uc.AudioClip):
             # As audio file:
-            if len(obj.samples) > 0:
-                byte = bytes()
-                for _, d in obj.samples.items():
-                    byte += d
-                SafeSaver.save_bytes(byte, destdir, name, SafeSaver.__ext_audio, on_queued, on_saved)
-                return
+            samples = None
+            with SafeSaver._AUDIO_ACCESS_LOCK:
+                samples = obj.samples
+            if samples:
+                for name, byte in samples.items():
+                    SafeSaver.save_bytes(byte, destdir, name, SafeSaver.__ext_raw, on_queued, on_saved)
+            return
         elif isinstance(obj, uc.TextAsset):
             # As raw file:
             byte = bytes(obj.script)
