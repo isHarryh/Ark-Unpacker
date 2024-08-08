@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
-import os.path as osp
+import os
 import UnityPy
+import os.path as osp
 import UnityPy.classes as uc
-from .utils import *
-from .CombineRGBwithA import *
-
+from .CombineRGBwithA import AlphaRGBCombiner
+from .utils.Config import Config, PerformanceLevel
+from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file
+from .utils.Logger import Logger
+from .utils.SaverUtils import SafeSaver
+from .utils.TaskUtils import ThreadCtrl, UICtrl, TimeRecorder
 
 class Resource:
     """The class representing a collection of the objects in an UnityPy Environment."""

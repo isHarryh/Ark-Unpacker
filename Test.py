@@ -6,7 +6,7 @@ from src import ResolveAB
 from src import CombineRGBwithA
 from src import ResolveFBO
 from src.utils.AnalyUtils import TestRT
-from src.utils.GlobalMethods import *
+from src.utils.GlobalMethods import print, stacktrace
 
 def __count_files(path):
     count = 0

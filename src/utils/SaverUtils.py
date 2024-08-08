@@ -8,11 +8,11 @@ import UnityPy.classes as uc
 from io import BytesIO
 from PIL import Image
 from contextlib import ContextDecorator
-from .Config import *
-from .GlobalMethods import *
-from .Logger import *
-from .TaskUtils import *
-from .AnalyUtils import *
+from .AnalyUtils import TestRT
+from .Config import Config, PerformanceLevel
+from .GlobalMethods import mkdir
+from .Logger import Logger
+from .TaskUtils import WorkerCtrl
 
 
 class EntryLock(ContextDecorator):

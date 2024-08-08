@@ -3,7 +3,7 @@
 # @ BSD 3-Clause License
 import os, json
 import os.path as osp
-from .Logger import *
+from .Logger import Logger
 
 
 class PerformanceLevel():

@@ -2,7 +2,6 @@
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
 import argparse
-from .GlobalMethods import *
 
 
 class ArgParserFailure(Exception):

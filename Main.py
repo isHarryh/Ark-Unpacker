@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
-import os, time, argparse
+import os
+import time
+import argparse
 import os.path as osp
-from src.utils import *
+from src.utils import ArgParser
+from src.utils.Config import Config
+from src.utils.Logger import Logger
+from src.utils.GlobalMethods import color, input, print, clear, title, stacktrace, rmdir
 from src import ResolveAB       as AU_Rs
 from src import ResolveFBO      as AU_Fb
 from src import CombineRGBwithA as AU_Cb
@@ -352,7 +357,7 @@ if __name__ == '__main__':
         print("\n[KeyboardInterrupt] 用户强制中止", c=1, s=7)
         print(stacktrace(), c=3)
         exit(1)
-    except ArgParserFailure as arg:
+    except ArgParser.ArgParserFailure as arg:
         Logger.error(f"CI: Program failed ti parse input arguments, {arg}")
         print(parser.format_usage())
         print("[ArgParserFailure] 命令行参数解析失败", c=1, s=7)
