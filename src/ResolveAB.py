@@ -25,13 +25,13 @@ class Resource:
         self.name:str = env.file.name
         self.length:int = len(env.objects)
         ###
-        self.sprites:list[uc.Sprite] = []
-        self.texture2ds:list[uc.Texture2D] = []
-        self.textassets:list[uc.TextAsset] = []
-        self.audioclips:list[uc.AudioClip] = []
-        self.materials:list[uc.Material] = []
-        self.monobehaviors:list[uc.MonoBehaviour] = []
-        self.spines:list[Resource.SpineAsset] = []
+        self.sprites:"list[uc.Sprite]" = []
+        self.texture2ds:"list[uc.Texture2D]" = []
+        self.textassets:"list[uc.TextAsset]" = []
+        self.audioclips:"list[uc.AudioClip]" = []
+        self.materials:"list[uc.Material]" = []
+        self.monobehaviors:"list[uc.MonoBehaviour]" = []
+        self.spines:"list[Resource.SpineAsset]" = []
         ###
         for i in [o.read() for o in env.objects]:
             if isinstance(i, uc.Sprite):
@@ -56,7 +56,7 @@ class Resource:
         """
         _key = 'm_PathID'
         pathid:int = pathid[_key] if type(pathid) == dict and _key in pathid.keys() else pathid
-        lst:list[uc.GameObject] = self.env.objects if not search_in else search_in
+        lst:"list[uc.GameObject]" = self.env.objects if not search_in else search_in
         for i in lst:
             if i.path_id == pathid:
                 return i
@@ -67,7 +67,7 @@ class Resource:
         
         :rtype: None;
         """
-        spines:list[Resource.SpineAsset] = []
+        spines:"list[Resource.SpineAsset]" = []
         for mono in self.monobehaviors:
             #(i stans for a MonoBehavior)
             success = False

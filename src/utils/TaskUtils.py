@@ -13,7 +13,7 @@ class ThreadCtrl():
 
     def __init__(self, max_subthread):
         """Initializes a tool for multi threading."""
-        self.__sts:list[threading.Thread] = []
+        self.__sts:"list[threading.Thread]" = []
         self.set_max_subthread(max_subthread)
     
     def set_max_subthread(self, max_subthread:int):
