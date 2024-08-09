@@ -93,7 +93,7 @@ class ModelsDist:
         try:
             if item.get('Rarity', None) is not None:
                 rarity = f"Rarity_{int(item['Rarity']) + 1}"
-                if rarity in self.data['sortTags'].keys():
+                if rarity in self.data['sortTags']:
                     rst.append(rarity)
         except BaseException:
             Logger.warn("ModelsDataDist: Failed to recognize rarity tag.")
@@ -109,10 +109,10 @@ class ModelsDist:
         return rst + [additional] if additional else rst
 
     def update_operator_data(self):
-        Logger.info(f"ModelsDataDist: Decoding operator data.")
+        Logger.info("ModelsDataDist: Decoding operator data.")
         print("解析干员信息...")
         raw:"dict[str,dict]" = self.get_gamedata(('character_table',))
-        Logger.info(f"ModelsDataDist: Parsing operator data.")
+        Logger.info("ModelsDataDist: Parsing operator data.")
         collected = {}
         for k, v in raw['Characters'].items():
             if k.startswith('char_') and not v.get('IsNotObtainable', None):
@@ -124,18 +124,18 @@ class ModelsDist:
         print(f"\t找到 {len(collected)} 位干员", c=2)
 
     def update_skin_data(self):
-        Logger.info(f"ModelsDataDist: Decoding skin data.")
+        Logger.info("ModelsDataDist: Decoding skin data.")
         print("解析干员皮肤信息...")
         raw:"dict[str,dict]" = self.get_gamedata(('skin_table',))
-        Logger.info(f"ModelsDataDist: Parsing skin data.")
+        Logger.info("ModelsDataDist: Parsing skin data.")
         collected = {}
         for k, v in raw['CharSkins'].items():
             if v.get('BuildingId', None):
                 key_char = v['CharId'][5:].lower()
-                if key_char in self.data['data'].keys():
+                if key_char in self.data['data']:
                     origin = self.data['data'][key_char]
                     key_skin = v['BuildingId'][5:].lower()
-                    if key_skin not in self.data['data'].keys():
+                    if key_skin not in self.data['data']:
                         sort_tags = origin['sortTags'] + ['Skinned']
                         collected[key_skin] = self.get_item_data(f"build_char_{key_skin}", "Operator", "BuildingSkin", sort_tags,
                                 origin['name'], origin['appellation'], v['DisplaySkin']['SkinGroupId'], v['DisplaySkin']['SkinGroupName'])
@@ -149,10 +149,10 @@ class ModelsDist:
         print(f"\t找到 {len(collected)} 件干员皮肤", c=2)
 
     def update_enemy_data(self):
-        Logger.info(f"ModelsDataDist: Decoding enemy data.")
+        Logger.info("ModelsDataDist: Decoding enemy data.")
         print("解析敌方单位信息...")
         raw:"dict[str,list]" = self.get_gamedata(('enemydata', 'enemy_database'))
-        Logger.info(f"ModelsDataDist: Parsing enemy data.")
+        Logger.info("ModelsDataDist: Parsing enemy data.")
         collected = {}
         for k, v in raw['Enemies'].items():
             if k.startswith('enemy_'):
@@ -165,7 +165,7 @@ class ModelsDist:
         print(f"\t找到 {len(collected)} 个敌方单位", c=2)
 
     def update_dynillust_data(self):
-        Logger.info(f"ModelsDataDist: Parsing dynillust data.")
+        Logger.info("ModelsDataDist: Parsing dynillust data.")
         print("分析动态立绘信息...")
         collected = {}
         if osp.isdir(self.data['storageDirectory']['DynIllust']):
@@ -177,7 +177,7 @@ class ModelsDist:
                     key_char = re.findall(r'[0-9]+.+', key)
                     if len(key_char) > 0:
                         key_char = key_char[0] #该动态立绘对应的原干员的key
-                        if key_char in self.data['data'].keys():
+                        if key_char in self.data['data']:
                             origin = self.data['data'][key_char]
                             sort_tags = origin['sortTags'] + ['DynIllust']
                             collected[key] = self.get_item_data(key, "DynIllust", None, sort_tags,
@@ -189,7 +189,7 @@ class ModelsDist:
                         Logger.warn(f"ModelsDataDist: The operator-key of the dyn illust \"{key}\" could not pass the regular expression check.")
                         print(f"\t动态立绘 {key} 未成功通过正则匹配", c=3)
         else:
-            Logger.warn(f"ModelsDataDist: The directory of dyn illust not found.")
+            Logger.warn("ModelsDataDist: The directory of dyn illust not found.")
             print("\t动态立绘根文件夹未找到", c=3)
         self.data['data'].update(collected)
         Logger.info(f"ModelsDataDist: Found {len(collected)} dynillusts.")
@@ -205,7 +205,7 @@ class ModelsDist:
             #(i是Key,Key应为文件夹的名称)
             fail_flag = False
             asset_list = {}
-            if v['type'] in self.data['storageDirectory'].keys():
+            if v['type'] in self.data['storageDirectory']:
                 #如果其type在模型存放目录预设中有对应值
                 d = osp.join(self.data['storageDirectory'][v['type']], k)
                 asset_list_pending = {}

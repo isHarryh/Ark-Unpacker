@@ -12,9 +12,6 @@ from .utils.TaskUtils import ThreadCtrl, Counter, UICtrl, TimeRecorder
 
 
 def collect_models(upkdir:str, destdir:str, dodel:bool, on_finished:staticmethod, on_collected:staticmethod):
-    """
-    
-    """
     error_occurred = False
     for model_type_dir in get_dirlist(upkdir, max_depth=1):
         model_type:str = osp.basename(model_type_dir) # Sub dir of one model type
@@ -94,7 +91,7 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
     for upkdir, destdir in flist:
         #(i stands for a source dir's path)
         UI.request([
-            f"正在分拣模型...",
+            "正在分拣模型...",
             TR.get_progress_str(),
             f"当前搜索：\t{osp.basename(upkdir)}",
             f"累计分拣：\t{collected.now()}",
@@ -108,7 +105,7 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
     UI.loop_stop()
     while TC.count_subthread() or not SafeSaver.get_instance().completed() or TR.get_progress() < 1:
         UI.request([
-            f"正在分拣模型...",
+            "正在分拣模型...",
             TR.get_progress_str(),
             f"累计分拣：\t{collected.now()}",
             f"剩余时间：\t{TR.get_eta_str()}",
@@ -117,6 +114,6 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
 
     UI.loop_stop()
     UI.reset()
-    print(f"\n分拣模型结束!", s=1)
+    print("\n分拣模型结束!", s=1)
     print(f"  累计分拣 {collected.now()} 套模型")
     print(f"  此项用时 {round(TR.get_rt(), 1)} 秒")

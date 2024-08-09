@@ -181,7 +181,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     :param dodel: Whether to delete the existed destination directory first, `False` for default;
     :rtype: None;
     """
-    print(f"\n正在解析路径...", s=1)
+    print("\n正在解析路径...", s=1)
     Logger.info("ResolveFBO: Retrieving file paths...")
     rootdir = osp.normpath(osp.realpath(rootdir))
     destdir = osp.normpath(osp.realpath(destdir))
@@ -205,7 +205,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     UI.loop_start()
     for i in flist:
         UI.request([
-            f"正在批量解码FlatBuffers数据...",
+            "正在批量解码FlatBuffers数据...",
             TR.get_progress_str(),
             f"当前目录：\t{osp.basename(osp.dirname(i))}",
             f"当前搜索：\t{osp.basename(i)}",
@@ -222,7 +222,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     UI.loop_stop()
     while TC.count_subthread() or not SafeSaver.get_instance().completed() or TR.get_progress() < 1:
         UI.request([
-            f"正在批量解码FlatBuffers数据...",
+            "正在批量解码FlatBuffers数据...",
             TR.get_progress_str(),
             f"累计搜索：\t{TR.get_done_dest_str_of(2)}",
             f"累计解码：\t{TR.get_done_dest_str_of(1)}",
@@ -231,24 +231,7 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
         UI.refresh(post_delay=0.1)
 
     UI.reset()
-    print(f"\n批量解码FlatBuffers数据结束!", s=1)
+    print("\n批量解码FlatBuffers数据结束!", s=1)
     print(f"  累计搜索 {TR.get_done_of(2)} 个文件")
     print(f"  累计解码 {TR.get_done_of(1)} 个文件")
     print(f"  此项用时 {round(TR.get_rt(), 1)} 秒")
-
-####### TestOnly-调试专用 #######
-if __name__ == '__main__':
-    for root, _, files in os.walk('test/upk'):
-        for f in files:
-            try:
-                file_path = osp.join(root, f)
-                dic = ArkFBOLibrary.decode(file_path)
-                os.makedirs('test/fbo', exist_ok=True)
-                with open(f'test/fbo/{f}.json', 'w', encoding='UTF-8') as g:
-                    g.write(json.dumps(dic, indent=4, ensure_ascii=False))
-                print("Success", f)
-            except AssertionError:
-                pass
-                # print("AssertionError", f)
-            except TypeError:
-                print("TypeError", f)

@@ -56,7 +56,7 @@ class Config():
                         self.config[k] = loaded_config[k] if isinstance(loaded_config.get(k, None), type(default_val)) else default_val
                 Logger.set_instance(self.get('log_file'), self.get('log_level'))
                 Logger.set_level(self.get('log_level'))
-                Logger.info(f"Config: Applied config.")
+                Logger.info("Config: Applied config.")
             except Exception as arg:
                 self.config = Config.__default_config
                 Logger.set_instance(self.get('log_file'), self.get('log_level'))
@@ -66,13 +66,13 @@ class Config():
             self.config = Config.__default_config
             Logger.set_instance(self.get('log_file'), self.get('log_level'))
             Logger.set_level(self.get('log_level'))
-            Logger.info(f"Config: Applied default config.")
+            Logger.info("Config: Applied default config.")
             self.save_config()
 
     def _save_config(self):
         try:
             json.dump(self.config, open(self.__config_path, 'w', encoding=Config.__file_encoding), indent=4, ensure_ascii=False)
-            Logger.info(f"Config: Saved config.")
+            Logger.info("Config: Saved config.")
         except Exception as arg:
             Logger.error(f"Config: Failed to save config, cause: {arg}")
 

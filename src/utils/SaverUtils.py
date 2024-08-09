@@ -128,7 +128,8 @@ class SafeSaver(WorkerCtrl):
 
     @staticmethod
     def save_objects(lst:"list[uc.GameObject]", destdir:str, on_queued:staticmethod=None, on_saved:staticmethod=None):
-        """Saves all the Unity GameObjects in the given list as files. If a GameObject is not exportable, it does nothing.
+        """Saves all the Unity GameObjects in the given list as files.
+        If a GameObject is not exportable, it does nothing.
 
         :param lst: The GameObjects list;
         :param destdir: Destination directory;

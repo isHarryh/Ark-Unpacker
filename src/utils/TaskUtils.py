@@ -151,13 +151,13 @@ class WorkerCtrl():
             self.__workers.append(t)
             t.start()
             if len(self.__workers) >= self.__max_workers:
-                Logger.debug(f"Worker: Workers are in full load, slogging guts out!")
+                Logger.debug("Worker: Workers are in full load, slogging guts out!")
 
     def _layoff_worker(self, worker:threading.Thread):
         if worker in self.__workers:
             self.__workers.remove(worker)
             if len(self.__workers) <= 1:
-                Logger.debug(f"Worker: Workers nodded off, sleeping for new tasks!")
+                Logger.debug("Worker: Workers nodded off, sleeping for new tasks!")
 
 class UICtrl():
     """UI Controller in the separated thread."""
@@ -300,8 +300,8 @@ class TimeRecorder():
         :returns: The destination value;
         :rtype: int;
         """
-        return self.dest[weight] if weight in self.dest.keys() else 0
-    
+        return self.dest[weight] if weight in self.dest else 0
+
     def get_done_of(self, weight:int):
         """Gets the current value of the specified task weight.
 
@@ -309,8 +309,8 @@ class TimeRecorder():
         :returns: The current value;
         :rtype: int;
         """
-        return len(self.done[weight]) if weight in self.done.keys() else 0
-    
+        return len(self.done[weight]) if weight in self.done else 0
+
     def get_done_dest_str_of(self, weight:int):
         """Gets a string representing the done and destination of the specified task weight.
         
