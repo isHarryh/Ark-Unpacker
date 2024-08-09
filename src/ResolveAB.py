@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
-import os
 import UnityPy
 import os.path as osp
 import UnityPy.classes as uc
@@ -268,7 +267,7 @@ def main(src:str, destdir:str, dodel:bool=False,
     src = osp.normpath(osp.realpath(src))
     destdir = osp.normpath(osp.realpath(destdir))
     flist = [src] if osp.isfile(src) else get_filelist(src)
-    flist = list(filter(lambda x:is_ab_file(x), flist))
+    flist = list(filter(is_ab_file, flist))
 
     if dodel:
         print("\n正在清理...", s=1)

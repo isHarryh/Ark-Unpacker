@@ -81,7 +81,7 @@ class AlphaRGBCombiner:
 
     @staticmethod
     def get_real_name(fp_alpha:str):
-        basename, ext = osp.splitext(osp.basename(fp_alpha))
+        basename, _ = osp.splitext(osp.basename(fp_alpha))
         for i in AlphaRGBCombiner.PATTERNS:
             m = i.fullmatch(basename)
             if m:
@@ -142,7 +142,7 @@ def image_resolve(fp:str, destdir:str, \
     except BaseException as arg:
         # Error feedback
         Logger.error(f"CombineRGBwithA: Error occurred while processing alpha image \"{fp}\": Exception{type(arg)} {arg}")
-        raise(arg)
+        # raise(arg)
     if on_processed:
         on_processed()
 
@@ -161,8 +161,8 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     rootdir = osp.normpath(osp.realpath(rootdir))
     destdir = osp.normpath(osp.realpath(destdir))
     flist = get_filelist(rootdir)
-    flist = list(filter(lambda x:is_image_file(x), flist))
-    flist = list(filter(lambda x:AlphaRGBCombiner.get_real_name(x) != None, flist))
+    flist = list(filter(is_image_file, flist))
+    flist = list(filter(lambda x:AlphaRGBCombiner.get_real_name(x) is not None, flist))
 
     if dodel:
         print("\n正在清理...", s=1)

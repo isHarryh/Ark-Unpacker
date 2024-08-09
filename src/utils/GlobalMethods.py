@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
-import os, builtins, shutil, traceback
+import os
+import builtins
+import shutil
+import traceback
 import os.path as osp
 
 
@@ -80,7 +83,7 @@ def mkdir(path:str):
     try:
         path = path.strip().strip('/\\')
         os.makedirs(path, exist_ok=True)
-    except:
+    except BaseException:
         pass
 
 def rmdir(path:str):
@@ -136,8 +139,8 @@ def get_dirlist(path:str, max_depth=0):
     max_depth = int(max_depth)
     if max_depth <= 0:
         for root, dirs, _ in os.walk(path):
-            for dir in dirs:
-                lst.append(osp.join(root, dir))
+            for i in dirs:
+                lst.append(osp.join(root, i))
     else:
         for i in os.listdir(path):
             i = osp.join(path, i)

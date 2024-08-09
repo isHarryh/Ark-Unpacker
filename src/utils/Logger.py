@@ -35,29 +35,33 @@ class Logger():
                     pass
         self.thread = Thread(name=self.__class__.__name__, target=loop, args=(self,), daemon=True)
         self.thread.start()
-    
-    def __set_level(self, level:int):
+
+    def _set_level(self, level:int):
         self.log_level = level
-    
-    def __log(self, tag:str, msg:str):
+
+    def _log(self, tag:str, msg:str):
         try:
             self.queue.append(f"{datetime.now().strftime(Logger.__time_format)} [{tag}] {msg}\n")
             return True
         except BaseException:
             return False
-    
-    def __error(self, msg:str):
-        if self.log_level >= Logger.LV_ERROR: self.__log('ERROR', msg)
-    
-    def __warn(self, msg:str):
-        if self.log_level >= Logger.LV_WARN: self.__log('WARN', msg)
-    
-    def __info(self, msg:str):
-        if self.log_level >= Logger.LV_INFO: self.__log('INFO', msg)
-    
-    def __debug(self, msg:str):
-        if self.log_level >= Logger.LV_DEBUG: self.__log('DEBUG', msg)
-    
+
+    def _error(self, msg:str):
+        if self.log_level >= Logger.LV_ERROR:
+            self._log('ERROR', msg)
+
+    def _warn(self, msg:str):
+        if self.log_level >= Logger.LV_WARN:
+            self._log('WARN', msg)
+
+    def _info(self, msg:str):
+        if self.log_level >= Logger.LV_INFO:
+            self._log('INFO', msg)
+
+    def _debug(self, msg:str):
+        if self.log_level >= Logger.LV_DEBUG:
+            self._log('DEBUG', msg)
+
     @staticmethod
     def set_instance(log_file_path:str, level:int=LV_INFO):
         """Initializes the Logger static instance.
@@ -67,7 +71,8 @@ class Logger():
         :param level: The logging level;
         :rtype: None;
         """
-        if not Logger.__instance: Logger.set_instance_override(log_file_path, level)
+        if not Logger.__instance:
+            Logger.set_instance_override(log_file_path, level)
 
     @staticmethod
     def set_instance_override(log_file_path:str, level:int=LV_INFO):
@@ -87,24 +92,30 @@ class Logger():
         :param level: The new logging level;
         :rtype: None;
         """
-        if Logger.__instance: Logger.__instance.__set_level(level)
-    
+        if Logger.__instance:
+            Logger.__instance._set_level(level)
+
     @staticmethod
     def log(tag:str, msg:str):
-        if Logger.__instance: Logger.__instance.__log(tag, msg)
-    
+        if Logger.__instance:
+            Logger.__instance._log(tag, msg)
+
     @staticmethod
     def error(msg:str):
-        if Logger.__instance: Logger.__instance.__error(msg)
-    
+        if Logger.__instance:
+            Logger.__instance._error(msg)
+
     @staticmethod
     def warn(msg:str):
-        if Logger.__instance: Logger.__instance.__warn(msg)
-    
+        if Logger.__instance:
+            Logger.__instance._warn(msg)
+
     @staticmethod
     def info(msg:str):
-        if Logger.__instance: Logger.__instance.__info(msg)
-    
+        if Logger.__instance:
+            Logger.__instance._info(msg)
+
     @staticmethod
     def debug(msg:str):
-        if Logger.__instance: Logger.__instance.__debug(msg)
+        if Logger.__instance:
+            Logger.__instance._debug(msg)

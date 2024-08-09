@@ -42,11 +42,11 @@ class Config():
     def __init__(self):
         """Not recommended to use. Please use the static methods."""
         self.config = {}
-    
-    def __get(self, key):
+
+    def _get(self, key):
         return self.config.get(key, None)
-    
-    def __read_config(self):
+
+    def _read_config(self):
         if osp.isfile(Config.__config_path):
             try:
                 loaded_config = json.load(open(Config.__config_path, 'r', encoding=Config.__file_encoding))
@@ -68,8 +68,8 @@ class Config():
             Logger.set_level(self.get('log_level'))
             Logger.info(f"Config: Applied default config.")
             self.save_config()
-    
-    def __save_config(self):
+
+    def _save_config(self):
         try:
             json.dump(self.config, open(self.__config_path, 'w', encoding=Config.__file_encoding), indent=4, ensure_ascii=False)
             Logger.info(f"Config: Saved config.")
@@ -77,10 +77,10 @@ class Config():
             Logger.error(f"Config: Failed to save config, cause: {arg}")
 
     @staticmethod
-    def __get_instance():
+    def _get_instance():
         if not Config.__instance:
             Config.__instance = Config()
-            Config.__instance.__read_config()
+            Config.__instance._read_config()
         return Config.__instance
 
     @staticmethod
@@ -91,17 +91,17 @@ class Config():
         :returns: The value of the field, `None` if the key doesn't exist;
         :rtype: Any;
         """
-        return Config.__get_instance().__get(key)
-    
+        return Config._get_instance()._get(key)
+
     @staticmethod
     def read_config():
         """Reads the config from file, aka. deserialize the config.
         The default config will be used if the config file doesn't exist or an error occurs.
         The logging level of `Logger` class will be updated according to the config.
         """
-        return Config.__get_instance().__read_config()
-    
+        return Config._get_instance()._read_config()
+
     @staticmethod
     def save_config():
         """Saves the config to file, aka. serialize the config."""
-        return Config.__get_instance().__save_config()
+        return Config._get_instance()._save_config()

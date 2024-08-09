@@ -16,7 +16,7 @@ class _ArkUnpackerArgParser(argparse.ArgumentParser):
         raise ArgParserFailure(message)
 
     @staticmethod
-    def _instantiate():
+    def instantiate():
         parser = _ArkUnpackerArgParser(
             prog="ArkUnpacker",
             description="Arknights Assets Unpacker. Use no argument to run to enter the interactive CLI mode.",
@@ -85,4 +85,4 @@ class _ArkUnpackerArgParser(argparse.ArgumentParser):
         )
         return parser
 
-INSTANCE = _ArkUnpackerArgParser._instantiate()
+INSTANCE = _ArkUnpackerArgParser.instantiate()

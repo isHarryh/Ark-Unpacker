@@ -29,7 +29,11 @@ class ThreadCtrl():
         """Creates a sub thread and run it."""
         while self.count_subthread() >= self.__max:
             pass
-        ts = threading.Thread(target=fun, args=args, kwargs=kwargs, daemon=False, name=name)
+        ts = threading.Thread(target=fun,
+                              args=args if args else (),
+                              kwargs=kwargs if kwargs else {},
+                              daemon=False,
+                              name=name)
         self.__sts.append(ts)
         ts.start()
     #EndClass
@@ -262,7 +266,7 @@ class TimeRecorder():
         self.t_init = time.time()
         self.done = {}
         self.dest = {}
-        self._LOCK = threading.Lock()
+        self._lock = threading.Lock()
         self._cache_p = -1.0
 
     def update_dest(self, weight:int, advance:int=1):
@@ -274,7 +278,7 @@ class TimeRecorder():
         """
         if weight <= 0:
             raise ValueError("Arg weight should be positive")
-        with self._LOCK:
+        with self._lock:
             self.dest[weight] = self.dest.get(weight, 0) + advance
 
     def done_once(self, weight:int):
@@ -283,8 +287,8 @@ class TimeRecorder():
         :param weight: The task weight whose current value should be updated;
         :rtype: None;
         """
-        with self._LOCK:
-            if weight in self.done.keys():
+        with self._lock:
+            if weight in self.done:
                 self.done[weight].append(time.time())
             else:
                 self.done[weight] = [time.time()]
@@ -360,7 +364,7 @@ class TimeRecorder():
         sum_weight = sum([x[0] for x in items[:length]])
         delta_time = items[-1][1] - items[-length][1]
         return sum_weight / delta_time if delta_time != 0 else 0
-    
+
     def get_eta(self, basis:int=500):
         """Gets the estimated time of arrival.
 
@@ -413,12 +417,12 @@ class TimeRecorder():
         try:
             add_chars = (' ', '▏', '▎', '▍', '▌', '▋', '▊', '▉', '█')
             max_idx = len(add_chars) - 1
-            bar = ''
+            rst = ''
             unit = 1 / length
             for i in range(length):
                 ratio = (progress - i * unit) / unit
-                bar += add_chars[max(0, min(max_idx, round(ratio * max_idx)))]
-            return bar
-        except:
+                rst += add_chars[max(0, min(max_idx, round(ratio * max_idx)))]
+            return rst
+        except BaseException:
             return ''
     #EndClass

@@ -95,7 +95,7 @@ class ModelsDist:
                 rarity = f"Rarity_{int(item['Rarity']) + 1}"
                 if rarity in self.data['sortTags'].keys():
                     rst.append(rarity)
-        except:
+        except BaseException:
             Logger.warn("ModelsDataDist: Failed to recognize rarity tag.")
         return rst
 
@@ -207,23 +207,23 @@ class ModelsDist:
             asset_list = {}
             if v['type'] in self.data['storageDirectory'].keys():
                 #如果其type在模型存放目录预设中有对应值
-                dir = osp.join(self.data['storageDirectory'][v['type']], k)
+                d = osp.join(self.data['storageDirectory'][v['type']], k)
                 asset_list_pending = {}
-                if osp.isdir(dir):
+                if osp.isdir(d):
                     #如果预期的目录存在
-                    file_list = os.listdir(dir)
+                    file_list = os.listdir(d)
                     for j in ('.atlas', '.png', '.skel'):
                         #(j是资源文件扩展名)
                         asset_list_specified = list(filter(lambda x:x.lower().endswith(j), file_list))
                         if len(asset_list_specified) == 0:
-                            Logger.info(f"ModelsDataDist: The {j} asset of \"{k}\" not found, see in \"{dir}\".")
+                            Logger.info(f"ModelsDataDist: The {j} asset of \"{k}\" not found, see in \"{d}\".")
                             print(f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：{color(1)}{j}{color(7)} 文件缺失")
                             fail_flag = True
                             break
                         elif len(asset_list_specified) == 1:
                             asset_list_pending[j] = asset_list_specified[0]
                         else:
-                            Logger.debug(f"ModelsDataDist: The {j} asset of \"{k}\" is multiple, see in \"{dir}\".")
+                            Logger.debug(f"ModelsDataDist: The {j} asset of \"{k}\" is multiple, see in \"{d}\".")
                             asset_list_specified.sort()
                             asset_list_pending[j] = asset_list_specified
                     if not fail_flag:
@@ -231,7 +231,7 @@ class ModelsDist:
                     else:
                         cur_fail += 1
                 else:
-                    Logger.info(f"ModelsDataDist: The model directory of \"{k}\" not found, expected path \"{dir}\".")
+                    Logger.info(f"ModelsDataDist: The model directory of \"{k}\" not found, expected path \"{d}\".")
                     print(f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：模型不存在")
                     cur_fail += 1
             else:

@@ -87,7 +87,7 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
     TR = TimeRecorder()
     TR.update_dest(1, len(flist))
     on_finished = lambda: TR.done_once(1)
-    on_collected = lambda: collected.update()
+    on_collected = collected.update
 
     UI.reset()
     UI.loop_start()
