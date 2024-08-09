@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
-import os
 import time
 import argparse
+import os
 import os.path as osp
+
 from src.utils import ArgParser
 from src.utils.Config import Config
 from src.utils.Logger import Logger

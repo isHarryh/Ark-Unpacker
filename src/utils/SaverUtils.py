@@ -4,10 +4,11 @@
 import os
 import os.path as osp
 import threading
-import UnityPy.classes as uc
 from io import BytesIO
-from PIL import Image
 from contextlib import ContextDecorator
+
+import UnityPy.classes as uc
+from PIL import Image
 from .AnalyUtils import TestRT
 from .Config import Config, PerformanceLevel
 from .GlobalMethods import mkdir

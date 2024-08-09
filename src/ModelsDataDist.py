@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
-import os
 import re
 import json
 import shutil
+import os
 import os.path as osp
 from datetime import datetime
+
 from .ResolveAB import ab_resolve
 from .ResolveFBO import ArkFBOLibrary
 from .utils.GlobalMethods import color, print, get_dirlist, get_filelist

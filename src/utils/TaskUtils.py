@@ -4,6 +4,7 @@
 import time
 import queue
 import threading
+
 from .GlobalMethods import color, print, clear
 from .Logger import Logger
 

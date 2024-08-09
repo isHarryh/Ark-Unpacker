@@ -3,10 +3,11 @@
 # @ BSD 3-Clause License
 import os.path as osp
 import json
+import types
 import pkgutil
 import importlib.util
+
 import numpy as np
-from types import ModuleType
 from .utils.Config import Config, PerformanceLevel
 from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file, is_known_asset_file
 from .utils.Logger import Logger
@@ -18,7 +19,7 @@ class PackageHelper:
     """Helper class for dynamic package inspection."""
 
     @staticmethod
-    def get_modules_from_package(package:ModuleType):
+    def get_modules_from_package(package:types.ModuleType):
         walk_result = pkgutil.walk_packages(package.__path__, package.__name__ + '.')
         module_names = [name for _, name, is_pkg in walk_result if not is_pkg]
         return [importlib.import_module(name) for name in module_names]

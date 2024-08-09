@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
-import UnityPy
 import os.path as osp
+
+import UnityPy
 import UnityPy.classes as uc
 from .CombineRGBwithA import AlphaRGBCombiner
 from .utils.Config import Config, PerformanceLevel
