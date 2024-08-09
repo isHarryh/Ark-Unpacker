@@ -38,7 +38,7 @@ class Config():
         'log_level': Logger.LV_INFO,
         'performance_level': PerformanceLevel.STANDARD
     }
-    
+
     def __init__(self):
         """Not recommended to use. Please use the static methods."""
         self.config = {}
@@ -75,14 +75,14 @@ class Config():
             Logger.info(f"Config: Saved config.")
         except Exception as arg:
             Logger.error(f"Config: Failed to save config, cause: {arg}")
-    
+
     @staticmethod
     def __get_instance():
         if not Config.__instance:
             Config.__instance = Config()
             Config.__instance.__read_config()
         return Config.__instance
-    
+
     @staticmethod
     def get(key):
         """Gets the specified config field.

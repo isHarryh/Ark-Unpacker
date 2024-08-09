@@ -11,10 +11,10 @@ class ArgParserFailure(Exception):
 class _ArkUnpackerArgParser(argparse.ArgumentParser):
     def __init__(self, prog:str, description:str, epilog:str):
         super().__init__(prog=prog, description=description, epilog=epilog)
-    
+
     def error(self, message:str):
         raise ArgParserFailure(message)
-    
+
     @staticmethod
     def _instantiate():
         parser = _ArkUnpackerArgParser(

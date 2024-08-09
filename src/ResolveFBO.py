@@ -23,7 +23,7 @@ class PackageHelper:
         walk_result = pkgutil.walk_packages(package.__path__, package.__name__ + '.')
         module_names = [name for _, name, is_pkg in walk_result if not is_pkg]
         return [importlib.import_module(name) for name in module_names]
-    
+
     @staticmethod
     def get_modules_from_package_name(package_name:str):
         package = importlib.import_module(package_name)
@@ -42,7 +42,7 @@ class ArkFBOLibrary:
             return False
         except UnicodeError:
             return True
-    
+
     @staticmethod
     def guess_root_type(path:str):
         target = osp.basename(path)
@@ -69,7 +69,7 @@ class FBOHandler:
     """Handler for FlatBuffers Objects, implementing conversion to Python dict type."""
     def __init__(self, data:bytearray, root_type:type):
         self._root = root_type.GetRootAs(data, 0)
-    
+
     @staticmethod
     def _to_literal(obj:object):
         if obj is None:
@@ -142,7 +142,7 @@ class FBOHandler:
                     data[field_name] = val
         # Return the whole object data
         return data
-    
+
     def to_json_dict(self):
         return FBOHandler._to_json_dict(self._root)
 

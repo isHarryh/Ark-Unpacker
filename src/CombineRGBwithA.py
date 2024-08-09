@@ -26,7 +26,7 @@ class AlphaRGBCombiner:
 
     def __init__(self, alpha:"str|Image.Image"):
         self.img_alpha = AlphaRGBCombiner.as_image(alpha, 'RGBA')
-    
+
     def combine_with(self, rgb:"str|Image.Image"):
         """ Merges the RGB image and the Alpha image in an efficient way.
 
@@ -43,7 +43,7 @@ class AlphaRGBCombiner:
         img_rgb.putalpha(img_alpha) #RGB通道图使用A通道图作为alpha层
         img_rgb.paste(img_black, img_mask) #RGB通道图被执行透明抹除
         return img_rgb
-    
+
     @staticmethod
     def search_rgb(fp_alpha:str):
         real = AlphaRGBCombiner.get_real_name(fp_alpha)
@@ -67,7 +67,7 @@ class AlphaRGBCombiner:
             best, similarity = AlphaRGBCombiner.choose_most_similar_rgb(fp_alpha, flist)
             Logger.info(f"CombineRGBwithA: \"{best}\" matched \"{fp_alpha}\" among {len(flist)} candidates, confidentiality {similarity}")
             return best
-    
+
     @staticmethod
     def choose_most_similar_rgb(alpha, candidates:"list[str]"):
         best_candidate = None
@@ -78,7 +78,7 @@ class AlphaRGBCombiner:
                 best_candidate = i
                 best_similarity = similarity
         return best_candidate, similarity
-    
+
     @staticmethod
     def get_real_name(fp_alpha:str):
         basename, ext = osp.splitext(osp.basename(fp_alpha))
@@ -88,7 +88,7 @@ class AlphaRGBCombiner:
                 return m.group(1)
         return  None
 
-    @staticmethod    
+    @staticmethod
     def as_image(obj:"str|Image.Image", mode:str):
         return (obj if type(obj) == Image.Image else Image.open(obj)).convert(mode)
     

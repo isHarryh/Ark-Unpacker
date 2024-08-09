@@ -33,7 +33,7 @@ def collect_models(upkdir:str, destdir:str, dodel:bool, on_finished:staticmethod
                 elif model_type.startswith('DynIllust') and re.match(r'dyn_illust_char_', model):
                     newname = "dyn_illust_" + re.match(r'dyn_illust_char_(\d+_[0-9a-zA-Z]+(_[0-9a-zA-Z#]+)?)', model).group(1)
                 if newname:
-                    # Move to 
+                    # Move
                     dest = osp.join(destdir, newname)
                     Logger.debug(f"CollectModels: \"{model_dir}\" -> \"{dest}\"")
                     shutil.copytree(model_dir, dest, dirs_exist_ok=True)
@@ -42,7 +42,7 @@ def collect_models(upkdir:str, destdir:str, dodel:bool, on_finished:staticmethod
                         on_collected()
                 else:
                     # Not matched any rules
-                    pass 
+                    pass
             except Exception as arg:
                 error_occurred = True
                 Logger.error(f"CollectModels: Error occurred while handling \"{model_dir}\": Exception{type(arg)} {arg}")
@@ -74,13 +74,13 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
         Logger.error("CollectModels: Arguments error")
         print("参数错误", c=3)
         return
-    
+
     flist = [] # [(upkdir, destdir), ...]
     for srcdir, destdir in zip(srcdirs, destdirs):
         print(f"\t正在读取目录 {srcdir}")
         for upkdir in get_dirlist(srcdir, max_depth=1):
             flist.append((upkdir, destdir))
-    
+
     TC = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
     collected = Counter()
     UI = UICtrl()

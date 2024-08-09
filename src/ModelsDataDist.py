@@ -85,7 +85,7 @@ class ModelsDist:
             "skinGroupName": SGName,
             "sortTags": sortTags,
         }
-    
+
     def get_operator_sort_tags(self, item:dict):
         rst = ["Operator"]
         if item.get('IsSpChar', False):
@@ -98,7 +98,7 @@ class ModelsDist:
         except:
             Logger.warn("ModelsDataDist: Failed to recognize rarity tag.")
         return rst
-    
+
     def get_enemy_sort_tags(self, item:dict):
         rst = ['Enemy']
         additional = {
@@ -163,7 +163,7 @@ class ModelsDist:
         self.data['data'].update(collected)
         Logger.info(f"ModelsDataDist: Found {len(collected)} enemies.")
         print(f"\t找到 {len(collected)} 个敌方单位", c=2)
-    
+
     def update_dynillust_data(self):
         Logger.info(f"ModelsDataDist: Parsing dynillust data.")
         print("分析动态立绘信息...")
@@ -194,7 +194,7 @@ class ModelsDist:
         self.data['data'].update(collected)
         Logger.info(f"ModelsDataDist: Found {len(collected)} dynillusts.")
         print(f"\t找到 {len(collected)} 套动态立绘", c=2)
-    
+
     def verify_models(self):
         Logger.info("ModelsDataDist: Validating models files.")
         print("校验模型文件...")
@@ -244,7 +244,7 @@ class ModelsDist:
                 print(f"\t已处理完成 {color(2)}{round(cur_done / total * 100)}%{color(7)}")
         Logger.info(f"ModelsDataDist: Verify models completed, {cur_done - cur_fail} success, {cur_fail} failure.")
         print(f"\n\t校验完成：{color(2)}成功{cur_done - cur_fail}{color(7)}，失败{cur_fail}")
-    
+
     def export_json(self):
         Logger.info("ModelsDataDist: Writing to json.")
         with open('models_data.json', 'w', encoding='UTF-8') as f:

@@ -16,7 +16,7 @@ class Logger():
     LV_WARN     = 2
     LV_INFO     = 3
     LV_DEBUG    = 4
-    
+
     def __init__(self, log_file_path:str, level:int):
         """Not recommended to use. Please use the singleton instance."""
         self.log_level = level
@@ -79,7 +79,7 @@ class Logger():
         :rtype: None;
         """
         Logger.__instance = Logger(log_file_path, level)
-    
+
     @staticmethod
     def set_level(level:int):
         """Sets the logging level

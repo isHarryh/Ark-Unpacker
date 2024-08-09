@@ -15,17 +15,17 @@ class ThreadCtrl():
         """Initializes a tool for multi threading."""
         self.__sts:"list[threading.Thread]" = []
         self.set_max_subthread(max_subthread)
-    
+
     def set_max_subthread(self, max_subthread:int):
         """Sets the max number of sub threads."""
         self.__max:int = max(1, max_subthread)
-    
+
     def count_subthread(self):
         """Gets the number of alive sub threads."""
         self.__sts = list(filter(lambda x:x.is_alive(), self.__sts))
         return len(self.__sts)
-    
-    def run_subthread(self, fun, args:tuple=(), kwargs:dict={}, name:"str|None"=None):
+
+    def run_subthread(self, fun, args:tuple=None, kwargs:dict=None, name:"str|None"=None):
         """Creates a sub thread and run it."""
         while self.count_subthread() >= self.__max:
             pass
@@ -71,7 +71,7 @@ class WorkerCtrl():
             self._total_requested.update()
         else:
             raise RuntimeError("The worker controller has terminated")
-    
+
     def terminate(self, block:bool=False):
         """Requests the workers to terminate and stop receiving new data.
 
@@ -82,21 +82,21 @@ class WorkerCtrl():
             self.__opened == False
             if block:
                 self.__queue.join()
-    
+
     def completed(self):
         """Returns `True` if there is no data in queue or in handler.
 
         :rtype: bool;
         """
         return self._total_requested.now() == self._total_processed.now()
-    
+
     def get_total_requested(self):
         """Gets the total number of requested tasks.
         
         :rtype: int;
         """
         return self._total_requested.now()
-    
+
     def get_total_processed(self):
         """Gets the total number of processed tasks.
         
@@ -140,7 +140,7 @@ class WorkerCtrl():
                     self._total_processed.update()
             except queue.Empty:
                 pass
-    
+
     def _backup_worker(self):
         if len(self.__workers) < self.__max_workers:
             t = threading.Thread(target=self._loop, name=f"Worker:{self._name}", daemon=True)
@@ -168,11 +168,11 @@ class UICtrl():
         self.__cache_lines = []
         self.__status = True
         self.set_refresh_rate(interval)
-    
+
     def __loop(self):
         while self.__status:
             self.refresh(post_delay=self.__interval)
-    
+
     def loop_start(self):
         """Starts auto-refresh."""
         self.__status = True
@@ -183,7 +183,7 @@ class UICtrl():
         """Stops auto-refresh."""
         self.__status = False
         self.__cache_lines = []
-    
+
     def refresh(self, post_delay:float=0, force_refresh:bool=False):
         """Requests a immediate refresh.
 
@@ -200,7 +200,7 @@ class UICtrl():
                 pass
         if post_delay > 0:
             time.sleep(post_delay)
-    
+
     def request(self, lines:"list[str]"):
         """Updates the content
 
@@ -208,20 +208,20 @@ class UICtrl():
         :rtype: None;
         """
         self.__lines = lines
-    
+
     def reset(self):
         """Clears the content."""
         clear()
         self.__lines = []
         self.__cache_lines = []
-    
+
     def set_refresh_rate(self, interval:float):
         """Sets the auto-refresh interval.
 
         :param interval: Auto-refresh interval (seconds);
         :rtype: None;
         """
-        self.__interval = interval  
+        self.__interval = interval
     #EndClass
 
 class Counter():
@@ -243,7 +243,7 @@ class Counter():
         elif val:
             self.__s += 1
         return self.__s
-    
+
     def now(self):
         """Gets the current value.
 
@@ -288,7 +288,7 @@ class TimeRecorder():
                 self.done[weight].append(time.time())
             else:
                 self.done[weight] = [time.time()]
-    
+
     def get_dest_of(self, weight:int):
         """Gets the destination value of the specified task weight.
 
@@ -338,7 +338,7 @@ class TimeRecorder():
         """
         p = self.get_progress(force_inc)
         return f"[{TimeRecorder._get_progress_bar_str(p, length)}] {color(2, 0, 1)}{p:.1%}"
-    
+
     def get_speed(self, basis:int=500):
         """Gets the processing speed.
 
@@ -387,7 +387,7 @@ class TimeRecorder():
         if eta != 0:
             return f'{m:02}:{s:02}'
         return '--:--'
-    
+
     def get_rt(self):
         """Gets the running time since this instance was initialized.
 
@@ -395,19 +395,19 @@ class TimeRecorder():
         :rtype: float;
         """
         return time.time() - self.t_init
-    
+
     def _get_total_dest_weight(self):
         s = 0
         for k, v in self.dest.items():
             s += k * v
         return s
-    
+
     def _get_total_done_weight(self):
         s = 0
         for k, v in self.done.items():
             s += k * len(v)
         return s
-    
+
     @staticmethod
     def _get_progress_bar_str(progress:float, length:int):
         try:

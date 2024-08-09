@@ -18,7 +18,7 @@ class TestRT(ContextDecorator):
 
     # 类级别的字典，用于存储每个name的运行时间
     _records = defaultdict(list)
-    
+
     def __init__(self, name):
         self.name = name
 

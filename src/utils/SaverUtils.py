@@ -17,7 +17,7 @@ from .TaskUtils import WorkerCtrl
 
 class EntryLock(ContextDecorator):
     """The entry lock class to prevent simultaneous access to the same entry."""
-    
+
     _ENTRIES = set()
     _INTERNAL_LOCK = threading.Condition()
 
@@ -72,7 +72,7 @@ class SafeSaver(WorkerCtrl):
         if on_queued:
             on_queued()
         SafeSaver.get_instance().submit((data, destdir, name, ext, on_saved))
-    
+
     @staticmethod
     def save_image(img:Image.Image, destdir:str, name:str, ext:str=_EXT_IMAGE, on_queued:staticmethod=None, on_saved:staticmethod=None):
         """Saves an image to a file.
@@ -88,7 +88,7 @@ class SafeSaver(WorkerCtrl):
         bio = BytesIO()
         img.save(bio, format=ext.lstrip('.'))
         SafeSaver.save_bytes(bio.getvalue(), destdir, name, ext, on_queued, on_saved)
-    
+
     @staticmethod
     def save_object(obj:uc.GameObject, destdir:str, name:str, on_queued:staticmethod=None, on_saved:staticmethod=None):
         """Saves the given Unity GameObject as a file. If a GameObject is not exportable, it does nothing.
@@ -125,7 +125,7 @@ class SafeSaver(WorkerCtrl):
         else:
             # Not an exportable type:
             pass
-    
+
     @staticmethod
     def save_objects(lst:"list[uc.GameObject]", destdir:str, on_queued:staticmethod=None, on_saved:staticmethod=None):
         """Saves all the Unity GameObjects in the given list as files. If a GameObject is not exportable, it does nothing.
@@ -138,7 +138,7 @@ class SafeSaver(WorkerCtrl):
         """
         for i in lst:
             SafeSaver.save_object(i, destdir, i.name, on_queued, on_saved)
-    
+
     @staticmethod
     def _save(data:bytes, destdir:str, name:str, ext:str, on_saved:staticmethod):
         try:
@@ -181,7 +181,7 @@ class SafeSaver(WorkerCtrl):
                     Logger.debug(f"Saver: File \"{i}\" duplication was prevented, size {len(data)}")
                     return False
         return True
-    
+
     @staticmethod
     def _no_namesake(dest:str):
         destdir = osp.dirname(dest)

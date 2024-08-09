@@ -46,7 +46,7 @@ class Resource:
                 self.materials.append(i)
             elif isinstance(i, uc.MonoBehaviour):
                 self.monobehaviors.append(i)
-    
+
     def get_object_by_pathid(self, pathid:"int|dict", search_in:"list|None"=None):
         """Gets the object with the given PathID.
 
@@ -116,7 +116,7 @@ class Resource:
             if not success:
                 Logger.warn(f"ResolveAB: Failed to handle skeletonDataAsset at pathId {mono.path_id} of {self.name}.")
         self.spines = spines
-    
+
     def rename_skeletons(self):
         """Renames the Spine assets which includes skel, atlas and png files.
         Since the Spine in Arknights have 4 or more forms (Building, BattleFront, BattleBack, DynIllust),
@@ -159,23 +159,23 @@ class Resource:
             self.atlas = atlas
             self.tex_list = tex_list
             self.type = type
-        
+
         def is_front_geq_back(self):
             t = self.atlas.text
             return t.count('\nF_') + t.count('\nf_') + t.count('\nC_') + t.count('\nc_') >= t.count('\nB_') + t.count('\nb_')
-        
+
         def is_available(self):
             if type(self.skel) != uc.TextAsset or type(self.atlas) != uc.TextAsset:
                 return False
             if type(self.tex_list) != list or len(self.tex_list) == 0:
                 return False
             return True
-        
+
         def get_common_name(self):
             if type(self.atlas) == uc.TextAsset:
                 return osp.splitext(osp.basename(self.atlas.name))[0]
             return "Unknown"
-        
+
         def save_spine(self, destdir:str, on_queued:staticmethod, on_saved:staticmethod):
             if self.is_available():
                 for i in self.tex_list:

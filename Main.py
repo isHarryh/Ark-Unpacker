@@ -265,7 +265,7 @@ def validate_logging_level_arg(parer:argparse.ArgumentParser, args:argparse.Name
 
 class UserInput:
     CANCEL_CMD = '*'
-    
+
     @staticmethod
     def request(prompt:str="> "):
         uin = input(prompt, c=2)
