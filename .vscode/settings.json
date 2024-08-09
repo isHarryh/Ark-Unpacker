@@ -1,4 +1,8 @@
 {
     "python.analysis.typeCheckingMode": "off",
+    "pylint.args": [
+        "--max-line-length=120",
+        "--disable=W0622,W0718,C3001"
+    ],
     "cSpell.language": "en,en-US,en-GB"
 }
