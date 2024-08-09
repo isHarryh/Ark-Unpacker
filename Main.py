@@ -308,7 +308,7 @@ if __name__ == '__main__':
         parser = ArgParser.INSTANCE
         print('')
         args = parser.parse_args()
-        if getattr(args, 'mode', None) == None:
+        if getattr(args, 'mode', None) is None:
             # No argument input -> ENTER -> Interactive CLI mode
             while True:
                 try:

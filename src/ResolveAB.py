@@ -55,7 +55,7 @@ class Resource:
         :returns: The GameObject, `None` for not found;
         """
         _key = 'm_PathID'
-        pathid:int = pathid[_key] if type(pathid) == dict and _key in pathid.keys() else pathid
+        pathid:int = pathid[_key] if isinstance(pathid, dict) and _key in pathid.keys() else pathid
         lst:"list[uc.GameObject]" = self.env.objects if not search_in else search_in
         for i in lst:
             if i.path_id == pathid:
@@ -165,14 +165,14 @@ class Resource:
             return t.count('\nF_') + t.count('\nf_') + t.count('\nC_') + t.count('\nc_') >= t.count('\nB_') + t.count('\nb_')
 
         def is_available(self):
-            if type(self.skel) != uc.TextAsset or type(self.atlas) != uc.TextAsset:
+            if not isinstance(self.skel, uc.TextAsset) or not isinstance(self.atlas, uc.TextAsset):
                 return False
-            if type(self.tex_list) != list or len(self.tex_list) == 0:
+            if not isinstance(self.tex_list, list) or len(self.tex_list) == 0:
                 return False
             return True
 
         def get_common_name(self):
-            if type(self.atlas) == uc.TextAsset:
+            if isinstance (self.atlas, uc.TextAsset):
                 return osp.splitext(osp.basename(self.atlas.name))[0]
             return "Unknown"
 
@@ -249,7 +249,7 @@ def ab_resolve(abfile:str, destdir:str, \
 
 
 ########## Main-主程序 ##########
-def main(src:str, destdir:str, dodel:bool=False, 
+def main(src:str, destdir:str, dodel:bool=False,
     doimg:bool=True, dotxt:bool=True, doaud:bool=True, dospine:bool=False, separate:bool=True):
     """Extract all the AB files from the given directory or extract a given AB file.
 

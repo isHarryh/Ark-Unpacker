@@ -74,9 +74,9 @@ class FBOHandler:
     def _to_literal(obj:object):
         if obj is None:
             return None
-        if type(obj) == bytes:
+        if isinstance(obj, bytes):
             return str(obj, encoding='UTF-8')
-        if type(obj) == np.ndarray:
+        if isinstance(obj, np.ndarray):
             return obj.tolist()
         if not isinstance(obj, (bool, int, float, str, dict, list)):
             return FBOHandler._to_json_dict(obj)
@@ -84,7 +84,7 @@ class FBOHandler:
 
     @staticmethod
     def _to_json_dict(obj:object):
-        if obj == None:
+        if obj is None:
             return None
         data = {}
         if 'Key' in dir(obj) and 'Value' in dir(obj):

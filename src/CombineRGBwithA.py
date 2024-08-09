@@ -36,7 +36,7 @@ class AlphaRGBCombiner:
         """
         img_rgb:Image.Image = AlphaRGBCombiner.as_image(rgb, 'RGBA')
         img_alpha:Image.Image = self.img_alpha.convert('L')
-        if not (img_rgb.size == img_alpha.size):
+        if img_rgb.size != img_alpha.size:
             img_alpha = img_alpha.resize(img_rgb.size, Image.BILINEAR)
         img_black = Image.new('RGBA', img_rgb.size) #透明抹除全黑图实例化
         img_mask = img_alpha.point(lambda x:0 if x > 0 else 255) #透明抹除蒙版图实例化
@@ -90,8 +90,8 @@ class AlphaRGBCombiner:
 
     @staticmethod
     def as_image(obj:"str|Image.Image", mode:str):
-        return (obj if type(obj) == Image.Image else Image.open(obj)).convert(mode)
-    
+        return (obj if isinstance(obj, Image.Image) else Image.open(obj)).convert(mode)
+
     @staticmethod
     def similarity(fp_rgb:str, fp_alpha:str, mode:str='L', prec:int=150):
         """ Compares the similarity between the RGB image and the Alpha image.

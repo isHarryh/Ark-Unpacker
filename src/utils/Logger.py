@@ -28,7 +28,7 @@ class Logger():
                 try:
                     if len(self.queue):
                         t = self.queue.pop(0)
-                        if type(self.log_file_path) == str and len(self.log_file_path) > 0:
+                        if isinstance(self.log_file_path, str) and len(self.log_file_path) > 0:
                             with open(self.log_file_path, 'a', encoding=Logger.__file_encoding) as f:
                                 f.write(t)
                 except BaseException:

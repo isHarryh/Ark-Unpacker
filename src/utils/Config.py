@@ -14,7 +14,7 @@ class PerformanceLevel():
     STANDARD = 2
     HIGH = 3
 
-    __CPU = max(1, os.cpu_count() if os.cpu_count != None else 1)
+    __CPU = max(1, os.cpu_count() if os.cpu_count() is not None else 1)
     __MAP = {
         MINIMAL: 1,
         LOW: max(2, __CPU // 2),

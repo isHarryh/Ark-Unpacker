@@ -56,7 +56,7 @@ class ModelsDist:
             "data": {},
             "arkPetsCompatibility": ModelsDist.ARK_PETS_COMPATIBILITY
         }
-    
+
     def get_gamedata(self, alias:tuple):
         def basename_startswith(path:str, alias:tuple):
             for a in alias:
@@ -91,7 +91,7 @@ class ModelsDist:
         if item.get('IsSpChar', False):
             rst.append("Special")
         try:
-            if item.get('Rarity', None) != None:
+            if item.get('Rarity', None) is not None:
                 rarity = f"Rarity_{int(item['Rarity']) + 1}"
                 if rarity in self.data['sortTags'].keys():
                     rst.append(rarity)

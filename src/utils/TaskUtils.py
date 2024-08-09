@@ -79,7 +79,7 @@ class WorkerCtrl():
         :rtype: None;
         """
         if self.__opened:
-            self.__opened == False
+            self.__opened = False
             if block:
                 self.__queue.join()
 
@@ -238,9 +238,9 @@ class Counter():
         :returns: Current value;
         :rtype: int;
         """
-        if type(val) == int:
+        if isinstance(val, int):
             self.__s += val
-        elif val:
+        elif val is True:
             self.__s += 1
         return self.__s
 
