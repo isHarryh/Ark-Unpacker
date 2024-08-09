@@ -16,15 +16,15 @@ from src import CombineRGBwithA as AU_Cb
 from src import CollectModels   as AU_Cm
 from src import ModelsDataDist  as AU_Mdd
 
-AU_ver = 'v3.1'
-AU_i18n = 'zh-CN'
+ARKUNPACKER_VERSION = 'v3.1'
+ARKUNPACKER_LOCAL = 'zh-CN'
 
 
 def prt_homepage():
     Logger.info("CI: In Homepage.")
     clear()
     os.chdir('.')
-    print(f"欢迎使用ArkUnpacker {AU_ver}", s=1)
+    print(f"欢迎使用ArkUnpacker {ARKUNPACKER_VERSION}", s=1)
     print("=" * 20)
     print("""模式选择：
 1: 一键执行
@@ -58,7 +58,7 @@ def run_quickaccess():
     time.sleep(1)
     AU_Cb.main(destdir, f'Combined_{int(time.time())}')
 
-def run_custom_Rs():
+def run_custom_resolve_ab():
     Logger.info("CI: Customized unpack mode.")
     prt_subtitle("自定义资源解包")
     ###
@@ -75,11 +75,11 @@ def run_custom_Rs():
     print("导出目录路径：", c=2)
     print(f"  {osp.abspath(destdir)}", c=6)
     ###
-    dodel = False
+    do_del = False
     if osp.isdir(destdir):
         print("\n该导出目录已存在，您要删除它里面的全部文件吗？")
         print("  请!慎重!选择：[y]删除，[n]保留(默认)", c=3)
-        dodel = UserInput.request_yes_or_no(False)
+        do_del = UserInput.request_yes_or_no(False)
     ###
     separate = True
     if not osp.isfile(src):
@@ -91,19 +91,19 @@ def run_custom_Rs():
     print("  [i]图片，[t]文本，[a]音频", c=3)
     print("  [s]Spine动画模型", c=3)
     print("  示例输入：\"ita\"，\"ia\"")
-    dothem = input("> ", c=2).lower()
-    doimg = True if "i" in dothem else False
-    dotxt = True if "t" in dothem else False
-    doaud = True if "a" in dothem else False
-    dospi = True if "s" in dothem else False
-    print(f"  [{'√' if doimg else '×'}]图片，[{'√' if dotxt else '×'}]文本，[{'√' if doaud else '×'}]音频", c=6)
-    print(f"  [{'√' if dospi else '×'}]Spine动画模型", c=6)
+    do_them = input("> ", c=2).lower()
+    do_img = True if "i" in do_them else False
+    do_txt = True if "t" in do_them else False
+    do_aud = True if "a" in do_them else False
+    do_spi = True if "s" in do_them else False
+    print(f"  [{'√' if do_img else '×'}]图片，[{'√' if do_txt else '×'}]文本，[{'√' if do_aud else '×'}]音频", c=6)
+    print(f"  [{'√' if do_spi else '×'}]Spine动画模型", c=6)
     ###
     prt_continue()
     title("ArkUnpacker - Processing")
-    AU_Rs.main(src, destdir, dodel, doimg, dotxt, doaud, dospi, separate)
+    AU_Rs.main(src, destdir, do_del, do_img, do_txt, do_aud, do_spi, separate)
 
-def run_custom_Cb():
+def run_custom_combine_image():
     Logger.info("CI: Customized image combine mode.")
     prt_subtitle("自定义合并图片")
     ###
@@ -120,17 +120,17 @@ def run_custom_Cb():
     print("您选择的导出目录是：")
     print(f"  {osp.abspath(destdir)}", c=6)
     ###
-    dodel = False
+    do_del = False
     if osp.isdir(destdir):
         print("\n该导出目录已存在，您要删除它里面的全部文件吗？")
         print("  请!慎重!选择：[y]删除，[n]保留(默认)", c=3)
-        dodel = UserInput.request_yes_or_no(False)
+        do_del = UserInput.request_yes_or_no(False)
     ###
     prt_continue()
     title("ArkUnpacker - Processing")
-    AU_Cb.main(rootdir, destdir, dodel)
+    AU_Cb.main(rootdir, destdir, do_del)
 
-def run_custom_Fb():
+def run_custom_flatbuffers_decode():
     Logger.info("CI: Customized flatbuffers decoding mode.")
     prt_subtitle("FlatBuffers数据解码")
     ###
@@ -150,15 +150,15 @@ def run_custom_Fb():
     print("您选择的导出目录是：")
     print(f"  {osp.abspath(destdir)}", c=6)
     ###
-    dodel = False
+    do_del = False
     if osp.isdir(destdir):
         print("\n该导出目录已存在，您要删除它里面的全部文件吗？")
         print("  请!慎重!选择：[y]删除，[n]保留(默认)", c=3)
-        dodel = UserInput.request_yes_or_no(False)
+        do_del = UserInput.request_yes_or_no(False)
     ###
     prt_continue()
     title("ArkUnpacker - Processing")
-    AU_Fb.main(rootdir, destdir, dodel)
+    AU_Fb.main(rootdir, destdir, do_del)
 
 def run_arkmodels_unpacking(dirs, destdir):
     Logger.info("CI: ArkModels unpack mode.")
@@ -173,7 +173,7 @@ def run_arkmodels_unpacking(dirs, destdir):
     print("正在清理...")
     rmdir(destdir)
     for i in dirs:
-        AU_Rs.main(i, destdir, doimg=False, dotxt=False, doaud=False, dospine=True)
+        AU_Rs.main(i, destdir, do_img=False, do_txt=False, do_aud=False, do_spine=True)
 
 def run_arkmodels_filtering(dirs, destdirs):
     Logger.info("CI: ArkModels file filter mode.")
@@ -222,9 +222,9 @@ def run_arkmodels_workflow():
 6: 生成数据集 ({visual('gamedata')})
 0: 返回""", c=6)
         print("输入序号后按Enter即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker")
-    TEMP_DIR_1 = 'temp/am_upk_operator'
-    TEMP_DIR_2 = 'temp/am_upk_enemy'
-    TEMP_DIR_3 = 'temp/am_upk_dynillust'
+    temp_dir_1 = 'temp/am_upk_operator'
+    temp_dir_2 = 'temp/am_upk_enemy'
+    temp_dir_3 = 'temp/am_upk_dynillust'
     while True:
         title("ArkUnpacker")
         prt_arkmodels_menu()
@@ -233,13 +233,13 @@ def run_arkmodels_workflow():
         if order == '1':
             wildcard = True
         if order == '2' or wildcard:
-            run_arkmodels_unpacking(['chararts', 'skinpack'], TEMP_DIR_1)
+            run_arkmodels_unpacking(['chararts', 'skinpack'], temp_dir_1)
         if order == '3' or wildcard:
-            run_arkmodels_unpacking(['battle/prefabs/enemies'], TEMP_DIR_2)
+            run_arkmodels_unpacking(['battle/prefabs/enemies'], temp_dir_2)
         if order == '4' or wildcard:
-            run_arkmodels_unpacking(['arts/dynchars'], TEMP_DIR_3)
+            run_arkmodels_unpacking(['arts/dynchars'], temp_dir_3)
         if order == '5' or wildcard:
-            run_arkmodels_filtering([TEMP_DIR_1, TEMP_DIR_2, TEMP_DIR_3], ['models', 'models_enemies', 'models_illust'])
+            run_arkmodels_filtering([temp_dir_1, temp_dir_2, temp_dir_3], ['models', 'models_enemies', 'models_illust'])
         if order == '6' or wildcard:
             run_arkmodels_data_dist()
         if order in ['1', '2', '3', '4', '5', '6']:
@@ -320,13 +320,13 @@ if __name__ == '__main__':
                         run_quickaccess()
                         prt_continue()
                     elif order == '2':
-                        run_custom_Rs()
+                        run_custom_resolve_ab()
                         prt_continue()
                     elif order == '3':
-                        run_custom_Cb()
+                        run_custom_combine_image()
                         prt_continue()
                     elif order == '4':
-                        run_custom_Fb()
+                        run_custom_flatbuffers_decode()
                         prt_continue()
                     elif order == '5':
                         run_arkmodels_workflow()

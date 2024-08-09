@@ -198,16 +198,16 @@ class Resource:
 
 
 def ab_resolve(abfile:str, destdir:str, \
-               doimg:bool, dotxt:bool, doaud:bool, dospine:bool, \
+               do_img:bool, do_txt:bool, do_aud:bool, do_spine:bool, \
                on_processed:staticmethod=None, on_file_queued:staticmethod=None, on_file_saved:staticmethod=None):
     """Extracts an AB file.
 
     :param abfile: Path to the AB file;
     :param destdir: Destination directory;
-    :param doimg: Whether to extract images;
-    :param dotxt: Whether to extract text scripts;
-    :param doaud: Whether to extract audios;
-    :param dospine: Whether to extract Spine assets, note that the Spine assets may have some identical file with the images/scripts;
+    :param do_img: Whether to extract images;
+    :param do_txt: Whether to extract text scripts;
+    :param do_aud: Whether to extract audios;
+    :param do_spine: Whether to extract Spine assets, note that the Spine assets may have some identical file with the images/scripts;
     :param on_processed: Callback `f()` for finished, `None` for ignore;
     :param on_file_queued: Callback `f()` invoked when a file was queued, `None` for ignore;
     :param on_file_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
@@ -230,15 +230,15 @@ def ab_resolve(abfile:str, destdir:str, \
         res.sort_skeletons()
         res.rename_skeletons()
         ###
-        if dospine:
+        if do_spine:
             for i in res.spines:
                 i.save_spine(destdir, on_file_queued, on_file_saved)
-        if doimg:
+        if do_img:
             SafeSaver.save_objects(res.sprites, destdir, on_file_queued, on_file_saved)
             SafeSaver.save_objects(res.texture2ds, destdir, on_file_queued, on_file_saved)
-        if dotxt:
+        if do_txt:
             SafeSaver.save_objects(res.textassets, destdir, on_file_queued, on_file_saved)
-        if doaud:
+        if do_aud:
             SafeSaver.save_objects(res.audioclips, destdir, on_file_queued, on_file_saved)
     except BaseException as arg:
         # Error feedback
@@ -249,17 +249,17 @@ def ab_resolve(abfile:str, destdir:str, \
 
 
 ########## Main-主程序 ##########
-def main(src:str, destdir:str, dodel:bool=False,
-    doimg:bool=True, dotxt:bool=True, doaud:bool=True, dospine:bool=False, separate:bool=True):
+def main(src:str, destdir:str, do_del:bool=False,
+    do_img:bool=True, do_txt:bool=True, do_aud:bool=True, do_spine:bool=False, separate:bool=True):
     """Extract all the AB files from the given directory or extract a given AB file.
 
     :param src: Source directory or file;
     :param destdir: Destination directory;
-    :param dodel: Whether to delete the existing files in the destination directory, `False` for default;
-    :param doimg: Whether to extract images;
-    :param dotxt: Whether to extract text scripts;
-    :param doaud: Whether to extract audios;
-    :param dospine: Whether to extract Spine assets, note that the Spine assets may have some identical file with the images/scripts;
+    :param do_del: Whether to delete the existing files in the destination directory, `False` for default;
+    :param do_img: Whether to extract images;
+    :param do_txt: Whether to extract text scripts;
+    :param do_aud: Whether to extract audios;
+    :param do_spine: Whether to extract Spine assets, note that the Spine assets may have some identical file with the images/scripts;
     :param separate: Whether to sort the extracted files by their source AB file path.
     :rtype: None;
     """
@@ -270,54 +270,54 @@ def main(src:str, destdir:str, dodel:bool=False,
     flist = [src] if osp.isfile(src) else get_filelist(src)
     flist = list(filter(is_ab_file, flist))
 
-    if dodel:
+    if do_del:
         print("\n正在清理...", s=1)
         rmdir(destdir) # Danger zone
     SafeSaver.get_instance().reset_counter()
-    TC = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
-    UI = UICtrl()
-    TR = TimeRecorder()
-    TR.update_dest(4, len(flist))
-    on_processed = lambda: TR.done_once(4)
-    on_file_queued = lambda: TR.update_dest(1)
-    on_file_saved = lambda x: (TR.done_once(1) if x else TR.update_dest(1, -1), \
+    thread_ctrl = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
+    ui = UICtrl()
+    recorder = TimeRecorder()
+    recorder.update_dest(4, len(flist))
+    on_processed = lambda: recorder.done_once(4)
+    on_file_queued = lambda: recorder.update_dest(1)
+    on_file_saved = lambda x: (recorder.done_once(1) if x else recorder.update_dest(1, -1), \
                                Logger.debug(f"ResolveAB: Saved \"{x}\"") if x else None)
 
-    UI.reset()
-    UI.loop_start()
+    ui.reset()
+    ui.loop_start()
     for i in flist:
         #(i stands for a file's path)
-        UI.request([
+        ui.request([
             "正在批量解包...",
-            TR.get_progress_str(),
+            recorder.get_progress_str(),
             f"当前目录：\t{osp.basename(osp.dirname(i))}",
             f"当前文件：\t{osp.basename(i)}",
-            f"累计解包：\t{TR.get_done_dest_str_of(4)}",
-            f"累计导出：\t{TR.get_done_dest_str_of(1)}",
-            f"剩余时间：\t{TR.get_eta_str()}",
+            f"累计解包：\t{recorder.get_done_dest_str_of(4)}",
+            f"累计导出：\t{recorder.get_done_dest_str_of(1)}",
+            f"剩余时间：\t{recorder.get_eta_str()}",
         ])
         ###
         subdestdir = osp.dirname(i).strip(osp.sep).replace(src, '').strip(osp.sep)
         curdestdir = destdir if osp.samefile(i, src) else \
             osp.join(destdir, subdestdir, osp.splitext(osp.basename(i))[0]) if separate else \
             osp.join(destdir, subdestdir)
-        TC.run_subthread(ab_resolve, (i, curdestdir, doimg, dotxt, doaud, dospine, on_processed, on_file_queued, on_file_saved), \
+        thread_ctrl.run_subthread(ab_resolve, (i, curdestdir, do_img, do_txt, do_aud, do_spine, on_processed, on_file_queued, on_file_saved), \
             name=f"RsThread:{id(i)}")
 
-    UI.reset()
-    UI.loop_stop()
-    while TC.count_subthread() or not SafeSaver.get_instance().completed() or TR.get_progress() < 1:
-        UI.request([
+    ui.reset()
+    ui.loop_stop()
+    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or recorder.get_progress() < 1:
+        ui.request([
             "正在批量解包...",
-            TR.get_progress_str(),
-            f"累计解包：\t{TR.get_done_dest_str_of(4)}",
-            f"累计导出：\t{TR.get_done_dest_str_of(1)}",
-            f"剩余时间：\t{TR.get_eta_str()}",
+            recorder.get_progress_str(),
+            f"累计解包：\t{recorder.get_done_dest_str_of(4)}",
+            f"累计导出：\t{recorder.get_done_dest_str_of(1)}",
+            f"剩余时间：\t{recorder.get_eta_str()}",
         ])
-        UI.refresh(post_delay=0.1)
+        ui.refresh(post_delay=0.1)
 
-    UI.reset()
+    ui.reset()
     print("\n批量解包结束!", s=1)
-    print(f"  累计解包 {TR.get_done_of(4)} 个文件")
-    print(f"  累计导出 {TR.get_done_of(1)} 个文件")
-    print(f"  此项用时 {round(TR.get_rt(), 1)} 秒")
+    print(f"  累计解包 {recorder.get_done_of(4)} 个文件")
+    print(f"  累计导出 {recorder.get_done_of(1)} 个文件")
+    print(f"  此项用时 {round(recorder.get_rt(), 1)} 秒")

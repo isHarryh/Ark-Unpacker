@@ -173,13 +173,13 @@ def fbo_resolve(fp:str, destdir:str, on_processed:staticmethod, on_file_queued:s
         on_processed()
 
 ########## Main-主程序 ##########
-def main(rootdir:str, destdir:str, dodel:bool=False):
+def main(rootdir:str, destdir:str, do_del:bool=False):
     """Decodes the possible Arknights FlatBuffers binary files in the specified directory
     then saves the decoded data into another given directory.
 
     :param rootdir: Source directory;
     :param destdir: Destination directory;
-    :param dodel: Whether to delete the existed destination directory first, `False` for default;
+    :param do_del: Whether to delete the existed destination directory first, `False` for default;
     :rtype: None;
     """
     print("\n正在解析路径...", s=1)
@@ -190,49 +190,49 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     flist = list(filter(lambda x:not is_known_asset_file(x), flist))
     flist = list(filter(lambda x:not is_ab_file(x), flist))
 
-    if dodel:
+    if do_del:
         print("\n正在清理...", s=1)
         rmdir(destdir)
     SafeSaver.get_instance().reset_counter()
-    TC = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
-    UI = UICtrl()
-    TR = TimeRecorder()
-    TR.update_dest(2, len(flist))
-    on_processed = lambda: TR.done_once(2)
-    on_file_queued = lambda: TR.update_dest(1)
-    on_file_saved = lambda x: TR.done_once(1) if x else TR.update_dest(1, -1)
+    thread_ctrl = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
+    ui = UICtrl()
+    recorder = TimeRecorder()
+    recorder.update_dest(2, len(flist))
+    on_processed = lambda: recorder.done_once(2)
+    on_file_queued = lambda: recorder.update_dest(1)
+    on_file_saved = lambda x: recorder.done_once(1) if x else recorder.update_dest(1, -1)
 
-    UI.reset()
-    UI.loop_start()
+    ui.reset()
+    ui.loop_start()
     for i in flist:
-        UI.request([
+        ui.request([
             "正在批量解码FlatBuffers数据...",
-            TR.get_progress_str(),
+            recorder.get_progress_str(),
             f"当前目录：\t{osp.basename(osp.dirname(i))}",
             f"当前搜索：\t{osp.basename(i)}",
-            f"累计搜索：\t{TR.get_done_dest_str_of(2)}",
-            f"累计解码：\t{TR.get_done_dest_str_of(1)}",
-            f"剩余时间：\t{TR.get_eta_str()}",
+            f"累计搜索：\t{recorder.get_done_dest_str_of(2)}",
+            f"累计解码：\t{recorder.get_done_dest_str_of(1)}",
+            f"剩余时间：\t{recorder.get_eta_str()}",
         ])
         ###
         subdestdir = osp.dirname(i).strip(osp.sep).replace(rootdir, '').strip(osp.sep)
-        TC.run_subthread(fbo_resolve, (i, osp.join(destdir, subdestdir), on_processed, on_file_queued, on_file_saved), \
+        thread_ctrl.run_subthread(fbo_resolve, (i, osp.join(destdir, subdestdir), on_processed, on_file_queued, on_file_saved), \
             name=f"RFThread:{id(i)}")
 
-    UI.reset()
-    UI.loop_stop()
-    while TC.count_subthread() or not SafeSaver.get_instance().completed() or TR.get_progress() < 1:
-        UI.request([
+    ui.reset()
+    ui.loop_stop()
+    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or recorder.get_progress() < 1:
+        ui.request([
             "正在批量解码FlatBuffers数据...",
-            TR.get_progress_str(),
-            f"累计搜索：\t{TR.get_done_dest_str_of(2)}",
-            f"累计解码：\t{TR.get_done_dest_str_of(1)}",
-            f"剩余时间：\t{TR.get_eta_str()}",
+            recorder.get_progress_str(),
+            f"累计搜索：\t{recorder.get_done_dest_str_of(2)}",
+            f"累计解码：\t{recorder.get_done_dest_str_of(1)}",
+            f"剩余时间：\t{recorder.get_eta_str()}",
         ])
-        UI.refresh(post_delay=0.1)
+        ui.refresh(post_delay=0.1)
 
-    UI.reset()
+    ui.reset()
     print("\n批量解码FlatBuffers数据结束!", s=1)
-    print(f"  累计搜索 {TR.get_done_of(2)} 个文件")
-    print(f"  累计解码 {TR.get_done_of(1)} 个文件")
-    print(f"  此项用时 {round(TR.get_rt(), 1)} 秒")
+    print(f"  累计搜索 {recorder.get_done_of(2)} 个文件")
+    print(f"  累计解码 {recorder.get_done_of(1)} 个文件")
+    print(f"  此项用时 {round(recorder.get_rt(), 1)} 秒")

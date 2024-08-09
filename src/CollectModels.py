@@ -12,7 +12,7 @@ from .utils.SaverUtils import SafeSaver
 from .utils.TaskUtils import ThreadCtrl, Counter, UICtrl, TimeRecorder
 
 
-def collect_models(upkdir:str, destdir:str, dodel:bool, on_finished:staticmethod, on_collected:staticmethod):
+def collect_models(upkdir:str, destdir:str, do_del:bool, on_finished:staticmethod, on_collected:staticmethod):
     error_occurred = False
     for model_type_dir in get_dirlist(upkdir, max_depth=1):
         model_type:str = osp.basename(model_type_dir) # Sub dir of one model type
@@ -44,7 +44,7 @@ def collect_models(upkdir:str, destdir:str, dodel:bool, on_finished:staticmethod
             except Exception as arg:
                 error_occurred = True
                 Logger.error(f"CollectModels: Error occurred while handling \"{model_dir}\": Exception{type(arg)} {arg}")
-    if dodel and not error_occurred:
+    if do_del and not error_occurred:
         rmdir(upkdir)
     if on_finished:
         on_finished()
@@ -79,42 +79,42 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
         for upkdir in get_dirlist(srcdir, max_depth=1):
             flist.append((upkdir, destdir))
 
-    TC = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
+    thread_ctrl = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
     collected = Counter()
-    UI = UICtrl()
-    TR = TimeRecorder()
-    TR.update_dest(1, len(flist))
-    on_finished = lambda: TR.done_once(1)
+    ui = UICtrl()
+    recorder = TimeRecorder()
+    recorder.update_dest(1, len(flist))
+    on_finished = lambda: recorder.done_once(1)
     on_collected = collected.update
 
-    UI.reset()
-    UI.loop_start()
+    ui.reset()
+    ui.loop_start()
     for upkdir, destdir in flist:
         #(i stands for a source dir's path)
-        UI.request([
+        ui.request([
             "正在分拣模型...",
-            TR.get_progress_str(),
+            recorder.get_progress_str(),
             f"当前搜索：\t{osp.basename(upkdir)}",
             f"累计分拣：\t{collected.now()}",
-            f"剩余时间：\t{TR.get_eta_str()}",
+            f"剩余时间：\t{recorder.get_eta_str()}",
         ])
         ###
-        TC.run_subthread(collect_models, (upkdir, destdir, True, on_finished, on_collected), \
+        thread_ctrl.run_subthread(collect_models, (upkdir, destdir, True, on_finished, on_collected), \
             name=f"CmThread:{id(upkdir)}")
 
-    UI.reset()
-    UI.loop_stop()
-    while TC.count_subthread() or not SafeSaver.get_instance().completed() or TR.get_progress() < 1:
-        UI.request([
+    ui.reset()
+    ui.loop_stop()
+    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or recorder.get_progress() < 1:
+        ui.request([
             "正在分拣模型...",
-            TR.get_progress_str(),
+            recorder.get_progress_str(),
             f"累计分拣：\t{collected.now()}",
-            f"剩余时间：\t{TR.get_eta_str()}",
+            f"剩余时间：\t{recorder.get_eta_str()}",
         ])
-        UI.refresh(post_delay=0.1)
+        ui.refresh(post_delay=0.1)
 
-    UI.loop_stop()
-    UI.reset()
+    ui.loop_stop()
+    ui.reset()
     print("\n分拣模型结束!", s=1)
     print(f"  累计分拣 {collected.now()} 套模型")
-    print(f"  此项用时 {round(TR.get_rt(), 1)} 秒")
+    print(f"  此项用时 {round(recorder.get_rt(), 1)} 秒")

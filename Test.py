@@ -29,21 +29,21 @@ if __name__ == '__main__':
             with TestRT('unit_1'):
                 ResolveAB.main('test/res',
                             DIR_UPK,
-                            dodel=False,
-                            doimg=True,
-                            dotxt=True,
-                            doaud=True,
-                            dospine=False
+                            do_del=False,
+                            do_img=True,
+                            do_txt=True,
+                            do_aud=True,
+                            do_spine=False
                             )
             with TestRT('unit_2'):
                 CombineRGBwithA.main(DIR_UPK,
                                     DIR_CMB,
-                                    dodel=False
+                                    do_del=False
                                     )
             with TestRT('unit_3'):
                 ResolveFBO.main(DIR_UPK,
                                 DIR_FBO,
-                                dodel=False
+                                do_del=False
                                 )
             
             print(f"[#{i}] Analysing...", c=0, bg=6)

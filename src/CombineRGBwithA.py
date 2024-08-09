@@ -94,29 +94,29 @@ class AlphaRGBCombiner:
         return (obj if isinstance(obj, Image.Image) else Image.open(obj)).convert(mode)
 
     @staticmethod
-    def similarity(fp_rgb:str, fp_alpha:str, mode:str='L', prec:int=150):
+    def similarity(fp_rgb:str, fp_alpha:str, mode:str='L', precision:int=150):
         """ Compares the similarity between the RGB image and the Alpha image.
 
         :param fp_rgb: Path to the RGB image;
         :param fp_alpha: Path to the Alpha image;
         :param mode: Image mode, `L` for default;
-        :param prec: Precision of the judgement, higher for more precise, `150` for default;
+        :param precision: Precision of the judgement, higher for more precise, `150` for default;
         :returns: Similarity value in `[0, 255]`, higher for more similar;
         :rtype: int;
         """
         img_rgb = Image.open(fp_rgb).convert(mode)
         img_a = Image.open(fp_alpha).convert(mode)
-        prec = 150 if prec <= 0 else prec
+        precision = 150 if precision <= 0 else precision
         # Resize the two images
-        img_rgb = img_rgb.resize((prec, prec), Image.BILINEAR)
-        img_a = img_a.resize((prec, prec), Image.BILINEAR)
+        img_rgb = img_rgb.resize((precision, precision), Image.BILINEAR)
+        img_a = img_a.resize((precision, precision), Image.BILINEAR)
         # Load pixels into arrays
         px_rgb = img_rgb.load()
         px_a = img_a.load()
         # Calculate differences of every pixel
         diff = []
-        for y in range(prec):
-            for x in range(prec):
+        for y in range(precision):
+            for x in range(precision):
                 diff.append((((px_rgb[x, y] if px_rgb[x, y] < 255 else 0) - px_a[x, y]) ** 2) / 256)
         # Return the similarity
         diff_mean = round(sum(diff) / len(diff))
@@ -148,13 +148,13 @@ def image_resolve(fp:str, destdir:str, \
         on_processed()
 
 ########## Main-主程序 ##########
-def main(rootdir:str, destdir:str, dodel:bool=False):
+def main(rootdir:str, destdir:str, do_del:bool=False):
     """Combines the RGB images and the Alpha images in the given directory automatically according to their file names,
     then saves the combined images into another given directory.
 
     :param rootdir: Source directory;
     :param destdir: Destination directory;
-    :param dodel: Whether to delete the existed destination directory first, `False` for default;
+    :param do_del: Whether to delete the existed destination directory first, `False` for default;
     :rtype: None;
     """
     print("\n正在解析路径...", s=1)
@@ -165,49 +165,49 @@ def main(rootdir:str, destdir:str, dodel:bool=False):
     flist = list(filter(is_image_file, flist))
     flist = list(filter(lambda x:AlphaRGBCombiner.get_real_name(x) is not None, flist))
 
-    if dodel:
+    if do_del:
         print("\n正在清理...", s=1)
         rmdir(destdir) #慎用，会预先删除目的地目录的所有内容
     SafeSaver.get_instance().reset_counter()
-    TC = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
-    UI = UICtrl()
-    TR = TimeRecorder()
-    TR.update_dest(2, len(flist))
-    on_processed = lambda: TR.done_once(2)
-    on_file_queued = lambda: TR.update_dest(1)
-    on_file_saved = lambda x: TR.done_once(1) if x else TR.update_dest(1, -1)
+    thread_ctrl = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
+    ui = UICtrl()
+    recorder = TimeRecorder()
+    recorder.update_dest(2, len(flist))
+    on_processed = lambda: recorder.done_once(2)
+    on_file_queued = lambda: recorder.update_dest(1)
+    on_file_saved = lambda x: recorder.done_once(1) if x else recorder.update_dest(1, -1)
 
-    UI.reset()
-    UI.loop_start()
+    ui.reset()
+    ui.loop_start()
     for i in flist:
         #递归处理各个文件(i是文件的路径名)
-        UI.request([
+        ui.request([
             "正在批量合并图片...",
-            TR.get_progress_str(),
+            recorder.get_progress_str(),
             f"当前目录：\t{osp.basename(osp.dirname(i))}",
             f"当前文件：\t{osp.basename(i)}",
-            f"累计搜索：\t{TR.get_done_dest_str_of(2)}",
-            f"累计导出：\t{TR.get_done_dest_str_of(1)}",
-            f"剩余时间：\t{TR.get_eta_str()}",
+            f"累计搜索：\t{recorder.get_done_dest_str_of(2)}",
+            f"累计导出：\t{recorder.get_done_dest_str_of(1)}",
+            f"剩余时间：\t{recorder.get_eta_str()}",
         ])
         ###
         subdestdir = osp.dirname(i).strip(osp.sep).replace(rootdir, '').strip(osp.sep)
-        TC.run_subthread(image_resolve, (i, osp.join(destdir, subdestdir), on_processed, on_file_queued, on_file_saved), \
+        thread_ctrl.run_subthread(image_resolve, (i, osp.join(destdir, subdestdir), on_processed, on_file_queued, on_file_saved), \
             name=f"CBThread:{id(i)}")
 
-    UI.reset()
-    UI.loop_stop()
-    while TC.count_subthread() or not SafeSaver.get_instance().completed() or TR.get_progress() < 1:
-        UI.request([
+    ui.reset()
+    ui.loop_stop()
+    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or recorder.get_progress() < 1:
+        ui.request([
             "正在批量合并图片...",
-            TR.get_progress_str(),
-            f"累计搜索：\t{TR.get_done_dest_str_of(2)}",
-            f"累计导出：\t{TR.get_done_dest_str_of(1)}",
-            f"剩余时间：\t{TR.get_eta_str()}",
+            recorder.get_progress_str(),
+            f"累计搜索：\t{recorder.get_done_dest_str_of(2)}",
+            f"累计导出：\t{recorder.get_done_dest_str_of(1)}",
+            f"剩余时间：\t{recorder.get_eta_str()}",
         ])
-        UI.refresh(post_delay=0.1)
+        ui.refresh(post_delay=0.1)
 
-    UI.reset()
+    ui.reset()
     print("\n批量合并图片结束!", s=1)
-    print(f"  累计导出 {TR.get_done_of(1)} 张照片")
-    print(f"  此项用时 {round(TR.get_rt(), 1)} 秒")
+    print(f"  累计导出 {recorder.get_done_of(1)} 张照片")
+    print(f"  此项用时 {round(recorder.get_rt(), 1)} 秒")

@@ -75,16 +75,16 @@ class ModelsDist:
                 raise RuntimeError(f"Failed to get decoded data: {alias}")
         raise FileNotFoundError(f"Failed to find raw AB file: {alias}")
 
-    def get_item_data(self, assetId:str, type:str, style:str, sortTags:list, name:str, appellation:str, SGId:str, SGName:str):
+    def get_item_data(self, asset_id:str, type:str, style:str, sort_tags:list, name:str, appellation:str, sg_id:str, sg_name:str):
         return {
-            "assetId": assetId,
+            "assetId": asset_id,
             "type": type,
             "style": style,
             "name": name,
             "appellation": appellation,
-            "skinGroupId": SGId,
-            "skinGroupName": SGName,
-            "sortTags": sortTags,
+            "skinGroupId": sg_id,
+            "skinGroupName": sg_name,
+            "sortTags": sort_tags,
         }
 
     def get_operator_sort_tags(self, item:dict):
