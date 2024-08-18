@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
+import threading
 from datetime import datetime
-from threading import Thread
 
 
 class Logger():
@@ -21,19 +21,22 @@ class Logger():
         """Not recommended to use. Please use the singleton instance."""
         self.log_level = level
         self.log_file_path = log_file_path
+        self.internal_lock = threading.Condition()
         self.file = None
         self.queue = []
         def loop(self:Logger):
             while True:
                 try:
-                    if len(self.queue):
+                    with self.internal_lock:
+                        while not self.queue:
+                            self.internal_lock.wait()
                         t = self.queue.pop(0)
                         if isinstance(self.log_file_path, str) and len(self.log_file_path) > 0:
                             with open(self.log_file_path, 'a', encoding=Logger.__file_encoding) as f:
                                 f.write(t)
                 except BaseException:
                     pass
-        self.thread = Thread(name=self.__class__.__name__, target=loop, args=(self,), daemon=True)
+        self.thread = threading.Thread(name=self.__class__.__name__, target=loop, args=(self,), daemon=True)
         self.thread.start()
 
     def _set_level(self, level:int):
@@ -42,9 +45,9 @@ class Logger():
     def _log(self, tag:str, msg:str):
         try:
             self.queue.append(f"{datetime.now().strftime(Logger.__time_format)} [{tag}] {msg}\n")
-            return True
+            self.internal_lock.notify_all()
         except BaseException:
-            return False
+            pass
 
     def _error(self, msg:str):
         if self.log_level >= Logger.LV_ERROR:
