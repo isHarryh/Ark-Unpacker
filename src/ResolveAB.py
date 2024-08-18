@@ -64,7 +64,7 @@ class Resource:
 
     def sort_skeletons(self):
         """Sorts the Spine assets.
-        
+
         :rtype: None;
         """
         spines:"list[Resource.SpineAsset]" = []
@@ -104,10 +104,9 @@ class Resource:
                         spine = Resource.SpineAsset(skel, atlas, list2tex)
                         if spine.is_available():
                             # Succeeded
-                            if len(skel.name) > 4 and skel.name[:4] == 'dyn_':
+                            if skel.name.lower().startswith('dyn_'):
                                 spine.type = Resource.SpineAsset.DYN_ILLUST
-                            elif 'Relax' in tree['_animationName'] or \
-                                (len(skel.name) > 6 and skel.name[:6] == 'build_'):
+                            elif 'Relax' in tree['_animationName'] or skel.name.lower().startswith('build_'):
                                 spine.type = Resource.SpineAsset.BUILDING
                             else:
                                 spine.type = Resource.SpineAsset.BATTLE_FRONT if spine.is_front_geq_back() else Resource.SpineAsset.BATTLE_BACK
@@ -121,7 +120,7 @@ class Resource:
         """Renames the Spine assets which includes skel, atlas and png files.
         Since the Spine in Arknights have 4 or more forms (Building, BattleFront, BattleBack, DynIllust),
         it is necessary to rename them so that name collisions can be avoid.
-        
+
         :rtype: None;
         """
         for spine in self.spines:
@@ -277,8 +276,8 @@ def main(src:str, destdir:str, do_del:bool=False,
     thread_ctrl = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
     ui = UICtrl()
     recorder = TimeRecorder()
-    recorder.update_dest(4, len(flist))
-    on_processed = lambda: recorder.done_once(4)
+    recorder.update_dest(50, len(flist))
+    on_processed = lambda: recorder.done_once(50)
     on_file_queued = lambda: recorder.update_dest(1)
     on_file_saved = lambda x: (recorder.done_once(1) if x else recorder.update_dest(1, -1), \
                                Logger.debug(f"ResolveAB: Saved \"{x}\"") if x else None)
@@ -292,7 +291,7 @@ def main(src:str, destdir:str, do_del:bool=False,
             recorder.get_progress_str(),
             f"当前目录：\t{osp.basename(osp.dirname(i))}",
             f"当前文件：\t{osp.basename(i)}",
-            f"累计解包：\t{recorder.get_done_dest_str_of(4)}",
+            f"累计解包：\t{recorder.get_done_dest_str_of(50)}",
             f"累计导出：\t{recorder.get_done_dest_str_of(1)}",
             f"剩余时间：\t{recorder.get_eta_str()}",
         ])
@@ -310,7 +309,7 @@ def main(src:str, destdir:str, do_del:bool=False,
         ui.request([
             "正在批量解包...",
             recorder.get_progress_str(),
-            f"累计解包：\t{recorder.get_done_dest_str_of(4)}",
+            f"累计解包：\t{recorder.get_done_dest_str_of(50)}",
             f"累计导出：\t{recorder.get_done_dest_str_of(1)}",
             f"剩余时间：\t{recorder.get_eta_str()}",
         ])
@@ -318,6 +317,6 @@ def main(src:str, destdir:str, do_del:bool=False,
 
     ui.reset()
     print("\n批量解包结束!", s=1)
-    print(f"  累计解包 {recorder.get_done_of(4)} 个文件")
+    print(f"  累计解包 {recorder.get_done_of(50)} 个文件")
     print(f"  累计导出 {recorder.get_done_of(1)} 个文件")
     print(f"  此项用时 {round(recorder.get_rt(), 1)} 秒")

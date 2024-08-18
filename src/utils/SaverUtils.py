@@ -28,9 +28,7 @@ class EntryLock(ContextDecorator):
     def __enter__(self):
         with EntryLock._INTERNAL_LOCK:
             while self.entry in EntryLock._ENTRIES:
-                Logger.debug(f"EntryLock: Waiting \"{self.entry}\"")
                 EntryLock._INTERNAL_LOCK.wait()
-                Logger.debug(f"EntryLock: Ended waiting \"{self.entry}\"")
             EntryLock._ENTRIES.add(self.entry)
 
     def __exit__(self, exc_type, exc_val, exc_tb):

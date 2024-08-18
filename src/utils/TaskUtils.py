@@ -33,7 +33,7 @@ class ThreadCtrl():
         ts = threading.Thread(target=fun,
                               args=args if args else (),
                               kwargs=kwargs if kwargs else {},
-                              daemon=False,
+                              daemon=True,
                               name=name)
         self.__sts.append(ts)
         ts.start()
@@ -97,21 +97,21 @@ class WorkerCtrl():
 
     def get_total_requested(self):
         """Gets the total number of requested tasks.
-        
+
         :rtype: int;
         """
         return self._total_requested.now()
 
     def get_total_processed(self):
         """Gets the total number of processed tasks.
-        
+
         :rtype: int;
         """
         return self._total_processed.now()
 
     def reset_counter(self):
         """Resets the counter of requested tasks and processed tasks.
-        
+
         :rtype: None;
         """
         if self.completed():
@@ -272,7 +272,7 @@ class TimeRecorder():
 
     def update_dest(self, weight:int, advance:int=1):
         """Updates the destination value of the specified task weight.
-        
+
         :param weight: The task weight whose destination value should be updated;
         :param count: The advance value;
         :rtype: None;
@@ -314,7 +314,7 @@ class TimeRecorder():
 
     def get_done_dest_str_of(self, weight:int):
         """Gets a string representing the done and destination of the specified task weight.
-        
+
         :param weight: The task weight to inspect;
         :returns: A string that can be printed to CLI;
         :rtype: str;
@@ -335,7 +335,7 @@ class TimeRecorder():
 
     def get_progress_str(self, force_inc:bool=True, length:int=25):
         """Gets a string representing the current progress.
-        
+
         :param force_inc: Whether prevent the progress to decrease;
         :param length: The length of the progress bar;
         :returns: A progress bar string that can be printed to CLI;
