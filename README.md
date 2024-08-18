@@ -20,6 +20,10 @@
 </div>
 
 ## 介绍 <sub>Intro</sub>
+#### 终止更新预告
+本项目正在逐步升级和迁移到 [ArkStudio](https://github.com/isHarryh/Ark-Studio)，敬请关注。
+ArkStudio 是正在开发阶段的，功能更加强大的《明日方舟》游戏资源集成式管理平台，开发完成后，当前项目将由于生命周期结束而终止更新，感谢各位一直以来的支持和喜爱。
+
 #### 实现的功能
 1. 批量解包《明日方舟》Unity AssetBundle(AB) 文件中的游戏资源对象。
     1. 解包时可对基建小人、动态立绘和战斗小人的 Spine 模型文件进行区分；
@@ -50,9 +54,9 @@
 下面将以 **Android 安卓系统** 为例讲述**如何获取到明日方舟的 AB 文件**。明日方舟的游戏资源有 **2 个部分**：
 - 一部分是通过**安装包**（`.apk`）提供的，从明日方舟[**官网**](https://ak.hypergryph.com)将其下载到本地后，使用压缩文件查看工具打开（后缀名改成 `.zip` 后打开），然后把里面的 `assets\AB\Android` 文件夹解压出来；
 - 另一部分是通过**热更新**提供的，首先确保您的安卓手机上的明日方舟更新到了最新版本，然后（推荐使用 USB 数据线）将手机存储的 `Android\data\com.hypergryph.arknights\files\AB\Android` 文件夹（一般情况下是这个路径）复制到电脑上（重命名为 `Android(2)`）。至此，我们的目录结构大致如下：
-> **你的目录**  
-> ├─Android  
-> └─Android(2)  
+> **你的目录**
+> ├─Android
+> └─Android(2)
 
 最后，将 `Android(2)` 文件夹里的内容复制到 `Android` 中，并**覆盖**同名文件，就能得到完整的游戏资源。在这之后，您就可以使用我们的程序来解包其中的游戏资源了。
 
@@ -70,20 +74,20 @@
 
 ### 4.示例用法
 首先，将需要解包的文件夹（可以是多个）放到与 exe 相同的目录下，至此，我们的目录结构大致如下：
-> **你的目录**  
-> ├─Android (解包整个目录需要很久)  
-> ├─charpack (可以选择解包部分文件夹)  
-> └─ArkUnpacker.exe  
+> **你的目录**
+> ├─Android (解包整个目录需要很久)
+> ├─charpack (可以选择解包部分文件夹)
+> └─ArkUnpacker.exe
 
 然后运行 exe，弹出交互式命令行界面如下，依据其提示操作即可：
-> 欢迎使用ArkUnpacker  
-> 模式选择：  
-> 1: 一键执行  
-> 2: 自定义资源解包  
-> 3: 自定义图片合并  
-> 4: FlatBuffers数据解码  
-> 5: ArkModels提取与分拣工具  
-> 0: 退出  
+> 欢迎使用ArkUnpacker
+> 模式选择：
+> 1: 一键执行
+> 2: 自定义资源解包
+> 3: 自定义图片合并
+> 4: FlatBuffers数据解码
+> 5: ArkModels提取与分拣工具
+> 0: 退出
 > 输入序号后按回车即可，如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)
 
 各模式的功能概述如下：
@@ -98,7 +102,7 @@
 除了上述示例用法展示的**交互式**命令行界面外，程序还支持**直接**通过命令行来运行，以便熟悉命令行调用的用户使用。相关参数如下：
 ```
 usage: ArkUnpacker [-h] [-v] [-m {ab,cb,fb}] [-i INPUT] [-o OUTPUT] [-d] [--image] [--text] [--audio] [--spine] [-g] [-l {0,1,2,3,4}]
-  
+
 Arknights Assets Unpacker. Use no argument to run to enter the interactive CLI mode.
 
 optional arguments:
