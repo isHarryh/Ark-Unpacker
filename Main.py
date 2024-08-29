@@ -11,7 +11,7 @@ from src.utils.Config import Config
 from src.utils.Logger import Logger
 from src.utils.GlobalMethods import color, input, print, clear, title, stacktrace, rmdir
 from src import ResolveAB       as AU_Rs
-from src import ResolveFBO      as AU_Fb
+from src import DecodeTextAsset as AU_Fb
 from src import CombineRGBwithA as AU_Cb
 from src import CollectModels   as AU_Cm
 from src import ModelsDataDist  as AU_Mdd
@@ -30,7 +30,7 @@ def prt_homepage():
 1: 一键执行
 2: 自定义资源解包
 3: 自定义图片合并
-4: FlatBuffers数据解码
+4: 自定义文本资源解码
 5: ArkModels提取与分拣工具
 0: 退出""", c=6)
     print("输入序号后按Enter即可，\n如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker ")
@@ -130,14 +130,14 @@ def run_custom_combine_image():
     title("ArkUnpacker - Processing")
     AU_Cb.main(rootdir, destdir, do_del)
 
-def run_custom_flatbuffers_decode():
-    Logger.info("CI: Customized flatbuffers decoding mode.")
-    prt_subtitle("FlatBuffers数据解码")
+def run_custom_textasset_decode():
+    Logger.info("CI: Customized textasset decoding mode.")
+    prt_subtitle("自定义文本资源解码")
     ###
-    print("Arknights游戏内部分数据文件采用FlatBuffers格式存储。")
+    print("Arknights游戏内数据文件主要位于TextAsset中，采用FlatBuffers格式或AES加密存储。")
     print("在资源解包后需要对这些文件进行解码才可得到游戏数据。")
     print("\n请输入源文件目录的路径")
-    print("若您不清楚哪些文件是FlatBuffers格式，请选择整个解包后的目录。")
+    print("若您不清楚哪些文件是TextAsset，请选择整个解包后的目录。")
     rootdir = UserInput.request_path()
     print(" 源文件的目录是：")
     print(f"  {osp.abspath(rootdir)}", c=6)
@@ -146,7 +146,7 @@ def run_custom_flatbuffers_decode():
     print("  支持相对路径，留空表示自动创建")
     destdir = input("> ", c=2)
     if not destdir:
-        destdir = f'FlatBuffers_{int(time.time())}'
+        destdir = f'Decoded_{int(time.time())}'
     print("您选择的导出目录是：")
     print(f"  {osp.abspath(destdir)}", c=6)
     ###
@@ -326,7 +326,7 @@ if __name__ == '__main__':
                         run_custom_combine_image()
                         prt_continue()
                     elif order == '4':
-                        run_custom_flatbuffers_decode()
+                        run_custom_textasset_decode()
                         prt_continue()
                     elif order == '5':
                         run_arkmodels_workflow()

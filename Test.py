@@ -4,7 +4,7 @@
 import os, sys, json, shutil
 from src import ResolveAB
 from src import CombineRGBwithA
-from src import ResolveFBO
+from src import DecodeTextAsset
 from src.utils.AnalyUtils import TestRT
 from src.utils.GlobalMethods import print, stacktrace
 
@@ -20,10 +20,10 @@ if __name__ == '__main__':
             print(f"[#{i}] Preparing...", c=0, bg=6)
             DIR_UPK = 'test/upk'
             DIR_CMB = 'test/cmb'
-            DIR_FBO = 'test/fbo'
+            DIR_DTA = 'test/dta'
             shutil.rmtree(DIR_UPK, ignore_errors=True)
             shutil.rmtree(DIR_CMB, ignore_errors=True)
-            shutil.rmtree(DIR_FBO, ignore_errors=True)
+            shutil.rmtree(DIR_DTA, ignore_errors=True)
 
             print(f"[#{i}] Testing...", c=0, bg=6)
             with TestRT('unit_1'):
@@ -41,19 +41,19 @@ if __name__ == '__main__':
                                     do_del=False
                                     )
             with TestRT('unit_3'):
-                ResolveFBO.main(DIR_UPK,
-                                DIR_FBO,
+                DecodeTextAsset.main(DIR_UPK,
+                                DIR_DTA,
                                 do_del=False
                                 )
-            
+
             print(f"[#{i}] Analysing...", c=0, bg=6)
             if __count_files(DIR_UPK) != 1262:
                 raise AssertionError("Unpacked files count mismatch")
             if __count_files(DIR_CMB) != 139:
                 raise AssertionError("Combined images count mismatch")
-            if __count_files(DIR_FBO) != 2:
-                raise AssertionError("Decoded FBO count mismatch")
-            
+            if __count_files(DIR_DTA) != 2:
+                raise AssertionError("Decoded textassets count mismatch")
+
             print(f"[#{i}] Test success!", c=0, bg=2)
         except BaseException as arg:
             print(f"[#{i}] Test failed because an error occurred!", c=7, bg=1)

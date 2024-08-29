@@ -9,7 +9,7 @@ import os.path as osp
 from datetime import datetime
 
 from .ResolveAB import ab_resolve
-from .ResolveFBO import ArkFBOLibrary
+from .DecodeTextAsset import ArkFBOLibrary
 from .utils.GlobalMethods import color, print, get_dirlist, get_filelist
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
