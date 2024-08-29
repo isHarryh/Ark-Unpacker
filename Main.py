@@ -16,7 +16,7 @@ from src import CombineRGBwithA as AU_Cb
 from src import CollectModels   as AU_Cm
 from src import ModelsDataDist  as AU_Mdd
 
-ARKUNPACKER_VERSION = 'v3.1'
+ARKUNPACKER_VERSION = 'v3.2'
 ARKUNPACKER_LOCAL = 'zh-CN'
 
 
