@@ -5,6 +5,8 @@ import os.path as osp
 
 import UnityPy
 import UnityPy.classes as uc
+import UnityPy.files
+import UnityPy.streams
 from .CombineRGBwithA import AlphaRGBCombiner
 from .utils.Config import Config, PerformanceLevel
 from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file
@@ -21,8 +23,13 @@ class Resource:
         :param env: The Environment instance from `UnityPy.load()`;
         :rtype: None;
         """
+        if isinstance(env.file, UnityPy.files.File):
+            self.name:str = env.file.name
+        elif isinstance(env.file, UnityPy.streams.EndianBinaryReader):
+            self.name:str = ""
+        else:
+            raise TypeError(f"Unknown type of UnityPy Environment file: {type(env.file).__name__}")
         self.env:UnityPy.Environment = env
-        self.name:str = env.file.name
         self.length:int = len(env.objects)
         ###
         self.sprites:"list[uc.Sprite]" = []
@@ -113,7 +120,7 @@ class Resource:
                             spines.append(spine)
                             success = True
             if not success:
-                Logger.warn(f"ResolveAB: Failed to handle skeletonDataAsset at pathId {mono.path_id} of {self.name}.")
+                Logger.warn(f"ResolveAB: Failed to handle skeletonDataAsset at pathId {mono.path_id} of {skel.name}.")
         self.spines = spines
 
     def rename_skeletons(self):
