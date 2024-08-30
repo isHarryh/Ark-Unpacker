@@ -85,7 +85,7 @@ ArkStudio 是正在开发阶段的，功能更加强大的《明日方舟》游�
 > 1: 一键执行
 > 2: 自定义资源解包
 > 3: 自定义图片合并
-> 4: FlatBuffers数据解码
+> 4: 自定义文本资源解码
 > 5: ArkModels提取与分拣工具
 > 0: 退出
 > 输入序号后按回车即可，如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)
@@ -93,7 +93,7 @@ ArkStudio 是正在开发阶段的，功能更加强大的《明日方舟》游�
 各模式的功能概述如下：
 - “一键执行” 模式下，解包出的文件默认放置在 `Unpacked_xxxx` 文件夹中，合并完成的图片默认放置在 `Combined_xxxx` 文件夹中。
 - 若您选择 “自定义资源解包” 或 “自定义图片合并”，还可以**自定义**需要解包的文件类型和保存位置等内容。
-- 关于 “FlatBuffers数据解码”，请参阅[此文档](docs/FlatBuffersDecoding.md)了解详情。
+- 关于 “自定义文本资源数据解码”，请参阅[此文档](docs/TextAssetsDecoding.md)了解详情。
 - 关于 “ArkModels提取与分拣工具”，请参阅[此文档](docs/ArkModelsRepoKit.md)了解详情。
 
 此外，运行程序后，工作目录会生成配置文件 `ArkUnpackerConfig.json` 与日志文件 `ArkUnpackerLogs.log`。有关配置文件的字段说明，请参阅[此文档](docs/ConfigFile.md)了解详情。
