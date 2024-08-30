@@ -2,10 +2,13 @@
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
 import builtins
-import shutil
-import traceback
+import importlib.util
 import os
 import os.path as osp
+import pkgutil
+import shutil
+import traceback
+import types
 
 
 ##### ↓ CLI related ↓ #####
@@ -181,3 +184,29 @@ def is_ab_file(path:str):
     :rtype: bool;
     """
     return path.lower().endswith('.ab')
+
+def is_binary_file(path:str, guess_encoding:str='UTF-8'):
+    """Returns `True` if the given file is a binary file rather than text file.
+
+    :param path: Path;
+    :param guess_encoding: The specified charset to test the file;
+    :returns: `True` if the file is a binary file;
+    :rtype: bool;
+    """
+    try:
+        with open(path, encoding=guess_encoding) as f:
+            f.read()
+        return False
+    except UnicodeError:
+        return True
+
+##### ↓ Dynamic import related ↓ #####
+
+def get_modules_from_package(package:types.ModuleType):
+    walk_result = pkgutil.walk_packages(package.__path__, package.__name__ + '.')
+    module_names = [name for _, name, is_pkg in walk_result if not is_pkg]
+    return [importlib.import_module(name) for name in module_names]
+
+def get_modules_from_package_name(package_name:str):
+    package = importlib.import_module(package_name)
+    return get_modules_from_package(package)
