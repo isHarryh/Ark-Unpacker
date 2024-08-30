@@ -44,8 +44,9 @@ class Logger():
 
     def _log(self, tag:str, msg:str):
         try:
-            self.queue.append(f"{datetime.now().strftime(Logger.__time_format)} [{tag}] {msg}\n")
-            self.internal_lock.notify_all()
+            with self.internal_lock:
+                self.queue.append(f"{datetime.now().strftime(Logger.__time_format)} [{tag}] {msg}\n")
+                self.internal_lock.notify_all()
         except BaseException:
             pass
 

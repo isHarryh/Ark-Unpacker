@@ -52,7 +52,7 @@ def print(text:str="", c:int=7, bg:int=0, s:int=0, y:int=0):
 
 def clear(use_ansi:bool=False):
     """Clears the CLI output.
-    
+
     rtype: None;
     """
     if use_ansi:
@@ -62,7 +62,7 @@ def clear(use_ansi:bool=False):
 
 def title(text:str):
     """Sets the CLI window title. Windows only.
-    
+
     :param text: The text of the title;
     rtype: None;
     """
@@ -154,7 +154,7 @@ _EXT_IMAGE = ('.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tiff')
 
 def is_image_file(path:str):
     """Returns `True` if the given file is an image judging from its path.
-    
+
     :param path: Path;
     :returns: `True` if the file is an image;
     :rtype: bool;
@@ -166,7 +166,7 @@ _EXT_KNOWN = ('.atlas', '.skel', '.wav', '.mp3', '.m4a', '.mp4', '.avi', '.mov',
 def is_known_asset_file(path:str):
     """Returns `True` if the given file is a known asset type from its path.
     Images, audios, videos and Spine are all known asset types.
-    
+
     :param path: Path;
     :returns: `True` if the file is a known asset type;
     :rtype: bool;
