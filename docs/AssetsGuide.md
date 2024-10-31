@@ -3,9 +3,8 @@ ArkUnpacker附加说明文档
 
 > **注意：**  
 > - 请在合理范围内使用本程序。根据BSD3许可证，对于非法使用本程序解包出来的资源造成的侵权行为，作者不承担相应责任。
-> - 以下内容是基于 **Android `v2.0.01`** 的《明日方舟》编制的，不同版本客户端的特定资源的具体位置可能存在较大差异。
+> - 以下内容是基于 **Android `v2.3.81`** 的《明日方舟》编制的，不同版本客户端的特定资源的具体位置可能存在较大差异。
 > - 此文档内的所有内容均为作者独立整理，仅供参考，如需转载请注明出处。 
-
 
 
 ## 资源导览
@@ -22,7 +21,7 @@ ArkUnpacker附加说明文档
 ├─charpack / 干员(战斗小人)  
 ├─climbtowerseasons / 保全派驻  
 ├─config / 配置  
-├─crisisseasons / 危机合约  
+├─crisisv2longterm / 新版危机合约  
 ├─gamedata / 游戏数据  
 ├─graphics / 图形渲染  
 ├─[hotupdate](#hotupdate) / 热更新相关  
@@ -30,8 +29,8 @@ ArkUnpacker附加说明文档
 ├─npcpack / NPC  
 ├─[prefabs](#perfabs) / 预设文件  
 ├─raw / 未打包文件(例如视频)  
-├─refs / 引用？  
-├─retro / 复刻活动  
+├─refs / 集成战略  
+├─retro / 常驻支线与别传活动  
 ├─scenes / 关卡  
 ├─skinpack / 干员皮肤  
 ├─[spritepack](#spritepack) / 图标  
@@ -67,13 +66,13 @@ ArkUnpacker附加说明文档
 - `arts/specialized_hub.ab` 技能专精图标
 
 ### Audio
-- `audio/sound_beta_2/avg/` 剧情音效
 - `audio/sound_beta_2/enemy/` 敌人战斗音效
 - `audio/sound_beta_2/music/` 游戏音乐
 - `audio/sound_beta_2/player/` 干员战斗音效
 - `audio/sound_beta_2/voice/` 语音包(日文)
 - `audio/sound_beta_2/voice_{xxx}/` 语音包(其他语言)
 - `audio/sound_beta_2/ambience.ab` 环境氛围音效
+- `audio/sound_beta_2/avg_{xxx}.ab/` 剧情音效
 - `audio/sound_beta_2/battle.ab` 其他战斗音效
 - `audio/sound_beta_2/vox.ab` 人声音效
 
@@ -93,7 +92,8 @@ ArkUnpacker附加说明文档
 - `battle/prefabs/[uc]tokens.ab` 战斗道具和部分召唤物Spine
 
 ### Building
-- `building/blueprint/[uc]rooms.ab` 基建UI
+- `building/blueprint/` 基建UI
+- `building/diy/` 装扮模式素材与家具素材
 - `building/ui/[uc]diy.ab` 基建房间装扮模式UI
 - `building/vault/[uc]arts.ab` 基建功能室Sprite
 
@@ -121,14 +121,6 @@ ArkUnpacker附加说明文档
 - `spritepack/story_review_mini_activity.ab` 剧情回顾:故事集封面
 - `spritepack/story_review_mini_char.ab` 剧情回顾:子故事封面
 
-危机合约
-- `spritepack/ui_crisis_appraise.ab` 危机合约:通关等级图标
-- `spritepack/ui_crisis_level.ab` 危机合约:词条等级图标
-- `spritepack/ui_crisis_rune_bg.ab` 危机合约:词条背景图
-- `spritepack/ui_crisis_rune_bg.ab` 危机合约:词条图标
-- `spritepack/ui_crisis_shop.ab` 危机合约:商店相关
-- `spritepack/ui_dyn_crisis_entry.ab` 危机合约:关卡加载中背景图
-
 干员模组
 - `spritepack/ui_equip_big_img_hub.ab` 干员模组:模组大图
 - `spritepack/ui_equip_type_direction_hub.ab` 干员模组:模组类型图标
@@ -153,7 +145,7 @@ ArkUnpacker附加说明文档
 蚀刻章
 - `spritepack/ui_medal_banner_list.ab` 蚀刻章:套组横幅
 - `spritepack/ui_medal_diy_frame_bkg.ab` 蚀刻章:套组卡槽背景
-- `spritepack/ui_medal_icon_list.ab` 蚀刻章:蚀刻章图标
+- `spritepack/ui_medal_icons.ab` 蚀刻章:蚀刻章图标
 
 头像
 - `spritepack/icon_enemies.ab` 敌人头像
@@ -191,16 +183,16 @@ ArkUnpacker附加说明文档
 - `ui/gacha/` 干员寻访相关
 - `ui/handbook/` 干员档案相关
 - `ui/legion/` 保全派驻
-- `ui/operation/returnning/` 玩家回归活动
 - `ui/pages/` 各种页面的UI
 - `ui/rglktopic/` 集成战略各主题UI
+- `ui/sandboxv2/` 生息演算相关
 - `ui/squadassist/` 好友助战编队相关
 - `ui/stage/enemyhandbook/` 敌人档案相关
 - `ui/timelydrop/` 限时掉落
 - `ui/[uc]charsortfilter.ab` 干员筛选相关
 - `ui/[uc]climbtower.ab` 保全派驻关卡页相关
 - `ui/[uc]squad.ab` 编队页面相关
-- `ui/activity/actfun.ab` 愚人节活动
+- `ui/operation/return.ab` 玩家回归活动
 - `ui/recruit/states/recruit_ten_result_state.ab` 十连寻访
 - `ui/skin_groups.ab` 时装品牌
 - `ui/zonemap_{x}.ab` 主线关卡页背景
