@@ -3,16 +3,13 @@
 # @ BSD 3-Clause License
 import re
 import json
-import shutil
 import os
 import os.path as osp
 from datetime import datetime
 
-from .ResolveAB import ab_resolve
 from .DecodeTextAsset import ArkFBOLibrary
 from .utils.GlobalMethods import color, print, get_dirlist, get_filelist
 from .utils.Logger import Logger
-from .utils.SaverUtils import SafeSaver
 
 class PrefabError(Exception):
     def __init__(self, *args):
@@ -44,11 +41,10 @@ class ModelsDist:
         "Enemy": "models_enemies",
         "DynIllust": "models_illust",
     }
-    GAMEDATA_DIR = 'gamedata'
-    TEMP_DIR = 'temp/mdd'
+    GAMEDATA_DIR = 'anon'
+    TEMP_DIR = 'temp/am_upk_mdd'
 
     def __init__(self):
-        shutil.rmtree(ModelsDist.TEMP_DIR, ignore_errors=True)
         self.data = {
             "storageDirectory": ModelsDist.MODELS_DIR,
             "sortTags": ModelsDist.SORT_TAGS_L10N,
@@ -64,16 +60,10 @@ class ModelsDist:
                 if osp.basename(path).startswith(a):
                     return True
             return False
-        for i in get_filelist(ModelsDist.GAMEDATA_DIR):
-            if basename_startswith(i, alias):
-                ab_resolve(i, ModelsDist.TEMP_DIR, False, True, False, False, None, None)
-                while not SafeSaver.get_instance().completed():
-                    pass
-                for j in get_filelist(ModelsDist.TEMP_DIR):
-                    if basename_startswith(j, alias):
-                        return ArkFBOLibrary.decode(j)
-                raise RuntimeError(f"Failed to get decoded data: {alias}")
-        raise FileNotFoundError(f"Failed to find raw AB file: {alias}")
+        for j in get_filelist(ModelsDist.TEMP_DIR):
+            if basename_startswith(j, alias):
+                return ArkFBOLibrary.decode(j)
+        raise FileNotFoundError(f"Failed to find data file with the name: {alias}")
 
     def get_item_data(self, asset_id:str, type:str, style:str, sort_tags:list, name:str, appellation:str, sg_id:str, sg_name:str):
         return {

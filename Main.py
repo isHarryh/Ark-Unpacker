@@ -166,7 +166,7 @@ def run_arkmodels_unpacking(dirs, destdir):
     ###
     for i in dirs:
         if not osp.exists(i):
-            print(f"在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是本程序版本与您的资源版本不再兼容，可尝试获取新版程序。", c=3)
+            print(f"在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是本程序版本与您的资源版本不兼容，可尝试获取其他版本的程序。", c=3)
             return
     title("ArkUnpacker - Processing")
     ###
@@ -174,6 +174,21 @@ def run_arkmodels_unpacking(dirs, destdir):
     rmdir(destdir)
     for i in dirs:
         AU_Rs.main(i, destdir, do_img=False, do_txt=False, do_aud=False, do_spine=True)
+
+def run_arkmodels_anon_unpacking(dirs, destdir):
+    Logger.info("CI: ArkModels unpack mode.")
+    prt_subtitle("ArkModels 模型提取")
+    ###
+    for i in dirs:
+        if not osp.exists(i):
+            print(f"在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是本程序版本与您的资源版本不兼容，可尝试获取其他版本的程序。", c=3)
+            return
+    title("ArkUnpacker - Processing")
+    ###
+    print("正在清理...")
+    rmdir(destdir)
+    for i in dirs:
+        AU_Rs.main(i, destdir, do_img=False, do_txt=True, do_aud=False, do_spine=False)
 
 def run_arkmodels_filtering(dirs, destdirs):
     Logger.info("CI: ArkModels file filter mode.")
@@ -218,13 +233,15 @@ def run_arkmodels_workflow():
 2: 干员基建模型提取 ({visual('chararts')}, {visual('skinpack')})
 3: 敌方战斗模型提取 ({visual('battle')})
 4: 动态立绘模型提取 ({visual('arts')})
-5: 模型分拣
-6: 生成数据集 ({visual('gamedata')})
+5: 匿名数据提取 ({visual(AU_Mdd.ModelsDist.GAMEDATA_DIR)})
+6: 模型分拣
+7: 生成数据集
 0: 返回""", c=6)
         print("输入序号后按Enter即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker")
     temp_dir_1 = 'temp/am_upk_operator'
     temp_dir_2 = 'temp/am_upk_enemy'
     temp_dir_3 = 'temp/am_upk_dynillust'
+    temp_dir_4 = AU_Mdd.ModelsDist.TEMP_DIR
     while True:
         title("ArkUnpacker")
         prt_arkmodels_menu()
@@ -239,10 +256,12 @@ def run_arkmodels_workflow():
         if order == '4' or wildcard:
             run_arkmodels_unpacking(['arts/dynchars'], temp_dir_3)
         if order == '5' or wildcard:
-            run_arkmodels_filtering([temp_dir_1, temp_dir_2, temp_dir_3], ['models', 'models_enemies', 'models_illust'])
+            run_arkmodels_anon_unpacking([AU_Mdd.ModelsDist.GAMEDATA_DIR], temp_dir_4)
         if order == '6' or wildcard:
+            run_arkmodels_filtering([temp_dir_1, temp_dir_2, temp_dir_3], ['models', 'models_enemies', 'models_illust'])
+        if order == '7' or wildcard:
             run_arkmodels_data_dist()
-        if order in ['1', '2', '3', '4', '5', '6']:
+        if order in ['1', '2', '3', '4', '5', '6', '7']:
             prt_continue()
         if order == '0':
             return

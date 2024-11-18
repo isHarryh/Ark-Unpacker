@@ -53,6 +53,11 @@ class Resource:
                 self.materials.append(i)
             elif isinstance(i, uc.MonoBehaviour):
                 self.monobehaviors.append(i)
+            elif isinstance(i, uc.AssetBundle):
+                if getattr(i, 'name'):
+                    if self.name != osp.basename(i.name):
+                        Logger.debug(f"ResolveAB: Resource \"{self.name}\" internally named \"{i.name}\"")
+                        self.name = osp.basename(i.name)
 
     def get_object_by_pathid(self, pathid:"int|dict", search_in:"list|None"=None):
         """Gets the object with the given PathID.
