@@ -165,9 +165,10 @@ def is_image_file(path:str):
     return any(path.lower().endswith(ext) for ext in _EXT_IMAGE)
 
 _EXT_KNOWN = ('.atlas', '.skel', '.wav', '.mp3', '.m4a', '.mp4', '.avi', '.mov', '.mkv', '.flv')
+_EXT_AB = ('.ab', '.bin')
 
 def is_known_asset_file(path:str):
-    """Returns `True` if the given file is a known asset type from its path.
+    """Returns `True` if the given file is a known asset type from its judging from its name.
     Images, audios, videos and Spine are all known asset types.
 
     :param path: Path;
@@ -177,13 +178,13 @@ def is_known_asset_file(path:str):
     return is_image_file(path) or any(path.lower().endswith(ext) for ext in _EXT_KNOWN)
 
 def is_ab_file(path:str):
-    """Returns `True` if the given file is an asset bundle judging from its path.
+    """Returns `True` if the given file is an asset bundle judging from its name.
 
     :param path: Path;
     :returns: `True` if the file is an asset bundle;
     :rtype: bool;
     """
-    return path.lower().endswith('.ab')
+    return any(path.lower().endswith(ext) for ext in _EXT_AB)
 
 def is_binary_file(path:str, guess_encoding:str='UTF-8'):
     """Returns `True` if the given file is a binary file rather than text file.
