@@ -3,7 +3,7 @@ ArkUnpacker附加说明文档
 
 > **注意：**  
 > - 请在合理范围内使用本程序。根据BSD3许可证，对于非法使用本程序解包出来的资源造成的侵权行为，作者不承担相应责任。
-> - 以下内容是基于 **Android `v2.3.81`** 的《明日方舟》编制的，不同版本客户端的特定资源的具体位置可能存在较大差异。
+> - 以下内容是基于 **Android `v2.4.01`** 的《明日方舟》编制的，不同版本客户端的特定资源的具体位置可能存在较大差异。
 > - 此文档内的所有内容均为作者独立整理，仅供参考，如需转载请注明出处。 
 
 
@@ -11,8 +11,9 @@ ArkUnpacker附加说明文档
 各个子目录储存的资源的内容：
 
 **Android**  
-├─[activity](#activity) / 活动   
-├─[arts](#arts) / 图片  
+├─[activity](#activity) / 活动  
+├─anon / 匿名数据  
+├─[arts](#arts) / 美术图片  
 ├─[audio](#audio) / 音频  
 ├─[avg](#avg) / 剧情图  
 ├─[battle](#battle) / 战斗相关  
@@ -22,10 +23,8 @@ ArkUnpacker附加说明文档
 ├─climbtowerseasons / 保全派驻  
 ├─config / 配置  
 ├─crisisv2longterm / 新版危机合约  
-├─gamedata / 游戏数据  
+├─cutin / 角色插入  
 ├─graphics / 图形渲染  
-├─[hotupdate](#hotupdate) / 热更新相关  
-├─[i18n](#i18n) / 多语言(国际化)  
 ├─npcpack / NPC  
 ├─[prefabs](#perfabs) / 预设文件  
 ├─raw / 未打包文件(例如视频)  
@@ -36,9 +35,12 @@ ArkUnpacker附加说明文档
 ├─[spritepack](#spritepack) / 图标  
 └─[ui](#ui) / 用户界面  
 
-> **提示：**  
+> **重要变更：**  
 > 1. 在明日方舟`v1.8.01`及之前版本中，干员默认皮肤的立绘、基建小人和战斗小人全都位于`charpack`中。而在之后的版本中，立绘和基建小人被转移到了`chararts`中存放。
-> 2. 解包只是解包AB文件。这意味着像`raw/video/`里的部分非AB文件不会放到解包后文件夹中，所以请在原始文件中查找它们。
+> 2. 在明日方舟`v2.3.81`及之前版本中，游戏数据文件位于`gamedata`目录，热更新开屏素材位于`hotupdate`目录，国际化数据位于`i18n`目录。而在之后的版本中，这些数据都被转移到了`anon`中作为匿名文件存放，并且后缀名被更改为`.bin`。
+
+> **提示：**  
+> 解包只是解包AB文件。这意味着像`raw/video/`里的部分非AB文件不会放到解包后文件夹中，所以请在原始文件中查找它们。
 
 
 ## 常用资源定位
@@ -96,12 +98,6 @@ ArkUnpacker附加说明文档
 - `building/diy/` 装扮模式素材与家具素材
 - `building/ui/[uc]diy.ab` 基建房间装扮模式UI
 - `building/vault/[uc]arts.ab` 基建功能室Sprite
-
-### Hotupdate
-- `hotupdate/[uc]worldtips.ab` 热更新时背景图(开屏图)
-
-### I18n
-- `i18n/string_map.ab` 字符串映射表
 
 ### Perfabs
 - `prefabs/shop/shopkeeper/` 可露希尔
