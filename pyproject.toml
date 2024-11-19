@@ -29,7 +29,7 @@ build-dir = "$project$\\build"
 entry = "$project$\\Main.py"
 icon = "$project$\\ArkUnpacker.ico"
 add-binary = "$venv$\\Lib\\site-packages\\UnityPy\\lib:UnityPy\\lib|$venv$\\Lib\\site-packages\\UnityPy\\resources\\uncompressed.tpk:UnityPy\\resources"
-add-data = "$project$\\src\\fbs\\CN:src\\fbs\\CN"
+add-data = "$project$\\src\\fbs\\CN:src\\fbs\\CN|$venv$\\Lib\\site-packages\\archspec\\json:archspec\\json"
 hidden-import = "flatbuffers"
 log-level = "WARN"
 
