@@ -55,14 +55,9 @@ class ModelsDist:
         }
 
     def get_gamedata(self, alias:tuple):
-        def basename_startswith(path:str, alias:tuple):
-            for a in alias:
-                if osp.basename(path).startswith(a):
-                    return True
-            return False
-        for j in get_filelist(ModelsDist.TEMP_DIR):
-            if basename_startswith(j, alias):
-                return ArkFBOLibrary.decode(j)
+        for i in get_filelist(ModelsDist.TEMP_DIR):
+            if any(osp.basename(i).startswith(a) for a in alias):
+                return ArkFBOLibrary.decode(i)
         raise FileNotFoundError(f"Failed to find data file with the name: {alias}")
 
     def get_item_data(self, asset_id:str, type:str, style:str, sort_tags:list, name:str, appellation:str, sg_id:str, sg_name:str):
@@ -208,7 +203,7 @@ class ModelsDist:
                         asset_list_specified = list(filter(lambda x:x.lower().endswith(j), file_list))
                         if len(asset_list_specified) == 0:
                             Logger.info(f"ModelsDataDist: The {j} asset of \"{k}\" not found, see in \"{d}\".")
-                            print(f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：{color(1)}{j}{color(7)} 文件缺失")
+                            print(f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：{color(1)}{j} 文件缺失{color(7)}")
                             fail_flag = True
                             break
                         elif len(asset_list_specified) == 1:

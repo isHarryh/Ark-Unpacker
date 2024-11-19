@@ -136,34 +136,25 @@ class Resource:
         :rtype: None;
         """
         for spine in self.spines:
-            prefix = spine.get_common_name() + osp.sep
-            if spine.type == Resource.SpineAsset.BUILDING:
-                prefix = 'Building' + osp.sep + prefix
-            elif spine.type == Resource.SpineAsset.BATTLE_FRONT:
-                prefix = 'BattleFront' + osp.sep + prefix
-            elif spine.type == Resource.SpineAsset.BATTLE_BACK:
-                prefix = 'BattleBack' + osp.sep + prefix
-            elif spine.type == Resource.SpineAsset.DYN_ILLUST:
-                prefix = 'DynIllust' + osp.sep + prefix
+            prefix = spine.type + osp.sep + spine.get_common_name() + osp.sep
             self.__rename_add_prefix(spine.skel, prefix)
             self.__rename_add_prefix(spine.atlas, prefix)
             for i in spine.tex_list:
                 for j in i:
-                    if j:
-                        self.__rename_add_prefix(j, prefix)
+                    self.__rename_add_prefix(j, prefix)
 
     @staticmethod
     def __rename_add_prefix(obj:uc.GameObject, pre:str):
         """Adds a prefix to rename the Spine-related files."""
-        if not obj.name.startswith(pre):
+        if obj and not obj.name.startswith(pre):
             obj.name = str(pre + obj.name)
 
     class SpineAsset:
-        UNKNOWN = 0
-        BUILDING = 1
-        BATTLE_FRONT = 2
-        BATTLE_BACK = 3
-        DYN_ILLUST = 4
+        UNKNOWN = 'Unknown'
+        BUILDING = 'Building'
+        BATTLE_FRONT = 'BattleFront'
+        BATTLE_BACK = 'BattleBack'
+        DYN_ILLUST = 'DynIllust'
 
         def __init__(self, skel:uc.TextAsset, atlas:uc.TextAsset, tex_list:"list[tuple[uc.Texture2D]]", type:int=UNKNOWN):
             self.skel = skel
