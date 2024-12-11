@@ -210,11 +210,15 @@ def run_arkmodels_data_dist():
     Logger.info("CI: ArkModels dataset mode.")
     prt_subtitle("ArkModels 生成数据集")
     ###
-    for i in ["models", "models_enemies"]:
+    for i in ["models", "models_enemies", "models_illust"]:
         if not osp.exists(i):
-            print(f"在工作目录下找不到 {i}，请确认您先前已运行了\"文件分拣\"。", c=3)
+            print(f"在工作目录下找不到 {i}，请确认您先前已运行了\"模型分拣\"。", c=3)
             UserInput.request("> 输入符号 \"*\" 以取消任务，或直接按Enter以强制继续")
             return
+    if not osp.exists(AU_Mdd.ModelsDist.TEMP_DIR):
+        print(f"在工作目录下找不到 {AU_Mdd.ModelsDist.TEMP_DIR}，请确认您先前已运行了\"匿名数据提取\"。", c=3)
+        UserInput.request("> 输入符号 \"*\" 以取消任务，或直接按Enter以强制继续")
+        return
     AU_Mdd.main()
 
 def run_arkmodels_workflow():
