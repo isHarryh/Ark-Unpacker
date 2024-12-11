@@ -81,7 +81,7 @@ class Resource:
         """
         spines:"list[Resource.SpineAsset]" = []
         for mono in self.monobehaviors:
-            #(i stans for a MonoBehavior)
+            #(i stands for a MonoBehavior)
             success = False
             if mono.serialized_type.nodes:
                 # As asset:
@@ -131,7 +131,7 @@ class Resource:
     def rename_skeletons(self):
         """Renames the Spine assets which includes skel, atlas and png files.
         Since the Spine in Arknights have 4 or more forms (Building, BattleFront, BattleBack, DynIllust),
-        it is necessary to rename them so that name collisions can be avoid.
+        it is necessary to rename them so that name collisions can be avoided.
 
         :rtype: None;
         """
