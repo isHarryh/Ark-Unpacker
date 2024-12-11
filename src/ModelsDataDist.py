@@ -41,6 +41,12 @@ class ModelsDist:
         "Enemy": "models_enemies",
         "DynIllust": "models_illust",
     }
+    MODELS_FILE_EXT = {
+        # extension type -> extension alternatives
+        ".atlas": [".atlas"],
+        ".png": [".png"],
+        ".skel": [".skel", ""]
+    }
     GAMEDATA_DIR = 'anon'
     TEMP_DIR = 'temp/am_upk_mdd'
 
@@ -198,20 +204,28 @@ class ModelsDist:
                 if osp.isdir(d):
                     #如果预期的目录存在
                     file_list = os.listdir(d)
-                    for j in ('.atlas', '.png', '.skel'):
-                        #(j是资源文件扩展名)
-                        asset_list_specified = list(filter(lambda x:x.lower().endswith(j), file_list))
-                        if len(asset_list_specified) == 0:
-                            Logger.info(f"ModelsDataDist: The {j} asset of \"{k}\" not found, see in \"{d}\".")
-                            print(f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：{color(1)}{j} 文件缺失{color(7)}")
+                    for ext_type, ext_alt in ModelsDist.MODELS_FILE_EXT.items():
+                        #要求每个ext_alt组内的文件扩展名至少存在一种
+                        ext_verified = False
+                        for ext in ext_alt:
+                            #(ext是文件扩展名)
+                            asset_list_specified = list(filter(lambda x:osp.splitext(x)[1] == ext, file_list))
+                            if len(asset_list_specified) > 0:
+                                #以ext为扩展名的文件存在
+                                if len(asset_list_specified) == 1:
+                                    asset_list_pending[ext_type] = asset_list_specified[0]
+                                else:
+                                    Logger.debug(f"ModelsDataDist: The {ext_type} asset of \"{k}\" is multiple, see in \"{d}\".")
+                                    asset_list_specified.sort()
+                                    asset_list_pending[ext_type] = asset_list_specified
+                                ext_verified = True
+                                break #跳出对ext的遍历
+                        #如果ext_alt组所指定的文件不存在
+                        if not ext_verified:
+                            Logger.info(f"ModelsDataDist: The {ext_type} asset of \"{k}\" not found, see in \"{d}\".")
+                            print(f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：{color(1)}{ext_type} 文件缺失{color(7)}")
                             fail_flag = True
-                            break
-                        elif len(asset_list_specified) == 1:
-                            asset_list_pending[j] = asset_list_specified[0]
-                        else:
-                            Logger.debug(f"ModelsDataDist: The {j} asset of \"{k}\" is multiple, see in \"{d}\".")
-                            asset_list_specified.sort()
-                            asset_list_pending[j] = asset_list_specified
+                            break #跳出对ext_alt的遍历
                     if not fail_flag:
                         asset_list = asset_list_pending
                     else:
