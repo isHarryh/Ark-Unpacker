@@ -43,10 +43,10 @@ class Config():
 
     def __init__(self):
         """Not recommended to use. Please use the static methods."""
-        self.config = {}
+        self._config = {}
 
     def _get(self, key):
-        return self.config.get(key, None)
+        return self._config.get(key, None)
 
     def _read_config(self):
         if osp.isfile(Config.__config_path):
@@ -55,17 +55,17 @@ class Config():
                 if isinstance(loaded_config, dict):
                     for k in Config.__default_config.keys():
                         default_val = Config.__default_config[k]
-                        self.config[k] = loaded_config[k] if isinstance(loaded_config.get(k, None), type(default_val)) else default_val
+                        self._config[k] = loaded_config[k] if isinstance(loaded_config.get(k, None), type(default_val)) else default_val
                 Logger.set_instance(self.get('log_file'), self.get('log_level'))
                 Logger.set_level(self.get('log_level'))
                 Logger.info("Config: Applied config.")
             except Exception as arg:
-                self.config = Config.__default_config
+                self._config = Config.__default_config
                 Logger.set_instance(self.get('log_file'), self.get('log_level'))
                 Logger.set_level(self.get('log_level'))
                 Logger.error(f"Config: Failed to parsing config, now using default config, cause: {arg}")
         else:
-            self.config = Config.__default_config
+            self._config = Config.__default_config
             Logger.set_instance(self.get('log_file'), self.get('log_level'))
             Logger.set_level(self.get('log_level'))
             Logger.info("Config: Applied default config.")
@@ -73,7 +73,7 @@ class Config():
 
     def _save_config(self):
         try:
-            json.dump(self.config, open(self.__config_path, 'w', encoding=Config.__file_encoding), indent=4, ensure_ascii=False)
+            json.dump(self._config, open(self.__config_path, 'w', encoding=Config.__file_encoding), indent=4, ensure_ascii=False)
             Logger.info("Config: Saved config.")
         except Exception as arg:
             Logger.error(f"Config: Failed to save config, cause: {arg}")
