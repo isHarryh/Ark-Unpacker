@@ -169,7 +169,7 @@ def main(rootdir:str, destdir:str, do_del:bool=False):
         print("\n正在清理...", s=1)
         rmdir(destdir) #慎用，会预先删除目的地目录的所有内容
     SafeSaver.get_instance().reset_counter()
-    thread_ctrl = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
+    thread_ctrl = ThreadCtrl()
     ui = UICtrl()
     tr_processed = TaskReporter(2, len(flist))
     tr_file_saving = TaskReporter(1)

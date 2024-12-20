@@ -5,6 +5,7 @@ import time
 import queue
 import threading
 
+from .Config import PerformanceLevel, Config
 from .GlobalMethods import color, print, clear
 from .Logger import Logger
 
@@ -12,9 +13,11 @@ from .Logger import Logger
 class ThreadCtrl():
     """Controller for Multi Threading."""
 
-    def __init__(self, max_subthread):
+    def __init__(self, max_subthread:int=None):
         """Initializes a tool for multi threading."""
         self.__sts:"list[threading.Thread]" = []
+        if not max_subthread:
+            max_subthread = PerformanceLevel.get_thread_limit(Config.get('performance_level'))
         self.set_max_subthread(max_subthread)
 
     def set_max_subthread(self, max_subthread:int):
@@ -368,7 +371,7 @@ class TaskReporterTracker():
         """
         done = sum(reporter._done * reporter._weight for reporter in self._reporters)
         demand = sum(reporter._demand * reporter._weight for reporter in self._reporters)
-        pg = max(0.0, min(1.0, done / demand)) if demand > 0 else 0.0
+        pg = max(0.0, min(1.0, done / demand)) if demand > 0 else 1.0
         self._cache_pg = max(self._cache_pg, pg)
         return self._cache_pg if force_inc else pg
 

@@ -276,7 +276,7 @@ def main(src:str, destdir:str, do_del:bool=False,
         print("\n正在清理...", s=1)
         rmdir(destdir) # Danger zone
     SafeSaver.get_instance().reset_counter()
-    thread_ctrl = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
+    thread_ctrl = ThreadCtrl()
     ui = UICtrl()
     tr_processed = TaskReporter(50, len(flist))
     tr_file_saving = TaskReporter(1)

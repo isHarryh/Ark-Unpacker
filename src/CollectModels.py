@@ -79,7 +79,7 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
         for upkdir in get_dirlist(srcdir, max_depth=1):
             flist.append((upkdir, destdir))
 
-    thread_ctrl = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
+    thread_ctrl = ThreadCtrl()
     collected = Counter()
     ui = UICtrl()
     tr_finished = TaskReporter(1, len(flist))
