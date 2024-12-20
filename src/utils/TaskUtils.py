@@ -258,80 +258,112 @@ class Counter():
         return self.__s
     #EndClass
 
-class TimeRecorder():
-    """Tasking Time Recorder."""
+class TaskReporter():
+    """Task reporter providing functions to record time consumptions of one kind of tasks."""
 
-    def __init__(self):
-        """Initializes a Tasking Time Recorder.
+    def __init__(self, weight:int, demand:int=0, window_size:int=100):
+        """Initializes a task reporter with a sliding window for time tracking.
+
+        :param weight: The weight per task, higher weight indicating more time consumption;
+        :param demand: The initial number of the tasks to be done;
+        :param window_size: The size of the sliding window for speed calculation;
         """
-        self.t_init = time.time()
-        self.done = {}
-        self.dest = {}
-        self._lock = threading.Lock()
-        self._cache_p = -1.0
+        self._weight = weight
+        self._demand = demand
+        self._done = 0
+        self._timestamps = queue.Queue(maxsize=window_size)
 
-    def update_dest(self, weight:int, advance:int=1):
-        """Updates the destination value of the specified task weight.
+    def report(self, success:bool=True):
+        """Reports that one task has been successfully done (or failed).
 
-        :param weight: The task weight whose destination value should be updated;
-        :param count: The advance value;
+        :param success: `True` to let `done += 1`, `False` to let `demand -= 1`;
         :rtype: None;
         """
-        if weight <= 0:
-            raise ValueError("Arg weight should be positive")
-        with self._lock:
-            self.dest[weight] = self.dest.get(weight, 0) + advance
+        if success:
+            self._done += 1
+            if self._timestamps.full():
+                # Remove the oldest timestamp if the queue is full
+                self._timestamps.get()
+            # Record the current completion timestamp
+            self._timestamps.put(time.time())
+        else:
+            # Task failed, decrease the demand
+            self._demand -= 1
 
-    def done_once(self, weight:int):
-        """Updates the current value of the specified task wight by `1`.
+    def update_demand(self, delta:int=1):
+        """Updates the number of the tasks to be done by the given value."""
+        self._demand += delta
 
-        :param weight: The task weight whose current value should be updated;
-        :rtype: None;
-        """
-        with self._lock:
-            if weight in self.done:
-                self.done[weight].append(time.time())
-            else:
-                self.done[weight] = [time.time()]
+    def get_demand(self):
+        """Gets the number of the tasks to be done."""
+        return self._demand
 
-    def get_dest_of(self, weight:int):
-        """Gets the destination value of the specified task weight.
+    def get_done(self):
+        """Gets the number of the tasks done."""
+        return self._done
 
-        :param weight: The task weight whose destination value should be returned;
-        :returns: The destination value;
-        :rtype: int;
-        """
-        return self.dest[weight] if weight in self.dest else 0
+    def get_speed(self):
+        """Calculates the average time per task based on the sliding window.
 
-    def get_done_of(self, weight:int):
-        """Gets the current value of the specified task weight.
-
-        :param weight: The task weight whose current value should be returned;
-        :returns: The current value;
-        :rtype: int;
-        """
-        return len(self.done[weight]) if weight in self.done else 0
-
-    def get_done_dest_str_of(self, weight:int):
-        """Gets a string representing the done and destination of the specified task weight.
-
-        :param weight: The task weight to inspect;
-        :returns: A string that can be printed to CLI;
-        :rtype: str;
-        """
-        return f"{self.get_done_of(weight)}/{self.get_dest_of(weight)}"
-
-    def get_progress(self, force_inc:bool=True):
-        """Gets the current progress.
-
-        :param force_inc: Whether prevent the progress to decrease;
-        :returns: The progress in `[0.0, 1.0]`;
+        :returns: The average speed (tasks per second), `0` if no enough data;
         :rtype: float;
         """
-        p = self._get_total_done_weight() / self._get_total_dest_weight() if self._get_total_dest_weight() else 1.0
-        p = self._cache_p if p < self._cache_p and force_inc else p
-        self._cache_p = p
-        return p
+        if self._timestamps.qsize() < 2:
+            return 0.0
+        timestamps = list(self._timestamps.queue)
+        delta_time = float(timestamps[-1] - timestamps[0])
+        task_count = len(timestamps) - 1
+        return task_count / delta_time if delta_time > 0 else 0.0
+
+    def __str__(self):
+        """Returns a string representing the done and demand of the tasks."""
+        return f"{self._done}/{self._demand}"
+    #EndClass
+
+class TaskReporterTracker():
+    """Task reporter tracker providing functions to manage multiple task reporters."""
+
+    def __init__(self, *reporters:TaskReporter):
+        """Initializes a task reporter tracker with multiple task reporters.
+
+        :param reporters: Some TaskReporter instances to be managed;
+        """
+        self._reporters = reporters
+        self._start_at = time.time()
+        self._cache_pg = -1.0
+
+    def get_rt(self):
+        """Gets the running time since this instance was initialized.
+
+        :returns: Time (seconds);
+        :rtype: None;
+        """
+        return time.time() - self._start_at
+
+    def get_eta(self):
+        """Calculates the total estimated time to complete all tasks across all reporters.
+
+        :returns: The total remaining time (seconds), `0` if not available;
+        :rtype: float;
+        """
+        eta = 0.0
+        for reporter in self._reporters:
+            s = reporter.get_speed()
+            eta += (reporter._demand - reporter._done) / s if s > 0 else float('inf')
+        return eta if eta != float('inf') else 0.0
+
+    def get_progress(self, force_inc:bool=False):
+        """Calculates the overall progress of tasks completed.
+
+        :param force_inc: Whether prevent the progress to decrease;
+        :returns: The overall progress in `[0.0, 1.0]`;
+        :rtype: float;
+        """
+        done = sum(reporter._done * reporter._weight for reporter in self._reporters)
+        demand = sum(reporter._demand * reporter._weight for reporter in self._reporters)
+        pg = max(0.0, min(1.0, done / demand)) if demand > 0 else 0.0
+        self._cache_pg = max(self._cache_pg, pg)
+        return self._cache_pg if force_inc else pg
 
     def get_progress_str(self, force_inc:bool=True, length:int=25):
         """Gets a string representing the current progress.
@@ -342,48 +374,15 @@ class TimeRecorder():
         :rtype: str;
         """
         p = self.get_progress(force_inc)
-        return f"[{TimeRecorder._get_progress_bar_str(p, length)}] {color(2, 0, 1)}{p:.1%}"
+        return f"[{TaskReporterTracker._get_progress_bar_str(p, length)}] {color(2, 0, 1)}{p:.1%}"
 
-    def get_speed(self, basis:int=500):
-        """Gets the processing speed.
+    def get_eta_str(self):
+        """Gets a string representing the estimated time to complete all tasks.
 
-        :param basis: The max records used to calculate the speed;
-        :returns: Weight per second;
-        :rtype: float;
-        """
-        items = []
-        for k, v in self.done.items():
-            length = min(len(v), basis)
-            if length <= 2:
-                continue
-            for i in range(length):
-                items.append((k, v[-i - 1]))
-        length = min(len(items), basis)
-        if length <= 2:
-            return 0
-        items.sort(key=lambda x:x[1])
-        sum_weight = sum([x[0] for x in items[:length]])
-        delta_time = items[-1][1] - items[-length][1]
-        return sum_weight / delta_time if delta_time != 0 else 0
-
-    def get_eta(self, basis:int=500):
-        """Gets the estimated time of arrival.
-
-        :param basis: How many records do we use to calculate the speed;
-        :returns: Remaining time in seconds;
-        :rtype: float;
-        """
-        speed = self.get_speed(basis)
-        return (self._get_total_dest_weight() - self._get_total_done_weight()) / speed if speed else 0
-
-    def get_eta_str(self, basis:int=500):
-        """Gets a string representing the estimated time of arrival.
-
-        :param basis: How many records do we use to calculate the speed;
         :returns: A human-readable string;
         :rtype: str;
         """
-        eta = self.get_eta(basis)
+        eta = self.get_eta()
         h = int(eta / 3600)
         m = int(eta % 3600 / 60)
         s = int(eta % 60)
@@ -392,26 +391,6 @@ class TimeRecorder():
         if eta != 0:
             return f'{m:02}:{s:02}'
         return '--:--'
-
-    def get_rt(self):
-        """Gets the running time since this instance was initialized.
-
-        :returns: Time in seconds;
-        :rtype: float;
-        """
-        return time.time() - self.t_init
-
-    def _get_total_dest_weight(self):
-        s = 0
-        for k, v in self.dest.items():
-            s += k * v
-        return s
-
-    def _get_total_done_weight(self):
-        s = 0
-        for k, v in self.done.items():
-            s += k * len(v)
-        return s
 
     @staticmethod
     def _get_progress_bar_str(progress:float, length:int):

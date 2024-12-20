@@ -12,7 +12,7 @@ from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file, \
                                  is_known_asset_file, is_binary_file, get_modules_from_package_name
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
-from .utils.TaskUtils import ThreadCtrl, UICtrl, TimeRecorder
+from .utils.TaskUtils import ThreadCtrl, UICtrl, TaskReporter, TaskReporterTracker
 
 
 class ArkFBOLibrary:
@@ -256,43 +256,42 @@ def main(rootdir:str, destdir:str, do_del:bool=False):
     SafeSaver.get_instance().reset_counter()
     thread_ctrl = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
     ui = UICtrl()
-    recorder = TimeRecorder()
-    recorder.update_dest(2, len(flist))
-    on_processed = lambda: recorder.done_once(2)
-    on_file_queued = lambda: recorder.update_dest(1)
-    on_file_saved = lambda x: recorder.done_once(1) if x else recorder.update_dest(1, -1)
+    tr_processed = TaskReporter(2)
+    tr_file_saving = TaskReporter(1)
+    tracker = TaskReporterTracker(tr_processed, tr_file_saving)
 
     ui.reset()
     ui.loop_start()
     for i in flist:
         ui.request([
             "正在批量解码文本资源...",
-            recorder.get_progress_str(),
+            tracker.get_progress_str(),
             f"当前目录：\t{osp.basename(osp.dirname(i))}",
             f"当前搜索：\t{osp.basename(i)}",
-            f"累计搜索：\t{recorder.get_done_dest_str_of(2)}",
-            f"累计解码：\t{recorder.get_done_dest_str_of(1)}",
-            f"剩余时间：\t{recorder.get_eta_str()}",
+            f"累计搜索：\t{tr_processed.get_done()}",
+            f"累计解码：\t{tr_file_saving.get_done()}",
+            f"剩余时间：\t{tracker.get_eta_str()}",
         ])
         ###
         subdestdir = osp.dirname(i).strip(osp.sep).replace(rootdir, '').strip(osp.sep)
-        thread_ctrl.run_subthread(text_asset_resolve, (i, osp.join(destdir, subdestdir), on_processed, on_file_queued, on_file_saved), \
+        thread_ctrl.run_subthread(text_asset_resolve, (i, osp.join(destdir, subdestdir), \
+            tr_processed.report, tr_file_saving.update_demand, tr_file_saving.report), \
             name=f"RFThread:{id(i)}")
 
     ui.reset()
     ui.loop_stop()
-    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or recorder.get_progress() < 1:
+    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
         ui.request([
             "正在批量解码文本资源...",
-            recorder.get_progress_str(),
-            f"累计搜索：\t{recorder.get_done_dest_str_of(2)}",
-            f"累计解码：\t{recorder.get_done_dest_str_of(1)}",
-            f"剩余时间：\t{recorder.get_eta_str()}",
+            tracker.get_progress_str(),
+            f"累计搜索：\t{tr_processed.get_done()}",
+            f"累计解码：\t{tr_file_saving.get_done()}",
+            f"剩余时间：\t{tracker.get_eta_str()}",
         ])
         ui.refresh(post_delay=0.1)
 
     ui.reset()
     print("\n批量解码文本资源结束!", s=1)
-    print(f"  累计搜索 {recorder.get_done_of(2)} 个文件")
-    print(f"  累计解码 {recorder.get_done_of(1)} 个文件")
-    print(f"  此项用时 {round(recorder.get_rt(), 1)} 秒")
+    print(f"  累计搜索 {tr_processed.get_done()} 个文件")
+    print(f"  累计解码 {tr_file_saving.get_done()} 个文件")
+    print(f"  此项用时 {round(tracker.get_rt(), 1)} 秒")

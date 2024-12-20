@@ -12,7 +12,7 @@ from .utils.Config import Config, PerformanceLevel
 from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
-from .utils.TaskUtils import ThreadCtrl, UICtrl, TimeRecorder
+from .utils.TaskUtils import ThreadCtrl, UICtrl, TaskReporter, TaskReporterTracker
 
 class Resource:
     """The class representing a collection of the objects in an UnityPy Environment."""
@@ -278,12 +278,9 @@ def main(src:str, destdir:str, do_del:bool=False,
     SafeSaver.get_instance().reset_counter()
     thread_ctrl = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
     ui = UICtrl()
-    recorder = TimeRecorder()
-    recorder.update_dest(50, len(flist))
-    on_processed = lambda: recorder.done_once(50)
-    on_file_queued = lambda: recorder.update_dest(1)
-    on_file_saved = lambda x: (recorder.done_once(1) if x else recorder.update_dest(1, -1), \
-                               Logger.debug(f"ResolveAB: Saved \"{x}\"") if x else None)
+    tr_processed = TaskReporter(50, len(flist))
+    tr_file_saving = TaskReporter(1)
+    tracker = TaskReporterTracker(tr_processed, tr_file_saving)
 
     ui.reset()
     ui.loop_start()
@@ -291,35 +288,36 @@ def main(src:str, destdir:str, do_del:bool=False,
         #(i stands for a file's path)
         ui.request([
             "正在批量解包...",
-            recorder.get_progress_str(),
+            tracker.get_progress_str(),
             f"当前目录：\t{osp.basename(osp.dirname(i))}",
             f"当前文件：\t{osp.basename(i)}",
-            f"累计解包：\t{recorder.get_done_dest_str_of(50)}",
-            f"累计导出：\t{recorder.get_done_dest_str_of(1)}",
-            f"剩余时间：\t{recorder.get_eta_str()}",
+            f"累计解包：\t{tr_processed.get_done()}",
+            f"累计导出：\t{tr_file_saving.get_done()}",
+            f"剩余时间：\t{tracker.get_eta_str()}",
         ])
         ###
         subdestdir = osp.dirname(i).strip(osp.sep).replace(src, '').strip(osp.sep)
         curdestdir = destdir if osp.samefile(i, src) else \
             osp.join(destdir, subdestdir, osp.splitext(osp.basename(i))[0]) if separate else \
             osp.join(destdir, subdestdir)
-        thread_ctrl.run_subthread(ab_resolve, (i, curdestdir, do_img, do_txt, do_aud, do_spine, on_processed, on_file_queued, on_file_saved), \
+        thread_ctrl.run_subthread(ab_resolve, (i, curdestdir, do_img, do_txt, do_aud, do_spine, \
+            tr_processed.report, tr_file_saving.update_demand, tr_file_saving.report), \
             name=f"RsThread:{id(i)}")
 
     ui.reset()
     ui.loop_stop()
-    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or recorder.get_progress() < 1:
+    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
         ui.request([
             "正在批量解包...",
-            recorder.get_progress_str(),
-            f"累计解包：\t{recorder.get_done_dest_str_of(50)}",
-            f"累计导出：\t{recorder.get_done_dest_str_of(1)}",
-            f"剩余时间：\t{recorder.get_eta_str()}",
+            tracker.get_progress_str(),
+            f"累计解包：\t{tr_processed.get_done()}",
+            f"累计导出：\t{tr_file_saving.get_done()}",
+            f"剩余时间：\t{tracker.get_eta_str()}",
         ])
         ui.refresh(post_delay=0.1)
 
     ui.reset()
     print("\n批量解包结束!", s=1)
-    print(f"  累计解包 {recorder.get_done_of(50)} 个文件")
-    print(f"  累计导出 {recorder.get_done_of(1)} 个文件")
-    print(f"  此项用时 {round(recorder.get_rt(), 1)} 秒")
+    print(f"  累计解包 {tr_processed.get_done()} 个文件")
+    print(f"  累计导出 {tr_file_saving.get_done()} 个文件")
+    print(f"  此项用时 {round(tracker.get_rt(), 1)} 秒")

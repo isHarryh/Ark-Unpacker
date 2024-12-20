@@ -9,7 +9,7 @@ from .utils.Config import Config, PerformanceLevel
 from .utils.GlobalMethods import print, rmdir, get_dirlist
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
-from .utils.TaskUtils import ThreadCtrl, Counter, UICtrl, TimeRecorder
+from .utils.TaskUtils import ThreadCtrl, Counter, UICtrl, TaskReporter, TaskReporterTracker
 
 
 def collect_models(upkdir:str, destdir:str, do_del:bool, on_finished:staticmethod, on_collected:staticmethod):
@@ -82,10 +82,8 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
     thread_ctrl = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
     collected = Counter()
     ui = UICtrl()
-    recorder = TimeRecorder()
-    recorder.update_dest(1, len(flist))
-    on_finished = lambda: recorder.done_once(1)
-    on_collected = collected.update
+    tr_finished = TaskReporter(1, len(flist))
+    tracker = TaskReporterTracker(tr_finished)
 
     ui.reset()
     ui.loop_start()
@@ -93,23 +91,23 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
         #(i stands for a source dir's path)
         ui.request([
             "正在分拣模型...",
-            recorder.get_progress_str(),
+            tracker.get_progress_str(),
             f"当前搜索：\t{osp.basename(upkdir)}",
             f"累计分拣：\t{collected.now()}",
-            f"剩余时间：\t{recorder.get_eta_str()}",
+            f"剩余时间：\t{tracker.get_eta_str()}",
         ])
         ###
-        thread_ctrl.run_subthread(collect_models, (upkdir, destdir, True, on_finished, on_collected), \
+        thread_ctrl.run_subthread(collect_models, (upkdir, destdir, True, tr_finished.report, collected.update), \
             name=f"CmThread:{id(upkdir)}")
 
     ui.reset()
     ui.loop_stop()
-    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or recorder.get_progress() < 1:
+    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
         ui.request([
             "正在分拣模型...",
-            recorder.get_progress_str(),
+            tracker.get_progress_str(),
             f"累计分拣：\t{collected.now()}",
-            f"剩余时间：\t{recorder.get_eta_str()}",
+            f"剩余时间：\t{tracker.get_eta_str()}",
         ])
         ui.refresh(post_delay=0.1)
 
@@ -117,4 +115,4 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
     ui.reset()
     print("\n分拣模型结束!", s=1)
     print(f"  累计分拣 {collected.now()} 套模型")
-    print(f"  此项用时 {round(recorder.get_rt(), 1)} 秒")
+    print(f"  此项用时 {round(tracker.get_rt(), 1)} 秒")

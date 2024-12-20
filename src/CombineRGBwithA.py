@@ -10,7 +10,7 @@ from .utils.Config import Config, PerformanceLevel
 from .utils.GlobalMethods import print, rmdir, get_filelist, is_image_file
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
-from .utils.TaskUtils import ThreadCtrl, UICtrl, TimeRecorder
+from .utils.TaskUtils import ThreadCtrl, UICtrl, TaskReporter, TaskReporterTracker
 
 
 class NoRGBImageMatchedError(FileNotFoundError):
@@ -171,11 +171,9 @@ def main(rootdir:str, destdir:str, do_del:bool=False):
     SafeSaver.get_instance().reset_counter()
     thread_ctrl = ThreadCtrl(PerformanceLevel.get_thread_limit(Config.get('performance_level')))
     ui = UICtrl()
-    recorder = TimeRecorder()
-    recorder.update_dest(2, len(flist))
-    on_processed = lambda: recorder.done_once(2)
-    on_file_queued = lambda: recorder.update_dest(1)
-    on_file_saved = lambda x: recorder.done_once(1) if x else recorder.update_dest(1, -1)
+    tr_processed = TaskReporter(2, len(flist))
+    tr_file_saving = TaskReporter(1)
+    tracker = TaskReporterTracker(tr_processed, tr_file_saving)
 
     ui.reset()
     ui.loop_start()
@@ -183,31 +181,32 @@ def main(rootdir:str, destdir:str, do_del:bool=False):
         #递归处理各个文件(i是文件的路径名)
         ui.request([
             "正在批量合并图片...",
-            recorder.get_progress_str(),
+            tracker.get_progress_str(),
             f"当前目录：\t{osp.basename(osp.dirname(i))}",
             f"当前文件：\t{osp.basename(i)}",
-            f"累计搜索：\t{recorder.get_done_dest_str_of(2)}",
-            f"累计导出：\t{recorder.get_done_dest_str_of(1)}",
-            f"剩余时间：\t{recorder.get_eta_str()}",
+            f"累计搜索：\t{tr_processed.get_done()}",
+            f"累计导出：\t{tr_file_saving.get_done()}",
+            f"剩余时间：\t{tracker.get_eta_str()}",
         ])
         ###
         subdestdir = osp.dirname(i).strip(osp.sep).replace(rootdir, '').strip(osp.sep)
-        thread_ctrl.run_subthread(image_resolve, (i, osp.join(destdir, subdestdir), on_processed, on_file_queued, on_file_saved), \
+        thread_ctrl.run_subthread(image_resolve, (i, osp.join(destdir, subdestdir), \
+            tr_processed.report, tr_file_saving.update_demand, tr_file_saving.report), \
             name=f"CBThread:{id(i)}")
 
     ui.reset()
     ui.loop_stop()
-    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or recorder.get_progress() < 1:
+    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
         ui.request([
             "正在批量合并图片...",
-            recorder.get_progress_str(),
-            f"累计搜索：\t{recorder.get_done_dest_str_of(2)}",
-            f"累计导出：\t{recorder.get_done_dest_str_of(1)}",
-            f"剩余时间：\t{recorder.get_eta_str()}",
+            tracker.get_progress_str(),
+            f"累计搜索：\t{tr_processed.get_done()}",
+            f"累计导出：\t{tr_file_saving.get_done()}",
+            f"剩余时间：\t{tracker.get_eta_str()}",
         ])
         ui.refresh(post_delay=0.1)
 
     ui.reset()
     print("\n批量合并图片结束!", s=1)
-    print(f"  累计导出 {recorder.get_done_of(1)} 张照片")
-    print(f"  此项用时 {round(recorder.get_rt(), 1)} 秒")
+    print(f"  累计导出 {tr_file_saving.get_done()} 张照片")
+    print(f"  此项用时 {round(tracker.get_rt(), 1)} 秒")
