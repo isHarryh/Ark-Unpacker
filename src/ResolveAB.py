@@ -288,12 +288,12 @@ def main(src:str, destdir:str, do_del:bool=False,
         #(i stands for a file's path)
         ui.request([
             "正在批量解包...",
-            tracker.get_progress_str(),
+            tracker.to_progress_bar_str(),
             f"当前目录：\t{osp.basename(osp.dirname(i))}",
             f"当前文件：\t{osp.basename(i)}",
-            f"累计解包：\t{tr_processed.get_done()}",
-            f"累计导出：\t{tr_file_saving.get_done()}",
-            f"剩余时间：\t{tracker.get_eta_str()}",
+            f"累计解包：\t{tr_processed.to_progress_str()}",
+            f"累计导出：\t{tr_file_saving.to_progress_str()}",
+            f"剩余时间：\t{tracker.to_eta_str()}",
         ])
         ###
         subdestdir = osp.dirname(i).strip(osp.sep).replace(src, '').strip(osp.sep)
@@ -309,10 +309,10 @@ def main(src:str, destdir:str, do_del:bool=False,
     while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
         ui.request([
             "正在批量解包...",
-            tracker.get_progress_str(),
-            f"累计解包：\t{tr_processed.get_done()}",
-            f"累计导出：\t{tr_file_saving.get_done()}",
-            f"剩余时间：\t{tracker.get_eta_str()}",
+            tracker.to_progress_bar_str(),
+            f"累计解包：\t{tr_processed.to_progress_str()}",
+            f"累计导出：\t{tr_file_saving.to_progress_str()}",
+            f"剩余时间：\t{tracker.to_eta_str()}",
         ])
         ui.refresh(post_delay=0.1)
 

@@ -91,10 +91,10 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
         #(i stands for a source dir's path)
         ui.request([
             "正在分拣模型...",
-            tracker.get_progress_str(),
+            tracker.to_progress_bar_str(),
             f"当前搜索：\t{osp.basename(upkdir)}",
             f"累计分拣：\t{collected.now()}",
-            f"剩余时间：\t{tracker.get_eta_str()}",
+            f"剩余时间：\t{tracker.to_eta_str()}",
         ])
         ###
         thread_ctrl.run_subthread(collect_models, (upkdir, destdir, True, tr_finished.report, collected.update), \
@@ -105,9 +105,9 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
     while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
         ui.request([
             "正在分拣模型...",
-            tracker.get_progress_str(),
+            tracker.to_progress_bar_str(),
             f"累计分拣：\t{collected.now()}",
-            f"剩余时间：\t{tracker.get_eta_str()}",
+            f"剩余时间：\t{tracker.to_eta_str()}",
         ])
         ui.refresh(post_delay=0.1)
 

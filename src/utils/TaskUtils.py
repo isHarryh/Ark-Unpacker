@@ -272,6 +272,7 @@ class TaskReporter():
         self._demand = demand
         self._done = 0
         self._timestamps = queue.Queue(maxsize=window_size)
+        self._internal_lock = threading.Lock()
 
     def report(self, success:bool=True):
         """Reports that one task has been successfully done (or failed).
@@ -279,20 +280,22 @@ class TaskReporter():
         :param success: `True` to let `done += 1`, `False` to let `demand -= 1`;
         :rtype: None;
         """
-        if success:
-            self._done += 1
-            if self._timestamps.full():
-                # Remove the oldest timestamp if the queue is full
-                self._timestamps.get()
-            # Record the current completion timestamp
-            self._timestamps.put(time.time())
-        else:
-            # Task failed, decrease the demand
-            self._demand -= 1
+        with self._internal_lock:
+            if success:
+                self._done += 1
+                if self._timestamps.full():
+                    # Remove the oldest timestamp if the queue is full
+                    self._timestamps.get()
+                # Record the current completion timestamp
+                self._timestamps.put(time.time())
+            else:
+                # Task failed, decrease the demand
+                self._demand -= 1
 
     def update_demand(self, delta:int=1):
         """Updates the number of the tasks to be done by the given value."""
-        self._demand += delta
+        with self._internal_lock:
+            self._demand += delta
 
     def get_demand(self):
         """Gets the number of the tasks to be done."""
@@ -315,8 +318,12 @@ class TaskReporter():
         task_count = len(timestamps) - 1
         return task_count / delta_time if delta_time > 0 else 0.0
 
-    def __str__(self):
-        """Returns a string representing the done and demand of the tasks."""
+    def to_progress_str(self):
+        """Returns a string representing the done and demand of the tasks.
+
+        :returns: A human-readable string;
+        :rtype: str;
+        """
         return f"{self._done}/{self._demand}"
     #EndClass
 
@@ -365,7 +372,7 @@ class TaskReporterTracker():
         self._cache_pg = max(self._cache_pg, pg)
         return self._cache_pg if force_inc else pg
 
-    def get_progress_str(self, force_inc:bool=True, length:int=25):
+    def to_progress_bar_str(self, force_inc:bool=True, length:int=25):
         """Gets a string representing the current progress.
 
         :param force_inc: Whether prevent the progress to decrease;
@@ -374,9 +381,9 @@ class TaskReporterTracker():
         :rtype: str;
         """
         p = self.get_progress(force_inc)
-        return f"[{TaskReporterTracker._get_progress_bar_str(p, length)}] {color(2, 0, 1)}{p:.1%}"
+        return f"[{TaskReporterTracker._format_progress_bar_str(p, length)}] {color(2, 0, 1)}{p:.1%}"
 
-    def get_eta_str(self):
+    def to_eta_str(self):
         """Gets a string representing the estimated time to complete all tasks.
 
         :returns: A human-readable string;
@@ -393,7 +400,7 @@ class TaskReporterTracker():
         return '--:--'
 
     @staticmethod
-    def _get_progress_bar_str(progress:float, length:int):
+    def _format_progress_bar_str(progress:float, length:int):
         try:
             add_chars = (' ', '▏', '▎', '▍', '▌', '▋', '▊', '▉', '█')
             max_idx = len(add_chars) - 1

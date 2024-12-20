@@ -156,9 +156,10 @@ class SafeSaver(WorkerCtrl):
                         # Invoke callback with destination path as argument
                         if on_saved:
                             on_saved(dest)
+                            Logger.debug(f"Saver: Saved file \"{dest}\"")
                             return
         except Exception as arg:
-            Logger.error(f"Saver: Failed to save file {dest} because: Exception{type(arg)} {arg}")
+            Logger.error(f"Saver: Failed to save file \"{dest}\" because: Exception{type(arg)} {arg}")
         # Invoke call back with `None` indicating the file was not saved
         if on_saved:
             on_saved(None)
