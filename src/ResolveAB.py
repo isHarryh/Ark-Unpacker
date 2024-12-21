@@ -2,6 +2,7 @@
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
 import os.path as osp
+from contextlib import ContextDecorator
 from typing import Any, Sequence
 
 import UnityPy
@@ -89,28 +90,24 @@ class Resource:
         for mono in self.monobehaviors:
             #(i stands for a MonoBehavior)
             success = False
-            if mono.serialized_type.nodes:
+            with Resource.TreeReader(mono) as tree:
                 # As asset:
-                tree = mono.read_typetree()
                 if 'skeletonDataAsset' not in tree.keys():
                     continue # Skip non-skeleton asset
                 mono_sd = self.get_object_by_pathid(tree['skeletonDataAsset'], self.monobehaviors)
-                if mono_sd.serialized_type.nodes:
+                with Resource.TreeReader(mono_sd) as tree_sd:
                     # As skeleton data asset:
-                    tree_sd = mono_sd.read_typetree()
                     skel = self.get_object_by_pathid(tree_sd['skeletonJSON'], self.textassets)
                     mono_ad = self.get_object_by_pathid(tree_sd['atlasAssets'][0], self.monobehaviors)
-                    if mono_ad.serialized_type.nodes:
+                    with Resource.TreeReader(mono_ad) as tree_ad:
                         # As atlas data asset:
-                        tree_ad = mono_ad.read_typetree()
                         atlas = self.get_object_by_pathid(tree_ad['atlasFile'], self.textassets)
                         list2mat = [self.get_object_by_pathid(i, self.materials) for i in tree_ad['materials']]
                         list2tex = []
                         for mat in list2mat:
                             tex_rgb, tex_alpha = None, None
-                            if mat.serialized_type.nodes:
+                            with Resource.TreeReader(mat) as tree_mat:
                                 # As material asset:
-                                tree_mat = mat.read_typetree()
                                 tex_envs = tree_mat['m_SavedProperties']['m_TexEnvs']
                                 for tex in tex_envs:
                                     if tex[0] == '_MainTex':
@@ -142,10 +139,28 @@ class Resource:
                     self.__rename_add_prefix(j, prefix)
 
     @staticmethod
-    def __rename_add_prefix(obj:"uc.TextAsset", pre:str):
+    def __rename_add_prefix(obj:"uc.TextAsset|uc.Texture2D", pre:str):
         """Adds a prefix to rename the Spine-related files."""
         if obj and not obj.name.startswith(pre):
             obj.name = str(pre + obj.name)
+
+    class TreeReader(ContextDecorator):
+        """Reader of the serialized type tree of Unity objects."""
+
+        def __init__(self, obj:"uc.Object|UnityPy.files.ObjectReader|None"):
+            self.obj = obj
+
+        def __enter__(self):
+            if self.obj is None:
+                raise AttributeError("Given object is none")
+            if self.obj.serialized_type and getattr(self.obj.serialized_type, 'nodes'):
+                tree = self.obj.read_typetree()
+                if isinstance(tree, dict):
+                    return tree
+            raise AttributeError("Given object has no serialized type tree")
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            return False # Hand down the exception
 
     class SpineAsset:
         UNKNOWN = 'Unknown'
