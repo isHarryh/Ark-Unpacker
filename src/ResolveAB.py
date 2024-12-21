@@ -2,6 +2,7 @@
 # Copyright (c) 2022-2024, Harry Huang
 # @ BSD 3-Clause License
 import os.path as osp
+from typing import Any, Sequence
 
 import UnityPy
 import UnityPy.classes as uc
@@ -58,7 +59,7 @@ class Resource:
                         Logger.debug(f"ResolveAB: Resource \"{self.name}\" internally named \"{i.name}\"")
                         self.name = osp.basename(i.name)
 
-    def get_object_by_pathid(self, pathid:"int|dict", search_in:"list[uc.GameObject]|None"=None):
+    def get_object_by_pathid(self, pathid:"int|dict", search_in:"Sequence[uc.Object]|None"=None):
         """Gets the object with the given PathID.
 
         :param pathid: PathID in int or a dict containing `m_PathID` field;
@@ -118,17 +119,9 @@ class Resource:
                                         tex_alpha = self.get_object_by_pathid(tex[1]['m_Texture'], self.texture2ds)
                             list2tex.append((tex_rgb, tex_alpha))
                         # Pack into Spine asset instance
-                        spine = Resource.SpineAsset(skel, atlas, list2tex)
-                        if spine.is_available():
-                            # Succeeded
-                            if skel.name.lower().startswith('dyn_'):
-                                spine.type = Resource.SpineAsset.DYN_ILLUST
-                            elif 'Relax' in tree['_animationName'] or skel.name.lower().startswith('build_'):
-                                spine.type = Resource.SpineAsset.BUILDING
-                            else:
-                                spine.type = Resource.SpineAsset.BATTLE_FRONT if spine.is_front_geq_back() else Resource.SpineAsset.BATTLE_BACK
-                            spines.append(spine)
-                            success = True
+                        spine = Resource.SpineAsset(skel, atlas, list2tex, tree['_animationName'])
+                        spines.append(spine)
+                        success = True
             if not success:
                 Logger.warn(f"ResolveAB: Failed to handle skeletonDataAsset at pathId {mono.path_id} of {skel.name}.")
         self.spines = spines
@@ -149,7 +142,7 @@ class Resource:
                     self.__rename_add_prefix(j, prefix)
 
     @staticmethod
-    def __rename_add_prefix(obj:uc.GameObject, pre:str):
+    def __rename_add_prefix(obj:"uc.TextAsset", pre:str):
         """Adds a prefix to rename the Spine-related files."""
         if obj and not obj.name.startswith(pre):
             obj.name = str(pre + obj.name)
@@ -161,22 +154,25 @@ class Resource:
         BATTLE_BACK = 'BattleBack'
         DYN_ILLUST = 'DynIllust'
 
-        def __init__(self, skel:uc.TextAsset, atlas:uc.TextAsset, tex_list:"list[tuple[uc.Texture2D]]", type:str=UNKNOWN):
+        def __init__(self, skel:Any, atlas:Any, tex_list:"list[tuple[uc.Texture2D,uc.Texture2D]]", anim_list:"list[str]"):
+            if not isinstance(skel, uc.TextAsset) or not isinstance(atlas, uc.TextAsset):
+                raise TypeError("Spine asset unavailable, bad skel or atlas")
+            if not isinstance(tex_list, list) or len(tex_list) == 0:
+                raise TypeError("Spine asset unavailable, bad textures")
             self.skel = skel
             self.atlas = atlas
             self.tex_list = tex_list
-            self.type = type
+            self.type = Resource.SpineAsset.UNKNOWN
+            if skel.name.lower().startswith('dyn_'):
+                self.type = Resource.SpineAsset.DYN_ILLUST
+            elif 'Relax' in anim_list or skel.name.lower().startswith('build_'):
+                self.type = Resource.SpineAsset.BUILDING
+            else:
+                self.type = Resource.SpineAsset.BATTLE_FRONT if self.is_front_geq_back() else Resource.SpineAsset.BATTLE_BACK
 
         def is_front_geq_back(self):
             t = self.atlas.text
             return t.count('\nF_') + t.count('\nf_') + t.count('\nC_') + t.count('\nc_') >= t.count('\nB_') + t.count('\nb_')
-
-        def is_available(self):
-            if not isinstance(self.skel, uc.TextAsset) or not isinstance(self.atlas, uc.TextAsset):
-                return False
-            if not isinstance(self.tex_list, list) or len(self.tex_list) == 0:
-                return False
-            return True
 
         def get_common_name(self):
             if isinstance (self.atlas, uc.TextAsset):
@@ -184,22 +180,21 @@ class Resource:
             return "Unknown"
 
         def save_spine(self, destdir:str, on_queued:staticmethod, on_saved:staticmethod):
-            if self.is_available():
-                for i in self.tex_list:
-                    if i[0]:
-                        rgb = i[0].image
-                        if i[1]:
-                            rgba = AlphaRGBCombiner(i[1].image).combine_with(rgb)
-                        else:
-                            Logger.debug(f"ResolveAB: Spine asset \"{i[0].name}\" found with no Alpha texture.")
-                            rgba = rgb
-                        if SafeSaver.save_image(rgba, destdir, i[0].name, on_queued=on_queued, on_saved=on_saved):
-                            Logger.debug(f"ResolveAB: Spine asset \"{i[0].name}\" found.")
+            for i in self.tex_list:
+                if i[0]:
+                    rgb = i[0].image
+                    if i[1]:
+                        rgba = AlphaRGBCombiner(i[1].image).combine_with(rgb)
                     else:
-                        Logger.warn("ResolveAB: Spine asset RGB texture missing.")
-                for i in (self.atlas, self.skel):
-                    SafeSaver.save_object(i, destdir, i.name, on_queued, on_saved)
-                    Logger.debug(f"ResolveAB: Spine asset \"{i.name}\" found.")
+                        Logger.debug(f"ResolveAB: Spine asset \"{i[0].name}\" found with no Alpha texture.")
+                        rgba = rgb
+                    if SafeSaver.save_image(rgba, destdir, i[0].name, on_queued=on_queued, on_saved=on_saved):
+                        Logger.debug(f"ResolveAB: Spine asset \"{i[0].name}\" found.")
+                else:
+                    Logger.warn("ResolveAB: Spine asset RGB texture missing.")
+            for i in (self.atlas, self.skel):
+                SafeSaver.save_object(i, destdir, i.name, on_queued, on_saved)
+                Logger.debug(f"ResolveAB: Spine asset \"{i.name}\" found.")
         #EndClass
     #EndClass
 
