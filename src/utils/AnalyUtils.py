@@ -8,7 +8,7 @@ from collections import defaultdict
 
 class TestRT(ContextDecorator):
     """Utility class for testing the running time of a code block. Usage is shown below.
-    
+
     ```
     with TestRT('scope'):
         pass # The codes to test
@@ -28,8 +28,9 @@ class TestRT(ContextDecorator):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        span = time.time() - self.start_time
-        TestRT._records[self.name].append(span)
+        if self.start_time:
+            span = time.time() - self.start_time
+            TestRT._records[self.name].append(span)
         return False # Hand down the exception
 
     @staticmethod

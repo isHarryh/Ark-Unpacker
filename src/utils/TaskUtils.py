@@ -13,7 +13,7 @@ from .Logger import Logger
 class ThreadCtrl():
     """Controller for Multi Threading."""
 
-    def __init__(self, max_subthread:int=None):
+    def __init__(self, max_subthread:"int|None"=None):
         """Initializes a tool for multi threading."""
         self.__sts:"list[threading.Thread]" = []
         if not max_subthread:
@@ -29,13 +29,13 @@ class ThreadCtrl():
         self.__sts = list(filter(lambda x:x.is_alive(), self.__sts))
         return len(self.__sts)
 
-    def run_subthread(self, fun, args:tuple=None, kwargs:dict=None, name:"str|None"=None):
+    def run_subthread(self, fun, args:"tuple|None"=None, kwargs:"dict|None"=None, name:"str|None"=None):
         """Creates a sub thread and run it."""
         while self.count_subthread() >= self.__max:
             pass
         ts = threading.Thread(target=fun,
-                              args=args if args else (),
-                              kwargs=kwargs if kwargs else {},
+                              args=args if args is not None else (),
+                              kwargs=kwargs if kwargs is not None else {},
                               daemon=True,
                               name=name)
         self.__sts.append(ts)

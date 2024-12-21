@@ -58,7 +58,7 @@ class Resource:
                         Logger.debug(f"ResolveAB: Resource \"{self.name}\" internally named \"{i.name}\"")
                         self.name = osp.basename(i.name)
 
-    def get_object_by_pathid(self, pathid:"int|dict", search_in:"list|None"=None):
+    def get_object_by_pathid(self, pathid:"int|dict", search_in:"list[uc.GameObject]|None"=None):
         """Gets the object with the given PathID.
 
         :param pathid: PathID in int or a dict containing `m_PathID` field;
@@ -66,10 +66,16 @@ class Resource:
         :returns: The GameObject, `None` for not found;
         """
         _key = 'm_PathID'
-        pathid:int = pathid[_key] if isinstance(pathid, dict) and _key in pathid.keys() else pathid
-        lst:"list[uc.GameObject]" = self.env.objects if not search_in else search_in
+        if isinstance(pathid, dict):
+            if _key in pathid:
+                _pathid = int(pathid[_key])
+            else:
+                return None
+        else:
+            _pathid = pathid
+        lst = self.env.objects if not search_in else search_in
         for i in lst:
-            if i.path_id == pathid:
+            if i.path_id == _pathid:
                 return i
         return None
 
@@ -155,7 +161,7 @@ class Resource:
         BATTLE_BACK = 'BattleBack'
         DYN_ILLUST = 'DynIllust'
 
-        def __init__(self, skel:uc.TextAsset, atlas:uc.TextAsset, tex_list:"list[tuple[uc.Texture2D]]", type:int=UNKNOWN):
+        def __init__(self, skel:uc.TextAsset, atlas:uc.TextAsset, tex_list:"list[tuple[uc.Texture2D]]", type:str=UNKNOWN):
             self.skel = skel
             self.atlas = atlas
             self.tex_list = tex_list

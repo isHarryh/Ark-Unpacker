@@ -65,8 +65,11 @@ class AlphaRGBCombiner:
             return flist[0]
         else:
             best, similarity = AlphaRGBCombiner.choose_most_similar_rgb(fp_alpha, flist)
-            Logger.info(f"CombineRGBwithA: \"{best}\" matched \"{fp_alpha}\" among {len(flist)} candidates, confidentiality {similarity}")
-            return best
+            if best:
+                Logger.info(f"CombineRGBwithA: \"{best}\" matched \"{fp_alpha}\" among {len(flist)} candidates, confidentiality {similarity}")
+                return best
+            else:
+                raise NoRGBImageMatchedError(fp_alpha)
 
     @staticmethod
     def choose_most_similar_rgb(alpha, candidates:"list[str]"):
@@ -85,8 +88,8 @@ class AlphaRGBCombiner:
         for i in AlphaRGBCombiner.PATTERNS:
             m = i.fullmatch(basename)
             if m:
-                return m.group(1)
-        return  None
+                return str(m.group(1))
+        return None
 
     @staticmethod
     def as_image(obj:"str|Image.Image", mode:str):
