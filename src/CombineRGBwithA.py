@@ -6,7 +6,6 @@ import os
 import os.path as osp
 
 from PIL import Image
-from .utils.Config import Config, PerformanceLevel
 from .utils.GlobalMethods import print, rmdir, get_filelist, is_image_file
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver

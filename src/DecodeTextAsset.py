@@ -7,7 +7,6 @@ import bson
 import numpy as np
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
-from .utils.Config import Config, PerformanceLevel
 from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file, \
                                  is_known_asset_file, is_binary_file, get_modules_from_package_name
 from .utils.Logger import Logger

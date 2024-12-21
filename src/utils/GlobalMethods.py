@@ -40,10 +40,10 @@ def input(text:str="", c:int=7, bg:int=0, s:int=0, y:int=0):
     ctrl = f"\033[K\033[{y};1H" if y > 0 else ""
     return builtins.input(f"{ctrl}{color(c, bg, s)}{text}\033[?25h")
 
-def print(text:str="", c:int=7, bg:int=0, s:int=0, y:int=0):
+def print(obj:object="", c:int=7, bg:int=0, s:int=0, y:int=0):
     """Enhanced version of printing in interactive CLI.
 
-    :param text: The text to print;
+    :param obj: The object to print;
     :param c: The color [0=black,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
     :param bg: The background color [0=black,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
     :param s: The style [0=default,1=bold,4=underlined,5=flashing,7=inverted,8=none];
@@ -51,7 +51,7 @@ def print(text:str="", c:int=7, bg:int=0, s:int=0, y:int=0):
     :rtype: None;
     """
     ctrl = f'\033[K\033[{y};{1}H' if y > 0 else ''
-    builtins.print(f"\033[?25l{ctrl}{color(c, bg, s)}{text}")
+    builtins.print(f"\033[?25l{ctrl}{color(c, bg, s)}{obj}")
 
 def clear(use_ansi:bool=False):
     """Clears the CLI output.

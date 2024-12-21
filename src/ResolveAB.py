@@ -8,7 +8,6 @@ import UnityPy.classes as uc
 import UnityPy.files
 import UnityPy.streams
 from .CombineRGBwithA import AlphaRGBCombiner
-from .utils.Config import Config, PerformanceLevel
 from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver

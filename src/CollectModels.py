@@ -5,7 +5,6 @@ import re
 import shutil
 import os.path as osp
 
-from .utils.Config import Config, PerformanceLevel
 from .utils.GlobalMethods import print, rmdir, get_dirlist
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
