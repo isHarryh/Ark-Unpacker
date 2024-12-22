@@ -10,7 +10,7 @@ import UnityPy.classes as uc
 import UnityPy.files
 import UnityPy.streams
 from .CombineRGBwithA import AlphaRGBCombiner
-from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file
+from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file, stacktrace
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
 from .utils.TaskUtils import ThreadCtrl, UICtrl, TaskReporter, TaskReporterTracker
@@ -87,62 +87,42 @@ class Resource:
         :rtype: None;
         """
         spines:"list[Resource.SpineAsset]" = []
-        for mono in self.monobehaviors:
-            #(i stands for a MonoBehavior)
-            success = False
-            with Resource.TreeReader(mono) as tree:
-                # As asset:
-                if 'skeletonDataAsset' not in tree.keys():
-                    continue # Skip non-skeleton asset
-                mono_sd = self.get_object_by_pathid(tree['skeletonDataAsset'], self.monobehaviors)
-                with Resource.TreeReader(mono_sd) as tree_sd:
-                    # As skeleton data asset:
-                    skel = self.get_object_by_pathid(tree_sd['skeletonJSON'], self.textassets)
-                    mono_ad = self.get_object_by_pathid(tree_sd['atlasAssets'][0], self.monobehaviors)
-                    with Resource.TreeReader(mono_ad) as tree_ad:
-                        # As atlas data asset:
-                        atlas = self.get_object_by_pathid(tree_ad['atlasFile'], self.textassets)
-                        list2mat = [self.get_object_by_pathid(i, self.materials) for i in tree_ad['materials']]
-                        list2tex = []
-                        for mat in list2mat:
-                            tex_rgb, tex_alpha = None, None
-                            with Resource.TreeReader(mat) as tree_mat:
-                                # As material asset:
-                                tex_envs = tree_mat['m_SavedProperties']['m_TexEnvs']
-                                for tex in tex_envs:
-                                    if tex[0] == '_MainTex':
-                                        tex_rgb = self.get_object_by_pathid(tex[1]['m_Texture'], self.texture2ds)
-                                    elif tex[0] == '_AlphaTex':
-                                        tex_alpha = self.get_object_by_pathid(tex[1]['m_Texture'], self.texture2ds)
-                            list2tex.append((tex_rgb, tex_alpha))
-                        # Pack into Spine asset instance
-                        spine = Resource.SpineAsset(skel, atlas, list2tex, tree['_animationName'])
-                        spines.append(spine)
-                        success = True
-            if not success:
-                Logger.warn(f"ResolveAB: Failed to handle skeletonDataAsset at pathId {mono.path_id} of {skel.name}.")
+        try:
+            for mono in self.monobehaviors:
+                #(i stands for a MonoBehavior)
+                with Resource.TreeReader(mono) as tree:
+                    # As asset:
+                    if 'skeletonDataAsset' not in tree.keys():
+                        continue # Skip non-skeleton asset
+                    mono_sd = self.get_object_by_pathid(tree['skeletonDataAsset'], self.monobehaviors)
+                    with Resource.TreeReader(mono_sd) as tree_sd:
+                        # As skeleton data asset:
+                        skel = self.get_object_by_pathid(tree_sd['skeletonJSON'], self.textassets)
+                        mono_ad = self.get_object_by_pathid(tree_sd['atlasAssets'][0], self.monobehaviors)
+                        with Resource.TreeReader(mono_ad) as tree_ad:
+                            # As atlas data asset:
+                            atlas = self.get_object_by_pathid(tree_ad['atlasFile'], self.textassets)
+                            list2mat = [self.get_object_by_pathid(i, self.materials) for i in tree_ad['materials']]
+                            list2tex = []
+                            for mat in list2mat:
+                                tex_rgb, tex_alpha = None, None
+                                with Resource.TreeReader(mat) as tree_mat:
+                                    # As material asset:
+                                    tex_envs = tree_mat['m_SavedProperties']['m_TexEnvs']
+                                    for tex in tex_envs:
+                                        if tex[0] == '_MainTex':
+                                            tex_rgb = self.get_object_by_pathid(tex[1]['m_Texture'], self.texture2ds)
+                                        elif tex[0] == '_AlphaTex':
+                                            tex_alpha = self.get_object_by_pathid(tex[1]['m_Texture'], self.texture2ds)
+                                list2tex.append((tex_rgb, tex_alpha))
+                            # Pack into Spine asset instance
+                            spine = Resource.SpineAsset(skel, atlas, list2tex, tree['_animationName'])
+                            spine.add_prefix()
+                            spines.append(spine)
+            #EndForeach
+        except Exception as arg:
+            Logger.warn(f"ResolveAB: Failed to handle skeletons in resource \"{self.name}\": {stacktrace()}")
         self.spines = spines
-
-    def rename_skeletons(self):
-        """Renames the Spine assets which includes skel, atlas and png files.
-        Since the Spine in Arknights have 4 or more forms (Building, BattleFront, BattleBack, DynIllust),
-        it is necessary to rename them so that name collisions can be avoided.
-
-        :rtype: None;
-        """
-        for spine in self.spines:
-            prefix = spine.type + osp.sep + spine.get_common_name() + osp.sep
-            self.__rename_add_prefix(spine.skel, prefix)
-            self.__rename_add_prefix(spine.atlas, prefix)
-            for i in spine.tex_list:
-                for j in i:
-                    self.__rename_add_prefix(j, prefix)
-
-    @staticmethod
-    def __rename_add_prefix(obj:"uc.TextAsset|uc.Texture2D", pre:str):
-        """Adds a prefix to rename the Spine-related files."""
-        if obj and not obj.name.startswith(pre):
-            obj.name = str(pre + obj.name)
 
     class TreeReader(ContextDecorator):
         """Reader of the serialized type tree of Unity objects."""
@@ -170,6 +150,7 @@ class Resource:
         DYN_ILLUST = 'DynIllust'
 
         def __init__(self, skel:Any, atlas:Any, tex_list:"list[tuple[uc.Texture2D,uc.Texture2D]]", anim_list:"list[str]"):
+            # Validate arguments
             if not isinstance(skel, uc.TextAsset) or not isinstance(atlas, uc.TextAsset):
                 raise TypeError("Spine asset unavailable, bad skel or atlas")
             if not isinstance(tex_list, list) or len(tex_list) == 0:
@@ -178,21 +159,36 @@ class Resource:
             self.atlas = atlas
             self.tex_list = tex_list
             self.type = Resource.SpineAsset.UNKNOWN
+            # Determine the type
             if skel.name.lower().startswith('dyn_'):
                 self.type = Resource.SpineAsset.DYN_ILLUST
             elif 'Relax' in anim_list or skel.name.lower().startswith('build_'):
                 self.type = Resource.SpineAsset.BUILDING
             else:
-                self.type = Resource.SpineAsset.BATTLE_FRONT if self.is_front_geq_back() else Resource.SpineAsset.BATTLE_BACK
+                t = self.atlas.text.lower()
+                if t.count('\nf_') + t.count('\nc_') >= t.count('\nb_'):
+                    self.type = Resource.SpineAsset.BATTLE_FRONT
+                else:
+                    self.type = Resource.SpineAsset.BATTLE_BACK
 
-        def is_front_geq_back(self):
-            t = self.atlas.text
-            return t.count('\nF_') + t.count('\nf_') + t.count('\nC_') + t.count('\nc_') >= t.count('\nB_') + t.count('\nb_')
+        def add_prefix(self):
+            """Renames the Spine assets which includes skel, atlas and png files.
+            Since the Spine in Arknights have 4 or more forms (Building, BattleFront, BattleBack, DynIllust),
+            it is necessary to rename them so that name collisions can be avoided.
 
-        def get_common_name(self):
-            if isinstance (self.atlas, uc.TextAsset):
-                return osp.splitext(osp.basename(self.atlas.name))[0]
-            return "Unknown"
+            :rtype: None;
+            """
+            def _add_prefix(obj:"uc.TextAsset|uc.Texture2D", pre:str):
+                if obj and not obj.name.startswith(pre):
+                    obj.name = pre + obj.name
+            # Get the prefix string
+            prefix = self.type + osp.sep + osp.splitext(osp.basename(self.atlas.name))[0] + osp.sep
+            # Do add prefix to skel, atlas and textures
+            _add_prefix(self.skel, prefix)
+            _add_prefix(self.atlas, prefix)
+            for i in self.tex_list:
+                for j in i:
+                    _add_prefix(j, prefix)
 
         def save_spine(self, destdir:str, on_queued:staticmethod, on_saved:staticmethod):
             for i in self.tex_list:
@@ -245,8 +241,6 @@ def ab_resolve(abfile:str, destdir:str, \
     try:
         # Preprocess
         res.sort_skeletons()
-        res.rename_skeletons()
-        ###
         if do_spine:
             for i in res.spines:
                 i.save_spine(destdir, on_file_queued, on_file_saved)
