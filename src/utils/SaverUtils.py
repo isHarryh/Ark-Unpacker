@@ -6,6 +6,7 @@ import os.path as osp
 import threading
 from io import BytesIO
 from contextlib import ContextDecorator
+from typing import Sequence
 
 import UnityPy.classes as uc
 from PIL import Image
@@ -89,10 +90,10 @@ class SafeSaver(WorkerCtrl):
         SafeSaver.save_bytes(bio.getvalue(), destdir, name, ext, on_queued, on_saved)
 
     @staticmethod
-    def save_object(obj:uc.GameObject, destdir:str, name:str, on_queued:staticmethod=None, on_saved:staticmethod=None):
-        """Saves the given Unity GameObject as a file. If a GameObject is not exportable, it does nothing.
+    def save_object(obj:uc.Object, destdir:str, name:str, on_queued:staticmethod=None, on_saved:staticmethod=None):
+        """Saves the given Unity object as a file. If a object is not exportable, it does nothing.
 
-        :param obj: The GameObject to save as file;
+        :param obj: The object to save as file;
         :param destdir: Destination directory;
         :param name: File name (without the extension);
         :param on_queued: Callback `f()` invoked when the file was queued, `None` for ignore;
@@ -126,18 +127,18 @@ class SafeSaver(WorkerCtrl):
             pass
 
     @staticmethod
-    def save_objects(lst:"list[uc.GameObject]", destdir:str, on_queued:staticmethod=None, on_saved:staticmethod=None):
-        """Saves all the Unity GameObjects in the given list as files.
-        If a GameObject is not exportable, it does nothing.
+    def save_objects(lst:"Sequence[uc.Object]", destdir:str, on_queued:staticmethod=None, on_saved:staticmethod=None):
+        """Saves all the Unity objects in the given list as files.
+        If a object is not exportable, it does nothing.
 
-        :param lst: The GameObjects list;
+        :param lst: The objects list;
         :param destdir: Destination directory;
         :param on_queued: Callback `f()` invoked when the file was queued, `None` for ignore;
         :param on_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
         :rtype: None;
         """
         for i in lst:
-            SafeSaver.save_object(i, destdir, i.name, on_queued, on_saved)
+            SafeSaver.save_object(i, destdir, getattr(i, 'name', 'Unknown'), on_queued, on_saved)
 
     @staticmethod
     def _save(data:bytes, destdir:str, name:str, ext:str, on_saved:staticmethod):
