@@ -4,6 +4,7 @@
 import re
 import os
 import os.path as osp
+from typing import Callable
 
 from PIL import Image
 from .utils.GlobalMethods import print, rmdir, get_filelist, is_image_file
@@ -125,7 +126,7 @@ class AlphaRGBCombiner:
         return 0 if diff_mean >= 255 else (255 if diff_mean <= 0 else 255 - diff_mean)
 
 def image_resolve(fp:str, destdir:str, \
-                  on_processed:staticmethod, on_file_queued:staticmethod, on_file_saved:staticmethod):
+                  on_processed:"Callable|None", on_file_queued:"Callable|None", on_file_saved:"Callable|None"):
     """Finds an RGB image to combine with the given Alpha image then saves the combined image into the given directory.
 
     :param fp: Path to the Alpha image;

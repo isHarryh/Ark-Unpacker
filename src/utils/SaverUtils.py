@@ -6,7 +6,7 @@ import os.path as osp
 import threading
 from io import BytesIO
 from contextlib import ContextDecorator
-from typing import Sequence
+from typing import Callable, Sequence
 
 import UnityPy.classes as uc
 from PIL import Image
@@ -58,7 +58,8 @@ class SafeSaver(WorkerCtrl):
         return SafeSaver.__instance
 
     @staticmethod
-    def save_bytes(data:bytes, destdir:str, name:str, ext:str, on_queued:staticmethod=None, on_saved:staticmethod=None):
+    def save_bytes(data:bytes, destdir:str, name:str, ext:str,
+                   on_queued:"Callable|None"=None, on_saved:"Callable|None"=None):
         """Saves a binary data to a file.
 
         :param data: Bytes data;
@@ -74,7 +75,8 @@ class SafeSaver(WorkerCtrl):
         SafeSaver.get_instance().submit((data, destdir, name, ext, on_saved))
 
     @staticmethod
-    def save_image(img:Image.Image, destdir:str, name:str, ext:str=_EXT_IMAGE, on_queued:staticmethod=None, on_saved:staticmethod=None):
+    def save_image(img:Image.Image, destdir:str, name:str, ext:str=_EXT_IMAGE,
+                   on_queued:"Callable|None"=None, on_saved:"Callable|None"=None):
         """Saves an image to a file.
 
         :param img: Image instance;
@@ -90,7 +92,8 @@ class SafeSaver(WorkerCtrl):
         SafeSaver.save_bytes(bio.getvalue(), destdir, name, ext, on_queued, on_saved)
 
     @staticmethod
-    def save_object(obj:uc.Object, destdir:str, name:str, on_queued:staticmethod=None, on_saved:staticmethod=None):
+    def save_object(obj:uc.Object, destdir:str, name:str,
+                    on_queued:"Callable|None"=None, on_saved:"Callable|None"=None):
         """Saves the given Unity object as a file. If a object is not exportable, it does nothing.
 
         :param obj: The object to save as file;
@@ -127,7 +130,8 @@ class SafeSaver(WorkerCtrl):
             pass
 
     @staticmethod
-    def save_objects(lst:"Sequence[uc.Object]", destdir:str, on_queued:staticmethod=None, on_saved:staticmethod=None):
+    def save_objects(lst:"Sequence[uc.Object]", destdir:str,
+                     on_queued:"Callable|None"=None, on_saved:"Callable|None"=None):
         """Saves all the Unity objects in the given list as files.
         If a object is not exportable, it does nothing.
 
@@ -141,7 +145,7 @@ class SafeSaver(WorkerCtrl):
             SafeSaver.save_object(i, destdir, getattr(i, 'name', 'Unknown'), on_queued, on_saved)
 
     @staticmethod
-    def _save(data:bytes, destdir:str, name:str, ext:str, on_saved:staticmethod):
+    def _save(data:bytes, destdir:str, name:str, ext:str, on_saved:"Callable|None"):
         try:
             dest = osp.join(destdir, name + ext)
             with TestRT('lock'):

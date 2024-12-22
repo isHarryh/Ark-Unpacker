@@ -3,7 +3,7 @@
 # @ BSD 3-Clause License
 import os.path as osp
 from contextlib import ContextDecorator
-from typing import Any, Sequence
+from typing import Any, Callable, Sequence
 
 import UnityPy
 import UnityPy.classes as uc
@@ -190,7 +190,7 @@ class Resource:
                 for j in i:
                     _add_prefix(j, prefix)
 
-        def save_spine(self, destdir:str, on_queued:staticmethod, on_saved:staticmethod):
+        def save_spine(self, destdir:str, on_queued:"Callable|None", on_saved:"Callable|None"):
             for i in self.tex_list:
                 if i[0]:
                     rgb = i[0].image
@@ -210,9 +210,9 @@ class Resource:
     #EndClass
 
 
-def ab_resolve(abfile:str, destdir:str, \
-               do_img:bool, do_txt:bool, do_aud:bool, do_spine:bool, \
-               on_processed:staticmethod=None, on_file_queued:staticmethod=None, on_file_saved:staticmethod=None):
+def ab_resolve(abfile:str, destdir:str,
+               do_img:bool, do_txt:bool, do_aud:bool, do_spine:bool,
+               on_processed:"Callable|None"=None, on_file_queued:"Callable|None"=None, on_file_saved:"Callable|None"=None):
     """Extracts an AB file.
 
     :param abfile: Path to the AB file;

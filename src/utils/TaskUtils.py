@@ -4,6 +4,7 @@
 import time
 import queue
 import threading
+from typing import Callable
 
 from .Config import PerformanceLevel, Config
 from .GlobalMethods import color, print, clear
@@ -47,7 +48,7 @@ class WorkerCtrl():
     LAYOFF_INTERVAL = 5
     BACKUP_THRESHOLD = 5
 
-    def __init__(self, handler:staticmethod, max_workers:int=1, name:str=""):
+    def __init__(self, handler:Callable, max_workers:int=1, name:str=""):
         """Initializes a Worker Controller.
 
         :param handler: The handler function of the workers;

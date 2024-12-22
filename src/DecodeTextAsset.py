@@ -3,6 +3,8 @@
 # @ BSD 3-Clause License
 import os.path as osp
 import json
+from typing import Callable
+
 import bson
 import numpy as np
 from Crypto.Cipher import AES
@@ -202,11 +204,8 @@ class FBOHandler:
         return FBOHandler._to_json_dict(self._root)
 
 
-def text_asset_resolve(fp:str,
-                       destdir:str,
-                       on_processed:staticmethod,
-                       on_file_queued:staticmethod,
-                       on_file_saved:staticmethod):
+def text_asset_resolve(fp:str, destdir:str,
+                       on_processed:"Callable|None", on_file_queued:"Callable|None", on_file_saved:"Callable|None"):
     """Decodes the give Arknights TextAsset file that is either FBO stored format or AES encrypted format,
     otherwise does nothing.
 

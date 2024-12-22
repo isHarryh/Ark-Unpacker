@@ -4,6 +4,7 @@
 import re
 import shutil
 import os.path as osp
+from typing import Callable
 
 from .utils.GlobalMethods import print, rmdir, get_dirlist
 from .utils.Logger import Logger
@@ -11,7 +12,7 @@ from .utils.SaverUtils import SafeSaver
 from .utils.TaskUtils import ThreadCtrl, Counter, UICtrl, TaskReporter, TaskReporterTracker
 
 
-def collect_models(upkdir:str, destdir:str, do_del:bool, on_finished:staticmethod, on_collected:staticmethod):
+def collect_models(upkdir:str, destdir:str, do_del:bool, on_finished:Callable, on_collected:Callable):
     error_occurred = False
     for model_type_dir in get_dirlist(upkdir, max_depth=1):
         model_type:str = osp.basename(model_type_dir) # Sub dir of one model type
