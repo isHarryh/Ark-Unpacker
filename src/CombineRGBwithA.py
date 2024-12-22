@@ -139,8 +139,9 @@ def image_resolve(fp:str, destdir:str, \
     try:
         handle = AlphaRGBCombiner(fp)
         result = handle.combine_with(AlphaRGBCombiner.search_rgb(fp))
-        SafeSaver.save_image(result, destdir, AlphaRGBCombiner.get_real_name(fp), \
-                             on_queued=on_file_queued, on_saved=on_file_saved)
+        real_name = AlphaRGBCombiner.get_real_name(fp)
+        if real_name:
+            SafeSaver.save_image(result, destdir, real_name, on_queued=on_file_queued, on_saved=on_file_saved)
     except NoRGBImageMatchedError:
         pass
     except BaseException as arg:

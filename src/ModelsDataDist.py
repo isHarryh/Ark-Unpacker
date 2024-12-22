@@ -6,6 +6,7 @@ import json
 import os
 import os.path as osp
 from datetime import datetime
+from typing import Any
 
 from .DecodeTextAsset import ArkFBOLibrary
 from .utils.GlobalMethods import color, print, get_dirlist, get_filelist
@@ -63,10 +64,13 @@ class ModelsDist:
     def get_gamedata(self, alias:tuple):
         for i in get_filelist(ModelsDist.TEMP_DIR):
             if any(osp.basename(i).startswith(a) for a in alias):
-                return ArkFBOLibrary.decode(i)
+                rst = ArkFBOLibrary.decode(i)
+                if rst is None:
+                    raise ValueError("Decoded data is none")
+                return rst
         raise FileNotFoundError(f"Failed to find data file with the name: {alias}")
 
-    def get_item_data(self, asset_id:str, type:str, style:str, sort_tags:list, name:str, appellation:str, sg_id:str, sg_name:str):
+    def get_item_data(self, asset_id:Any, type:Any, style:Any, sort_tags:list, name:Any, appellation:Any, sg_id:Any, sg_name:Any):
         return {
             "assetId": asset_id,
             "type": type,
@@ -146,6 +150,8 @@ class ModelsDist:
         raw:"dict[str,list]" = self.get_gamedata(('enemydata', 'enemy_database'))
         Logger.info("ModelsDataDist: Parsing enemy data.")
         collected = {}
+        if not isinstance(raw['Enemies'], dict):
+            raise TypeError("Value key 'Enemies' is not a dict")
         for k, v in raw['Enemies'].items():
             if k.startswith('enemy_'):
                 key_enemy = k.lower()[6:]

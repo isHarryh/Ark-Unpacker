@@ -44,7 +44,7 @@ class ArkFBOLibrary:
         return None
 
     @staticmethod
-    def decode(path:str, root_type:type=_AUTO_GUESS_ROOT_TYPE):
+    def decode(path:str, root_type:"type|None"=_AUTO_GUESS_ROOT_TYPE):
         """Decodes the given FlatBuffers binary file.
 
         :param path: The file path;
