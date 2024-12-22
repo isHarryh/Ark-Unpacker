@@ -74,7 +74,7 @@ class ArkAESLibrary:
 
     *Special thanks to ashlen (https://github.com/thesadru).*
     """
-    MASK_V2 = b'UITpAi82pHAWwnzqHRMCwPonJLIB3WCl'
+    MASK_V2 = b'UITpAi82pHAWwnzqHRMCwPonJLIB3WCl' # spell-checker: disable-line
 
     @staticmethod
     def aes_cbc_decrypt_bytes(data:bytes, mask:bytes, has_rsa:bool=True):
@@ -150,10 +150,10 @@ class FBOHandler:
             val_len_method = getattr(obj, 'ValueLength', None)
             if val_len_method:
                 # As key-array table
-                val = [FBOHandler._to_literal(obj.Value(i)) for i in range(val_len_method())]
+                val = [FBOHandler._to_literal(obj.Value(i)) for i in range(val_len_method())] # type: ignore
             else:
-                val = FBOHandler._to_literal(obj.Value())
-            data[FBOHandler._to_literal(obj.Key())] = val
+                val = FBOHandler._to_literal(obj.Value()) # type: ignore
+            data[FBOHandler._to_literal(obj.Key())] = val # type: ignore
         else:
             # As general object:
             for field_name in dir(obj):
@@ -183,7 +183,7 @@ class FBOHandler:
                                 # As key-value table:
                                 val = {}
                                 for i in range(field_len):
-                                    val.update(FBOHandler._to_json_dict(field(i)))
+                                    val.update(FBOHandler._to_json_dict(field(i))) # type: ignore
                             else:
                                 # As general table:
                                 val = []

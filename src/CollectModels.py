@@ -25,11 +25,11 @@ def collect_models(upkdir:str, destdir:str, do_del:bool, on_finished:Callable, o
             try:
                 newname = None
                 if model_type.startswith('Building') and re.match(r'(build_)?char_', model):
-                    newname = re.match(r'(build_)?char_(\d+_[0-9a-zA-Z]+(_[0-9a-zA-Z#]+)?)', model).group(2)
+                    newname = re.match(r'(build_)?char_(\d+_[0-9a-zA-Z]+(_[0-9a-zA-Z#]+)?)', model).group(2) # type: ignore
                 elif model_type.startswith('Battle') and re.match(r'enemy_', model):
-                    newname = re.match(r'enemy_(\d+_[0-9a-zA-Z]+(_\d+)?)', model).group(1)
+                    newname = re.match(r'enemy_(\d+_[0-9a-zA-Z]+(_\d+)?)', model).group(1) # type: ignore
                 elif model_type.startswith('DynIllust') and re.match(r'dyn_illust_char_', model):
-                    newname = "dyn_illust_" + re.match(r'dyn_illust_char_(\d+_[0-9a-zA-Z]+(_[0-9a-zA-Z#]+)?)', model).group(1)
+                    newname = "dyn_illust_" + re.match(r'dyn_illust_char_(\d+_[0-9a-zA-Z]+(_[0-9a-zA-Z#]+)?)', model).group(1) # type: ignore
                 if newname:
                     # Move
                     dest = osp.join(destdir, newname)

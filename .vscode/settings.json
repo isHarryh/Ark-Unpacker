@@ -1,9 +1,5 @@
 {
-    "python.analysis.typeCheckingMode": "off",
-    "pylint.args": [
-        "--max-line-length=120",
-        "--disable=W0212,W0622,W0718,C3001"
-    ],
+    "python.analysis.typeCheckingMode": "basic",
     "cSpell.language": "en,en-US,en-GB",
     "cSpell.words": [
         "abfile",
@@ -43,8 +39,10 @@
         "srcdirs",
         "subdestdir",
         "subthread",
+        "textasset",
         "textassets",
         "typetree",
+        "unpad",
         "upkdir"
     ]
 }
