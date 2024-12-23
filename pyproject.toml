@@ -17,7 +17,7 @@ pycryptodome = "~3.21"
 UnityPy = "~1.10"
 
 [tool.poetry.dev-dependencies]
-pyinstaller = "6.8.0"
+pyinstaller = "6.10.0"
 
 [[tool.poetry.source]]
 name = "PyPI-Tsinghua"
