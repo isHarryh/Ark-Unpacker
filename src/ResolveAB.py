@@ -65,7 +65,7 @@ class Resource:
 
         :param pathid: PathID in int or a dict containing `m_PathID` field;
         :param search_in: Searching range, `None` for all objects;
-        :returns: The GameObject, `None` for not found;
+        :returns: The object, `None` for not found;
         """
         _key = 'm_PathID'
         if isinstance(pathid, dict):
