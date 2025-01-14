@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ArkUnpacker"
-version = "3.4.0"
+version = "3.4.1"
 description = "Arknights Assets Unpacker"
 authors = ["Harry Huang <harryhuang2652@qq.com>"]
 license = "BSD-3-Clause"
