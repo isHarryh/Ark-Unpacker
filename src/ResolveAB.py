@@ -116,7 +116,7 @@ class Resource:
                                             tex_alpha = self.get_object_by_pathid(tex[1]['m_Texture'], self.texture2ds)
                                 list2tex.append((tex_rgb, tex_alpha))
                             # Pack into Spine asset instance
-                            spine = Resource.SpineAsset(skel, atlas, list2tex, tree['_animationName'])
+                            spine = Resource.SpineAsset(skel, atlas, list2tex, tree.get('_animationName', None))
                             spine.add_prefix()
                             spines.append(spine)
             #EndForeach
@@ -149,7 +149,7 @@ class Resource:
         BATTLE_BACK = 'BattleBack'
         DYN_ILLUST = 'DynIllust'
 
-        def __init__(self, skel:Any, atlas:Any, tex_list:"list[tuple[uc.Texture2D,uc.Texture2D]]", anim_list:"list[str]"):
+        def __init__(self, skel:Any, atlas:Any, tex_list:"list[tuple[uc.Texture2D,uc.Texture2D]]", anim_list:"list[str]|None"):
             # Validate arguments
             if not isinstance(skel, uc.TextAsset) or not isinstance(atlas, uc.TextAsset):
                 raise TypeError("Spine asset unavailable, bad skel or atlas")
@@ -162,7 +162,7 @@ class Resource:
             # Determine the type
             if skel.name.lower().startswith('dyn_'):
                 self.type = Resource.SpineAsset.DYN_ILLUST
-            elif 'Relax' in anim_list or skel.name.lower().startswith('build_'):
+            elif anim_list and 'Relax' in anim_list or skel.name.lower().startswith('build_'):
                 self.type = Resource.SpineAsset.BUILDING
             else:
                 t = self.atlas.text.lower()
