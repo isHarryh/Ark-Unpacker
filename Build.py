@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2022-2024, Harry Huang
+# Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
 import os, configparser
 import os.path as osp
@@ -7,7 +7,7 @@ import os.path as osp
 def __get_venv_dir():
     import re, subprocess
     rst = subprocess.run(['poetry', 'env', 'info'], capture_output=True)
-    
+
     if rst.returncode == 0:
         for l in rst.stdout.splitlines():
             match = re.search(r'Path:\s+(.+)', str(l, encoding='UTF-8'))
@@ -77,7 +77,7 @@ def __exec(cmd):
 def __build(proj_info, proj_dir, build_def):
     import time, shutil
     t1 = time.time()
-    
+
     print(f"Removing build dir...")
     os.chdir(proj_dir)
     build_dir = build_def['build-dir']
@@ -87,7 +87,7 @@ def __build(proj_info, proj_dir, build_def):
     print(f"Creating build dir...")
     os.mkdir(build_dir)
     os.chdir(build_dir)
-    
+
     print(f"Creating version file...")
     version_file = 'version.txt'
     with open(version_file, 'w', encoding='UTF-8') as f:
@@ -116,7 +116,7 @@ StringFileInfo([
   ])
 ])
 ''') # End f.write
-    
+
     print('Running pyinstaller...')
     cmd_pyinstaller = f"poetry run pyinstaller -F"
     cmd_pyinstaller += f" --name \"{proj_info['name']}-v{proj_info['version']}\""
