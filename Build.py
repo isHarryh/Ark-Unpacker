@@ -128,7 +128,9 @@ StringFileInfo([
     if 'add-data' in build_def.keys():
         for i in build_def['add-data'].split('|'):
             cmd_pyinstaller += f" --add-data \"{i}\"" if i else ""
-    cmd_pyinstaller += f" --hidden-import {build_def['hidden-import']}" if 'hidden-import' in build_def.keys() else ""
+    if 'hidden-import' in build_def.keys():
+        for i in build_def['hidden-import'].split('|'):
+            cmd_pyinstaller += f" --hidden-import \"{i}\"" if i else ""
     cmd_pyinstaller += f" --log-level {build_def['log-level']}" if 'log-level' in build_def.keys() else ""
     cmd_pyinstaller += f" \"{build_def['entry']}\""
     __exec(cmd_pyinstaller)
