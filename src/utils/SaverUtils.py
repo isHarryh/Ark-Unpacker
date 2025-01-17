@@ -103,7 +103,7 @@ class SafeSaver(WorkerCtrl):
         :param on_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
         :rtype: None;
         """
-        if obj.byte_size == 0:
+        if obj.object_reader is None or obj.object_reader.byte_size == 0:
             # No data:
             pass
         elif isinstance(obj, (uc.Sprite, uc.Texture2D)):
@@ -122,7 +122,7 @@ class SafeSaver(WorkerCtrl):
             return
         elif isinstance(obj, uc.TextAsset):
             # As raw file:
-            byte = bytes(obj.script)
+            byte = obj.m_Script.encode('utf-8', 'surrogateescape')
             SafeSaver.save_bytes(byte, destdir, name, SafeSaver._EXT_RAW, on_queued, on_saved)
             return
         else:
@@ -142,7 +142,7 @@ class SafeSaver(WorkerCtrl):
         :rtype: None;
         """
         for i in lst:
-            SafeSaver.save_object(i, destdir, getattr(i, 'name', 'Unknown'), on_queued, on_saved)
+            SafeSaver.save_object(i, destdir, getattr(i, 'm_Name', 'Unknown'), on_queued, on_saved)
 
     @staticmethod
     def _save(data:bytes, destdir:str, name:str, ext:str, on_saved:"Callable|None"):

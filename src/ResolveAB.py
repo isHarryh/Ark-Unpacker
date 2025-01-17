@@ -46,7 +46,7 @@ class Resource:
                 self.sprites.append(i)
             elif isinstance(i, uc.Texture2D):
                 self.texture2ds.append(i)
-            elif isinstance(i, uc.TextAsset):
+            elif isinstance(i, uc.TextAsset) and not isinstance(i, uc.MonoScript):
                 self.textassets.append(i)
             elif isinstance(i, uc.AudioClip):
                 self.audioclips.append(i)
@@ -55,16 +55,16 @@ class Resource:
             elif isinstance(i, uc.MonoBehaviour):
                 self.monobehaviors.append(i)
             elif isinstance(i, uc.AssetBundle):
-                if getattr(i, 'name'):
-                    if self.name != osp.basename(i.name):
-                        Logger.debug(f"ResolveAB: Resource \"{self.name}\" internally named \"{i.name}\"")
-                        self.name = osp.basename(i.name)
+                if getattr(i, 'm_Name', None):
+                    if self.name != osp.basename(i.m_Name):
+                        Logger.debug(f"ResolveAB: Resource \"{self.name}\" internally named \"{i.m_Name}\"")
+                        self.name = osp.basename(i.m_Name)
 
-    def get_object_by_pathid(self, pathid:"int|dict", search_in:"Sequence[uc.Object]|None"=None):
+    def get_object_by_pathid(self, pathid:"int|dict", search_in:"Sequence[uc.Object]"):
         """Gets the object with the given PathID.
 
         :param pathid: PathID in int or a dict containing `m_PathID` field;
-        :param search_in: Searching range, `None` for all objects;
+        :param search_in: Searching range;
         :returns: The object, `None` for not found;
         """
         _key = 'm_PathID'
@@ -75,9 +75,8 @@ class Resource:
                 return None
         else:
             _pathid = pathid
-        lst = self.env.objects if not search_in else search_in
-        for i in lst:
-            if i.path_id == _pathid:
+        for i in search_in:
+            if i.object_reader is not None and i.object_reader.path_id == _pathid:
                 return i
         return None
 
@@ -127,12 +126,12 @@ class Resource:
     class TreeReader(ContextDecorator):
         """Reader of the serialized type tree of Unity objects."""
 
-        def __init__(self, obj:"uc.Object|UnityPy.files.ObjectReader|None"):
-            self.obj = obj
+        def __init__(self, obj:"uc.Object|None"):
+            self.obj = obj.object_reader if isinstance(obj, uc.Object) else obj
 
         def __enter__(self):
             if self.obj is None:
-                raise AttributeError("Given object is none")
+                raise AttributeError("Given object or object reader is none")
             if self.obj.serialized_type and getattr(self.obj.serialized_type, 'nodes'):
                 tree = self.obj.read_typetree()
                 if isinstance(tree, dict):
@@ -160,12 +159,12 @@ class Resource:
             self.tex_list = tex_list
             self.type = Resource.SpineAsset.UNKNOWN
             # Determine the type
-            if skel.name.lower().startswith('dyn_'):
+            if skel.m_Name.lower().startswith('dyn_'):
                 self.type = Resource.SpineAsset.DYN_ILLUST
-            elif anim_list and 'Relax' in anim_list or skel.name.lower().startswith('build_'):
+            elif anim_list and 'Relax' in anim_list or skel.m_Name.lower().startswith('build_'):
                 self.type = Resource.SpineAsset.BUILDING
             else:
-                t = self.atlas.text.lower()
+                t = self.atlas.m_Script.lower()
                 if t.count('\nf_') + t.count('\nc_') >= t.count('\nb_'):
                     self.type = Resource.SpineAsset.BATTLE_FRONT
                 else:
@@ -179,10 +178,10 @@ class Resource:
             :rtype: None;
             """
             def _add_prefix(obj:"uc.TextAsset|uc.Texture2D", pre:str):
-                if obj and not obj.name.startswith(pre):
-                    obj.name = pre + obj.name
+                if obj and not obj.m_Name.startswith(pre):
+                    obj.m_Name = pre + obj.m_Name
             # Get the prefix string
-            prefix = self.type + osp.sep + osp.splitext(osp.basename(self.atlas.name))[0] + osp.sep
+            prefix = self.type + osp.sep + osp.splitext(osp.basename(self.atlas.m_Name))[0] + osp.sep
             # Do add prefix to skel, atlas and textures
             _add_prefix(self.skel, prefix)
             _add_prefix(self.atlas, prefix)
@@ -197,15 +196,15 @@ class Resource:
                     if i[1]:
                         rgba = AlphaRGBCombiner(i[1].image).combine_with(rgb)
                     else:
-                        Logger.debug(f"ResolveAB: Spine asset \"{i[0].name}\" found with no Alpha texture.")
+                        Logger.debug(f"ResolveAB: Spine asset \"{i[0].m_Name}\" found with no Alpha texture.")
                         rgba = rgb
-                    if SafeSaver.save_image(rgba, destdir, i[0].name, on_queued=on_queued, on_saved=on_saved):
-                        Logger.debug(f"ResolveAB: Spine asset \"{i[0].name}\" found.")
+                    if SafeSaver.save_image(rgba, destdir, i[0].m_Name, on_queued=on_queued, on_saved=on_saved):
+                        Logger.debug(f"ResolveAB: Spine asset \"{i[0].m_Name}\" found.")
                 else:
                     Logger.warn("ResolveAB: Spine asset RGB texture missing.")
             for i in (self.atlas, self.skel):
-                SafeSaver.save_object(i, destdir, i.name, on_queued, on_saved)
-                Logger.debug(f"ResolveAB: Spine asset \"{i.name}\" found.")
+                SafeSaver.save_object(i, destdir, i.m_Name, on_queued, on_saved)
+                Logger.debug(f"ResolveAB: Spine asset \"{i.m_Name}\" found.")
         #EndClass
     #EndClass
 
