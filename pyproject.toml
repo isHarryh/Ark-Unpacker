@@ -15,7 +15,7 @@ numpy = "~1.24"
 Pillow = "~8.4"
 pycryptodome = "~3.21"
 pydub = "~0.25"
-UnityPy = "~1.10"
+UnityPy = "~1.20"
 
 [tool.poetry.dev-dependencies]
 pyinstaller = "6.10.0"
