@@ -14,9 +14,10 @@ from src import ResolveAB       as AU_Rs
 from src import DecodeTextAsset as AU_Fb
 from src import CombineRGBwithA as AU_Cb
 from src import CollectModels   as AU_Cm
+from src import CollectVoice    as AU_Cv
 from src import ModelsDataDist  as AU_Mdd
 
-ARKUNPACKER_VERSION = 'v3.4'
+ARKUNPACKER_VERSION = 'v3.5'
 ARKUNPACKER_LOCAL = 'zh-CN'
 
 
@@ -32,6 +33,7 @@ def prt_homepage():
 3: 自定义图片合并
 4: 自定义文本资源解码
 5: ArkModels提取与分拣工具
+6: ArkVoice提取与分拣工具
 0: 退出""", c=6)
     print("输入序号后按Enter即可，\n如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker ")
 
@@ -270,6 +272,84 @@ def run_arkmodels_workflow():
         if order == '0':
             return
 
+def run_arkvoice_unpacking(dir, destdir1, destdir2, wildcard=False):
+    def visual(fp:str, default_c:int=6):
+        return f"{color(2 if osp.exists(fp) else 3)}{fp}{color(default_c)}"
+    Logger.info("CI: ArkVoice unpack mode.")
+    def prt_arkvoice_unpacking_menu(dir, destdir1):
+        clear()
+        os.chdir('.')
+        print("ArkVoice提取与分拣工具", s=1)
+        print("="*20)
+        print(f"""模式选择：
+1: 仅提取 Wav 文件 ({visual(dir)})
+2: 仅合并 Wav 文件为 Ogg 文件 ({visual(destdir1)})
+3: 提取与合并
+0: 取消""", c=6)
+    while True:
+        title("ArkUnpacker")
+        prt_arkvoice_unpacking_menu(dir, destdir1)
+        order = input("> ", c=2)
+        wildcard = False
+        if order == '3':
+            wildcard = True
+        if order == '1' or wildcard:
+            if not osp.exists(dir):
+                print(f"在工作目录下找不到 {dir}，请确保该文件夹直接位于工作目录中。", c=3)
+                return
+            print("正在清理...")
+            rmdir(destdir1)
+            title("ArkUnpacker - Processing")
+            AU_Rs.main(dir, destdir1, do_img=False, do_txt=False, do_aud=True, do_spine=False)
+        if order == '2' or wildcard:
+            if not osp.exists(destdir1):
+                print(f"在工作目录下找不到 {destdir1}，请确保您已执行前置步骤。", c=3)
+                return
+            print("正在清理...")
+            rmdir(destdir2)
+            title("ArkUnpacker - Processing")
+            AU_Cv.main(destdir1, destdir2)
+        if order == '0':
+            return
+
+def run_arkvoice_workflow():
+    Logger.info("CI: In ArkVoice workflow.")
+    def prt_arkvoice_menu():
+        clear()
+        os.chdir('.')
+        print("ArkVoice提取与分拣工具", s=1)
+        print("="*20)
+        print(f"""功能选择：
+1: 一键执行
+2: 提取并分拣日文语音
+3: 提取并分拣中文语音
+4: 提取并分拣英文语音
+5: 提取并分拣韩文语音
+6: 提取并分拣个性语音
+0: 返回""", c=6)
+        print("输入序号后按Enter即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker")
+    while True:
+        title("ArkUnpacker")
+        prt_arkvoice_menu()
+        order = input("> ", c=2)
+        wildcard = False
+        if order == '1':
+            wildcard = True
+        if order == '2' or wildcard:
+            run_arkvoice_unpacking('audio/sound_beta_2/voice', 'temp/av_upk', 'voice')
+        if order == '3' or wildcard:
+            run_arkvoice_unpacking('audio/sound_beta_2/voice_cn', 'temp/av_upk_cn', 'voice_cn')
+        if order == '4' or wildcard:
+            run_arkvoice_unpacking('audio/sound_beta_2/voice_en', 'temp/av_upk_en', 'voice_en')
+        if order == '5' or wildcard:
+            run_arkvoice_unpacking('audio/sound_beta_2/voice_kr', 'temp/av_upk_kr', 'voice_kr')
+        if order == '6' or wildcard:
+            run_arkvoice_unpacking('audio/sound_beta_2/voice_custom', 'temp/av_upk_custom', 'voice_custom')
+        if order in ['1', '2', '3', '4', '5', '6']:
+            prt_continue()
+        if order == '0':
+            return
+
 def validate_input_output_arg(parser:argparse.ArgumentParser, args:argparse.Namespace, allow_file_input:bool=False):
     if not getattr(args, 'input', None):
         parser.error("input should be defined in this mode")
@@ -353,6 +433,8 @@ if __name__ == '__main__':
                         prt_continue()
                     elif order == '5':
                         run_arkmodels_workflow()
+                    elif order == '6':
+                        run_arkvoice_workflow()
                     elif order == '0':
                         print("\n用户退出")
                         break
