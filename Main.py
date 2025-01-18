@@ -16,6 +16,7 @@ from src import CombineRGBwithA as AU_Cb
 from src import CollectModels   as AU_Cm
 from src import CollectVoice    as AU_Cv
 from src import ModelsDataDist  as AU_Mdd
+from src import VoiceDataDist   as AU_Vdd
 
 ARKUNPACKER_VERSION = 'v3.5'
 ARKUNPACKER_LOCAL = 'zh-CN'
@@ -289,8 +290,9 @@ def run_arkvoice_unpacking(dir, destdir1, destdir2, wildcard=False):
     while True:
         title("ArkUnpacker")
         prt_arkvoice_unpacking_menu(dir, destdir1)
-        order = input("> ", c=2)
-        wildcard = False
+        order = '0'
+        if not wildcard:
+            order = input("> ", c=2)
         if order == '3':
             wildcard = True
         if order == '1' or wildcard:
@@ -308,9 +310,15 @@ def run_arkvoice_unpacking(dir, destdir1, destdir2, wildcard=False):
             print("正在清理...")
             rmdir(destdir2)
             title("ArkUnpacker - Processing")
-            AU_Cv.main(destdir1, destdir2)
+            AU_Cv.main(destdir1, destdir2, 'custom' in destdir2)
         if order == '0':
             return
+
+def run_arkvoice_data_dist():
+    Logger.info("CI: ArkVoice dataset mode.")
+    prt_subtitle("ArkVoice 生成数据集")
+    ###
+    AU_Vdd.main()
 
 def run_arkvoice_workflow():
     Logger.info("CI: In ArkVoice workflow.")
@@ -326,6 +334,7 @@ def run_arkvoice_workflow():
 4: 提取并分拣英文语音
 5: 提取并分拣韩文语音
 6: 提取并分拣个性语音
+7: 生成数据集
 0: 返回""", c=6)
         print("输入序号后按Enter即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker")
     while True:
@@ -336,16 +345,18 @@ def run_arkvoice_workflow():
         if order == '1':
             wildcard = True
         if order == '2' or wildcard:
-            run_arkvoice_unpacking('audio/sound_beta_2/voice', 'temp/av_upk', 'voice')
+            run_arkvoice_unpacking('audio/sound_beta_2/voice', 'temp/av_upk', 'voice', wildcard)
         if order == '3' or wildcard:
-            run_arkvoice_unpacking('audio/sound_beta_2/voice_cn', 'temp/av_upk_cn', 'voice_cn')
+            run_arkvoice_unpacking('audio/sound_beta_2/voice_cn', 'temp/av_upk_cn', 'voice_cn', wildcard)
         if order == '4' or wildcard:
-            run_arkvoice_unpacking('audio/sound_beta_2/voice_en', 'temp/av_upk_en', 'voice_en')
+            run_arkvoice_unpacking('audio/sound_beta_2/voice_en', 'temp/av_upk_en', 'voice_en', wildcard)
         if order == '5' or wildcard:
-            run_arkvoice_unpacking('audio/sound_beta_2/voice_kr', 'temp/av_upk_kr', 'voice_kr')
+            run_arkvoice_unpacking('audio/sound_beta_2/voice_kr', 'temp/av_upk_kr', 'voice_kr', wildcard)
         if order == '6' or wildcard:
-            run_arkvoice_unpacking('audio/sound_beta_2/voice_custom', 'temp/av_upk_custom', 'voice_custom')
-        if order in ['1', '2', '3', '4', '5', '6']:
+            run_arkvoice_unpacking('audio/sound_beta_2/voice_custom', 'temp/av_upk_custom', 'voice_custom', wildcard)
+        if order == '7' or wildcard:
+            run_arkvoice_data_dist()
+        if order in ['1', '2', '3', '4', '5', '6', '7']:
             prt_continue()
         if order == '0':
             return

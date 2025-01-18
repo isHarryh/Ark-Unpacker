@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
-
 import os.path as osp
 import json
 import threading
@@ -27,11 +26,14 @@ class FixedFloat(float):
         return self
 
 
-def collect_voice(upkdir:str, destdir:str, do_del:bool, info_merged:dict, on_finished:Callable, on_collected:Callable):
+def collect_voice(upkdir:str, destdir:str, do_del:bool, force_std_name:bool, info_merged:dict,
+                  on_finished:Callable, on_collected:Callable):
     global _INTERNAL_LOCK
+    ori_name = osp.basename(upkdir)
+    std_name = '_'.join(ori_name.split('_')[:3]) if force_std_name else ori_name
     voice_merged:AudioSegment = AudioSegment.empty()
     duration_merged = 0.0
-    info = []
+    clips = []
     # For each audio file unpacked
     for file in sorted(get_filelist(upkdir, max_depth=1)):
         name, ext = osp.splitext(osp.basename(file))
@@ -45,7 +47,7 @@ def collect_voice(upkdir:str, destdir:str, do_del:bool, info_merged:dict, on_fin
         # Merge this audio file
         voice_clip:AudioSegment = AudioSegment.from_file(file)
         duration_clip = voice_clip.frame_count() / voice_clip.frame_rate
-        info.append({
+        clips.append({
             'name': name,
             'start': FixedFloat(f"{duration_merged:6f}"), # Start time (second)
         })
@@ -53,19 +55,25 @@ def collect_voice(upkdir:str, destdir:str, do_del:bool, info_merged:dict, on_fin
         duration_merged += duration_clip
         # Logger.debug(f"CollectVoice: Merged \"{name}\" from \"{osp.basename(upkdir)}\"")
 
-    if info:
+    if clips:
         # Save the final audio file
-        Logger.debug(f"CollectVoice: Completed collection at \"{osp.basename(upkdir)}\", {len(info)} clips merged")
+        Logger.debug(f"CollectVoice: Completed collection at \"{ori_name}\", {len(clips)} clips merged")
         voice_io = BytesIO()
         voice_merged.export(voice_io, format='ogg', parameters=['-q:a', str(3)])
-        SafeSaver.save_bytes(voice_io.read(), destdir, osp.basename(upkdir), '.ogg')
+        voice_bytes = voice_io.read()
+        SafeSaver.save_bytes(voice_bytes, destdir, std_name, '.ogg')
+        # Post processing
         if on_collected:
             on_collected()
         with _INTERNAL_LOCK:
             if info_merged is not None:
-                info_merged[osp.basename(upkdir)] = info
+                info_merged[std_name] = {
+                    'size': len(voice_bytes),
+                    'duration': FixedFloat(f"{duration_merged:6f}"),
+                    'clips': clips
+                }
     else:
-        Logger.warn(f"CollectVoice: Collection not performed at \"{osp.basename(upkdir)}\"")
+        Logger.warn(f"CollectVoice: Collection not performed at \"{ori_name}\"")
 
     if do_del:
         rmdir(upkdir)
@@ -74,7 +82,7 @@ def collect_voice(upkdir:str, destdir:str, do_del:bool, info_merged:dict, on_fin
 
 
 ########## Main-主程序 ##########
-def main(srcdir:str, destdir:str):
+def main(srcdir:str, destdir:str, force_std_name:bool):
     """Collects the voice files from the source directory to the destination directory.
     The structure of the source directory is shown below.
 
@@ -86,6 +94,7 @@ def main(srcdir:str, destdir:str):
 
     :param srcdir: Source directory;
     :param destdir: Destination directory;
+    :param force_std_name: Forces the keys to use standard character name;
     :rtype: None;
     """
     print("\n正在解析目录...", s=1)
@@ -116,8 +125,9 @@ def main(srcdir:str, destdir:str):
             f"剩余时间：\t{tracker.to_eta_str()}",
         ])
         ###
-        thread_ctrl.run_subthread(collect_voice, (upkdir, destdir, False, info_merged, tr_finished.report, collected.update), \
-            name=f"CmThread:{id(upkdir)}")
+        thread_ctrl.run_subthread(collect_voice, (upkdir, destdir, False, force_std_name, \
+                                                  info_merged, tr_finished.report, collected.update), \
+            name=f"CvThread:{id(upkdir)}")
 
     ui.reset()
     ui.loop_stop()
