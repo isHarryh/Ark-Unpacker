@@ -44,7 +44,6 @@ class SafeSaver(WorkerCtrl):
     __instance = None
     _EXT_IMAGE = '.png'
     _EXT_RAW = ''
-    _AUDIO_ACCESS_LOCK = threading.Lock()
 
     def __init__(self):
         """Not recommended to use. Please use the static methods."""
@@ -113,9 +112,7 @@ class SafeSaver(WorkerCtrl):
                 return
         elif isinstance(obj, uc.AudioClip):
             # As audio file:
-            samples = None
-            with SafeSaver._AUDIO_ACCESS_LOCK:
-                samples = obj.samples
+            samples = obj.samples
             if samples:
                 for name, byte in samples.items():
                     SafeSaver.save_bytes(byte, destdir, name, SafeSaver._EXT_RAW, on_queued, on_saved)
