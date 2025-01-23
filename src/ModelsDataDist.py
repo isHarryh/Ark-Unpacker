@@ -12,10 +12,6 @@ from .DecodeTextAsset import ArkFBOLibrary
 from .utils.GlobalMethods import color, print, get_dirlist, get_filelist
 from .utils.Logger import Logger
 
-class PrefabError(Exception):
-    def __init__(self, *args):
-        super().__init__(*args)
-
 class ModelsDist:
     SORT_TAGS_L10N = {
         # tag -> translation

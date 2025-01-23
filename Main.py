@@ -327,6 +327,7 @@ def run_arkvoice_workflow():
         os.chdir('.')
         print("ArkVoice提取与分拣工具", s=1)
         print("="*20)
+        print("ArkVoice是作者建立的明日方舟语音仓库（https://github.com/isHarryh/Ark-Voice），以下功能专门为ArkVoice仓库的更新而设计。")
         print(f"""功能选择：
 1: 一键执行
 2: 提取并分拣日文语音
