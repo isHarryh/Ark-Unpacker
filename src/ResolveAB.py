@@ -7,8 +7,8 @@ from typing import Any, Callable, Sequence
 
 import UnityPy
 import UnityPy.classes as uc
-import UnityPy.files
-import UnityPy.streams
+from UnityPy.files.File import File
+from UnityPy.streams.EndianBinaryReader import EndianBinaryReader
 from .CombineRGBwithA import AlphaRGBCombiner
 from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file, stacktrace
 from .utils.Logger import Logger
@@ -24,9 +24,9 @@ class Resource:
         :param env: The Environment instance from `UnityPy.load()`;
         :rtype: None;
         """
-        if isinstance(env.file, UnityPy.files.File):
+        if isinstance(env.file, File):
             self.name:str = env.file.name
-        elif isinstance(env.file, UnityPy.streams.EndianBinaryReader):
+        elif isinstance(env.file, EndianBinaryReader):
             self.name:str = ""
         else:
             raise TypeError(f"Unknown type of UnityPy Environment file: {type(env.file).__name__}")

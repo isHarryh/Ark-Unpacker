@@ -1,5 +1,5 @@
 {
-    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.typeCheckingMode": "standard",
     "cSpell.language": "en,en-US,en-GB",
     "cSpell.words": [
         "abfile",

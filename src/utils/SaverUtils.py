@@ -143,8 +143,8 @@ class SafeSaver(WorkerCtrl):
 
     @staticmethod
     def _save(data:bytes, destdir:str, name:str, ext:str, on_saved:"Callable|None"):
+        dest = osp.join(destdir, name + ext)
         try:
-            dest = osp.join(destdir, name + ext)
             with TestRT('lock'):
                 # Ensure files with identical name cannot be saved simultaneously
                 with EntryLock(dest):

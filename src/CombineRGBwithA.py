@@ -81,7 +81,7 @@ class AlphaRGBCombiner:
             if similarity > best_similarity:
                 best_candidate = i
                 best_similarity = similarity
-        return best_candidate, similarity
+        return best_candidate, best_similarity
 
     @staticmethod
     def get_real_name(fp_alpha:str):

@@ -8,6 +8,11 @@ import os.path as osp
 from .Logger import Logger
 
 
+def get_cpu_count():
+    cpu = os.cpu_count()
+    return 1 if cpu is None or cpu <= 0 else cpu
+
+
 class PerformanceLevel():
     """Enumeration class for performance level."""
 
@@ -16,7 +21,7 @@ class PerformanceLevel():
     STANDARD = 2
     HIGH = 3
 
-    __CPU = max(1, os.cpu_count() if os.cpu_count() is not None else 1)
+    __CPU = get_cpu_count()
     __MAP = {
         MINIMAL: 1,
         LOW: max(2, __CPU // 2),
@@ -28,6 +33,7 @@ class PerformanceLevel():
     def get_thread_limit(performance_level:int):
         """Gets the maximum thread count according to the given performance level."""
         return PerformanceLevel.__MAP.get(performance_level, PerformanceLevel.__MAP[PerformanceLevel.STANDARD])
+
 
 class Config():
     """Configuration class for ArkUnpacker."""

@@ -418,10 +418,10 @@ class UserInput:
             return True if uin == 'y' else False
 
 if __name__ == '__main__':
+    parser = ArgParser.INSTANCE
     try:
         Logger.set_instance(Config.get('log_file'), Config.get('log_level'))
         Logger.info("CI: Initialized")
-        parser = ArgParser.INSTANCE
         print('')
         args = parser.parse_args()
         if getattr(args, 'mode', None) is None:
