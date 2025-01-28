@@ -65,6 +65,8 @@ class ArkFBOLibrary:
             Logger.debug(f"DecodeTextAsset: FBS decoded \"{path}\" with type {root_type.__name__}")
             return dic
 
+# spell-checker: disable
+
 class ArkAESLibrary:
     """Helper class for Arknights **AES-CBC encrypted files** decoding,
     which provides methods and keys for decryption.
@@ -74,7 +76,9 @@ class ArkAESLibrary:
 
     *Special thanks to ashlen (https://github.com/thesadru).*
     """
-    MASK_V2 = b'UITpAi82pHAWwnzqHRMCwPonJLIB3WCl' # spell-checker: disable-line
+    MASK_V2 = b'UITpAi82pHAWwnzqHRMCwPonJLIB3WCl'
+
+# spell-checker: enable
 
     @staticmethod
     def aes_cbc_decrypt_bytes(data:bytes, mask:bytes, has_rsa:bool=True):
@@ -121,6 +125,7 @@ class ArkAESLibrary:
                 dic = bson.loads(decrypted)
                 Logger.debug(f"DecodeTextAsset: AES decoded BSON document \"{path}\"")
             return dic
+
 
 class FBOHandler:
     """Handler for FlatBuffers Objects, implementing conversion to Python dict type."""

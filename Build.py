@@ -91,6 +91,7 @@ def __build(proj_info, proj_dir, build_def):
     print(f"Creating version file...")
     version_file = 'version.txt'
     with open(version_file, 'w', encoding='UTF-8') as f:
+        # spell-checker: disable
         f.write(f'''# UTF-8
 VSVersionInfo(
   ffi=FixedFileInfo(
@@ -116,6 +117,7 @@ StringFileInfo([
   ])
 ])
 ''') # End f.write
+        # spell-checker: enable
 
     print('Running pyinstaller...')
     cmd_pyinstaller = f"poetry run pyinstaller -F"
