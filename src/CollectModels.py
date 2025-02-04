@@ -97,7 +97,7 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
             f"剩余时间：\t{tracker.to_eta_str()}",
         ])
         ###
-        thread_ctrl.run_subthread(collect_models, (upkdir, destdir, True, tr_finished.report, collected.update), \
+        thread_ctrl.run_subthread(collect_models, (upkdir, destdir, True, tr_finished.report, collected.update),
             name=f"CmThread:{id(upkdir)}")
 
     ui.reset()

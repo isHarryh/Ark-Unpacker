@@ -277,8 +277,8 @@ def main(rootdir:str, destdir:str, do_del:bool=False):
         ])
         ###
         subdestdir = osp.dirname(i).strip(osp.sep).replace(rootdir, '').strip(osp.sep)
-        thread_ctrl.run_subthread(text_asset_resolve, (i, osp.join(destdir, subdestdir), \
-            tr_processed.report, tr_file_saving.update_demand, tr_file_saving.report), \
+        thread_ctrl.run_subthread(text_asset_resolve, (i, osp.join(destdir, subdestdir),
+            tr_processed.report, tr_file_saving.update_demand, tr_file_saving.report),
             name=f"RFThread:{id(i)}")
 
     ui.reset()

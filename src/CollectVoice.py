@@ -125,8 +125,8 @@ def main(srcdir:str, destdir:str, force_std_name:bool):
             f"剩余时间：\t{tracker.to_eta_str()}",
         ])
         ###
-        thread_ctrl.run_subthread(collect_voice, (upkdir, destdir, False, force_std_name, \
-                                                  info_merged, tr_finished.report, collected.update), \
+        thread_ctrl.run_subthread(collect_voice, (upkdir, destdir, False, force_std_name,
+                                                  info_merged, tr_finished.report, collected.update),
             name=f"CvThread:{id(upkdir)}")
 
     ui.reset()

@@ -47,7 +47,7 @@ def __get_build_def(proj_dir, venv_dir):
     try:
         parser = configparser.ConfigParser()
         parser.read('pyproject.toml', encoding='UTF-8')
-        return {k: v.strip("'\"").replace('\\\\', '\\').replace('$project$', proj_dir).replace('$venv$', venv_dir) \
+        return {k: v.strip("'\"").replace('\\\\', '\\').replace('$project$', proj_dir).replace('$venv$', venv_dir)
                 for k, v in parser['tool.build'].items()}
     except Exception as arg:
         print("× Failed to parse build definition fields.")

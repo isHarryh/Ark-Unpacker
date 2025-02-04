@@ -125,7 +125,7 @@ class AlphaRGBCombiner:
         diff_mean = round(sum(diff) / len(diff))
         return 0 if diff_mean >= 255 else (255 if diff_mean <= 0 else 255 - diff_mean)
 
-def image_resolve(fp:str, destdir:str, \
+def image_resolve(fp:str, destdir:str,
                   on_processed:"Callable|None", on_file_queued:"Callable|None", on_file_saved:"Callable|None"):
     """Finds an RGB image to combine with the given Alpha image then saves the combined image into the given directory.
 
@@ -194,8 +194,8 @@ def main(rootdir:str, destdir:str, do_del:bool=False):
         ])
         ###
         subdestdir = osp.dirname(i).strip(osp.sep).replace(rootdir, '').strip(osp.sep)
-        thread_ctrl.run_subthread(image_resolve, (i, osp.join(destdir, subdestdir), \
-            tr_processed.report, tr_file_saving.update_demand, tr_file_saving.report), \
+        thread_ctrl.run_subthread(image_resolve, (i, osp.join(destdir, subdestdir),
+            tr_processed.report, tr_file_saving.update_demand, tr_file_saving.report),
             name=f"CBThread:{id(i)}")
 
     ui.reset()

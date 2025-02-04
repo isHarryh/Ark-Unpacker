@@ -308,8 +308,8 @@ def main(src:str, destdir:str, do_del:bool=False,
         curdestdir = destdir if osp.samefile(i, src) else \
             osp.join(destdir, subdestdir, osp.splitext(osp.basename(i))[0]) if separate else \
             osp.join(destdir, subdestdir)
-        thread_ctrl.run_subthread(ab_resolve, (i, curdestdir, do_img, do_txt, do_aud, do_spine, \
-            tr_processed.report, tr_file_saving.update_demand, tr_file_saving.report), \
+        thread_ctrl.run_subthread(ab_resolve, (i, curdestdir, do_img, do_txt, do_aud, do_spine,
+            tr_processed.report, tr_file_saving.update_demand, tr_file_saving.report),
             name=f"RsThread:{id(i)}")
 
     ui.reset()
