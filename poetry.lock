@@ -555,13 +555,13 @@ reference = "PyPI-Tsinghua"
 
 [[package]]
 name = "pefile"
-version = "2024.8.26"
+version = "2023.2.7"
 description = "Python PE parsing module"
 optional = false
 python-versions = ">=3.6.0"
 files = [
-    {file = "pefile-2024.8.26-py3-none-any.whl", hash = "sha256:76f8b485dcd3b1bb8166f1128d395fa3d87af26360c2358fb75b80019b957c6f"},
-    {file = "pefile-2024.8.26.tar.gz", hash = "sha256:3ff6c5d8b43e8c37bb6e6dd5085658d658a7a0bdcd20b6a07b1fcfc1c4e9d632"},
+    {file = "pefile-2023.2.7-py3-none-any.whl", hash = "sha256:da185cd2af68c08a6cd4481f7325ed600a88f6a813bad9dea07ab3ef73d8d8d6"},
+    {file = "pefile-2023.2.7.tar.gz", hash = "sha256:82e6114004b3d6911c77c3953e3838654b04511b8b66e8583db70c65998017dc"},
 ]
 
 [package.source]
@@ -938,30 +938,72 @@ reference = "PyPI-Tsinghua"
 
 [[package]]
 name = "unitypy"
-version = "1.20.19"
+version = "1.20.20"
 description = "A Unity extraction and patching package"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "UnityPy-1.20.19-cp310-cp310-win32.whl", hash = "sha256:9172526680105d54f9d170644ab27fb6bc0512d55ad3b651b80c1ae8540a8901"},
-    {file = "UnityPy-1.20.19-cp310-cp310-win_amd64.whl", hash = "sha256:f5c5429dcc0e564f55e771bb6972483b2780c36efcf145bd85d19c222216339b"},
-    {file = "UnityPy-1.20.19-cp310-cp310-win_arm64.whl", hash = "sha256:4b1066a10ac417494518dcb1090c2a6b9339906370b8ec043ce30821d0adfd2e"},
-    {file = "UnityPy-1.20.19-cp311-cp311-win32.whl", hash = "sha256:d9a6dcb081215b281f220fdae480917ff428d0708d728b1780eb2f273bcd2f3a"},
-    {file = "UnityPy-1.20.19-cp311-cp311-win_amd64.whl", hash = "sha256:46254247fbda5127ce043d0225d07c0f6007712257399930bf0f4ee218444835"},
-    {file = "UnityPy-1.20.19-cp311-cp311-win_arm64.whl", hash = "sha256:7531ec2b288ab11bfcfb5cec66299dbc72a92e728b7193d3401efdbf7d180745"},
-    {file = "UnityPy-1.20.19-cp312-cp312-win32.whl", hash = "sha256:160e67866f136fd79de98b80fed200c895e8973554b1b4cc9e9de2a4084e4883"},
-    {file = "UnityPy-1.20.19-cp312-cp312-win_amd64.whl", hash = "sha256:267be6f85cd4b00cd4a45e7d138a6bd829d3d5339c555eb6a3079844d4106ab0"},
-    {file = "UnityPy-1.20.19-cp312-cp312-win_arm64.whl", hash = "sha256:aa73e1f73a68d01afa9fd4ed60cdecad1fddb3bc699826f7ee31fdb5fb84993d"},
-    {file = "UnityPy-1.20.19-cp313-cp313-win32.whl", hash = "sha256:c17f8b3257e6d486058d748e0f6a50f83ccb8c32a25a0f4a73e5621261e2b43b"},
-    {file = "UnityPy-1.20.19-cp313-cp313-win_amd64.whl", hash = "sha256:c03e79324f4450d6097b95d1fc61d19ce8b13917a74b65d1fa424565e5dfd578"},
-    {file = "UnityPy-1.20.19-cp313-cp313-win_arm64.whl", hash = "sha256:61d9b5584b490297f6c466164389422729a3a808486714b92a98cf7a3823cbba"},
-    {file = "UnityPy-1.20.19-cp37-cp37m-win32.whl", hash = "sha256:f4340bfae91304316c01014d0cf4259d517d2d7042423095ec45e358b57c1e9b"},
-    {file = "UnityPy-1.20.19-cp37-cp37m-win_amd64.whl", hash = "sha256:8c4fed1b68f7b42a088ea625d047058d93c45f388fa6d71dda247a4ee95cb0fc"},
-    {file = "UnityPy-1.20.19-cp38-cp38-win32.whl", hash = "sha256:61c984d6a2e02562ed7b01304cc2bcc3c4d30992034e0cb8e675b8ec3fa9df77"},
-    {file = "UnityPy-1.20.19-cp38-cp38-win_amd64.whl", hash = "sha256:fa321c6d785780f04b80c71a8f7ebbc95f9f692733409f5c5b2cd4ff447d1f82"},
-    {file = "UnityPy-1.20.19-cp39-cp39-win32.whl", hash = "sha256:308a257035496378e8f4b4870b2e9c71176b28299ef596a0b406242bc2e968a5"},
-    {file = "UnityPy-1.20.19-cp39-cp39-win_amd64.whl", hash = "sha256:25996a7b10e4432d57284f36e4c17a311052178289b90768fa5f545eb6d974ec"},
-    {file = "UnityPy-1.20.19-cp39-cp39-win_arm64.whl", hash = "sha256:87cd420d53b060d2b9d6cf04c2b3a346de2ceeecd1c6061d9d7b0d7037a7520d"},
+    {file = "UnityPy-1.20.20-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:0e7e25c72a5f5d6fb33115eed3c9aaf175bda9dc0428e1dee695769d1ebf29c4"},
+    {file = "UnityPy-1.20.20-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:8f6ae9da445e39a45e1b484d6f51aa1ffa026e51d3af831340063fac18a1786c"},
+    {file = "UnityPy-1.20.20-cp310-cp310-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:3507c5f6fb0a63a83c1fb1b1f1e95dfbcc4728b9b8cf632fde39dc0336a364ee"},
+    {file = "UnityPy-1.20.20-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:053cf9df7ba8908c13d6013f377847423cf5ab31d638404aae244a83107bcf04"},
+    {file = "UnityPy-1.20.20-cp310-cp310-musllinux_1_2_i686.whl", hash = "sha256:963b31997297a0b85757c0b7aaa1db2497f52bac07b1714a05d47d3baa9ea689"},
+    {file = "UnityPy-1.20.20-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:90a7bd9505a4e93311386871122ad3d8d22602a44e60d1f42aa7145ad0de75a0"},
+    {file = "UnityPy-1.20.20-cp310-cp310-win32.whl", hash = "sha256:a61d26f718fd1ad0145405e9179b3a9b63aec1e7dce3b744194c9e0ff1cff622"},
+    {file = "UnityPy-1.20.20-cp310-cp310-win_amd64.whl", hash = "sha256:95ce7035d45acb8d9347f11677602751b572be133797886df18f7d7523d3bf23"},
+    {file = "UnityPy-1.20.20-cp310-cp310-win_arm64.whl", hash = "sha256:bb62e7cdf7ded0e859c6f4a378f4abb9e51b713d24492f8c4cd3a0499ad34a46"},
+    {file = "UnityPy-1.20.20-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:48334c39d716772bcc84675b20ebd92cd163fe624ba05926085a7c6db03e6f9a"},
+    {file = "UnityPy-1.20.20-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:27145d0d640cbcd404d36a9c5690381e6e3a220227a2d77aa9743a7b8864c267"},
+    {file = "UnityPy-1.20.20-cp311-cp311-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:dd8fa113e3009cc122a2aadf5ba5f4b8c108eb9b873e6b5618fa43572985214a"},
+    {file = "UnityPy-1.20.20-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:834c83ffc32bcbb7e122e02ffa1eaf113ced434e61b1837291ffd1622d814853"},
+    {file = "UnityPy-1.20.20-cp311-cp311-musllinux_1_2_i686.whl", hash = "sha256:c8e1932d6b5121080229cf9491d6811e76428f8769e3d7b0e7975b733cf0cf7b"},
+    {file = "UnityPy-1.20.20-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:7478469bec56e2ee9f9d212a38c1993b8f505fb367d677c3b0884eee39629fb7"},
+    {file = "UnityPy-1.20.20-cp311-cp311-win32.whl", hash = "sha256:5475070b158724fdd2f538c2a0d4a3074c4ff3d57de2ace7f43168c7d3228bff"},
+    {file = "UnityPy-1.20.20-cp311-cp311-win_amd64.whl", hash = "sha256:ac2b11fa900f713e4534102877d0bb91e966c9c28832d91598886815794c6775"},
+    {file = "UnityPy-1.20.20-cp311-cp311-win_arm64.whl", hash = "sha256:a27609ea7c14c7830cb34de528bed4c8324c2abe9595a145f0fffa95e0818267"},
+    {file = "UnityPy-1.20.20-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:857d560e04ea49f3ed27ad76022d5bd557fa68fc992b41dbeaaf6dd27afb1275"},
+    {file = "UnityPy-1.20.20-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:5ec3e5bc613b7b051905ccb13c8ad9513253386fcb00e1a2754d6f9a26e4780f"},
+    {file = "UnityPy-1.20.20-cp312-cp312-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:17016b7c5f9c2bd4f1053479bf2aa7d4b6d245d9de0bc92f99e4f8e9fb15c2c5"},
+    {file = "UnityPy-1.20.20-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:87ab0cb721ce79838f13d51b0f58ea483596100cb3787b9d5b0f52cd21c1b791"},
+    {file = "UnityPy-1.20.20-cp312-cp312-musllinux_1_2_i686.whl", hash = "sha256:6ef8b0b6cf6f0dc7746fcdb95e2619284b9c76a57fdac812d3391be0c96bbaf0"},
+    {file = "UnityPy-1.20.20-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:1ecfbd242fe6070ae3731673aa6b318ac34ff1b916ec36fa0f23a7990c446b6c"},
+    {file = "UnityPy-1.20.20-cp312-cp312-win32.whl", hash = "sha256:47c8cb1c27c41bb795fdea0bd6c6152ff97b01c198481ae6bf56791cce8a7f4c"},
+    {file = "UnityPy-1.20.20-cp312-cp312-win_amd64.whl", hash = "sha256:6313e39ea5269900adbb5b8f4a77eed298570aaafd32f6906d5656a2c223610b"},
+    {file = "UnityPy-1.20.20-cp312-cp312-win_arm64.whl", hash = "sha256:b10484df95dce550558940c4d8c34df4de7f44d4679ba3f3a6792d2f6f20c4c6"},
+    {file = "UnityPy-1.20.20-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:42153bb47522718658a7d9c3e45ef2edc792e3fa7539d000eb5d4347f14a2595"},
+    {file = "UnityPy-1.20.20-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:5113a8ed6b8ff650265a5df784d23595e272dc398b0084e5f48a69ded908afb3"},
+    {file = "UnityPy-1.20.20-cp313-cp313-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:53e93cc5bde4af766ef894453b9a47d78905e710de865bf2bc50ce2661148adf"},
+    {file = "UnityPy-1.20.20-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c62d51efbc1287b42f95e88289ad0165edbdeaea9111fced31002ce07bb00e36"},
+    {file = "UnityPy-1.20.20-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:935efa64bf219192f7955c349ea6f14befcee4a2a3f00bcc375dfbbd95cf31d2"},
+    {file = "UnityPy-1.20.20-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:653576da538bb69b28a113404cadc40d1ac03cf64ef5fb4962550aee42832f22"},
+    {file = "UnityPy-1.20.20-cp313-cp313-win32.whl", hash = "sha256:aa9dd405be8d1f675fe845b6d36613d9c39c087761375f8b6cb45c3e34eaa72d"},
+    {file = "UnityPy-1.20.20-cp313-cp313-win_amd64.whl", hash = "sha256:e9724bfae6cbab6317eb543725cb250b15a931da0050c6c9813bbef4c0bd5380"},
+    {file = "UnityPy-1.20.20-cp313-cp313-win_arm64.whl", hash = "sha256:aaa976761038bb49edb87f6523163eea48dea22848bbcde825ab0d3542ee6294"},
+    {file = "UnityPy-1.20.20-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:647e92d14446bc83f69c780200b6a67994a9ca65d566bbf78f53dcc49917370f"},
+    {file = "UnityPy-1.20.20-cp37-cp37m-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:30e7135605b672989c3605ecfd6c0ff1021db2b8de06963e4b892dd0c3802713"},
+    {file = "UnityPy-1.20.20-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8d7c37956b41be8f2c572cffc62f258a627675a35342c6a1bebe69c07256dbd2"},
+    {file = "UnityPy-1.20.20-cp37-cp37m-musllinux_1_2_i686.whl", hash = "sha256:6837880840a7915f2dfdbdb4275b38b42a0bbfbf13fb27c3bea06ccaeaf60aa8"},
+    {file = "UnityPy-1.20.20-cp37-cp37m-musllinux_1_2_x86_64.whl", hash = "sha256:d7d6d1b348f071eafcf813d2db4db986af937c062065b05961fde736af854b2b"},
+    {file = "UnityPy-1.20.20-cp37-cp37m-win32.whl", hash = "sha256:ebc8f1c5a93fa720f5bc69d2d6b3fa55ed884a1d36d0518cb50578408439663c"},
+    {file = "UnityPy-1.20.20-cp37-cp37m-win_amd64.whl", hash = "sha256:f3d49c8a34eaf3711c4c866cb7fd129031f045820bb78b336977fe251f0bfd1b"},
+    {file = "UnityPy-1.20.20-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:d8413557777f88649cb4739b6575ec7b3def5eb8b14304fa295f74ba32b0090e"},
+    {file = "UnityPy-1.20.20-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:570c8a98e97074e2f919779ac085d8ccfed95c38bacbc02d07810a4a8a098f76"},
+    {file = "UnityPy-1.20.20-cp38-cp38-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:6a305ce2b489ab2305213c550af4bd425d69bc246ab54b40c99d756b574219cb"},
+    {file = "UnityPy-1.20.20-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9a96172f0b4f5f9109641f6082012103e57441950fa569af12b12406ae125b6f"},
+    {file = "UnityPy-1.20.20-cp38-cp38-musllinux_1_2_i686.whl", hash = "sha256:e124126625969c2299034026c539dcafa211e38539b714b6f7544118adbd381e"},
+    {file = "UnityPy-1.20.20-cp38-cp38-musllinux_1_2_x86_64.whl", hash = "sha256:d37fd30099fb52e339a99dc39cd7a1e0795a52648ecc448cbe58bcef9522e2d0"},
+    {file = "UnityPy-1.20.20-cp38-cp38-win32.whl", hash = "sha256:74a3e022831bab8d93478f769bd595b3cd57659f4f399c595115dff4c4f474ef"},
+    {file = "UnityPy-1.20.20-cp38-cp38-win_amd64.whl", hash = "sha256:5ffedec18bda36f1fef7370ccb82833333004a595607627bcb7eacb4b1ef5b79"},
+    {file = "UnityPy-1.20.20-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:6488399bae2de925dff28ba65f07be58c178c5cf668763eac6ca112505e6de8e"},
+    {file = "UnityPy-1.20.20-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:695e73eb9ce745c626f7b88d03434f7de6bb15f3ca07c96041ee5a3dacad2a05"},
+    {file = "UnityPy-1.20.20-cp39-cp39-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:7e14257d8863fb9499a81da5a4c54bb72011d4f3243ef5ffb5b4fc3c1642a643"},
+    {file = "UnityPy-1.20.20-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9770415b0cf2648580bc390a2ab1b2604a7610408503638156e16e31243aa8b8"},
+    {file = "UnityPy-1.20.20-cp39-cp39-musllinux_1_2_i686.whl", hash = "sha256:a19311ab23636b4e31fe756ce23870a6754e386e8825fcc829a5c7b5ed9354ef"},
+    {file = "UnityPy-1.20.20-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:731fd0fc2a4d9f0642b82a274dc60ecf7ee0796d8485b59bec5b0d9591c7e35c"},
+    {file = "UnityPy-1.20.20-cp39-cp39-win32.whl", hash = "sha256:751888fce76f693aae939a4a6ef4ca51d763076969b1d2e6d01e5a02c26ae568"},
+    {file = "UnityPy-1.20.20-cp39-cp39-win_amd64.whl", hash = "sha256:9906f98751dd0c9cce7a896b83ea05ffdd19754f41edbc6b8f29ac6cb2bff857"},
+    {file = "UnityPy-1.20.20-cp39-cp39-win_arm64.whl", hash = "sha256:1d9a30f5833da129a414082c3798b3a9efaf4bbb8111111a0f5acd01922ea68b"},
+    {file = "unitypy-1.20.20.tar.gz", hash = "sha256:dffea106436175f05fa56b9902805671c9d8d11cb44bab7e4ddb22f626ec8caa"},
 ]
 
 [package.dependencies]
