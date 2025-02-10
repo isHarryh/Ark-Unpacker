@@ -18,7 +18,7 @@ pydub = "~0.25"
 UnityPy = "~1.20"
 
 [tool.poetry.dev-dependencies]
-pyinstaller = "6.10.0"
+pyinstaller = "6.12.0"
 
 [[tool.poetry.source]]
 name = "PyPI-Tsinghua"
