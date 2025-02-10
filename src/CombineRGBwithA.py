@@ -17,25 +17,19 @@ class NoRGBImageMatchedError(FileNotFoundError):
     def __init__(self, *args):
         super().__init__(*args)
 
-class AlphaRGBCombiner:
-    PATTERNS = [
-        re.compile(r'(.+)\[alpha\](\$[0-9]+)?'),
-        re.compile(r'(.+)_alpha(\$[0-9]+)?'),
-        re.compile(r'(.+)alpha(\$[0-9]+)?'),
-        re.compile(r'(.+)a(\$[0-9]+)?'),
-        ]
 
+class AlphaRGBCombiner:
     def __init__(self, alpha:"str|Image.Image"):
-        self.img_alpha = AlphaRGBCombiner.as_image(alpha, 'RGBA')
+        self.img_alpha = AlphaRGBCombiner._get_image(alpha, 'RGBA')
 
     def combine_with(self, rgb:"str|Image.Image"):
-        """ Merges the RGB image and the Alpha image in an efficient way.
+        """Merges the RGB image and the Alpha image in an efficient way.
 
         :param rgb: Instance of RGB image or its file path;
         :returns: A new image instance;
         :rtype: Image;
         """
-        img_rgb:Image.Image = AlphaRGBCombiner.as_image(rgb, 'RGBA')
+        img_rgb:Image.Image = AlphaRGBCombiner._get_image(rgb, 'RGBA')
         img_alpha:Image.Image = self.img_alpha.convert('L')
         if img_rgb.size != img_alpha.size:
             img_alpha = img_alpha.resize(img_rgb.size, Image.BILINEAR)
@@ -46,59 +40,72 @@ class AlphaRGBCombiner:
         return img_rgb
 
     @staticmethod
-    def search_rgb(fp_alpha:str):
-        real = AlphaRGBCombiner.get_real_name(fp_alpha)
+    def _get_image(str_or_img:"str|Image.Image", mode:str):
+        return (str_or_img if isinstance(str_or_img, Image.Image) else Image.open(str_or_img)).convert(mode)
+
+
+class AlphaRGBSearcher:
+    PATTERNS = [
+        re.compile(r'(.+)\[alpha\](\$[0-9]+)?'),
+        re.compile(r'(.+)_alpha(\$[0-9]+)?'),
+        re.compile(r'(.+)alpha(\$[0-9]+)?'),
+        re.compile(r'(.+)a(\$[0-9]+)?'),
+    ]
+
+    def __init__(self, fp_alpha:str):
+        self.fp_alpha = fp_alpha
+
+    def get_real_name(self):
+        return AlphaRGBSearcher.calc_real_name(self.fp_alpha)
+
+    def search_rgb(self):
+        real = self.get_real_name()
         if not real:
             raise ValueError("Not a recognized alpha image name")
-        if not is_image_file(fp_alpha):
+        if not is_image_file(self.fp_alpha):
             raise ValueError("Not a image file path")
-        ext = osp.splitext(fp_alpha)[1]
-        dirname = osp.dirname(fp_alpha)
+        ext = osp.splitext(self.fp_alpha)[1]
+        dirname = osp.dirname(self.fp_alpha)
         flist = os.listdir(dirname)
         flist = list(filter(is_image_file, flist))
         flist = list(filter(lambda x:x == real + ext or (x.startswith(real) and '$' in x), flist))
         flist = [osp.join(dirname, x) for x in flist]
+
         if len(flist) == 0:
-            Logger.info(f"CombineRGBwithA: No RGB-image could be matched to \"{fp_alpha}\"")
-            raise NoRGBImageMatchedError(fp_alpha)
+            Logger.info(f"CombineRGBwithA: No RGB-image could be matched to \"{self.fp_alpha}\"")
+            raise NoRGBImageMatchedError(self.fp_alpha)
         elif len(flist) == 1:
-            Logger.debug(f"CombineRGBwithA: \"{flist[0]}\" matched \"{fp_alpha}\" exclusively")
+            Logger.debug(f"CombineRGBwithA: \"{flist[0]}\" matched \"{self.fp_alpha}\" exclusively")
             return flist[0]
         else:
-            best, similarity = AlphaRGBCombiner.choose_most_similar_rgb(fp_alpha, flist)
+            best, similarity = self.choose_most_similar_rgb(flist)
             if best:
-                Logger.info(f"CombineRGBwithA: \"{best}\" matched \"{fp_alpha}\" among {len(flist)} candidates, confidentiality {similarity}")
+                Logger.info(f"CombineRGBwithA: \"{best}\" matched \"{self.fp_alpha}\" among {len(flist)} candidates, confidentiality {similarity}")
                 return best
             else:
-                raise NoRGBImageMatchedError(fp_alpha)
+                raise NoRGBImageMatchedError(self.fp_alpha)
 
-    @staticmethod
-    def choose_most_similar_rgb(alpha, candidates:"list[str]"):
+    def choose_most_similar_rgb(self, candidates:"list[str]"):
         best_candidate = None
         best_similarity = -1
         for i in candidates:
-            similarity = AlphaRGBCombiner.similarity(i, alpha)
+            similarity = AlphaRGBSearcher.calc_similarity(i, self.fp_alpha)
             if similarity > best_similarity:
                 best_candidate = i
                 best_similarity = similarity
         return best_candidate, best_similarity
 
     @staticmethod
-    def get_real_name(fp_alpha:str):
+    def calc_real_name(fp_alpha:str):
         basename, _ = osp.splitext(osp.basename(fp_alpha))
-        for i in AlphaRGBCombiner.PATTERNS:
-            m = i.fullmatch(basename)
+        for p in AlphaRGBSearcher.PATTERNS:
+            m = p.fullmatch(basename)
             if m:
-                return str(m.group(1))
-        return None
+                return m.group(1)
 
     @staticmethod
-    def as_image(obj:"str|Image.Image", mode:str):
-        return (obj if isinstance(obj, Image.Image) else Image.open(obj)).convert(mode)
-
-    @staticmethod
-    def similarity(fp_rgb:str, fp_alpha:str, mode:str='L', precision:int=150):
-        """ Compares the similarity between the RGB image and the Alpha image.
+    def calc_similarity(fp_rgb:str, fp_alpha:str, mode:str='L', precision:int=150):
+        """Compares the similarity between the RGB image and the Alpha image.
 
         :param fp_rgb: Path to the RGB image;
         :param fp_alpha: Path to the Alpha image;
@@ -125,6 +132,7 @@ class AlphaRGBCombiner:
         diff_mean = round(sum(diff) / len(diff))
         return 0 if diff_mean >= 255 else (255 if diff_mean <= 0 else 255 - diff_mean)
 
+
 def image_resolve(fp:str, destdir:str,
                   on_processed:"Callable|None", on_file_queued:"Callable|None", on_file_saved:"Callable|None"):
     """Finds an RGB image to combine with the given Alpha image then saves the combined image into the given directory.
@@ -137,9 +145,10 @@ def image_resolve(fp:str, destdir:str,
     :rtype: None;
     """
     try:
-        handle = AlphaRGBCombiner(fp)
-        result = handle.combine_with(AlphaRGBCombiner.search_rgb(fp))
-        real_name = AlphaRGBCombiner.get_real_name(fp)
+        combiner = AlphaRGBCombiner(fp)
+        searcher = AlphaRGBSearcher(fp)
+        result = combiner.combine_with(searcher.search_rgb())
+        real_name = searcher.get_real_name()
         if real_name:
             SafeSaver.save_image(result, destdir, real_name, on_queued=on_file_queued, on_saved=on_file_saved)
     except NoRGBImageMatchedError:
@@ -167,7 +176,7 @@ def main(rootdir:str, destdir:str, do_del:bool=False):
     destdir = osp.normpath(osp.realpath(destdir))
     flist = get_filelist(rootdir)
     flist = list(filter(is_image_file, flist))
-    flist = list(filter(lambda x:AlphaRGBCombiner.get_real_name(x) is not None, flist))
+    flist = list(filter(lambda x:AlphaRGBSearcher.calc_real_name(x) is not None, flist))
 
     if do_del:
         print("\n正在清理...", s=1)
