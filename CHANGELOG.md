@@ -8,6 +8,14 @@
 
 -----
 
+## v3.6
+#### 优化
+1. ☆ 减少了 Windows 打包文件的大小，这得益于 [PyInstaller #8799](https://github.com/pyinstaller/pyinstaller/pull/8799) 的修复。
+
+#### 依赖
+1. ☆ 将 UnityPy 升级到了 1.20.21。
+2. ☆ 将 PyInstaller 升级到了 6.12.0。
+
 ## v3.5
 #### 新增
 1. ★ 支持新功能“ArkVoice提取与分拣工具”，详情参见[附加文档](docs/ArkVoiceRepoKit.md)。
