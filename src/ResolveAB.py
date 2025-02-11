@@ -197,7 +197,7 @@ class Resource:
                         rgba = AlphaRGBCombiner(i[1].image).combine_with(rgb)
                     else:
                         Logger.debug(f"ResolveAB: Spine asset \"{i[0].m_Name}\" found with no Alpha texture.")
-                        rgba = rgb
+                        rgba = AlphaRGBCombiner.apply_premultiplied_alpha(rgb)
                     if SafeSaver.save_image(rgba, destdir, i[0].m_Name, on_queued=on_queued, on_saved=on_saved):
                         Logger.debug(f"ResolveAB: Spine asset \"{i[0].m_Name}\" found.")
                 else:

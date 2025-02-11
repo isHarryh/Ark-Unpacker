@@ -4,6 +4,7 @@
 import re
 import os
 import os.path as osp
+import numpy as np
 from typing import Callable
 
 from PIL import Image
@@ -22,10 +23,11 @@ class AlphaRGBCombiner:
     def __init__(self, alpha:"str|Image.Image"):
         self.img_alpha = AlphaRGBCombiner._get_image(alpha, 'RGBA')
 
-    def combine_with(self, rgb:"str|Image.Image"):
+    def combine_with(self, rgb:"str|Image.Image", remove_bleeding=True):
         """Merges the RGB image and the Alpha image in an efficient way.
 
         :param rgb: Instance of RGB image or its file path;
+        :param remove_bleeding: Whether to remove the color bleeding;
         :returns: A new image instance;
         :rtype: Image;
         """
@@ -33,16 +35,45 @@ class AlphaRGBCombiner:
         img_alpha:Image.Image = self.img_alpha.convert('L')
         if img_rgb.size != img_alpha.size:
             img_alpha = img_alpha.resize(img_rgb.size, Image.BILINEAR)
-        img_black = Image.new('RGBA', img_rgb.size) #透明抹除全黑图实例化
-        img_mask = img_alpha.point(lambda x:0 if x > 0 else 255) #透明抹除蒙版图实例化
-        img_rgb.putalpha(img_alpha) #RGB通道图使用A通道图作为alpha层
-        img_rgb.paste(img_black, img_mask) #RGB通道图被执行透明抹除
+        img_rgb.putalpha(img_alpha)
+        if remove_bleeding:
+            img_rgb = AlphaRGBCombiner.remove_bleeding(img_rgb)
         return img_rgb
+
+    @staticmethod
+    def remove_bleeding(rgba:"str|Image.Image"):
+        """Removes the color bleeding in the given RGBA image
+        by setting the RGB value of the transparent pixel to (0, 0, 0).
+
+        :param rgba: Instance of RGBA image or its file path;
+        :returns: A new image instance;
+        :rtype: Image;
+        """
+        img_rgba:Image.Image = AlphaRGBCombiner._get_image(rgba, 'RGBA')
+        img_black = Image.new('RGBA', img_rgba.size)
+        img_alpha = img_rgba.getchannel('A')
+        img_mask = img_alpha.point(lambda x:0 if x > 0 else 255)
+        img_rgba.paste(img_black, img_mask)
+        return img_rgba
+
+    @staticmethod
+    def apply_premultiplied_alpha(rgba:"str|Image.Image"):
+        """Multiplies the RGB channels with the alpha channel.
+        Useful when handling non-PMA Spine textures.
+
+        :param rgba: Instance of RGBA image or its file path;
+        :returns: A new image instance;
+        :rtype: Image;
+        """
+        img_rgba:Image.Image = AlphaRGBCombiner._get_image(rgba, 'RGBA')
+        data = np.array(img_rgba, dtype=np.float32)
+        data[:, :, :3] *= data[:, :, 3:] / 255.0
+        data_int = np.clip(data, 0, 255).astype(np.uint8)
+        return Image.fromarray(data_int, 'RGBA')
 
     @staticmethod
     def _get_image(str_or_img:"str|Image.Image", mode:str):
         return (str_or_img if isinstance(str_or_img, Image.Image) else Image.open(str_or_img)).convert(mode)
-
 
 class AlphaRGBSearcher:
     PATTERNS = [
