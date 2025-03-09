@@ -5,6 +5,7 @@ import time
 import argparse
 import os
 import os.path as osp
+import sys
 
 from src.utils import ArgParser
 from src.utils.Config import Config
@@ -469,23 +470,23 @@ if __name__ == '__main__':
     except SystemExit as arg:
         Logger.info(f"CI: Program received explicit exit code {arg.code}")
         print("\n[SystemExit] 显式退出程序", c=3)
-        exit(arg.code)
+        sys.exit(arg.code)
     except KeyboardInterrupt as arg:
         Logger.error("CI: Program was forcibly interrupted by user.")
         print("\n[KeyboardInterrupt] 用户强制中止", c=1, s=7)
         print(stacktrace(), c=3)
-        exit(1)
+        sys.exit(1)
     except ArgParser.ArgParserFailure as arg:
         Logger.error(f"CI: Program failed ti parse input arguments, {arg}")
         print(parser.format_usage())
         print("[ArgParserFailure] 命令行参数解析失败", c=1, s=7)
         print(f"{parser.prog} failed to parse arguments", c=1)
         print(arg, c=3)
-        exit(2)
+        sys.exit(2)
     except BaseException as arg:
         Logger.error(f"CI: Oops! Unexpected error occurred: {stacktrace()}")
         print(f"\n[{type(arg).__name__}] 发生了未处理的异常", c=1, s=7)
         print(stacktrace(), c=3)
         input("> 按Enter退出...", c=1)
-        exit(1)
-    exit(0)
+        sys.exit(1)
+    sys.exit(0)
