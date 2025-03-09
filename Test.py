@@ -47,9 +47,9 @@ if __name__ == '__main__':
                                 )
 
             print(f"[#{i}] Analysing...", c=0, bg=6)
-            if __count_files(DIR_UPK) != 1300:
+            if __count_files(DIR_UPK) != 1374:
                 raise AssertionError("Unpacked files count mismatch")
-            if __count_files(DIR_CMB) != 140:
+            if __count_files(DIR_CMB) != 153:
                 raise AssertionError("Combined images count mismatch")
             if __count_files(DIR_DTA) != 2:
                 raise AssertionError("Decoded textassets count mismatch")
