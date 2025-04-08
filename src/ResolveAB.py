@@ -229,15 +229,13 @@ def ab_resolve(abfile:str, destdir:str,
         if on_processed:
             on_processed()
         return
-    ###
-    res = Resource(UnityPy.load(abfile))
-    Logger.debug(f"ResolveAB: \"{res.name}\" has {res.length} objects.")
-    if res.length >= 10000:
-        Logger.info(f"ResolveAB: Too many objects in file \"{res.name}\", unpacking it may take a long time.")
-    elif res.length == 0:
-        Logger.info(f"ResolveAB: No object in file \"{res.name}\".")
-    ###
     try:
+        res = Resource(UnityPy.load(abfile))
+        Logger.debug(f"ResolveAB: \"{res.name}\" has {res.length} objects.")
+        if res.length >= 10000:
+            Logger.info(f"ResolveAB: Too many objects in file \"{res.name}\", unpacking it may take a long time.")
+        elif res.length == 0:
+            Logger.info(f"ResolveAB: No object in file \"{res.name}\".")
         # Preprocess
         res.sort_skeletons()
         if do_spine:
@@ -252,7 +250,7 @@ def ab_resolve(abfile:str, destdir:str,
             SafeSaver.save_objects(res.audioclips, destdir, on_file_queued, on_file_saved)
     except BaseException as arg:
         # Error feedback
-        Logger.error(f"ResolveAB: Error occurred while unpacking file \"{res.name}\": Exception{type(arg)} {arg}")
+        Logger.error(f"ResolveAB: Error occurred while unpacking file \"{abfile}\": Exception{type(arg)} {arg}")
         # raise(arg)
     if on_processed:
         on_processed()
