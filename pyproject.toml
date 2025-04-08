@@ -10,12 +10,12 @@ package-mode = false
 [tool.poetry.dependencies]
 python = "3.8.10"
 bson = "~0.5"
-flatbuffers = "~24.3"
+flatbuffers = "~25.2"
 numpy = "~1.24"
 Pillow = "~9.5"
-pycryptodome = "~3.21"
+pycryptodome = "~3.22"
 pydub = "~0.25"
-UnityPy = "~1.20"
+UnityPy = "~1.22"
 
 [tool.poetry.dev-dependencies]
 pyinstaller = "6.12.0"
