@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
-import os, configparser
+import os
 import os.path as osp
+import toml
 
 def __get_venv_dir():
     import re, subprocess
@@ -26,15 +27,14 @@ def __get_venv_dir():
 
 def __get_proj_info():
     try:
-        parser = configparser.ConfigParser()
-        parser.read('pyproject.toml', encoding='UTF-8')
-        config = parser['tool.poetry']
+        config = toml.load('pyproject.toml')
+        config = config['project']
         return {
-            'name': config['name'].strip("'\""),
-            'version': config['version'].strip("'\""),
-            'description': config['description'].strip("'\""),
-            'author': config['authors'].strip("'\"[]").split('<')[0].strip(),
-            'license': config['license'].strip("'\"").replace('\\\\', '\\')
+            'name': config['name'],
+            'version': config['version'],
+            'description': config['description'],
+            'author': config['authors'][0]['name'],
+            'license': config['license']
         }
     except KeyError as arg:
         print(f"x Required field missing, {arg}")
@@ -45,10 +45,9 @@ def __get_proj_info():
 
 def __get_build_def(proj_dir, venv_dir):
     try:
-        parser = configparser.ConfigParser()
-        parser.read('pyproject.toml', encoding='UTF-8')
-        return {k: v.strip("'\"").replace('\\\\', '\\').replace('$project$', proj_dir).replace('$venv$', venv_dir)
-                for k, v in parser['tool.build'].items()}
+        config = toml.load('pyproject.toml')
+        return {k: v.replace('$project$', proj_dir).replace('$venv$', venv_dir)
+                for k, v in config['tool']['build'].items()}
     except Exception as arg:
         print("× Failed to parse build definition fields.")
         raise arg
