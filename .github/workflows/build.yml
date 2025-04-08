@@ -13,8 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9.21", "3.10.16", "3.11.11", "3.12.9"]
-        poetry-version: ["2.1.2"]
+        python-version: ["3.9.13", "3.10.11", "3.11.9", "3.12.9"]
         os: [windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -29,7 +28,7 @@ jobs:
       - name: Install Poetry
         uses: abatilo/actions-poetry@v4
         with:
-          poetry-version: ${{ matrix.poetry-version }}
+          poetry-version: "2.1.2"
       - name: Define venv location
         run: |
           poetry config virtualenvs.create true --local
@@ -38,7 +37,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ./.venv
-          key: venv-${{ hashFiles('poetry.lock') }}
+          key: venv-(${{ matrix.os }}-${{ matrix.python-version }})-${{ hashFiles('poetry.lock') }}
       - name: Install dependencies
         run: |
           poetry install
