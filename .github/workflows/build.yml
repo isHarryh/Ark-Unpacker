@@ -3,7 +3,7 @@ name: Build
 on:
   push:
     branches:
-      - '**'
+      - 'v4.x'
 
 env:
   PYTHONIOENCODING: "UTF-8"
@@ -13,21 +13,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8.10"]
-        poetry-version: ["1.8.3"]
+        python-version: ["3.9.21", "3.10.16", "3.11.11", "3.12.9"]
+        poetry-version: ["2.1.2"]
         os: [windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v2
+        uses: abatilo/actions-poetry@v4
         with:
           poetry-version: ${{ matrix.poetry-version }}
       - name: Define venv location
