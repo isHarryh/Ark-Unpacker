@@ -3,7 +3,7 @@ name: Build
 on:
   push:
     branches:
-      - 'v4.x'
+      - "v4.x"
 
 env:
   PYTHONIOENCODING: "UTF-8"
@@ -15,35 +15,44 @@ jobs:
       matrix:
         python-version: ["3.9.13", "3.10.11", "3.11.9", "3.12.9"]
         os: [windows-latest]
+
     runs-on: ${{ matrix.os }}
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Install Poetry
         uses: abatilo/actions-poetry@v4
         with:
-          poetry-version: "2.1.2"
+          poetry-version: 2.1.2
+
       - name: Define venv location
         run: |
           poetry config virtualenvs.create true --local
           poetry config virtualenvs.in-project true --local
+
       - name: Define venv caching
         uses: actions/cache@v3
         with:
           path: ./.venv
           key: venv-(${{ matrix.os }}-${{ matrix.python-version }})-${{ hashFiles('poetry.lock') }}
+
       - name: Install dependencies
         run: |
           poetry install
+
       - name: Build distributable
         run: |
           poetry run python Build.py
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
