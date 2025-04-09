@@ -5,7 +5,7 @@ import os, sys, json, shutil
 from src import ResolveAB
 from src import CombineRGBwithA
 from src import DecodeTextAsset
-from src.utils.AnalyUtils import TestRT
+from src.utils.Profiler import CodeProfiler
 from src.utils.GlobalMethods import print, stacktrace
 
 def __count_files(path):
@@ -26,7 +26,7 @@ if __name__ == '__main__':
             shutil.rmtree(DIR_DTA, ignore_errors=True)
 
             print(f"[#{i}] Testing...", c=0, bg=6)
-            with TestRT('unit_1'):
+            with CodeProfiler('unit_1'):
                 ResolveAB.main('test/res',
                             DIR_UPK,
                             do_del=False,
@@ -35,12 +35,12 @@ if __name__ == '__main__':
                             do_aud=True,
                             do_spine=False
                             )
-            with TestRT('unit_2'):
+            with CodeProfiler('unit_2'):
                 CombineRGBwithA.main(DIR_UPK,
                                     DIR_CMB,
                                     do_del=False
                                     )
-            with TestRT('unit_3'):
+            with CodeProfiler('unit_3'):
                 DecodeTextAsset.main(DIR_UPK,
                                 DIR_DTA,
                                 do_del=False
@@ -58,4 +58,4 @@ if __name__ == '__main__':
         except BaseException as arg:
             print(f"[#{i}] Test failed because an error occurred!", c=7, bg=1)
             print(stacktrace(), c=3)
-    json.dump(TestRT.get_avg_time_all(), open('test/rt.json', 'w', encoding='UTF-8'), indent=4)
+    json.dump(CodeProfiler.get_avg_time_all(), open('test/rt.json', 'w', encoding='UTF-8'), indent=4)

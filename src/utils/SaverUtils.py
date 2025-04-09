@@ -10,7 +10,7 @@ from typing import Callable, Sequence
 
 import UnityPy.classes as uc
 from PIL import Image
-from .AnalyUtils import TestRT
+from .Profiler import CodeProfiler
 from .Config import Config, PerformanceLevel
 from .GlobalMethods import mkdir
 from .Logger import Logger
@@ -145,7 +145,7 @@ class SafeSaver(WorkerCtrl):
     def _save(data:bytes, destdir:str, name:str, ext:str, on_saved:"Callable|None"):
         dest = osp.join(destdir, name + ext)
         try:
-            with TestRT('lock'):
+            with CodeProfiler('lock'):
                 # Ensure files with identical name cannot be saved simultaneously
                 with EntryLock(dest):
                     # Ensure this new file is unique to prevent duplication
