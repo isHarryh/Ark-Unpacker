@@ -19,7 +19,7 @@ from src import CollectVoice as AU_Cv
 from src import ModelsDataDist as AU_Mdd
 from src import VoiceDataDist as AU_Vdd
 
-ARKUNPACKER_VERSION = "v3.6"
+ARKUNPACKER_VERSION = "v4.0"
 ARKUNPACKER_LOCAL = "zh-CN"
 
 
