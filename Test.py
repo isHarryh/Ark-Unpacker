@@ -44,11 +44,11 @@ if __name__ == "__main__":
                 DecodeTextAsset.main(DIR_UPK, DIR_DTA, do_del=False)
 
             print(f"[#{i}] Analysing...", c=0)
-            if __count_files(DIR_UPK) != 1374:
+            if __count_files(DIR_UPK) != 1390:
                 raise AssertionError("Unpacked files count mismatch")
             if __count_files(DIR_CMB) != 153:
                 raise AssertionError("Combined images count mismatch")
-            if __count_files(DIR_DTA) != 2:
+            if __count_files(DIR_DTA) != 3:
                 raise AssertionError("Decoded textassets count mismatch")
 
             print(f"[#{i}] Test success!", c=0)
