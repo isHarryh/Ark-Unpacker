@@ -5,7 +5,7 @@ import re
 import os
 import os.path as osp
 import numpy as np
-from typing import Callable
+from typing import Callable, Optional
 
 from PIL import Image
 from .utils.GlobalMethods import print, rmdir, get_filelist, is_image_file
@@ -23,7 +23,7 @@ class AlphaRGBCombiner:
     def __init__(self, alpha: "str|Image.Image"):
         self.img_alpha = AlphaRGBCombiner._get_image(alpha, "RGBA")
 
-    def combine_with(self, rgb: "str|Image.Image", remove_bleeding=True):
+    def combine_with(self, rgb: "str|Image.Image", remove_bleeding: bool = True):
         """Merges the RGB image and the Alpha image in an efficient way.
 
         :param rgb: Instance of RGB image or its file path;
@@ -187,9 +187,9 @@ class AlphaRGBSearcher:
 def image_resolve(
     fp: str,
     destdir: str,
-    on_processed: "Callable|None",
-    on_file_queued: "Callable|None",
-    on_file_saved: "Callable|None",
+    on_processed: Optional[Callable],
+    on_file_queued: Optional[Callable],
+    on_file_saved: Optional[Callable],
 ):
     """Finds an RGB image to combine with the given Alpha image then saves the combined image into the given directory.
 

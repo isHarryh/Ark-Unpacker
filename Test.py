@@ -19,7 +19,7 @@ def __count_files(path):
 if __name__ == "__main__":
     for i in range(int(sys.argv[1]) if len(sys.argv) > 1 else 1):
         try:
-            print(f"[#{i}] Preparing...", c=0, bg=6)
+            print(f"[#{i}] Preparing...", c=0)
             DIR_UPK = "test/upk"
             DIR_CMB = "test/cmb"
             DIR_DTA = "test/dta"
@@ -27,7 +27,7 @@ if __name__ == "__main__":
             shutil.rmtree(DIR_CMB, ignore_errors=True)
             shutil.rmtree(DIR_DTA, ignore_errors=True)
 
-            print(f"[#{i}] Testing...", c=0, bg=6)
+            print(f"[#{i}] Testing...", c=0)
             with CodeProfiler("unit_1"):
                 ResolveAB.main(
                     "test/res",
@@ -43,7 +43,7 @@ if __name__ == "__main__":
             with CodeProfiler("unit_3"):
                 DecodeTextAsset.main(DIR_UPK, DIR_DTA, do_del=False)
 
-            print(f"[#{i}] Analysing...", c=0, bg=6)
+            print(f"[#{i}] Analysing...", c=0)
             if __count_files(DIR_UPK) != 1374:
                 raise AssertionError("Unpacked files count mismatch")
             if __count_files(DIR_CMB) != 153:
@@ -51,9 +51,9 @@ if __name__ == "__main__":
             if __count_files(DIR_DTA) != 2:
                 raise AssertionError("Decoded textassets count mismatch")
 
-            print(f"[#{i}] Test success!", c=0, bg=2)
+            print(f"[#{i}] Test success!", c=0)
         except BaseException as arg:
-            print(f"[#{i}] Test failed because an error occurred!", c=7, bg=1)
+            print(f"[#{i}] Test failed because an error occurred!", c=7)
             print(stacktrace(), c=3)
     json.dump(
         CodeProfiler.get_avg_time_all(),

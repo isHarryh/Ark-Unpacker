@@ -53,8 +53,8 @@ class Config:
         """Not recommended to use. Please use the static methods."""
         self._config = {}
 
-    def _get(self, key):
-        return self._config.get(key, None)
+    def _get(self, key: str):
+        return self._config[key]
 
     def _read_config(self):
         if osp.isfile(Config.__config_path):

@@ -3,7 +3,7 @@
 # @ BSD 3-Clause License
 import os.path as osp
 from contextlib import ContextDecorator
-from typing import Any, Callable, Sequence
+from typing import Any, Callable, Optional, Sequence
 
 import UnityPy
 import UnityPy.classes as uc
@@ -237,7 +237,7 @@ class Resource:
                     _add_prefix(j, prefix)
 
         def save_spine(
-            self, destdir: str, on_queued: "Callable|None", on_saved: "Callable|None"
+            self, destdir: str, on_queued: Optional[Callable], on_saved: Optional[Callable]
         ):
             for i in self.tex_list:
                 if i[0]:
@@ -275,9 +275,9 @@ def ab_resolve(
     do_txt: bool,
     do_aud: bool,
     do_spine: bool,
-    on_processed: "Callable|None" = None,
-    on_file_queued: "Callable|None" = None,
-    on_file_saved: "Callable|None" = None,
+    on_processed: Optional[Callable] = None,
+    on_file_queued: Optional[Callable] = None,
+    on_file_saved: Optional[Callable] = None,
 ):
     """Extracts an AB file.
 

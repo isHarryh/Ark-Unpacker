@@ -4,7 +4,7 @@
 import time
 import queue
 import threading
-from typing import Callable
+from typing import Callable, Optional
 
 from .Config import PerformanceLevel, Config
 from .GlobalMethods import color, print, clear
@@ -14,7 +14,7 @@ from .Logger import Logger
 class ThreadCtrl:
     """Controller for Multi Threading."""
 
-    def __init__(self, max_subthread: "int|None" = None):
+    def __init__(self, max_subthread: Optional[int] = None):
         """Initializes a tool for multi threading."""
         self.__sts: "list[threading.Thread]" = []
         if not max_subthread:
@@ -35,9 +35,9 @@ class ThreadCtrl:
     def run_subthread(
         self,
         fun,
-        args: "tuple|None" = None,
-        kwargs: "dict|None" = None,
-        name: "str|None" = None,
+        args: Optional[tuple] = None,
+        kwargs: Optional[dict] = None,
+        name: Optional[str] = None,
     ):
         """Creates a sub thread and run it."""
         while self.count_subthread() >= self.__max:

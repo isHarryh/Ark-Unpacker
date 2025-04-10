@@ -3,7 +3,7 @@
 # @ BSD 3-Clause License
 import os.path as osp
 import json
-from typing import Callable
+from typing import Callable, Optional
 
 import bson
 import numpy as np
@@ -52,7 +52,7 @@ class ArkFBOLibrary:
         return None
 
     @staticmethod
-    def decode(path: str, root_type: "type|None" = _AUTO_GUESS_ROOT_TYPE):
+    def decode(path: str, root_type: Optional[type] = _AUTO_GUESS_ROOT_TYPE):
         """Decodes the given FlatBuffers binary file.
 
         :param path: The file path;
@@ -228,9 +228,9 @@ class FBOHandler:
 def text_asset_resolve(
     fp: str,
     destdir: str,
-    on_processed: "Callable|None",
-    on_file_queued: "Callable|None",
-    on_file_saved: "Callable|None",
+    on_processed: Optional[Callable],
+    on_file_queued: Optional[Callable],
+    on_file_saved: Optional[Callable],
 ):
     """Decodes the give Arknights TextAsset file that is either FBO stored format or AES encrypted format,
     otherwise does nothing.
