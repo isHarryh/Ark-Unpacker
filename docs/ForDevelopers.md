@@ -4,12 +4,12 @@ ArkUnpacker附加说明文档
 此文档描述了运行源程序或参与项目开发的准备工作和具体步骤。
 
 ## 依赖
-1. **Python：** 本项目基于 **Python 3.8.10**，您可[前往下载](https://www.python.org/downloads)。
+1. **Python：** 本项目需要 **Python 3.9~3.12** 运行环境，您可[前往下载](https://www.python.org/downloads)。
 2. **IDE：** 建议使用的集成开发环境（IDE）是 **VS Code**，您可[前往下载](https://code.visualstudio.com)。
     > 建议使用的 VS Code 插件：
     > - [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker)
     > - [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
-3. **Poetry：** 本项目使用 **Poetry** 进行依赖项的自动化管理，您可[查看教程](https://python-poetry.org/docs)。所有依赖项将被安装在 Poetry 的虚拟环境中。
+3. **Poetry：** 本项目使用 **Poetry 2** 进行依赖项的自动化管理，您可[查看教程](https://python-poetry.org/docs)。所有依赖项将被安装在 Poetry 的虚拟环境中。
     > Poetry 快速安装方法：
     > 1. 命令行运行 `pip install pipx` 安装 pipx 这一命令行程序管理工具；
     > 2. 命令行运行 `pipx install poetry` 安装 Poetry，并在命令行运行 `pipx ensurepath` 以完善 PATH 配置；
@@ -28,23 +28,3 @@ ArkUnpacker附加说明文档
 ## 测试与构建
 1. **测试：** 在 VS Code 中启动 `Test` 终端任务；或者直接运行 `Test.py` 脚本。这将使用仓库自带的测试用的游戏资源文件（位于 `test/res` 目录中）进行模拟解包。测试完成后会生成运行用时的记录文件 `test/rt.json`。
 2. **构建：** 在 VS Code 中启动 `Build Dist` 终端任务；或者直接运行 `Build.py` 脚本。这将使用 PyInstaller 在项目文件夹的 `build/dist` 目录中自动生成可分发的文件。
-
-## 代码结构与用例
-本程序可以通过交互式命令行界面（Interactive CLI）与用户进行交互，也可以直接使用命令行运行并执行任务。
-
-本项目的代码可分为 3 个层次：
-- 表现层（入口点 `Main.py`）
-- 操作层（软件包 `src`）
-- 工具层（软件包 `src.utils`）
-
-如果您不想使用我们的表现层的功能，只想利用操作层中的代码，来实现一些您自定义的功能，您可以这样做：
-```Python
-from src import ResolveAB
-from src import CombineRGBwithA
-ResolveAB.main('Android', 'Unpacked') # (a)
-CombineRGBwithA.main('Unpacked', 'Combined') # (b)
-```
-
-以上 (a) (b) 两个方法还有其他可选的参数，具体的用法已在函数声明的代码注释中非常详尽地给出了，请自行阅读。
-
-关于直接使用命令行运行的详细介绍，请参阅 [README](../README.md#5命令行用法)。
