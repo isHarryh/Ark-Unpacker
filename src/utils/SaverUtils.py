@@ -36,19 +36,23 @@ class EntryLock(ContextDecorator):
         with EntryLock._INTERNAL_LOCK:
             EntryLock._ENTRIES.discard(self.entry)
             EntryLock._INTERNAL_LOCK.notify_all()
-    #EndClass
+
+    # EndClass
+
 
 class SafeSaver(WorkerCtrl):
     """The file saver class to save file and avoid file name collision."""
 
     __instance = None
-    _EXT_IMAGE = '.png'
-    _EXT_RAW = ''
+    _EXT_IMAGE = ".png"
+    _EXT_RAW = ""
 
     def __init__(self):
         """Not recommended to use. Please use the static methods."""
-        max_workers = PerformanceLevel.get_thread_limit(Config.get('performance_level'))
-        super(SafeSaver, self).__init__(self._save, max_workers=max_workers, name="Saver")
+        max_workers = PerformanceLevel.get_thread_limit(Config.get("performance_level"))
+        super(SafeSaver, self).__init__(
+            self._save, max_workers=max_workers, name="Saver"
+        )
 
     @staticmethod
     def get_instance():
@@ -57,8 +61,14 @@ class SafeSaver(WorkerCtrl):
         return SafeSaver.__instance
 
     @staticmethod
-    def save_bytes(data:bytes, destdir:str, name:str, ext:str,
-                   on_queued:"Callable|None"=None, on_saved:"Callable|None"=None):
+    def save_bytes(
+        data: bytes,
+        destdir: str,
+        name: str,
+        ext: str,
+        on_queued: "Callable|None" = None,
+        on_saved: "Callable|None" = None,
+    ):
         """Saves a binary data to a file.
 
         :param data: Bytes data;
@@ -74,8 +84,14 @@ class SafeSaver(WorkerCtrl):
         SafeSaver.get_instance().submit((data, destdir, name, ext, on_saved))
 
     @staticmethod
-    def save_image(img:Image.Image, destdir:str, name:str, ext:str=_EXT_IMAGE,
-                   on_queued:"Callable|None"=None, on_saved:"Callable|None"=None):
+    def save_image(
+        img: Image.Image,
+        destdir: str,
+        name: str,
+        ext: str = _EXT_IMAGE,
+        on_queued: "Callable|None" = None,
+        on_saved: "Callable|None" = None,
+    ):
         """Saves an image to a file.
 
         :param img: Image instance;
@@ -87,12 +103,17 @@ class SafeSaver(WorkerCtrl):
         :rtype: None;
         """
         bio = BytesIO()
-        img.save(bio, format=ext.lstrip('.'))
+        img.save(bio, format=ext.lstrip("."))
         SafeSaver.save_bytes(bio.getvalue(), destdir, name, ext, on_queued, on_saved)
 
     @staticmethod
-    def save_object(obj:uc.Object, destdir:str, name:str,
-                    on_queued:"Callable|None"=None, on_saved:"Callable|None"=None):
+    def save_object(
+        obj: uc.Object,
+        destdir: str,
+        name: str,
+        on_queued: "Callable|None" = None,
+        on_saved: "Callable|None" = None,
+    ):
         """Saves the given Unity object as a file. If a object is not exportable, it does nothing.
 
         :param obj: The object to save as file;
@@ -108,27 +129,37 @@ class SafeSaver(WorkerCtrl):
         elif isinstance(obj, (uc.Sprite, uc.Texture2D)):
             # As image file:
             if obj.image.width > 0 and obj.image.height > 0:
-                SafeSaver.save_image(obj.image, destdir, name, SafeSaver._EXT_IMAGE, on_queued, on_saved)
+                SafeSaver.save_image(
+                    obj.image, destdir, name, SafeSaver._EXT_IMAGE, on_queued, on_saved
+                )
                 return
         elif isinstance(obj, uc.AudioClip):
             # As audio file:
             samples = obj.samples
             if samples:
                 for name, byte in samples.items():
-                    SafeSaver.save_bytes(byte, destdir, name, SafeSaver._EXT_RAW, on_queued, on_saved)
+                    SafeSaver.save_bytes(
+                        byte, destdir, name, SafeSaver._EXT_RAW, on_queued, on_saved
+                    )
             return
         elif isinstance(obj, uc.TextAsset):
             # As raw file:
-            byte = obj.m_Script.encode('utf-8', 'surrogateescape')
-            SafeSaver.save_bytes(byte, destdir, name, SafeSaver._EXT_RAW, on_queued, on_saved)
+            byte = obj.m_Script.encode("utf-8", "surrogateescape")
+            SafeSaver.save_bytes(
+                byte, destdir, name, SafeSaver._EXT_RAW, on_queued, on_saved
+            )
             return
         else:
             # Not an exportable type:
             pass
 
     @staticmethod
-    def save_objects(lst:"Sequence[uc.Object]", destdir:str,
-                     on_queued:"Callable|None"=None, on_saved:"Callable|None"=None):
+    def save_objects(
+        lst: "Sequence[uc.Object]",
+        destdir: str,
+        on_queued: "Callable|None" = None,
+        on_saved: "Callable|None" = None,
+    ):
         """Saves all the Unity objects in the given list as files.
         If a object is not exportable, it does nothing.
 
@@ -139,13 +170,17 @@ class SafeSaver(WorkerCtrl):
         :rtype: None;
         """
         for i in lst:
-            SafeSaver.save_object(i, destdir, getattr(i, 'm_Name', 'Unknown'), on_queued, on_saved)
+            SafeSaver.save_object(
+                i, destdir, getattr(i, "m_Name", "Unknown"), on_queued, on_saved
+            )
 
     @staticmethod
-    def _save(data:bytes, destdir:str, name:str, ext:str, on_saved:"Callable|None"):
+    def _save(
+        data: bytes, destdir: str, name: str, ext: str, on_saved: "Callable|None"
+    ):
         dest = osp.join(destdir, name + ext)
         try:
-            with CodeProfiler('lock'):
+            with CodeProfiler("lock"):
                 # Ensure files with identical name cannot be saved simultaneously
                 with EntryLock(dest):
                     # Ensure this new file is unique to prevent duplication
@@ -158,40 +193,47 @@ class SafeSaver(WorkerCtrl):
                         # Invoke callback with destination path as argument
                         if on_saved:
                             on_saved(dest)
-                            Logger.debug(f"Saver: Saved file \"{dest}\"")
+                            Logger.debug(f'Saver: Saved file "{dest}"')
                             return
         except Exception as arg:
-            Logger.error(f"Saver: Failed to save file \"{dest}\" because: Exception{type(arg)} {arg}")
+            Logger.error(
+                f'Saver: Failed to save file "{dest}" because: Exception{type(arg)} {arg}'
+            )
         # Invoke call back with `None` indicating the file was not saved
         if on_saved:
             on_saved(None)
 
     @staticmethod
-    def _save_bytes(data:bytes, dest:str):
-        with open(dest, 'wb') as f:
+    def _save_bytes(data: bytes, dest: str):
+        with open(dest, "wb") as f:
             f.write(data)
 
     @staticmethod
-    def _is_unique(data:bytes, dest:str):
+    def _is_unique(data: bytes, dest: str):
         destdir = osp.dirname(dest)
         name, ext = osp.splitext(osp.basename(dest))
         if not osp.isdir(destdir):
             return True
-        flist = filter(lambda x:x.startswith(name) and x.endswith(ext), os.listdir(destdir))
+        flist = filter(
+            lambda x: x.startswith(name) and x.endswith(ext), os.listdir(destdir)
+        )
         for i in flist:
-            with open(osp.join(destdir, i), 'rb') as f:
+            with open(osp.join(destdir, i), "rb") as f:
                 if f.read() == data:
-                    Logger.debug(f"Saver: File \"{i}\" duplication was prevented, size {len(data)}")
+                    Logger.debug(
+                        f'Saver: File "{i}" duplication was prevented, size {len(data)}'
+                    )
                     return False
         return True
 
     @staticmethod
-    def _no_namesake(dest:str):
+    def _no_namesake(dest: str):
         destdir = osp.dirname(dest)
         name, ext = osp.splitext(osp.basename(dest))
         tmp = 0
         while osp.isfile(dest):
-            dest = osp.join(destdir, f'{name}${tmp}{ext}')
+            dest = osp.join(destdir, f"{name}${tmp}{ext}")
             tmp += 1
         return dest
-    #EndClass
+
+    # EndClass

@@ -33,13 +33,17 @@ class CodeProfiler(ContextDecorator):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._start_time:
-            CodeProfiler._records[self._name].put(time.perf_counter() - self._start_time)
+            CodeProfiler._records[self._name].put(
+                time.perf_counter() - self._start_time
+            )
         return False  # Hand down the exception
 
     @staticmethod
     def get_avg_time(name: str):
         times = CodeProfiler._records.get(name, None)
-        return sum(times.queue) / len(times.queue) if times and len(times.queue) else None
+        return (
+            sum(times.queue) / len(times.queue) if times and len(times.queue) else None
+        )
 
     @staticmethod
     def get_avg_time_all():

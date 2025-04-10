@@ -13,9 +13,10 @@ import types
 
 ##### ↓ CLI related ↓ #####
 
-os.system('')
+os.system("")
 
-def color(c:int=7, s:int=0):
+
+def color(c: int = 7, s: int = 0):
     """Gets a color controller string in interactive CLI.
 
     :param c: The color [0=black,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
@@ -23,9 +24,10 @@ def color(c:int=7, s:int=0):
     :returns: The color controller string.
     :rtype: str;
     """
-    return f'\033[{s};3{c}m'
+    return f"\033[{s};3{c}m"
 
-def input(text:str="", c:int=7, s:int=0, y:int=0):
+
+def input(text: str = "", c: int = 7, s: int = 0, y: int = 0):
     """Enhanced version of inputting in interactive CLI.
 
     :param text: The text to display;
@@ -38,7 +40,8 @@ def input(text:str="", c:int=7, s:int=0, y:int=0):
     ctrl = f"\033[K\033[{y};1H" if y > 0 else ""
     return builtins.input(f"{ctrl}{color(c, s)}{text}\033[?25h")
 
-def print(obj:object="", c:int=7, s:int=0, y:int=0):
+
+def print(obj: object = "", c: int = 7, s: int = 0, y: int = 0):
     """Enhanced version of printing in interactive CLI.
 
     :param obj: The object to print;
@@ -47,50 +50,57 @@ def print(obj:object="", c:int=7, s:int=0, y:int=0):
     :param y: The y-position of the line to print or overwrite [0=append];
     :rtype: None;
     """
-    ctrl = f'\033[K\033[{y};{1}H' if y > 0 else ''
+    ctrl = f"\033[K\033[{y};{1}H" if y > 0 else ""
     builtins.print(f"\033[?25l{ctrl}{color(c, s)}{obj}")
 
-def clear(use_ansi:bool=False):
+
+def clear(use_ansi: bool = False):
     """Clears the CLI output.
 
     rtype: None;
     """
     if use_ansi:
-        builtins.print('\033[2J')
+        builtins.print("\033[2J")
     else:
-        os.system('cls' if os.name == 'nt' else 'clear')
+        os.system("cls" if os.name == "nt" else "clear")
 
-def title(text:str):
+
+def title(text: str):
     """Sets the CLI window title. Windows only.
 
     :param text: The text of the title;
     rtype: None;
     """
-    if os.name == 'nt':
-        os.system(f'title {text}')
+    if os.name == "nt":
+        os.system(f"title {text}")
+
 
 def stacktrace():
     return traceback.format_exc()
 
+
 ##### ↓ IO related ↓ #####
 
-def mkdir(path:str):
+
+def mkdir(path: str):
     """Creates a directory.
 
     :param path: Path to the directory to be created;
     :rtype: None;
     """
     try:
-        path = path.strip().strip('/\\')
+        path = path.strip().strip("/\\")
         os.makedirs(path, exist_ok=True)
     except BaseException:
         pass
 
-def rmdir(path:str):
+
+def rmdir(path: str):
     """Deletes a directory."""
     shutil.rmtree(path, ignore_errors=True)
 
-def get_dir_size(path:str):
+
+def get_dir_size(path: str):
     """Gets the size of the given directory.
 
     :param path: Path to the directory;
@@ -104,7 +114,8 @@ def get_dir_size(path:str):
             size += osp.getsize(i)
     return size
 
-def get_filelist(path:str, max_depth=0):
+
+def get_filelist(path: str, max_depth=0):
     """Gets a list containing all the files in the given dir and its sub dirs.
     Note that If `max_depth` is specified to unlimited,
     `os.walk` (the most efficient way) will be used in this method instead of `os.listdir`.
@@ -125,7 +136,8 @@ def get_filelist(path:str, max_depth=0):
             lst.append(osp.join(path, i))
     return lst
 
-def get_dirlist(path:str, max_depth=0):
+
+def get_dirlist(path: str, max_depth=0):
     """Gets a list containing all the sub dirs in the given dir.
     Note that If `max_depth` is specified to unlimited,
     `os.walk` (the most efficient way) will be used in this method instead of `os.listdir`.
@@ -150,9 +162,11 @@ def get_dirlist(path:str, max_depth=0):
                     lst.extend(get_filelist(i, max_depth - 1))
     return lst
 
-_EXT_IMAGE = ('.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tiff')
 
-def is_image_file(path:str):
+_EXT_IMAGE = (".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tiff")
+
+
+def is_image_file(path: str):
     """Returns `True` if the given file is an image judging from its path.
 
     :param path: Path;
@@ -161,10 +175,23 @@ def is_image_file(path:str):
     """
     return any(path.lower().endswith(ext) for ext in _EXT_IMAGE)
 
-_EXT_KNOWN = ('.atlas', '.skel', '.wav', '.mp3', '.m4a', '.mp4', '.avi', '.mov', '.mkv', '.flv')
-_EXT_AB = ('.ab', '.bin')
 
-def is_known_asset_file(path:str):
+_EXT_KNOWN = (
+    ".atlas",
+    ".skel",
+    ".wav",
+    ".mp3",
+    ".m4a",
+    ".mp4",
+    ".avi",
+    ".mov",
+    ".mkv",
+    ".flv",
+)
+_EXT_AB = (".ab", ".bin")
+
+
+def is_known_asset_file(path: str):
     """Returns `True` if the given file is a known asset type from its judging from its name.
     Images, audios, videos and Spine are all known asset types.
 
@@ -174,7 +201,8 @@ def is_known_asset_file(path:str):
     """
     return is_image_file(path) or any(path.lower().endswith(ext) for ext in _EXT_KNOWN)
 
-def is_ab_file(path:str):
+
+def is_ab_file(path: str):
     """Returns `True` if the given file is an asset bundle judging from its name.
 
     :param path: Path;
@@ -183,7 +211,8 @@ def is_ab_file(path:str):
     """
     return any(path.lower().endswith(ext) for ext in _EXT_AB)
 
-def is_binary_file(path:str, guess_encoding:str='UTF-8'):
+
+def is_binary_file(path: str, guess_encoding: str = "UTF-8"):
     """Returns `True` if the given file is a binary file rather than text file.
 
     :param path: Path;
@@ -198,13 +227,16 @@ def is_binary_file(path:str, guess_encoding:str='UTF-8'):
     except UnicodeError:
         return True
 
+
 ##### ↓ Dynamic import related ↓ #####
 
-def get_modules_from_package(package:types.ModuleType):
-    walk_result = pkgutil.walk_packages(package.__path__, package.__name__ + '.')
+
+def get_modules_from_package(package: types.ModuleType):
+    walk_result = pkgutil.walk_packages(package.__path__, package.__name__ + ".")
     module_names = [name for _, name, is_pkg in walk_result if not is_pkg]
     return [importlib.import_module(name) for name in module_names]
 
-def get_modules_from_package_name(package_name:str):
+
+def get_modules_from_package_name(package_name: str):
     package = importlib.import_module(package_name)
     return get_modules_from_package(package)

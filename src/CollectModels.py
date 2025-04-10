@@ -9,31 +9,47 @@ from typing import Callable
 from .utils.GlobalMethods import print, rmdir, get_dirlist
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
-from .utils.TaskUtils import ThreadCtrl, Counter, UICtrl, TaskReporter, TaskReporterTracker
+from .utils.TaskUtils import (
+    ThreadCtrl,
+    Counter,
+    UICtrl,
+    TaskReporter,
+    TaskReporterTracker,
+)
 
 
-def collect_models(upkdir:str, destdir:str, do_del:bool, on_finished:Callable, on_collected:Callable):
+def collect_models(
+    upkdir: str,
+    destdir: str,
+    do_del: bool,
+    on_finished: Callable,
+    on_collected: Callable,
+):
     error_occurred = False
     for model_type_dir in get_dirlist(upkdir, max_depth=1):
-        model_type:str = osp.basename(model_type_dir) # Sub dir of one model type
+        model_type: str = osp.basename(model_type_dir)  # Sub dir of one model type
         for model_dir in get_dirlist(model_type_dir, max_depth=1):
-            model:str = osp.basename(model_dir) # Sub dir of one determined model
+            model: str = osp.basename(model_dir)  # Sub dir of one determined model
             if not model.islower():
                 # To solve model typo caused by Arknights side
                 model = model.lower()
-                Logger.info(f"CollectModels: \"{model_dir}\" may has a typo name")
+                Logger.info(f'CollectModels: "{model_dir}" may has a typo name')
             try:
                 newname = None
-                if model_type.startswith('Building') and re.match(r'(build_)?char_', model):
-                    newname = re.match(r'(build_)?char_(\d+_[0-9a-zA-Z]+(_[0-9a-zA-Z#]+)?)', model).group(2) # type: ignore
-                elif model_type.startswith('Battle') and re.match(r'enemy_', model):
-                    newname = re.match(r'enemy_(\d+_[0-9a-zA-Z]+(_\d+)?)', model).group(1) # type: ignore
-                elif model_type.startswith('DynIllust') and re.match(r'dyn_illust_char_', model):
-                    newname = "dyn_illust_" + re.match(r'dyn_illust_char_(\d+_[0-9a-zA-Z]+(_[0-9a-zA-Z#]+)?)', model).group(1) # type: ignore
+                if model_type.startswith("Building") and re.match(
+                    r"(build_)?char_", model
+                ):
+                    newname = re.match(r"(build_)?char_(\d+_[0-9a-zA-Z]+(_[0-9a-zA-Z#]+)?)", model).group(2)  # type: ignore
+                elif model_type.startswith("Battle") and re.match(r"enemy_", model):
+                    newname = re.match(r"enemy_(\d+_[0-9a-zA-Z]+(_\d+)?)", model).group(1)  # type: ignore
+                elif model_type.startswith("DynIllust") and re.match(
+                    r"dyn_illust_char_", model
+                ):
+                    newname = "dyn_illust_" + re.match(r"dyn_illust_char_(\d+_[0-9a-zA-Z]+(_[0-9a-zA-Z#]+)?)", model).group(1)  # type: ignore
                 if newname:
                     # Move
                     dest = osp.join(destdir, newname)
-                    Logger.debug(f"CollectModels: \"{model_dir}\" -> \"{dest}\"")
+                    Logger.debug(f'CollectModels: "{model_dir}" -> "{dest}"')
                     shutil.copytree(model_dir, dest, dirs_exist_ok=True)
                     rmdir(model_dir)
                     if on_collected:
@@ -43,14 +59,17 @@ def collect_models(upkdir:str, destdir:str, do_del:bool, on_finished:Callable, o
                     pass
             except Exception as arg:
                 error_occurred = True
-                Logger.error(f"CollectModels: Error occurred while handling \"{model_dir}\": Exception{type(arg)} {arg}")
+                Logger.error(
+                    f'CollectModels: Error occurred while handling "{model_dir}": Exception{type(arg)} {arg}'
+                )
     if do_del and not error_occurred:
         rmdir(upkdir)
     if on_finished:
         on_finished()
 
+
 ########## Main-主程序 ##########
-def main(srcdirs:"list[str]", destdirs:"list[str]"):
+def main(srcdirs: "list[str]", destdirs: "list[str]"):
     """Collects the Spine models from the source directories to the destination directories accordingly.
     The structure of the source directory is shown below.
 
@@ -73,7 +92,7 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
         print("参数错误", c=3)
         return
 
-    flist = [] # [(upkdir, destdir), ...]
+    flist = []  # [(upkdir, destdir), ...]
     for srcdir, destdir in zip(srcdirs, destdirs):
         print(f"\t正在读取目录 {srcdir}")
         for upkdir in get_dirlist(srcdir, max_depth=1):
@@ -88,27 +107,38 @@ def main(srcdirs:"list[str]", destdirs:"list[str]"):
     ui.reset()
     ui.loop_start()
     for upkdir, destdir in flist:
-        #(i stands for a source dir's path)
-        ui.request([
-            "正在分拣模型...",
-            tracker.to_progress_bar_str(),
-            f"当前搜索：\t{osp.basename(upkdir)}",
-            f"累计分拣：\t{collected.now()}",
-            f"剩余时间：\t{tracker.to_eta_str()}",
-        ])
+        # (i stands for a source dir's path)
+        ui.request(
+            [
+                "正在分拣模型...",
+                tracker.to_progress_bar_str(),
+                f"当前搜索：\t{osp.basename(upkdir)}",
+                f"累计分拣：\t{collected.now()}",
+                f"剩余时间：\t{tracker.to_eta_str()}",
+            ]
+        )
         ###
-        thread_ctrl.run_subthread(collect_models, (upkdir, destdir, True, tr_finished.report, collected.update),
-            name=f"CmThread:{id(upkdir)}")
+        thread_ctrl.run_subthread(
+            collect_models,
+            (upkdir, destdir, True, tr_finished.report, collected.update),
+            name=f"CmThread:{id(upkdir)}",
+        )
 
     ui.reset()
     ui.loop_stop()
-    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
-        ui.request([
-            "正在分拣模型...",
-            tracker.to_progress_bar_str(),
-            f"累计分拣：\t{collected.now()}",
-            f"剩余时间：\t{tracker.to_eta_str()}",
-        ])
+    while (
+        thread_ctrl.count_subthread()
+        or not SafeSaver.get_instance().completed()
+        or tracker.get_progress() < 1
+    ):
+        ui.request(
+            [
+                "正在分拣模型...",
+                tracker.to_progress_bar_str(),
+                f"累计分拣：\t{collected.now()}",
+                f"剩余时间：\t{tracker.to_eta_str()}",
+            ]
+        )
         ui.refresh(post_delay=0.1)
 
     ui.loop_stop()

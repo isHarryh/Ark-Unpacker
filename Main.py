@@ -11,56 +11,65 @@ from src.utils import ArgParser
 from src.utils.Config import Config
 from src.utils.Logger import Logger
 from src.utils.GlobalMethods import color, input, print, clear, title, stacktrace, rmdir
-from src import ResolveAB       as AU_Rs
+from src import ResolveAB as AU_Rs
 from src import DecodeTextAsset as AU_Fb
 from src import CombineRGBwithA as AU_Cb
-from src import CollectModels   as AU_Cm
-from src import CollectVoice    as AU_Cv
-from src import ModelsDataDist  as AU_Mdd
-from src import VoiceDataDist   as AU_Vdd
+from src import CollectModels as AU_Cm
+from src import CollectVoice as AU_Cv
+from src import ModelsDataDist as AU_Mdd
+from src import VoiceDataDist as AU_Vdd
 
-ARKUNPACKER_VERSION = 'v3.6'
-ARKUNPACKER_LOCAL = 'zh-CN'
+ARKUNPACKER_VERSION = "v3.6"
+ARKUNPACKER_LOCAL = "zh-CN"
 
 
 def prt_homepage():
     Logger.info("CI: In Homepage.")
     clear()
-    os.chdir('.')
+    os.chdir(".")
     print(f"欢迎使用ArkUnpacker {ARKUNPACKER_VERSION}", s=1)
     print("=" * 20)
-    print("""模式选择：
+    print(
+        """模式选择：
 1: 一键执行
 2: 自定义资源解包
 3: 自定义图片合并
 4: 自定义文本资源解码
 5: ArkModels提取与分拣工具
 6: ArkVoice提取与分拣工具
-0: 退出""", c=6)
-    print("输入序号后按Enter即可，\n如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker ")
+0: 退出""",
+        c=6,
+    )
+    print(
+        "输入序号后按Enter即可，\n如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker "
+    )
 
-def prt_subtitle(msg:str):
+
+def prt_subtitle(msg: str):
     clear()
-    os.chdir('.')
+    os.chdir(".")
     print("=" * 10, s=1)
     print(msg, s=1)
     print("=" * 10, s=1)
 
+
 def prt_continue():
     UserInput.request("\n> 按Enter以继续...")
+
 
 def run_quickaccess():
     Logger.info("CI: Run quick access.")
     title("ArkUnpacker - Processing")
-    destdir = f'Unpacked_{int(time.time())}'
+    destdir = f"Unpacked_{int(time.time())}"
     ###
     prt_subtitle("步骤1|资源解包")
     time.sleep(1)
-    AU_Rs.main('.', destdir)
+    AU_Rs.main(".", destdir)
     ###
     prt_subtitle("步骤2|合并图片")
     time.sleep(1)
-    AU_Cb.main(destdir, f'Combined_{int(time.time())}')
+    AU_Cb.main(destdir, f"Combined_{int(time.time())}")
+
 
 def run_custom_resolve_ab():
     Logger.info("CI: Customized unpack mode.")
@@ -75,7 +84,7 @@ def run_custom_resolve_ab():
     print("  支持相对路径，留空表示自动创建")
     destdir = input("> ", c=2)
     if not destdir:
-        destdir = f'Unpacked_{int(time.time())}'
+        destdir = f"Unpacked_{int(time.time())}"
     print("导出目录路径：", c=2)
     print(f"  {osp.abspath(destdir)}", c=6)
     ###
@@ -94,18 +103,22 @@ def run_custom_resolve_ab():
     print("\n请输入要导出的资源类型")
     print("  [i]图片，[t]文本，[a]音频", c=3)
     print("  [s]Spine动画模型", c=3)
-    print("  示例输入：\"ita\"，\"ia\"")
+    print('  示例输入："ita"，"ia"')
     do_them = input("> ", c=2).lower()
     do_img = True if "i" in do_them else False
     do_txt = True if "t" in do_them else False
     do_aud = True if "a" in do_them else False
     do_spi = True if "s" in do_them else False
-    print(f"  [{'√' if do_img else '×'}]图片，[{'√' if do_txt else '×'}]文本，[{'√' if do_aud else '×'}]音频", c=6)
+    print(
+        f"  [{'√' if do_img else '×'}]图片，[{'√' if do_txt else '×'}]文本，[{'√' if do_aud else '×'}]音频",
+        c=6,
+    )
     print(f"  [{'√' if do_spi else '×'}]Spine动画模型", c=6)
     ###
     prt_continue()
     title("ArkUnpacker - Processing")
     AU_Rs.main(src, destdir, do_del, do_img, do_txt, do_aud, do_spi, separate)
+
 
 def run_custom_combine_image():
     Logger.info("CI: Customized image combine mode.")
@@ -120,7 +133,7 @@ def run_custom_combine_image():
     print("  支持相对路径，留空表示自动创建")
     destdir = input("> ", c=2)
     if not destdir:
-        destdir = f'Combined_{int(time.time())}'
+        destdir = f"Combined_{int(time.time())}"
     print("您选择的导出目录是：")
     print(f"  {osp.abspath(destdir)}", c=6)
     ###
@@ -134,11 +147,14 @@ def run_custom_combine_image():
     title("ArkUnpacker - Processing")
     AU_Cb.main(rootdir, destdir, do_del)
 
+
 def run_custom_textasset_decode():
     Logger.info("CI: Customized textasset decoding mode.")
     prt_subtitle("自定义文本资源解码")
     ###
-    print("Arknights游戏内数据文件主要位于TextAsset中，采用FlatBuffers格式或AES加密存储。")
+    print(
+        "Arknights游戏内数据文件主要位于TextAsset中，采用FlatBuffers格式或AES加密存储。"
+    )
     print("在资源解包后需要对这些文件进行解码才可得到游戏数据。")
     print("\n请输入源文件目录的路径")
     print("若您不清楚哪些文件是TextAsset，请选择整个解包后的目录。")
@@ -150,7 +166,7 @@ def run_custom_textasset_decode():
     print("  支持相对路径，留空表示自动创建")
     destdir = input("> ", c=2)
     if not destdir:
-        destdir = f'Decoded_{int(time.time())}'
+        destdir = f"Decoded_{int(time.time())}"
     print("您选择的导出目录是：")
     print(f"  {osp.abspath(destdir)}", c=6)
     ###
@@ -164,13 +180,17 @@ def run_custom_textasset_decode():
     title("ArkUnpacker - Processing")
     AU_Fb.main(rootdir, destdir, do_del)
 
+
 def run_arkmodels_unpacking(dirs, destdir):
     Logger.info("CI: ArkModels unpack mode.")
     prt_subtitle("ArkModels 模型提取")
     ###
     for i in dirs:
         if not osp.exists(i):
-            print(f"在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是本程序版本与您的资源版本不兼容，可尝试获取其他版本的程序。", c=3)
+            print(
+                f"在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是本程序版本与您的资源版本不兼容，可尝试获取其他版本的程序。",
+                c=3,
+            )
             return
     title("ArkUnpacker - Processing")
     ###
@@ -179,13 +199,17 @@ def run_arkmodels_unpacking(dirs, destdir):
     for i in dirs:
         AU_Rs.main(i, destdir, do_img=False, do_txt=False, do_aud=False, do_spine=True)
 
+
 def run_arkmodels_anon_unpacking(dirs, destdir):
     Logger.info("CI: ArkModels unpack mode.")
     prt_subtitle("ArkModels 模型提取")
     ###
     for i in dirs:
         if not osp.exists(i):
-            print(f"在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是本程序版本与您的资源版本不兼容，可尝试获取其他版本的程序。", c=3)
+            print(
+                f"在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是本程序版本与您的资源版本不兼容，可尝试获取其他版本的程序。",
+                c=3,
+            )
             return
     title("ArkUnpacker - Processing")
     ###
@@ -193,6 +217,7 @@ def run_arkmodels_anon_unpacking(dirs, destdir):
     rmdir(destdir)
     for i in dirs:
         AU_Rs.main(i, destdir, do_img=False, do_txt=True, do_aud=False, do_spine=False)
+
 
 def run_arkmodels_filtering(dirs, destdirs):
     Logger.info("CI: ArkModels file filter mode.")
@@ -202,13 +227,17 @@ def run_arkmodels_filtering(dirs, destdirs):
     destdirs_ = []
     for i, j in zip(dirs, destdirs):
         if not osp.exists(i):
-            print(f"在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是您事先没有进行\"模型提取\"的步骤。", c=3)
-            UserInput.request("> 输入符号 \"*\" 以取消任务，或直接按Enter以强制继续")
+            print(
+                f'在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是您事先没有进行"模型提取"的步骤。',
+                c=3,
+            )
+            UserInput.request('> 输入符号 "*" 以取消任务，或直接按Enter以强制继续')
         else:
             dirs_.append(i)
             destdirs_.append(j)
     ###
     AU_Cm.main(dirs_, destdirs_)
+
 
 def run_arkmodels_data_dist():
     Logger.info("CI: ArkModels dataset mode.")
@@ -216,27 +245,36 @@ def run_arkmodels_data_dist():
     ###
     for i in ["models", "models_enemies", "models_illust"]:
         if not osp.exists(i):
-            print(f"在工作目录下找不到 {i}，请确认您先前已运行了\"模型分拣\"。", c=3)
-            UserInput.request("> 输入符号 \"*\" 以取消任务，或直接按Enter以强制继续")
+            print(f'在工作目录下找不到 {i}，请确认您先前已运行了"模型分拣"。', c=3)
+            UserInput.request('> 输入符号 "*" 以取消任务，或直接按Enter以强制继续')
             return
     if not osp.exists(AU_Mdd.ModelsDist.TEMP_DIR):
-        print(f"在工作目录下找不到 {AU_Mdd.ModelsDist.TEMP_DIR}，请确认您先前已运行了\"匿名数据提取\"。", c=3)
-        UserInput.request("> 输入符号 \"*\" 以取消任务，或直接按Enter以强制继续")
+        print(
+            f'在工作目录下找不到 {AU_Mdd.ModelsDist.TEMP_DIR}，请确认您先前已运行了"匿名数据提取"。',
+            c=3,
+        )
+        UserInput.request('> 输入符号 "*" 以取消任务，或直接按Enter以强制继续')
         return
     AU_Mdd.main()
 
+
 def run_arkmodels_workflow():
-    def visual(fp:str, default_c:int=6):
+    def visual(fp: str, default_c: int = 6):
         return f"{color(2 if osp.exists(fp) else 3)}{fp}{color(default_c)}"
+
     Logger.info("CI: In ArkModels workflow.")
+
     def prt_arkmodels_menu():
         clear()
-        os.chdir('.')
+        os.chdir(".")
         print("ArkModels提取与分拣工具", s=1)
-        print("="*20)
-        print("""ArkModels是作者建立的明日方舟Spine模型仓库（https://github.com/isHarryh/Ark-Models），以下功能专门为ArkModels仓库的更新而设计。
-运行部分功能之前，需要确保括号内所示的资源文件夹已位于程序所在目录中。""")
-        print(f"""功能选择：
+        print("=" * 20)
+        print(
+            """ArkModels是作者建立的明日方舟Spine模型仓库（https://github.com/isHarryh/Ark-Models），以下功能专门为ArkModels仓库的更新而设计。
+运行部分功能之前，需要确保括号内所示的资源文件夹已位于程序所在目录中。"""
+        )
+        print(
+            f"""功能选择：
 1: 一键执行
 2: 干员基建模型提取 ({visual('chararts')}, {visual('skinpack')})
 3: 敌方战斗模型提取 ({visual('battle')})
@@ -244,76 +282,96 @@ def run_arkmodels_workflow():
 5: 匿名数据提取 ({visual(AU_Mdd.ModelsDist.GAMEDATA_DIR)})
 6: 模型分拣
 7: 生成数据集
-0: 返回""", c=6)
-        print("输入序号后按Enter即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker")
-    temp_dir_1 = 'temp/am_upk_operator'
-    temp_dir_2 = 'temp/am_upk_enemy'
-    temp_dir_3 = 'temp/am_upk_dynillust'
+0: 返回""",
+            c=6,
+        )
+        print(
+            "输入序号后按Enter即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker"
+        )
+
+    temp_dir_1 = "temp/am_upk_operator"
+    temp_dir_2 = "temp/am_upk_enemy"
+    temp_dir_3 = "temp/am_upk_dynillust"
     temp_dir_4 = AU_Mdd.ModelsDist.TEMP_DIR
     while True:
         title("ArkUnpacker")
         prt_arkmodels_menu()
         order = input("> ", c=2)
         wildcard = False
-        if order == '1':
+        if order == "1":
             wildcard = True
-        if order == '2' or wildcard:
-            run_arkmodels_unpacking(['chararts', 'skinpack'], temp_dir_1)
-        if order == '3' or wildcard:
-            run_arkmodels_unpacking(['battle/prefabs/enemies'], temp_dir_2)
-        if order == '4' or wildcard:
-            run_arkmodels_unpacking(['arts/dynchars'], temp_dir_3)
-        if order == '5' or wildcard:
+        if order == "2" or wildcard:
+            run_arkmodels_unpacking(["chararts", "skinpack"], temp_dir_1)
+        if order == "3" or wildcard:
+            run_arkmodels_unpacking(["battle/prefabs/enemies"], temp_dir_2)
+        if order == "4" or wildcard:
+            run_arkmodels_unpacking(["arts/dynchars"], temp_dir_3)
+        if order == "5" or wildcard:
             run_arkmodels_anon_unpacking([AU_Mdd.ModelsDist.GAMEDATA_DIR], temp_dir_4)
-        if order == '6' or wildcard:
-            run_arkmodels_filtering([temp_dir_1, temp_dir_2, temp_dir_3], ['models', 'models_enemies', 'models_illust'])
-        if order == '7' or wildcard:
+        if order == "6" or wildcard:
+            run_arkmodels_filtering(
+                [temp_dir_1, temp_dir_2, temp_dir_3],
+                ["models", "models_enemies", "models_illust"],
+            )
+        if order == "7" or wildcard:
             run_arkmodels_data_dist()
-        if order in ['1', '2', '3', '4', '5', '6', '7']:
+        if order in ["1", "2", "3", "4", "5", "6", "7"]:
             prt_continue()
-        if order == '0':
+        if order == "0":
             return
 
+
 def run_arkvoice_unpacking(dir, destdir1, destdir2, wildcard=False):
-    def visual(fp:str, default_c:int=6):
+    def visual(fp: str, default_c: int = 6):
         return f"{color(2 if osp.exists(fp) else 3)}{fp}{color(default_c)}"
+
     Logger.info("CI: ArkVoice unpack mode.")
+
     def prt_arkvoice_unpacking_menu(dir, destdir1):
         clear()
-        os.chdir('.')
+        os.chdir(".")
         print("ArkVoice提取与分拣工具", s=1)
-        print("="*20)
-        print(f"""模式选择：
+        print("=" * 20)
+        print(
+            f"""模式选择：
 1: 仅提取 Wav 文件 ({visual(dir)})
 2: 仅合并 Wav 文件为 Ogg 文件 ({visual(destdir1)})
 3: 提取与合并
-0: 取消""", c=6)
+0: 取消""",
+            c=6,
+        )
+
     while True:
         title("ArkUnpacker")
         prt_arkvoice_unpacking_menu(dir, destdir1)
-        order = '0'
+        order = "0"
         if not wildcard:
             order = input("> ", c=2)
-        if order == '3':
+        if order == "3":
             wildcard = True
-        if order == '1' or wildcard:
+        if order == "1" or wildcard:
             if not osp.exists(dir):
-                print(f"在工作目录下找不到 {dir}，请确保该文件夹直接位于工作目录中。", c=3)
+                print(
+                    f"在工作目录下找不到 {dir}，请确保该文件夹直接位于工作目录中。", c=3
+                )
                 return
             print("正在清理...")
             rmdir(destdir1)
             title("ArkUnpacker - Processing")
-            AU_Rs.main(dir, destdir1, do_img=False, do_txt=False, do_aud=True, do_spine=False)
-        if order == '2' or wildcard:
+            AU_Rs.main(
+                dir, destdir1, do_img=False, do_txt=False, do_aud=True, do_spine=False
+            )
+        if order == "2" or wildcard:
             if not osp.exists(destdir1):
                 print(f"在工作目录下找不到 {destdir1}，请确保您已执行前置步骤。", c=3)
                 return
             print("正在清理...")
             rmdir(destdir2)
             title("ArkUnpacker - Processing")
-            AU_Cv.main(destdir1, destdir2, 'custom' in destdir2)
-        if order == '0':
+            AU_Cv.main(destdir1, destdir2, "custom" in destdir2)
+        if order == "0":
             return
+
 
 def run_arkvoice_data_dist():
     Logger.info("CI: ArkVoice dataset mode.")
@@ -321,15 +379,20 @@ def run_arkvoice_data_dist():
     ###
     AU_Vdd.main()
 
+
 def run_arkvoice_workflow():
     Logger.info("CI: In ArkVoice workflow.")
+
     def prt_arkvoice_menu():
         clear()
-        os.chdir('.')
+        os.chdir(".")
         print("ArkVoice提取与分拣工具", s=1)
-        print("="*20)
-        print("ArkVoice是作者建立的明日方舟语音仓库（https://github.com/isHarryh/Ark-Voice），以下功能专门为ArkVoice仓库的更新而设计。")
-        print(f"""功能选择：
+        print("=" * 20)
+        print(
+            "ArkVoice是作者建立的明日方舟语音仓库（https://github.com/isHarryh/Ark-Voice），以下功能专门为ArkVoice仓库的更新而设计。"
+        )
+        print(
+            f"""功能选择：
 1: 一键执行
 2: 提取并分拣日文语音
 3: 提取并分拣中文语音
@@ -337,54 +400,85 @@ def run_arkvoice_workflow():
 5: 提取并分拣韩文语音
 6: 提取并分拣个性语音
 7: 生成数据集
-0: 返回""", c=6)
-        print("输入序号后按Enter即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker")
+0: 返回""",
+            c=6,
+        )
+        print(
+            "输入序号后按Enter即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker"
+        )
+
     while True:
         title("ArkUnpacker")
         prt_arkvoice_menu()
         order = input("> ", c=2)
         wildcard = False
-        if order == '1':
+        if order == "1":
             wildcard = True
-        if order == '2' or wildcard:
-            run_arkvoice_unpacking('audio/sound_beta_2/voice', 'temp/av_upk', 'voice', wildcard)
-        if order == '3' or wildcard:
-            run_arkvoice_unpacking('audio/sound_beta_2/voice_cn', 'temp/av_upk_cn', 'voice_cn', wildcard)
-        if order == '4' or wildcard:
-            run_arkvoice_unpacking('audio/sound_beta_2/voice_en', 'temp/av_upk_en', 'voice_en', wildcard)
-        if order == '5' or wildcard:
-            run_arkvoice_unpacking('audio/sound_beta_2/voice_kr', 'temp/av_upk_kr', 'voice_kr', wildcard)
-        if order == '6' or wildcard:
-            run_arkvoice_unpacking('audio/sound_beta_2/voice_custom', 'temp/av_upk_custom', 'voice_custom', wildcard)
-        if order == '7' or wildcard:
+        if order == "2" or wildcard:
+            run_arkvoice_unpacking(
+                "audio/sound_beta_2/voice", "temp/av_upk", "voice", wildcard
+            )
+        if order == "3" or wildcard:
+            run_arkvoice_unpacking(
+                "audio/sound_beta_2/voice_cn", "temp/av_upk_cn", "voice_cn", wildcard
+            )
+        if order == "4" or wildcard:
+            run_arkvoice_unpacking(
+                "audio/sound_beta_2/voice_en", "temp/av_upk_en", "voice_en", wildcard
+            )
+        if order == "5" or wildcard:
+            run_arkvoice_unpacking(
+                "audio/sound_beta_2/voice_kr", "temp/av_upk_kr", "voice_kr", wildcard
+            )
+        if order == "6" or wildcard:
+            run_arkvoice_unpacking(
+                "audio/sound_beta_2/voice_custom",
+                "temp/av_upk_custom",
+                "voice_custom",
+                wildcard,
+            )
+        if order == "7" or wildcard:
             run_arkvoice_data_dist()
-        if order in ['1', '2', '3', '4', '5', '6', '7']:
+        if order in ["1", "2", "3", "4", "5", "6", "7"]:
             prt_continue()
-        if order == '0':
+        if order == "0":
             return
 
-def validate_input_output_arg(parser:argparse.ArgumentParser, args:argparse.Namespace, allow_file_input:bool=False):
-    if not getattr(args, 'input', None):
+
+def validate_input_output_arg(
+    parser: argparse.ArgumentParser,
+    args: argparse.Namespace,
+    allow_file_input: bool = False,
+):
+    if not getattr(args, "input", None):
         parser.error("input should be defined in this mode")
-    if not getattr(args, 'output', None):
+    if not getattr(args, "output", None):
         parser.error("output should be defined in this mode")
     if not allow_file_input and os.path.isfile(args.input):
         parser.error("input should be a directory, not file")
-    if not os.path.isdir(args.input) and not (allow_file_input and os.path.isfile(args.input)):
-        parser.error(f"input should be a {'file or ' if allow_file_input else ''}directory that exists")
+    if not os.path.isdir(args.input) and not (
+        allow_file_input and os.path.isfile(args.input)
+    ):
+        parser.error(
+            f"input should be a {'file or ' if allow_file_input else ''}directory that exists"
+        )
 
-def validate_logging_level_arg(parer:argparse.ArgumentParser, args:argparse.Namespace):
-    if getattr(args, 'logging_level', None) is None:
+
+def validate_logging_level_arg(
+    parer: argparse.ArgumentParser, args: argparse.Namespace
+):
+    if getattr(args, "logging_level", None) is None:
         return
     if args.logging_level not in range(5):
         parser.error("invalid logging level")
     Logger.set_level(args.logging_level)
 
+
 class UserInput:
-    CANCEL_CMD = '*'
+    CANCEL_CMD = "*"
 
     @staticmethod
-    def request(prompt:str="> "):
+    def request(prompt: str = "> "):
         uin = input(prompt, c=2)
         if uin == UserInput.CANCEL_CMD:
             print("  已取消任务", c=3)
@@ -392,63 +486,64 @@ class UserInput:
         return uin
 
     @staticmethod
-    def request_options(options:list):
-        print(f"  输入符号 \"{UserInput.CANCEL_CMD}\" 以取消任务")
+    def request_options(options: list):
+        print(f'  输入符号 "{UserInput.CANCEL_CMD}" 以取消任务')
         uin = UserInput.request()
         while uin not in options:
-            print('  输入的选项不合法', c=3)
+            print("  输入的选项不合法", c=3)
             uin = UserInput.request()
         return uin
 
     @staticmethod
     def request_path():
-        print(f"  输入符号 \"{UserInput.CANCEL_CMD}\" 以取消任务，支持输入相对路径")
+        print(f'  输入符号 "{UserInput.CANCEL_CMD}" 以取消任务，支持输入相对路径')
         uin = osp.normpath(UserInput.request())
         while not osp.exists(uin):
-            print('  输入的路径不存在', c=3)
+            print("  输入的路径不存在", c=3)
             uin = osp.normpath(UserInput.request())
         return uin
 
     @staticmethod
-    def request_yes_or_no(default:bool):
-        print(f"  输入符号 \"{UserInput.CANCEL_CMD}\" 以取消任务")
+    def request_yes_or_no(default: bool):
+        print(f'  输入符号 "{UserInput.CANCEL_CMD}" 以取消任务')
         uin = UserInput.request().strip().lower()
         if default:
-            return False if uin == 'n' else True
+            return False if uin == "n" else True
         else:
-            return True if uin == 'y' else False
+            return True if uin == "y" else False
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     parser = ArgParser.INSTANCE
     try:
-        Logger.set_instance(Config.get('log_file'), Config.get('log_level'))
+        Logger.set_instance(Config.get("log_file"), Config.get("log_level"))
         Logger.info("CI: Initialized")
-        print('')
+        print("")
         args = parser.parse_args()
-        if getattr(args, 'mode', None) is None:
+        if getattr(args, "mode", None) is None:
             # No argument input -> ENTER -> Interactive CLI mode
             while True:
                 try:
                     title("ArkUnpacker")
                     prt_homepage()
                     order = input("> ", c=2)
-                    if order == '1':
+                    if order == "1":
                         run_quickaccess()
                         prt_continue()
-                    elif order == '2':
+                    elif order == "2":
                         run_custom_resolve_ab()
                         prt_continue()
-                    elif order == '3':
+                    elif order == "3":
                         run_custom_combine_image()
                         prt_continue()
-                    elif order == '4':
+                    elif order == "4":
                         run_custom_textasset_decode()
                         prt_continue()
-                    elif order == '5':
+                    elif order == "5":
                         run_arkmodels_workflow()
-                    elif order == '6':
+                    elif order == "6":
                         run_arkvoice_workflow()
-                    elif order == '0':
+                    elif order == "0":
                         print("\n用户退出")
                         break
                 except InterruptedError as arg:
@@ -457,13 +552,22 @@ if __name__ == '__main__':
         else:
             # Has arguments input -> GOTO -> The specified mode
             validate_logging_level_arg(parser, args)
-            if args.mode == 'ab':
+            if args.mode == "ab":
                 validate_input_output_arg(parser, args, allow_file_input=True)
-                AU_Rs.main(args.input, args.output, args.d, args.image, args.text, args.audio, args.spine, args.group)
-            elif args.mode == 'cb':
+                AU_Rs.main(
+                    args.input,
+                    args.output,
+                    args.d,
+                    args.image,
+                    args.text,
+                    args.audio,
+                    args.spine,
+                    args.group,
+                )
+            elif args.mode == "cb":
                 validate_input_output_arg(parser, args)
                 AU_Cb.main(args.input, args.output, args.d)
-            elif args.mode == 'fb':
+            elif args.mode == "fb":
                 validate_input_output_arg(parser, args)
                 AU_Fb.main(args.input, args.output, args.d)
     # Global error handlers

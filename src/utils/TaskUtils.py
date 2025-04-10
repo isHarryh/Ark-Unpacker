@@ -11,44 +11,57 @@ from .GlobalMethods import color, print, clear
 from .Logger import Logger
 
 
-class ThreadCtrl():
+class ThreadCtrl:
     """Controller for Multi Threading."""
 
-    def __init__(self, max_subthread:"int|None"=None):
+    def __init__(self, max_subthread: "int|None" = None):
         """Initializes a tool for multi threading."""
-        self.__sts:"list[threading.Thread]" = []
+        self.__sts: "list[threading.Thread]" = []
         if not max_subthread:
-            max_subthread = PerformanceLevel.get_thread_limit(Config.get('performance_level'))
+            max_subthread = PerformanceLevel.get_thread_limit(
+                Config.get("performance_level")
+            )
         self.set_max_subthread(max_subthread)
 
-    def set_max_subthread(self, max_subthread:int):
+    def set_max_subthread(self, max_subthread: int):
         """Sets the max number of sub threads."""
-        self.__max:int = max(1, max_subthread)
+        self.__max: int = max(1, max_subthread)
 
     def count_subthread(self):
         """Gets the number of alive sub threads."""
-        self.__sts = list(filter(lambda x:x.is_alive(), self.__sts))
+        self.__sts = list(filter(lambda x: x.is_alive(), self.__sts))
         return len(self.__sts)
 
-    def run_subthread(self, fun, args:"tuple|None"=None, kwargs:"dict|None"=None, name:"str|None"=None):
+    def run_subthread(
+        self,
+        fun,
+        args: "tuple|None" = None,
+        kwargs: "dict|None" = None,
+        name: "str|None" = None,
+    ):
         """Creates a sub thread and run it."""
         while self.count_subthread() >= self.__max:
             pass
-        ts = threading.Thread(target=fun,
-                              args=args if args is not None else (),
-                              kwargs=kwargs if kwargs is not None else {},
-                              daemon=True,
-                              name=name)
+        ts = threading.Thread(
+            target=fun,
+            args=args if args is not None else (),
+            kwargs=kwargs if kwargs is not None else {},
+            daemon=True,
+            name=name,
+        )
         self.__sts.append(ts)
         ts.start()
-    #EndClass
 
-class WorkerCtrl():
+    # EndClass
+
+
+class WorkerCtrl:
     """Controller for Permanent Worker Threads."""
+
     LAYOFF_INTERVAL = 5
     BACKUP_THRESHOLD = 5
 
-    def __init__(self, handler:Callable, max_workers:int=1, name:str=""):
+    def __init__(self, handler: Callable, max_workers: int = 1, name: str = ""):
         """Initializes a Worker Controller.
 
         :param handler: The handler function of the workers;
@@ -69,7 +82,7 @@ class WorkerCtrl():
         self._backup_worker()
         Logger.debug(f"Worker: Workers are ready to work for {name}!")
 
-    def submit(self, data:tuple):
+    def submit(self, data: tuple):
         """Submits new data to workers.
 
         :param data: A tuple that contains the arguments that the handler required;
@@ -81,7 +94,7 @@ class WorkerCtrl():
         else:
             raise RuntimeError("The worker controller has terminated")
 
-    def terminate(self, block:bool=False):
+    def terminate(self, block: bool = False):
         """Requests the workers to terminate and stop receiving new data.
 
         :param block: Whether to wait for workers to complete.
@@ -132,7 +145,10 @@ class WorkerCtrl():
                     self.__idle_timestamp = time.time()
                 elif self.__idle_timestamp + WorkerCtrl.LAYOFF_INTERVAL < time.time():
                     cur_worker = threading.current_thread()
-                    if cur_worker in self.__workers and self.__workers.index(cur_worker) != 0:
+                    if (
+                        cur_worker in self.__workers
+                        and self.__workers.index(cur_worker) != 0
+                    ):
                         self._layoff_worker(cur_worker)
                         break
             else:
@@ -152,23 +168,27 @@ class WorkerCtrl():
 
     def _backup_worker(self):
         if len(self.__workers) < self.__max_workers:
-            t = threading.Thread(target=self._loop, name=f"Worker:{self._name}", daemon=True)
+            t = threading.Thread(
+                target=self._loop, name=f"Worker:{self._name}", daemon=True
+            )
             self.__workers.append(t)
             t.start()
             if len(self.__workers) >= self.__max_workers:
                 Logger.debug("Worker: Workers are in full load, slogging guts out!")
 
-    def _layoff_worker(self, worker:threading.Thread):
+    def _layoff_worker(self, worker: threading.Thread):
         if worker in self.__workers:
             self.__workers.remove(worker)
             if len(self.__workers) <= 1:
                 Logger.debug("Worker: Workers nodded off, sleeping for new tasks!")
 
-class UICtrl():
-    """UI Controller in the separated thread."""
-    THREAD_NAME = 'UIThread'
 
-    def __init__(self, interval:float=0.1):
+class UICtrl:
+    """UI Controller in the separated thread."""
+
+    THREAD_NAME = "UIThread"
+
+    def __init__(self, interval: float = 0.1):
         """Initializes a UI Controller.
 
         :param interval: Auto-refresh interval (seconds);
@@ -186,14 +206,16 @@ class UICtrl():
         """Starts auto-refresh."""
         self.__status = True
         self.__cache_lines = []
-        threading.Thread(target=self.__loop, daemon=True, name=UICtrl.THREAD_NAME).start()
+        threading.Thread(
+            target=self.__loop, daemon=True, name=UICtrl.THREAD_NAME
+        ).start()
 
     def loop_stop(self):
         """Stops auto-refresh."""
         self.__status = False
         self.__cache_lines = []
 
-    def refresh(self, post_delay:float=0, force_refresh:bool=False):
+    def refresh(self, post_delay: float = 0, force_refresh: bool = False):
         """Requests a immediate refresh.
 
         :param post_delay: Set the post delay after this refresh (seconds);
@@ -204,13 +226,13 @@ class UICtrl():
             try:
                 self.__cache_lines = self.__lines[:]
                 for i in range(len(self.__cache_lines)):
-                    print(self.__cache_lines[i], y=i+1)
+                    print(self.__cache_lines[i], y=i + 1)
             except IndexError:
                 pass
         if post_delay > 0:
             time.sleep(post_delay)
 
-    def request(self, lines:"list[str]"):
+    def request(self, lines: "list[str]"):
         """Updates the content
 
         :param lines: A list containing the content of each line;
@@ -224,23 +246,25 @@ class UICtrl():
         self.__lines = []
         self.__cache_lines = []
 
-    def set_refresh_rate(self, interval:float):
+    def set_refresh_rate(self, interval: float):
         """Sets the auto-refresh interval.
 
         :param interval: Auto-refresh interval (seconds);
         :rtype: None;
         """
         self.__interval = interval
-    #EndClass
 
-class Counter():
+    # EndClass
+
+
+class Counter:
     """Cumulative Counter."""
 
     def __init__(self):
         """Initializes a cumulative counter."""
         self.__s = 0
 
-    def update(self, val:"int|bool"=1):
+    def update(self, val: "int|bool" = 1):
         """Updates the counter.
 
         :param val: Delta value in int or bool (`True` for 1 and `False` for 0);
@@ -260,12 +284,14 @@ class Counter():
         :rtype: int;
         """
         return self.__s
-    #EndClass
 
-class TaskReporter():
+    # EndClass
+
+
+class TaskReporter:
     """Task reporter providing functions to record time consumptions of one kind of tasks."""
 
-    def __init__(self, weight:int, demand:int=0, window_size:int=100):
+    def __init__(self, weight: int, demand: int = 0, window_size: int = 100):
         """Initializes a task reporter with a sliding window for time tracking.
 
         :param weight: The weight per task, higher weight indicating more time consumption;
@@ -278,7 +304,7 @@ class TaskReporter():
         self._timestamps = queue.Queue(maxsize=window_size)
         self._internal_lock = threading.Lock()
 
-    def report(self, success:bool=True):
+    def report(self, success: bool = True):
         """Reports that one task has been successfully done (or failed).
 
         :param success: `True` to let `done += 1`, `False` to let `demand -= 1`;
@@ -296,7 +322,7 @@ class TaskReporter():
                 # Task failed, decrease the demand
                 self._demand -= 1
 
-    def update_demand(self, delta:int=1):
+    def update_demand(self, delta: int = 1):
         """Updates the number of the tasks to be done by the given value."""
         with self._internal_lock:
             self._demand += delta
@@ -329,12 +355,14 @@ class TaskReporter():
         :rtype: str;
         """
         return f"{self._done}/{self._demand}"
-    #EndClass
 
-class TaskReporterTracker():
+    # EndClass
+
+
+class TaskReporterTracker:
     """Task reporter tracker providing functions to manage multiple task reporters."""
 
-    def __init__(self, *reporters:TaskReporter):
+    def __init__(self, *reporters: TaskReporter):
         """Initializes a task reporter tracker with multiple task reporters.
 
         :param reporters: Some TaskReporter instances to be managed;
@@ -360,10 +388,10 @@ class TaskReporterTracker():
         eta = 0.0
         for reporter in self._reporters:
             s = reporter.get_speed()
-            eta += (reporter._demand - reporter._done) / s if s > 0 else float('inf')
-        return eta if eta != float('inf') else 0.0
+            eta += (reporter._demand - reporter._done) / s if s > 0 else float("inf")
+        return eta if eta != float("inf") else 0.0
 
-    def get_progress(self, force_inc:bool=False):
+    def get_progress(self, force_inc: bool = False):
         """Calculates the overall progress of tasks completed.
 
         :param force_inc: Whether prevent the progress to decrease;
@@ -371,12 +399,14 @@ class TaskReporterTracker():
         :rtype: float;
         """
         done = sum(reporter._done * reporter._weight for reporter in self._reporters)
-        demand = sum(reporter._demand * reporter._weight for reporter in self._reporters)
+        demand = sum(
+            reporter._demand * reporter._weight for reporter in self._reporters
+        )
         pg = max(0.0, min(1.0, done / demand)) if demand > 0 else 1.0
         self._cache_pg = max(self._cache_pg, pg)
         return self._cache_pg if force_inc else pg
 
-    def to_progress_bar_str(self, force_inc:bool=True, length:int=25):
+    def to_progress_bar_str(self, force_inc: bool = True, length: int = 25):
         """Gets a string representing the current progress.
 
         :param force_inc: Whether prevent the progress to decrease;
@@ -398,22 +428,23 @@ class TaskReporterTracker():
         m = int(eta % 3600 / 60)
         s = int(eta % 60)
         if h != 0:
-            return f'{h}:{m:02}:{s:02}'
+            return f"{h}:{m:02}:{s:02}"
         if eta != 0:
-            return f'{m:02}:{s:02}'
-        return '--:--'
+            return f"{m:02}:{s:02}"
+        return "--:--"
 
     @staticmethod
-    def _format_progress_bar_str(progress:float, length:int):
+    def _format_progress_bar_str(progress: float, length: int):
         try:
-            add_chars = (' ', '▏', '▎', '▍', '▌', '▋', '▊', '▉', '█')
+            add_chars = (" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█")
             max_idx = len(add_chars) - 1
-            rst = ''
+            rst = ""
             unit = 1 / length
             for i in range(length):
                 ratio = (progress - i * unit) / unit
                 rst += add_chars[max(0, min(max_idx, round(ratio * max_idx)))]
             return rst
         except BaseException:
-            return ''
-    #EndClass
+            return ""
+
+    # EndClass

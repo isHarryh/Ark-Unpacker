@@ -8,6 +8,7 @@ from datetime import datetime
 from .utils.GlobalMethods import print
 from .utils.Logger import Logger
 
+
 class VoiceDist:
     L10N = {
         # lang_id -> dict (id -> translation)
@@ -54,7 +55,7 @@ class VoiceDist:
             "038": "新年祝福",
             "042": "问候",
             "043": "生日祝福",
-            "044": "周年庆典"
+            "044": "周年庆典",
         },
         "zh-TW": {
             "JP": "日語",
@@ -99,7 +100,7 @@ class VoiceDist:
             "038": "新年祝福",
             "042": "問候",
             "043": "生日祝福",
-            "044": "週年慶典"
+            "044": "週年慶典",
         },
         "jp-JP": {
             "JP": "日本語",
@@ -144,7 +145,7 @@ class VoiceDist:
             "038": "新年のご挨拶",
             "042": "挨拶",
             "043": "誕生日祝い",
-            "044": "周年記念"
+            "044": "周年記念",
         },
         "ko-KR": {
             "JP": "일본어",
@@ -189,7 +190,7 @@ class VoiceDist:
             "038": "새해 인사",
             "042": "인사",
             "043": "생일 축하",
-            "044": "기념일"
+            "044": "기념일",
         },
         "en-US": {
             "JP": "Japanese",
@@ -234,26 +235,26 @@ class VoiceDist:
             "038": "New Year Greeting",
             "042": "Greeting",
             "043": "Birthday Wishes",
-            "044": "Anniversary Celebration"
-        }
+            "044": "Anniversary Celebration",
+        },
     }
     ARK_PETS_COMPATIBILITY = [4, 0, 0]
-    SERVER_REGION = 'zh_CN'
-    FORMAT = '.ogg'
+    SERVER_REGION = "zh_CN"
+    FORMAT = ".ogg"
     VARIATIONS_DIR = {
         # variation_id -> dirname
         "JP": "voice",
         "CN": "voice_cn",
         "KR": "voice_kr",
         "EN": "voice_en",
-        "CUSTOM": "voice_custom"
+        "CUSTOM": "voice_custom",
     }
     TYPES = {
         # type -> regex
         "common": r"^CN_\d\d\d$",
-        "effected": r"^FX_\d\d\d(_\d)?$"
+        "effected": r"^FX_\d\d\d(_\d)?$",
     }
-    DATA_PART_FILE = 'voice_data_part.json'
+    DATA_PART_FILE = "voice_data_part.json"
 
     def __init__(self):
         self.data = {
@@ -264,7 +265,7 @@ class VoiceDist:
             "data": {},
             "audioTypes": VoiceDist.TYPES,
             "audioFormat": VoiceDist.FORMAT,
-            "arkPetsCompatibility": VoiceDist.ARK_PETS_COMPATIBILITY
+            "arkPetsCompatibility": VoiceDist.ARK_PETS_COMPATIBILITY,
         }
 
     def retrieve(self):
@@ -280,17 +281,23 @@ class VoiceDist:
             else:
                 data_part_file = osp.join(dir, VoiceDist.DATA_PART_FILE)
                 if not osp.isfile(data_part_file):
-                    Logger.error(f"VoiceDataDist: Data part file {data_part_file} not found.")
+                    Logger.error(
+                        f"VoiceDataDist: Data part file {data_part_file} not found."
+                    )
                     print(f"\t未找到子数据集文件 {data_part_file}", c=3)
                     failed = True
                 else:
-                    data_part:dict = json.load(open(data_part_file, 'r', encoding='UTF-8'))
+                    data_part: dict = json.load(
+                        open(data_part_file, "r", encoding="UTF-8")
+                    )
                     for cha, lst in data_part.items():
                         cnt += 1
-                        if cha not in self.data['data']:
-                            self.data['data'][cha] = {'variations': {}}
-                        self.data['data'][cha]['variations'][var] = lst
-                    Logger.info(f"VoiceDataDist: Variation {var} includes {cnt} voice file.")
+                        if cha not in self.data["data"]:
+                            self.data["data"][cha] = {"variations": {}}
+                        self.data["data"][cha]["variations"][var] = lst
+                    Logger.info(
+                        f"VoiceDataDist: Variation {var} includes {cnt} voice file."
+                    )
                     print(f"\t语种 {var} 包含 {cnt} 套语音文件", c=2)
         if failed:
             print("读取子数据集时发生警告，因此总数据集可能不完整", c=1)
@@ -298,14 +305,17 @@ class VoiceDist:
             print("读取子数据集完毕", c=2)
 
     def sort(self):
-        self.data['data'] = dict(sorted(self.data['data'].items()))
+        self.data["data"] = dict(sorted(self.data["data"].items()))
 
     def export_json(self):
         Logger.info("VoiceDataDist: Writing to json.")
-        with open('voice_data.json', 'w', encoding='UTF-8') as f:
-            json.dump(self.data, f, ensure_ascii=False, indent=None, separators=(',', ':'))
+        with open("voice_data.json", "w", encoding="UTF-8") as f:
+            json.dump(
+                self.data, f, ensure_ascii=False, indent=None, separators=(",", ":")
+            )
         Logger.info("VoiceDataDist: Succeeded in writing to json.")
         print("\n已写入总数据集文件", c=2)
+
 
 ########## Main-主程序 ##########
 def main():

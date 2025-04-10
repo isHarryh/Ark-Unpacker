@@ -12,6 +12,7 @@ from .DecodeTextAsset import ArkFBOLibrary
 from .utils.GlobalMethods import color, print, get_dirlist, get_filelist
 from .utils.Logger import Logger
 
+
 class ModelsDist:
     SORT_TAGS_L10N = {
         # tag -> translation
@@ -31,7 +32,7 @@ class ModelsDist:
         "Rarity_6": "六星",
     }
     ARK_PETS_COMPATIBILITY = [2, 2, 0]
-    SERVER_REGION = 'zh_CN'
+    SERVER_REGION = "zh_CN"
     MODELS_DIR = {
         # type -> dirname
         "Operator": "models",
@@ -42,10 +43,10 @@ class ModelsDist:
         # extension type -> extension alternatives
         ".atlas": [".atlas"],
         ".png": [".png"],
-        ".skel": [".skel", ""]
+        ".skel": [".skel", ""],
     }
-    GAMEDATA_DIR = 'anon'
-    TEMP_DIR = 'temp/am_upk_mdd'
+    GAMEDATA_DIR = "anon"
+    TEMP_DIR = "temp/am_upk_mdd"
 
     def __init__(self):
         self.data = {
@@ -54,10 +55,10 @@ class ModelsDist:
             "gameDataVersionDescription": f"Producer: ArkUnpacker 3\nDate: {datetime.now().date()}\n",
             "gameDataServerRegion": ModelsDist.SERVER_REGION,
             "data": {},
-            "arkPetsCompatibility": ModelsDist.ARK_PETS_COMPATIBILITY
+            "arkPetsCompatibility": ModelsDist.ARK_PETS_COMPATIBILITY,
         }
 
-    def get_gamedata(self, alias:tuple):
+    def get_gamedata(self, alias: tuple):
         for i in get_filelist(ModelsDist.TEMP_DIR):
             if any(osp.basename(i).startswith(a) for a in alias):
                 rst = ArkFBOLibrary.decode(i)
@@ -66,7 +67,17 @@ class ModelsDist:
                 return rst
         raise FileNotFoundError(f"Failed to find data file with the name: {alias}")
 
-    def get_item_data(self, asset_id:Any, type:Any, style:Any, sort_tags:list, name:Any, appellation:Any, sg_id:Any, sg_name:Any):
+    def get_item_data(
+        self,
+        asset_id: Any,
+        type: Any,
+        style: Any,
+        sort_tags: list,
+        name: Any,
+        appellation: Any,
+        sg_id: Any,
+        sg_name: Any,
+    ):
         return {
             "assetId": asset_id,
             "type": type,
@@ -78,83 +89,109 @@ class ModelsDist:
             "sortTags": sort_tags,
         }
 
-    def get_operator_sort_tags(self, item:dict):
+    def get_operator_sort_tags(self, item: dict):
         rst = ["Operator"]
-        if item.get('IsSpChar', False):
+        if item.get("IsSpChar", False):
             rst.append("Special")
         try:
-            if item.get('Rarity', None) is not None:
+            if item.get("Rarity", None) is not None:
                 rarity = f"Rarity_{int(item['Rarity']) + 1}"
-                if rarity in self.data['sortTags']:
+                if rarity in self.data["sortTags"]:
                     rst.append(rarity)
         except BaseException:
             Logger.warn("ModelsDataDist: Failed to recognize rarity tag.")
         return rst
 
-    def get_enemy_sort_tags(self, item:dict):
-        rst = ['Enemy']
-        additional = {
-            0: "EnemyNormal",
-            1: "EnemyElite",
-            2: "EnemyBoss"
-        }.get(item['LevelType']['MValue'], None)
+    def get_enemy_sort_tags(self, item: dict):
+        rst = ["Enemy"]
+        additional = {0: "EnemyNormal", 1: "EnemyElite", 2: "EnemyBoss"}.get(
+            item["LevelType"]["MValue"], None
+        )
         return rst + [additional] if additional else rst
 
     def update_operator_data(self):
         Logger.info("ModelsDataDist: Decoding operator data.")
         print("解析干员信息...")
-        raw:"dict[str,dict]" = self.get_gamedata(('character_table',))
+        raw: "dict[str,dict]" = self.get_gamedata(("character_table",))
         Logger.info("ModelsDataDist: Parsing operator data.")
         collected = {}
-        for k, v in raw['Characters'].items():
-            if k.startswith('char_') and not v.get('IsNotObtainable', None):
+        for k, v in raw["Characters"].items():
+            if k.startswith("char_") and not v.get("IsNotObtainable", None):
                 key_char = k.lower()[5:]
-                collected[key_char] = self.get_item_data(f'build_char_{key_char}', 'Operator', 'BuildingDefault', self.get_operator_sort_tags(v),
-                        v['Name'], v['Appellation'], 'DEFAULT', '默认服装')
-        self.data['data'].update(collected)
+                collected[key_char] = self.get_item_data(
+                    f"build_char_{key_char}",
+                    "Operator",
+                    "BuildingDefault",
+                    self.get_operator_sort_tags(v),
+                    v["Name"],
+                    v["Appellation"],
+                    "DEFAULT",
+                    "默认服装",
+                )
+        self.data["data"].update(collected)
         Logger.info(f"ModelsDataDist: Found {len(collected)} operators.")
         print(f"\t找到 {len(collected)} 位干员", c=2)
 
     def update_skin_data(self):
         Logger.info("ModelsDataDist: Decoding skin data.")
         print("解析干员皮肤信息...")
-        raw:"dict[str,dict]" = self.get_gamedata(('skin_table',))
+        raw: "dict[str,dict]" = self.get_gamedata(("skin_table",))
         Logger.info("ModelsDataDist: Parsing skin data.")
         collected = {}
-        for k, v in raw['CharSkins'].items():
-            if v.get('BuildingId', None):
-                key_char = v['CharId'][5:].lower()
-                if key_char in self.data['data']:
-                    origin = self.data['data'][key_char]
-                    key_skin = v['BuildingId'][5:].lower()
-                    if key_skin not in self.data['data']:
-                        sort_tags = origin['sortTags'] + ['Skinned']
-                        collected[key_skin] = self.get_item_data(f"build_char_{key_skin}", "Operator", "BuildingSkin", sort_tags,
-                                origin['name'], origin['appellation'], v['DisplaySkin']['SkinGroupId'], v['DisplaySkin']['SkinGroupName'])
+        for k, v in raw["CharSkins"].items():
+            if v.get("BuildingId", None):
+                key_char = v["CharId"][5:].lower()
+                if key_char in self.data["data"]:
+                    origin = self.data["data"][key_char]
+                    key_skin = v["BuildingId"][5:].lower()
+                    if key_skin not in self.data["data"]:
+                        sort_tags = origin["sortTags"] + ["Skinned"]
+                        collected[key_skin] = self.get_item_data(
+                            f"build_char_{key_skin}",
+                            "Operator",
+                            "BuildingSkin",
+                            sort_tags,
+                            origin["name"],
+                            origin["appellation"],
+                            v["DisplaySkin"]["SkinGroupId"],
+                            v["DisplaySkin"]["SkinGroupName"],
+                        )
                     else:
-                        Logger.info(f"ModelsDataDist: The skin-key of the skin \"{k}\" collided with an existed one.")
+                        Logger.info(
+                            f'ModelsDataDist: The skin-key of the skin "{k}" collided with an existed one.'
+                        )
                 else:
-                    Logger.warn(f"ModelsDataDist: The operator-key of the skin \"{k}\" not found.")
+                    Logger.warn(
+                        f'ModelsDataDist: The operator-key of the skin "{k}" not found.'
+                    )
                     print(f"\t皮肤 {k} 找不到对应的干员Key", c=3)
-        self.data['data'].update(collected)
+        self.data["data"].update(collected)
         Logger.info(f"ModelsDataDist: Found {len(collected)} skins.")
         print(f"\t找到 {len(collected)} 件干员皮肤", c=2)
 
     def update_enemy_data(self):
         Logger.info("ModelsDataDist: Decoding enemy data.")
         print("解析敌方单位信息...")
-        raw:"dict[str,list]" = self.get_gamedata(('enemydata', 'enemy_database'))
+        raw: "dict[str,list]" = self.get_gamedata(("enemydata", "enemy_database"))
         Logger.info("ModelsDataDist: Parsing enemy data.")
         collected = {}
-        if not isinstance(raw['Enemies'], dict):
+        if not isinstance(raw["Enemies"], dict):
             raise TypeError("Value key 'Enemies' is not a dict")
-        for k, v in raw['Enemies'].items():
-            if k.startswith('enemy_'):
+        for k, v in raw["Enemies"].items():
+            if k.startswith("enemy_"):
                 key_enemy = k.lower()[6:]
-                tags = self.get_enemy_sort_tags(v[0]['EnemyData'])
-                collected[key_enemy] = self.get_item_data(f"enemy_{key_enemy}", "Enemy", None, tags,
-                        v[0]['EnemyData']['Name']['MValue'], None, tags[-1], self.data['sortTags'][tags[-1]])
-        self.data['data'].update(collected)
+                tags = self.get_enemy_sort_tags(v[0]["EnemyData"])
+                collected[key_enemy] = self.get_item_data(
+                    f"enemy_{key_enemy}",
+                    "Enemy",
+                    None,
+                    tags,
+                    v[0]["EnemyData"]["Name"]["MValue"],
+                    None,
+                    tags[-1],
+                    self.data["sortTags"][tags[-1]],
+                )
+        self.data["data"].update(collected)
         Logger.info(f"ModelsDataDist: Found {len(collected)} enemies.")
         print(f"\t找到 {len(collected)} 个敌方单位", c=2)
 
@@ -162,30 +199,44 @@ class ModelsDist:
         Logger.info("ModelsDataDist: Parsing dynillust data.")
         print("分析动态立绘信息...")
         collected = {}
-        if osp.isdir(self.data['storageDirectory']['DynIllust']):
-            for i in get_dirlist(self.data['storageDirectory']['DynIllust'], max_depth=1):
-                #(i是每个动态立绘的文件夹)
+        if osp.isdir(self.data["storageDirectory"]["DynIllust"]):
+            for i in get_dirlist(
+                self.data["storageDirectory"]["DynIllust"], max_depth=1
+            ):
+                # (i是每个动态立绘的文件夹)
                 base = osp.basename(i)
-                if base.startswith('dyn_'):
+                if base.startswith("dyn_"):
                     key = base.lower()
-                    key_char = re.findall(r'[0-9]+.+', key)
+                    key_char = re.findall(r"[0-9]+.+", key)
                     if len(key_char) > 0:
-                        key_char = key_char[0] #该动态立绘对应的原干员的key
-                        if key_char in self.data['data']:
-                            origin = self.data['data'][key_char]
-                            sort_tags = origin['sortTags'] + ['DynIllust']
-                            collected[key] = self.get_item_data(key, "DynIllust", None, sort_tags,
-                                    origin['name'], origin['appellation'], origin['skinGroupId'], origin['skinGroupName'])
+                        key_char = key_char[0]  # 该动态立绘对应的原干员的key
+                        if key_char in self.data["data"]:
+                            origin = self.data["data"][key_char]
+                            sort_tags = origin["sortTags"] + ["DynIllust"]
+                            collected[key] = self.get_item_data(
+                                key,
+                                "DynIllust",
+                                None,
+                                sort_tags,
+                                origin["name"],
+                                origin["appellation"],
+                                origin["skinGroupId"],
+                                origin["skinGroupName"],
+                            )
                         else:
-                            Logger.warn(f"ModelsDataDist: The operator-key of the dyn illust \"{key}\" not found.")
+                            Logger.warn(
+                                f'ModelsDataDist: The operator-key of the dyn illust "{key}" not found.'
+                            )
                             print(f"\t动态立绘 {key} 找不到对应的干员Key", c=3)
                     else:
-                        Logger.warn(f"ModelsDataDist: The operator-key of the dyn illust \"{key}\" could not pass the regular expression check.")
+                        Logger.warn(
+                            f'ModelsDataDist: The operator-key of the dyn illust "{key}" could not pass the regular expression check.'
+                        )
                         print(f"\t动态立绘 {key} 未成功通过正则匹配", c=3)
         else:
             Logger.warn("ModelsDataDist: The directory of dyn illust not found.")
             print("\t动态立绘根文件夹未找到", c=3)
-        self.data['data'].update(collected)
+        self.data["data"].update(collected)
         Logger.info(f"ModelsDataDist: Found {len(collected)} dynillusts.")
         print(f"\t找到 {len(collected)} 套动态立绘", c=2)
 
@@ -194,64 +245,89 @@ class ModelsDist:
         print("校验模型文件...")
         cur_done = 0
         cur_fail = 0
-        total = len(self.data['data'])
-        for k, v in self.data['data'].items():
-            #(i是Key,Key应为文件夹的名称)
+        total = len(self.data["data"])
+        for k, v in self.data["data"].items():
+            # (i是Key,Key应为文件夹的名称)
             fail_flag = False
             asset_list = {}
-            if v['type'] in self.data['storageDirectory']:
-                #如果其type在模型存放目录预设中有对应值
-                d = osp.join(self.data['storageDirectory'][v['type']], k)
+            if v["type"] in self.data["storageDirectory"]:
+                # 如果其type在模型存放目录预设中有对应值
+                d = osp.join(self.data["storageDirectory"][v["type"]], k)
                 asset_list_pending = {}
                 if osp.isdir(d):
-                    #如果预期的目录存在
+                    # 如果预期的目录存在
                     file_list = os.listdir(d)
                     for ext_type, ext_alt in ModelsDist.MODELS_FILE_EXT.items():
-                        #要求每个ext_alt组内的文件扩展名至少存在一种
+                        # 要求每个ext_alt组内的文件扩展名至少存在一种
                         ext_verified = False
                         for ext in ext_alt:
-                            #(ext是文件扩展名)
-                            asset_list_specified = list(filter(lambda x:osp.splitext(x)[1] == ext, file_list))
+                            # (ext是文件扩展名)
+                            asset_list_specified = list(
+                                filter(lambda x: osp.splitext(x)[1] == ext, file_list)
+                            )
                             if len(asset_list_specified) > 0:
-                                #以ext为扩展名的文件存在
+                                # 以ext为扩展名的文件存在
                                 if len(asset_list_specified) == 1:
-                                    asset_list_pending[ext_type] = asset_list_specified[0]
+                                    asset_list_pending[ext_type] = asset_list_specified[
+                                        0
+                                    ]
                                 else:
-                                    Logger.debug(f"ModelsDataDist: The {ext_type} asset of \"{k}\" is multiple, see in \"{d}\".")
+                                    Logger.debug(
+                                        f'ModelsDataDist: The {ext_type} asset of "{k}" is multiple, see in "{d}".'
+                                    )
                                     asset_list_specified.sort()
                                     asset_list_pending[ext_type] = asset_list_specified
                                 ext_verified = True
-                                break #跳出对ext的遍历
-                        #如果ext_alt组所指定的文件不存在
+                                break  # 跳出对ext的遍历
+                        # 如果ext_alt组所指定的文件不存在
                         if not ext_verified:
-                            Logger.info(f"ModelsDataDist: The {ext_type} asset of \"{k}\" not found, see in \"{d}\".")
-                            print(f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：{color(1)}{ext_type} 文件缺失{color(7)}")
+                            Logger.info(
+                                f'ModelsDataDist: The {ext_type} asset of "{k}" not found, see in "{d}".'
+                            )
+                            print(
+                                f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：{color(1)}{ext_type} 文件缺失{color(7)}"
+                            )
                             fail_flag = True
-                            break #跳出对ext_alt的遍历
+                            break  # 跳出对ext_alt的遍历
                     if not fail_flag:
                         asset_list = asset_list_pending
                     else:
                         cur_fail += 1
                 else:
-                    Logger.info(f"ModelsDataDist: The model directory of \"{k}\" not found, expected path \"{d}\".")
-                    print(f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：模型不存在")
+                    Logger.info(
+                        f'ModelsDataDist: The model directory of "{k}" not found, expected path "{d}".'
+                    )
+                    print(
+                        f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：模型不存在"
+                    )
                     cur_fail += 1
             else:
-                Logger.info(f"ModelsDataDist: The model asset of \"{k}\" is the type of \"{v['type']}\" which is not declared in the prefab.")
-                print(f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：未在脚本预设中找到其类型的存储目录")
+                Logger.info(
+                    f"ModelsDataDist: The model asset of \"{k}\" is the type of \"{v['type']}\" which is not declared in the prefab."
+                )
+                print(
+                    f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：未在脚本预设中找到其类型的存储目录"
+                )
                 cur_fail += 1
-            self.data['data'][k]['assetList'] = asset_list
+            self.data["data"][k]["assetList"] = asset_list
             cur_done += 1
             if cur_done % 100 == 0:
-                print(f"\t已处理完成 {color(2)}{round(cur_done / total * 100)}%{color(7)}")
-        Logger.info(f"ModelsDataDist: Verify models completed, {cur_done - cur_fail} success, {cur_fail} failure.")
-        print(f"\n\t校验完成：{color(2)}成功{cur_done - cur_fail}{color(7)}，失败{cur_fail}")
+                print(
+                    f"\t已处理完成 {color(2)}{round(cur_done / total * 100)}%{color(7)}"
+                )
+        Logger.info(
+            f"ModelsDataDist: Verify models completed, {cur_done - cur_fail} success, {cur_fail} failure."
+        )
+        print(
+            f"\n\t校验完成：{color(2)}成功{cur_done - cur_fail}{color(7)}，失败{cur_fail}"
+        )
 
     def export_json(self):
         Logger.info("ModelsDataDist: Writing to json.")
-        with open('models_data.json', 'w', encoding='UTF-8') as f:
+        with open("models_data.json", "w", encoding="UTF-8") as f:
             json.dump(self.data, f, ensure_ascii=False, indent=4)
         Logger.info("ModelsDataDist: Succeeded in writing to json.")
+
 
 ########## Main-主程序 ##########
 def main():
