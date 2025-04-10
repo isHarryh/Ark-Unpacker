@@ -7,13 +7,20 @@ from typing import Any, Callable, Optional, Sequence
 
 import UnityPy
 import UnityPy.classes as uc
+from UnityPy.enums.BundleFile import CompressionFlags
 from UnityPy.files.File import File
+from UnityPy.helpers import CompressionHelper
 from UnityPy.streams.EndianBinaryReader import EndianBinaryReader
+
 from .CombineRGBwithA import AlphaRGBCombiner
+from .lz4ak.Block import decompress_lz4ak
 from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file, stacktrace
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
 from .utils.TaskUtils import ThreadCtrl, UICtrl, TaskReporter, TaskReporterTracker
+
+# New compression algorithm introduced in Arknights v2.5.04+
+CompressionHelper.DECOMPRESSION_MAP[CompressionFlags.LZHAM] = decompress_lz4ak
 
 
 class Resource:
@@ -237,7 +244,10 @@ class Resource:
                     _add_prefix(j, prefix)
 
         def save_spine(
-            self, destdir: str, on_queued: Optional[Callable], on_saved: Optional[Callable]
+            self,
+            destdir: str,
+            on_queued: Optional[Callable],
+            on_saved: Optional[Callable],
         ):
             for i in self.tex_list:
                 if i[0]:
