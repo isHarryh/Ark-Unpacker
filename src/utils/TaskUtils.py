@@ -385,7 +385,7 @@ class TaskReporterTracker():
         :rtype: str;
         """
         p = self.get_progress(force_inc)
-        return f"[{TaskReporterTracker._format_progress_bar_str(p, length)}] {color(2, 0, 1)}{p:.1%}"
+        return f"[{TaskReporterTracker._format_progress_bar_str(p, length)}] {color(2, 1)}{p:.1%}"
 
     def to_eta_str(self):
         """Gets a string representing the estimated time to complete all tasks.

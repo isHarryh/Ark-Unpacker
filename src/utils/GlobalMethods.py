@@ -2,7 +2,7 @@
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
 import builtins
-import importlib.util
+import importlib
 import os
 import os.path as osp
 import pkgutil
@@ -15,43 +15,40 @@ import types
 
 os.system('')
 
-def color(c:int=7, bg:int=0, s:int=0):
+def color(c:int=7, s:int=0):
     """Gets a color controller string in interactive CLI.
 
     :param c: The color [0=black,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
-    :param bg: The background color [0=black,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
     :param s: The style [0=default,1=bold,4=underlined,5=flashing,7=inverted,8=none];
     :returns: The color controller string.
     :rtype: str;
     """
-    return f'\033[{s};3{c};4{bg}m'
+    return f'\033[{s};3{c}m'
 
-def input(text:str="", c:int=7, bg:int=0, s:int=0, y:int=0):
+def input(text:str="", c:int=7, s:int=0, y:int=0):
     """Enhanced version of inputting in interactive CLI.
 
     :param text: The text to display;
     :param c: The color [0=black,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
-    :param bg: The background color [0=black,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
     :param s: The style [0=default,1=bold,4=underlined,5=flashing,7=inverted,8=none];
     :param y: The y-position of the line to print or overwrite [0=append];
     :returns: The inputted text;
     :rtype: str;
     """
     ctrl = f"\033[K\033[{y};1H" if y > 0 else ""
-    return builtins.input(f"{ctrl}{color(c, bg, s)}{text}\033[?25h")
+    return builtins.input(f"{ctrl}{color(c, s)}{text}\033[?25h")
 
-def print(obj:object="", c:int=7, bg:int=0, s:int=0, y:int=0):
+def print(obj:object="", c:int=7, s:int=0, y:int=0):
     """Enhanced version of printing in interactive CLI.
 
     :param obj: The object to print;
     :param c: The color [0=black,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
-    :param bg: The background color [0=black,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
     :param s: The style [0=default,1=bold,4=underlined,5=flashing,7=inverted,8=none];
     :param y: The y-position of the line to print or overwrite [0=append];
     :rtype: None;
     """
     ctrl = f'\033[K\033[{y};{1}H' if y > 0 else ''
-    builtins.print(f"\033[?25l{ctrl}{color(c, bg, s)}{obj}")
+    builtins.print(f"\033[?25l{ctrl}{color(c, s)}{obj}")
 
 def clear(use_ansi:bool=False):
     """Clears the CLI output.
