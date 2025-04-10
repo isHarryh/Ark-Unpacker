@@ -25,7 +25,9 @@
         "flist",
         "fmod",
         "fmoderror",
+        "fromarray",
         "gamedata",
+        "getchannel",
         "hypergryph",
         "monobehaviors",
         "ndarray",
@@ -50,5 +52,7 @@
         "typetree",
         "unpad",
         "upkdir"
-    ]
+    ],
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true
 }
