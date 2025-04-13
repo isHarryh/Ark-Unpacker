@@ -21,63 +21,77 @@ class NoRGBImageMatchedError(FileNotFoundError):
 
 class AlphaRGBCombiner:
     def __init__(self, alpha: "str|Image.Image"):
-        self.img_alpha = AlphaRGBCombiner._get_image(alpha, "RGBA")
+        self.img_alpha = image_open(alpha, "RGBA")
 
-    def combine_with(self, rgb: "str|Image.Image", remove_bleeding: bool = True):
+    def combine_with(
+        self,
+        rgb: "str|Image.Image",
+        resize: Optional[tuple] = None,
+        remove_bleeding: bool = True,
+    ):
         """Merges the RGB image and the Alpha image in an efficient way.
 
         :param rgb: Instance of RGB image or its file path;
+        :param resize: Resize the final image to the given size, `None` for disabled;
         :param remove_bleeding: Whether to remove the color bleeding;
         :returns: A new image instance;
         :rtype: Image;
         """
-        img_rgb: Image.Image = AlphaRGBCombiner._get_image(rgb, "RGBA")
+        img_rgb: Image.Image = image_open(rgb, "RGBA")
         img_alpha: Image.Image = self.img_alpha.convert("L")
-        if img_rgb.size != img_alpha.size:
-            img_alpha = img_alpha.resize(img_rgb.size, Image.BILINEAR)
+        if resize:
+            img_rgb = image_resize(img_rgb, resize)
+            img_alpha = image_resize(img_alpha, resize)
+        else:
+            img_alpha = image_resize(img_alpha, img_rgb.size)
         img_rgb.putalpha(img_alpha)
         if remove_bleeding:
             img_rgb = AlphaRGBCombiner.remove_bleeding(img_rgb)
         return img_rgb
 
     @staticmethod
-    def remove_bleeding(rgba: "str|Image.Image"):
+    def remove_bleeding(rgba: "str|Image.Image", min_alpha: int = 0):
         """Removes the color bleeding in the given RGBA image
         by setting the RGB value of the transparent pixel to (0, 0, 0).
 
         :param rgba: Instance of RGBA image or its file path;
+        :param min_alpha: The minimal alpha value to determine transparency;
         :returns: A new image instance;
         :rtype: Image;
         """
-        img_rgba: Image.Image = AlphaRGBCombiner._get_image(rgba, "RGBA")
+        img_rgba: Image.Image = image_open(rgba, "RGBA")
         img_black = Image.new("RGBA", img_rgba.size)
         img_alpha = img_rgba.getchannel("A")
-        img_mask = img_alpha.point(lambda x: 0 if x > 0 else 255)
+        img_mask = img_alpha.point(lambda x: 0 if x > min_alpha else 255)
         img_rgba.paste(img_black, img_mask)
         return img_rgba
 
     @staticmethod
-    def apply_premultiplied_alpha(rgba: "str|Image.Image"):
+    def apply_premultiplied_alpha(
+        rgba: "str|Image.Image", resize: Optional[tuple] = None
+    ):
         """Multiplies the RGB channels with the alpha channel.
         Useful when handling non-PMA Spine textures.
 
         :param rgba: Instance of RGBA image or its file path;
+        :param resize: Resize the final image to the given size, `None` for disabled;
         :returns: A new image instance;
         :rtype: Image;
         """
-        img_rgba: Image.Image = AlphaRGBCombiner._get_image(rgba, "RGBA")
+        img_rgba: Image.Image = image_open(rgba, "RGBA")
+        if resize:
+            # Resize RGB/A channel separately
+            data = np.array(img_rgba, dtype=np.float32)
+            img_rgb = Image.fromarray(data[:, :, :3], "RGB")
+            img_alpha = Image.fromarray(data[:, :, 3], "L")
+            img_rgb = image_resize(img_rgb, resize)
+            img_alpha = image_resize(img_alpha, resize)
+            img_rgb.putalpha(img_alpha)
+        # Apply PMA
         data = np.array(img_rgba, dtype=np.float32)
         data[:, :, :3] *= data[:, :, 3:] / 255.0
         data_int = np.clip(data, 0, 255).astype(np.uint8)
         return Image.fromarray(data_int, "RGBA")
-
-    @staticmethod
-    def _get_image(str_or_img: "str|Image.Image", mode: str):
-        return (
-            str_or_img
-            if isinstance(str_or_img, Image.Image)
-            else Image.open(str_or_img)
-        ).convert(mode)
 
 
 class AlphaRGBSearcher:
@@ -151,37 +165,58 @@ class AlphaRGBSearcher:
 
     @staticmethod
     def calc_similarity(
-        fp_rgb: str, fp_alpha: str, mode: str = "L", precision: int = 150
+        rgb: "str|Image.Image",
+        alpha: "str|Image.Image",
+        mode: str = "L",
+        precision: int = 150,
     ):
         """Compares the similarity between the RGB image and the Alpha image.
 
-        :param fp_rgb: Path to the RGB image;
-        :param fp_alpha: Path to the Alpha image;
-        :param mode: Image mode, `L` for default;
+        :param rgb: Instance of RGB image or its file path;
+        :param alpha: Instance of Alpha image or its file path;
+        :param mode: Image mode during comparing, `L` for default;
         :param precision: Precision of the judgement, higher for more precise, `150` for default;
         :returns: Similarity value in `[0, 255]`, higher for more similar;
         :rtype: int;
         """
-        img_rgb = Image.open(fp_rgb).convert(mode)
-        img_a = Image.open(fp_alpha).convert(mode)
+        img_rgb = image_open(rgb, mode)
+        img_alpha = image_open(alpha, mode)
         precision = 150 if precision <= 0 else precision
         # Resize the two images
-        img_rgb = img_rgb.resize((precision, precision), Image.BILINEAR)
-        img_a = img_a.resize((precision, precision), Image.BILINEAR)
+        img_rgb = image_resize(img_rgb, (precision, precision))
+        img_alpha = image_resize(img_alpha, (precision, precision))
         # Load pixels into arrays
         px_rgb = img_rgb.load()
-        px_a = img_a.load()
+        px_a = img_alpha.load()
         # Calculate differences of every pixel
         diff = []
         for y in range(precision):
             for x in range(precision):
                 diff.append(
                     (((px_rgb[x, y] if px_rgb[x, y] < 255 else 0) - px_a[x, y]) ** 2)
-                    / 256
+                    / 256.0
                 )
         # Return the similarity
         diff_mean = round(sum(diff) / len(diff))
         return 0 if diff_mean >= 255 else (255 if diff_mean <= 0 else 255 - diff_mean)
+
+
+def image_open(fp_or_img: "str|Image.Image", mode: str):
+    if isinstance(fp_or_img, Image.Image):
+        img = fp_or_img
+    else:
+        img = Image.open(fp_or_img)
+    img = img.convert(mode)
+    assert isinstance(img, Image.Image)
+    return img
+
+
+def image_resize(img: Image.Image, size: tuple):
+    if len(img.size) == 2 and len(size) == 2:
+        if img.size[0] != size[0] or img.size[1] != size[1]:
+            img = img.resize(size, resample=Image.BILINEAR)
+    assert isinstance(img, Image.Image)
+    return img
 
 
 def image_resolve(
