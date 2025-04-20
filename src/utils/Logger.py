@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
+import queue
 import threading
 from datetime import datetime
 
@@ -21,27 +22,20 @@ class Logger:
         """Not recommended to use. Please use the singleton instance."""
         self._log_level = level
         self._log_file_path = log_file_path
-        self._internal_lock = threading.Condition()
         self._file = None
-        self._queue = []
+        self._queue = queue.Queue()
 
         def loop(self: Logger):
             while True:
                 try:
-                    with self._internal_lock:
-                        while not self._queue:
-                            self._internal_lock.wait()
-                        t = self._queue.pop(0)
-                        if (
-                            isinstance(self._log_file_path, str)
-                            and len(self._log_file_path) > 0
-                        ):
-                            with open(
-                                self._log_file_path,
-                                "a",
-                                encoding=Logger.__file_encoding,
-                            ) as f:
-                                f.write(t)
+                    t = self._queue.get(timeout=1)
+                    if self._log_file_path:
+                        with open(
+                            self._log_file_path,
+                            "a",
+                            encoding=Logger.__file_encoding,
+                        ) as f:
+                            f.write(t)
                 except BaseException:
                     pass
 
@@ -55,11 +49,9 @@ class Logger:
 
     def _log(self, tag: str, msg: str):
         try:
-            with self._internal_lock:
-                self._queue.append(
-                    f"{datetime.now().strftime(Logger.__time_format)} [{tag}] {msg}\n"
-                )
-                self._internal_lock.notify_all()
+            self._queue.put(
+                f"{datetime.now().strftime(Logger.__time_format)} [{tag}] {msg}\n"
+            )
         except BaseException:
             pass
 
