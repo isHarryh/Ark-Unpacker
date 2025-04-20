@@ -2,12 +2,12 @@
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
 from __future__ import annotations
-from typing import Dict
+from typing import Dict, List
 
+import threading
 import time
 from collections import defaultdict
 from contextlib import ContextDecorator
-from queue import Queue
 
 
 class CodeProfiler(ContextDecorator):
@@ -21,7 +21,8 @@ class CodeProfiler(ContextDecorator):
     ```
     """
 
-    _records: Dict[str, Queue[float]] = defaultdict(lambda: Queue(maxsize=65536))
+    _records: Dict[str, List[float]] = defaultdict(list)
+    _internal_lock = threading.Lock()
 
     def __init__(self, name: str):
         self._name = name
@@ -33,17 +34,18 @@ class CodeProfiler(ContextDecorator):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._start_time:
-            CodeProfiler._records[self._name].put(
-                time.perf_counter() - self._start_time
-            )
+            with CodeProfiler._internal_lock:
+                while len(CodeProfiler._records[self._name]) >= 65536:
+                    CodeProfiler._records[self._name].pop(0)
+                CodeProfiler._records[self._name].append(
+                    time.perf_counter() - self._start_time
+                )
         return False  # Hand down the exception
 
     @staticmethod
     def get_avg_time(name: str):
         times = CodeProfiler._records.get(name, None)
-        return (
-            sum(times.queue) / len(times.queue) if times and len(times.queue) else None
-        )
+        return sum(times) / len(times) if times else None
 
     @staticmethod
     def get_avg_time_all():
@@ -52,7 +54,7 @@ class CodeProfiler(ContextDecorator):
     @staticmethod
     def get_total_time(name: str):
         times = CodeProfiler._records.get(name, None)
-        return sum(times.queue) if times else None
+        return sum(times) if times else None
 
     @staticmethod
     def get_total_time_all():
