@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
+from typing import Callable, Sequence
+
+import os.path as osp
 import re
 import shutil
-import os.path as osp
-from typing import Callable
 
 from .utils.GlobalMethods import print, rmdir, get_dirlist
 from .utils.Logger import Logger
@@ -69,7 +70,7 @@ def collect_models(
 
 
 ########## Main-主程序 ##########
-def main(srcdirs: "list[str]", destdirs: "list[str]"):
+def main(srcdirs: Sequence[str], destdirs: Sequence[str]):
     """Collects the Spine models from the source directories to the destination directories accordingly.
     The structure of the source directory is shown below.
 

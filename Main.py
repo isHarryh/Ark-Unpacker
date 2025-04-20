@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
-import time
 import argparse
 import os
 import os.path as osp
 import sys
+import time
 
 from src.utils import ArgParser
 from src.utils.Config import Config
 from src.utils.Logger import Logger
 from src.utils.GlobalMethods import color, input, print, clear, title, stacktrace, rmdir
+
 from src import ResolveAB as AU_Rs
 from src import DecodeTextAsset as AU_Fb
 from src import CombineRGBwithA as AU_Cb

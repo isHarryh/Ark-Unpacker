@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
-import os.path as osp
+from typing import Callable
+
 import json
+import os.path as osp
 import threading
 from io import BytesIO
-from typing import Callable
 from pydub import AudioSegment
 
 from .utils.GlobalMethods import print, rmdir, get_dirlist, get_filelist

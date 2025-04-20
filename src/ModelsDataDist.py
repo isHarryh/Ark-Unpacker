@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
-import re
+from typing import Any
+
 import json
 import os
 import os.path as osp
+import re
 from datetime import datetime
-from typing import Any
 
 from .DecodeTextAsset import ArkFBOLibrary
 from .utils.GlobalMethods import color, print, get_dirlist, get_filelist

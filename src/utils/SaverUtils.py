@@ -4,12 +4,13 @@
 import os
 import os.path as osp
 import threading
-from io import BytesIO
 from contextlib import ContextDecorator
-from typing import Callable, Sequence
+from io import BytesIO
+from typing import Callable, Optional, Sequence
 
 import UnityPy.classes as uc
 from PIL import Image
+
 from .Profiler import CodeProfiler
 from .Config import Config, PerformanceLevel
 from .GlobalMethods import mkdir
@@ -66,8 +67,8 @@ class SafeSaver(WorkerCtrl):
         destdir: str,
         name: str,
         ext: str,
-        on_queued: "Callable|None" = None,
-        on_saved: "Callable|None" = None,
+        on_queued: Optional[Callable] = None,
+        on_saved: Optional[Callable] = None,
     ):
         """Saves a binary data to a file.
 
@@ -89,8 +90,8 @@ class SafeSaver(WorkerCtrl):
         destdir: str,
         name: str,
         ext: str = _EXT_IMAGE,
-        on_queued: "Callable|None" = None,
-        on_saved: "Callable|None" = None,
+        on_queued: Optional[Callable] = None,
+        on_saved: Optional[Callable] = None,
     ):
         """Saves an image to a file.
 
@@ -111,8 +112,8 @@ class SafeSaver(WorkerCtrl):
         obj: uc.Object,
         destdir: str,
         name: str,
-        on_queued: "Callable|None" = None,
-        on_saved: "Callable|None" = None,
+        on_queued: Optional[Callable] = None,
+        on_saved: Optional[Callable] = None,
     ):
         """Saves the given Unity object as a file. If a object is not exportable, it does nothing.
 
@@ -155,10 +156,10 @@ class SafeSaver(WorkerCtrl):
 
     @staticmethod
     def save_objects(
-        lst: "Sequence[uc.Object]",
+        lst: Sequence[uc.Object],
         destdir: str,
-        on_queued: "Callable|None" = None,
-        on_saved: "Callable|None" = None,
+        on_queued: Optional[Callable] = None,
+        on_saved: Optional[Callable] = None,
     ):
         """Saves all the Unity objects in the given list as files.
         If a object is not exportable, it does nothing.
@@ -176,7 +177,7 @@ class SafeSaver(WorkerCtrl):
 
     @staticmethod
     def _save(
-        data: bytes, destdir: str, name: str, ext: str, on_saved: "Callable|None"
+        data: bytes, destdir: str, name: str, ext: str, on_saved: Optional[Callable]
     ):
         dest = osp.join(destdir, name + ext)
         try:

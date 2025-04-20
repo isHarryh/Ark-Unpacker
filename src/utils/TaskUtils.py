@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
-import time
+from typing import Callable, Optional, Union
+
 import queue
 import threading
-from typing import Callable, Optional
+import time
 
 from .Config import PerformanceLevel, Config
 from .GlobalMethods import color, print, clear
@@ -264,7 +265,7 @@ class Counter:
         """Initializes a cumulative counter."""
         self.__s = 0
 
-    def update(self, val: "int|bool" = 1):
+    def update(self, val: Union[int, bool] = 1):
         """Updates the counter.
 
         :param val: Delta value in int or bool (`True` for 1 and `False` for 0);

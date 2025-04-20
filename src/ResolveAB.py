@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
-import os.path as osp
 from contextlib import ContextDecorator
-from typing import Any, Callable, Optional, Sequence
+from typing import Any, Callable, List, Optional, Sequence, Tuple, Union
+
+import os.path as osp
 
 import UnityPy
 import UnityPy.classes as uc
@@ -44,13 +45,13 @@ class Resource:
         self.env: UnityPy.Environment = env
         self.length: int = len(env.objects)
         ###
-        self.sprites: "list[uc.Sprite]" = []
-        self.texture2ds: "list[uc.Texture2D]" = []
-        self.textassets: "list[uc.TextAsset]" = []
-        self.audioclips: "list[uc.AudioClip]" = []
-        self.materials: "list[uc.Material]" = []
-        self.monobehaviors: "list[uc.MonoBehaviour]" = []
-        self.spines: "list[Resource.SpineAsset]" = []
+        self.sprites: List[uc.Sprite] = []
+        self.texture2ds: List[uc.Texture2D] = []
+        self.textassets: List[uc.TextAsset] = []
+        self.audioclips: List[uc.AudioClip] = []
+        self.materials: List[uc.Material] = []
+        self.monobehaviors: List[uc.MonoBehaviour] = []
+        self.spines: List[Resource.SpineAsset] = []
         ###
         for i in [o.read() for o in env.objects]:
             if isinstance(i, uc.Sprite):
@@ -74,7 +75,7 @@ class Resource:
                         self.name = osp.basename(i.m_Name)
 
     def get_object_by_pathid(
-        self, pathid: "int|dict", search_in: "Sequence[uc.Object]"
+        self, pathid: Union[int, dict], search_in: Sequence[uc.Object]
     ):
         """Gets the object with the given PathID.
 
@@ -100,7 +101,7 @@ class Resource:
 
         :rtype: None;
         """
-        spines: "list[Resource.SpineAsset]" = []
+        spines: List[Resource.SpineAsset] = []
         try:
             for mono in self.monobehaviors:
                 # (i stands for a MonoBehavior)
@@ -162,7 +163,7 @@ class Resource:
     class TreeReader(ContextDecorator):
         """Reader of the serialized type tree of Unity objects."""
 
-        def __init__(self, obj: "uc.Object|None"):
+        def __init__(self, obj: Optional[uc.Object]):
             self.obj = obj.object_reader if isinstance(obj, uc.Object) else obj
 
         def __enter__(self):
@@ -188,8 +189,8 @@ class Resource:
             self,
             skel: Any,
             atlas: Any,
-            tex_list: "list[tuple[uc.Texture2D,uc.Texture2D]]",
-            anim_list: "list[str]|None",
+            tex_list: List[Tuple[uc.Texture2D, uc.Texture2D]],
+            anim_list: Optional[List[str]],
         ):
             # Validate arguments
             if not isinstance(skel, uc.TextAsset) or not isinstance(
@@ -226,7 +227,7 @@ class Resource:
             :rtype: None;
             """
 
-            def _add_prefix(obj: "uc.TextAsset|uc.Texture2D", pre: str):
+            def _add_prefix(obj: Union[uc.TextAsset, uc.Texture2D], pre: str):
                 if obj and not obj.m_Name.startswith(pre):
                     obj.m_Name = pre + obj.m_Name
 

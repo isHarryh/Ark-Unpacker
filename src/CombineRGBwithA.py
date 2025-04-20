@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
-import re
+from typing import Callable, List, Optional, Union
+
+import numpy as np
 import os
 import os.path as osp
-import numpy as np
-from typing import Callable, Optional
+import re
 
 from PIL import Image
+
 from .utils.GlobalMethods import print, rmdir, get_filelist, is_image_file
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
@@ -20,12 +22,12 @@ class NoRGBImageMatchedError(FileNotFoundError):
 
 
 class AlphaRGBCombiner:
-    def __init__(self, alpha: "str|Image.Image"):
+    def __init__(self, alpha: Union[str, Image.Image]):
         self.img_alpha = image_open(alpha, "RGBA")
 
     def combine_with(
         self,
-        rgb: "str|Image.Image",
+        rgb: Union[str, Image.Image],
         resize: Optional[tuple] = None,
         remove_bleeding: bool = True,
     ):
@@ -50,7 +52,7 @@ class AlphaRGBCombiner:
         return img_rgb
 
     @staticmethod
-    def remove_bleeding(rgba: "str|Image.Image", min_alpha: int = 0):
+    def remove_bleeding(rgba: Union[str, Image.Image], min_alpha: int = 0):
         """Removes the color bleeding in the given RGBA image
         by setting the RGB value of the transparent pixel to (0, 0, 0).
 
@@ -68,7 +70,7 @@ class AlphaRGBCombiner:
 
     @staticmethod
     def apply_premultiplied_alpha(
-        rgba: "str|Image.Image", resize: Optional[tuple] = None
+        rgba: Union[str, Image.Image], resize: Optional[tuple] = None
     ):
         """Multiplies the RGB channels with the alpha channel.
         Useful when handling non-PMA Spine textures.
@@ -145,7 +147,7 @@ class AlphaRGBSearcher:
             else:
                 raise NoRGBImageMatchedError(self.fp_alpha)
 
-    def choose_most_similar_rgb(self, candidates: "list[str]"):
+    def choose_most_similar_rgb(self, candidates: List[str]):
         best_candidate = None
         best_similarity = -1
         for i in candidates:
@@ -165,8 +167,8 @@ class AlphaRGBSearcher:
 
     @staticmethod
     def calc_similarity(
-        rgb: "str|Image.Image",
-        alpha: "str|Image.Image",
+        rgb: Union[str, Image.Image],
+        alpha: Union[str, Image.Image],
         mode: str = "L",
         precision: int = 150,
     ):
@@ -188,6 +190,7 @@ class AlphaRGBSearcher:
         # Load pixels into arrays
         px_rgb = img_rgb.load()
         px_a = img_alpha.load()
+        assert px_rgb is not None and px_a is not None
         # Calculate differences of every pixel
         diff = []
         for y in range(precision):
@@ -201,7 +204,7 @@ class AlphaRGBSearcher:
         return 0 if diff_mean >= 255 else (255 if diff_mean <= 0 else 255 - diff_mean)
 
 
-def image_open(fp_or_img: "str|Image.Image", mode: str):
+def image_open(fp_or_img: Union[str, Image.Image], mode: str):
     if isinstance(fp_or_img, Image.Image):
         img = fp_or_img
     else:
