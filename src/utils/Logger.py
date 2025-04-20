@@ -5,6 +5,8 @@ import queue
 import threading
 from datetime import datetime
 
+from .GlobalMethods import color
+
 
 class Logger:
     """Logger class for ArkUnpacker"""
@@ -12,6 +14,7 @@ class Logger:
     __time_format = "%Y-%m-%d %H:%M:%S"
     __file_encoding = "UTF-8"
     __instance = None
+
     LV_NONE = 0
     LV_ERROR = 1
     LV_WARN = 2
@@ -24,6 +27,10 @@ class Logger:
         self._log_file_path = log_file_path
         self._file = None
         self._queue = queue.Queue()
+
+        self._internal_lock = threading.Lock()
+        self._level_stats = {}
+        self._reset_stats()
 
         def loop(self: Logger):
             while True:
@@ -47,6 +54,15 @@ class Logger:
     def _set_level(self, level: int):
         self._log_level = level
 
+    def _reset_stats(self):
+        with self._internal_lock:
+            self._level_stats = {
+                Logger.LV_ERROR: 0,
+                Logger.LV_WARN: 0,
+                Logger.LV_INFO: 0,
+                Logger.LV_DEBUG: 0,
+            }
+
     def _log(self, tag: str, msg: str):
         try:
             self._queue.put(
@@ -57,18 +73,26 @@ class Logger:
 
     def _error(self, msg: str):
         if self._log_level >= Logger.LV_ERROR:
+            with self._internal_lock:
+                self._level_stats[Logger.LV_ERROR] += 1
             self._log("ERROR", msg)
 
     def _warn(self, msg: str):
         if self._log_level >= Logger.LV_WARN:
+            with self._internal_lock:
+                self._level_stats[Logger.LV_WARN] += 1
             self._log("WARN", msg)
 
     def _info(self, msg: str):
         if self._log_level >= Logger.LV_INFO:
+            with self._internal_lock:
+                self._level_stats[Logger.LV_INFO] += 1
             self._log("INFO", msg)
 
     def _debug(self, msg: str):
         if self._log_level >= Logger.LV_DEBUG:
+            with self._internal_lock:
+                self._level_stats[Logger.LV_DEBUG] += 1
             self._log("DEBUG", msg)
 
     @staticmethod
@@ -96,13 +120,54 @@ class Logger:
 
     @staticmethod
     def set_level(level: int):
-        """Sets the logging level
+        """Sets the logging level.
 
         :param level: The new logging level;
         :rtype: None;
         """
         if Logger.__instance:
             Logger.__instance._set_level(level)
+
+    @staticmethod
+    def reset_stats():
+        """Resets the logging level stats.
+
+        :rtype: None;
+        """
+        if Logger.__instance:
+            Logger.__instance._reset_stats()
+
+    @staticmethod
+    def get_stats(key: int):
+        """Returns the logging level stats of the specified level key.
+
+        :param key: The logging level;
+        :returns: The number of hit count;
+        :rtype: int;
+        """
+        if Logger.__instance:
+            return Logger.__instance._level_stats[key]
+        return 0
+
+    @staticmethod
+    def to_ew_stats_str():
+        """Returns the error-warning logging level stats string.
+
+        :returns: A string that can be printed to CLI;
+        :rtype: str;
+        """
+        errors = Logger.get_stats(Logger.LV_ERROR)
+        warns = Logger.get_stats(Logger.LV_WARN)
+        if errors + warns <= 0:
+            return f"{color()}正常"
+        rst = ""
+        if errors > 0:
+            rst += f"{color(1)}{errors}{color()} 个错误"
+        if warns > 0:
+            if rst:
+                rst += "，"
+            rst += f"{color(3)}{warns}{color()} 个警告"
+        return rst
 
     @staticmethod
     def log(tag: str, msg: str):

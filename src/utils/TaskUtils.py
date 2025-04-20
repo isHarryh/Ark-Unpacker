@@ -418,19 +418,30 @@ class TaskReporterTracker:
         p = self.get_progress(force_inc)
         return f"[{TaskReporterTracker._format_progress_bar_str(p, length)}] {color(2, 1)}{p:.1%}"
 
+    def to_rt_str(self):
+        """Gets a string representing the running time since this instance was initialized.
+
+        :returns: A human-readable string;
+        :rtype: str;
+        """
+        return TaskReporterTracker._format_time_str(self.get_rt())
+
     def to_eta_str(self):
         """Gets a string representing the estimated time to complete all tasks.
 
         :returns: A human-readable string;
         :rtype: str;
         """
-        eta = self.get_eta()
-        h = int(eta / 3600)
-        m = int(eta % 3600 / 60)
-        s = int(eta % 60)
+        return TaskReporterTracker._format_time_str(self.get_eta())
+
+    @staticmethod
+    def _format_time_str(seconds: float):
+        h = int(seconds / 3600)
+        m = int(seconds % 3600 / 60)
+        s = int(seconds % 60)
         if h != 0:
             return f"{h}:{m:02}:{s:02}"
-        if eta != 0:
+        if seconds != 0:
             return f"{m:02}:{s:02}"
         return "--:--"
 

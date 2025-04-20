@@ -142,7 +142,9 @@ def main(srcdir: str, destdir: str, force_std_name: bool):
                 tracker.to_progress_bar_str(),
                 f"当前搜索：\t{osp.basename(upkdir)}",
                 f"累计分拣：\t{collected.now()}",
-                f"剩余时间：\t{tracker.to_eta_str()}",
+                f"预计剩余时间：\t{tracker.to_eta_str()}",
+                f"累计消耗时间：\t{tracker.to_rt_str()}",
+                f"运行状态统计：\t{Logger.to_ew_stats_str()}",
             ]
         )
         ###
@@ -172,7 +174,9 @@ def main(srcdir: str, destdir: str, force_std_name: bool):
                 "正在分拣语音...",
                 tracker.to_progress_bar_str(),
                 f"累计分拣：\t{collected.now()}",
-                f"剩余时间：\t{tracker.to_eta_str()}",
+                f"预计剩余时间：\t{tracker.to_eta_str()}",
+                f"累计消耗时间：\t{tracker.to_rt_str()}",
+                f"运行状态统计：\t{Logger.to_ew_stats_str()}",
             ]
         )
         ui.refresh(post_delay=0.1)

@@ -305,7 +305,9 @@ def main(rootdir: str, destdir: str, do_del: bool = False):
                 f"当前文件：\t{osp.basename(i)}",
                 f"累计搜索：\t{tr_processed.to_progress_str()}",
                 f"累计导出：\t{tr_file_saving.to_progress_str()}",
-                f"剩余时间：\t{tracker.to_eta_str()}",
+                f"预计剩余时间：\t{tracker.to_eta_str()}",
+                f"累计消耗时间：\t{tracker.to_rt_str()}",
+                f"运行状态统计：\t{Logger.to_ew_stats_str()}",
             ]
         )
         ###
@@ -335,7 +337,9 @@ def main(rootdir: str, destdir: str, do_del: bool = False):
                 tracker.to_progress_bar_str(),
                 f"累计搜索：\t{tr_processed.to_progress_str()}",
                 f"累计导出：\t{tr_file_saving.to_progress_str()}",
-                f"剩余时间：\t{tracker.to_eta_str()}",
+                f"预计剩余时间：\t{tracker.to_eta_str()}",
+                f"累计消耗时间：\t{tracker.to_rt_str()}",
+                f"运行状态统计：\t{Logger.to_ew_stats_str()}",
             ]
         )
         ui.refresh(post_delay=0.1)
