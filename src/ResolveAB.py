@@ -12,8 +12,9 @@ from UnityPy.files.File import File
 from UnityPy.helpers import CompressionHelper
 from UnityPy.streams.EndianBinaryReader import EndianBinaryReader
 
-from .CombineRGBwithA import AlphaRGBCombiner
+from .CombineRGBwithA import AlphaRGBCombiner, image_resize
 from .lz4ak.Block import decompress_lz4ak
+from .utils.AtlasFile import AtlasFile
 from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file, stacktrace
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
@@ -249,24 +250,35 @@ class Resource:
             on_queued: Optional[Callable],
             on_saved: Optional[Callable],
         ):
+            atlas = AtlasFile.loads(self.atlas.m_Script)
             for i in self.tex_list:
                 if i[0]:
                     rgb = i[0].image
                     if i[1]:
+                        Logger.debug(
+                            f'ResolveAB: Spine asset "{i[0].m_Name}" found with Alpha texture.'
+                        )
                         rgba = AlphaRGBCombiner(i[1].image).combine_with(rgb)
                     else:
                         Logger.debug(
-                            f'ResolveAB: Spine asset "{i[0].m_Name}" found with no Alpha texture.'
+                            f'ResolveAB: Spine asset "{i[0].m_Name}" found with NO Alpha texture.'
                         )
                         rgba = AlphaRGBCombiner.apply_premultiplied_alpha(rgb)
-                    if SafeSaver.save_image(
+
+                    for p in atlas["pages"]:
+                        n1 = osp.basename(osp.splitext(p["filename"])[0]).lower()
+                        n2 = osp.basename(osp.splitext(i[0].m_Name)[0]).lower()
+                        if n1 == n2:
+                            rgba = image_resize(rgba, p["size"])
+                            break
+
+                    SafeSaver.save_image(
                         rgba,
                         destdir,
                         i[0].m_Name,
                         on_queued=on_queued,
                         on_saved=on_saved,
-                    ):
-                        Logger.debug(f'ResolveAB: Spine asset "{i[0].m_Name}" found.')
+                    )
                 else:
                     Logger.warn("ResolveAB: Spine asset RGB texture missing.")
             for i in (self.atlas, self.skel):
