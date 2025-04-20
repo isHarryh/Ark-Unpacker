@@ -181,7 +181,7 @@ class SafeSaver(WorkerCtrl):
     ):
         dest = osp.join(destdir, name + ext)
         try:
-            with CodeProfiler("lock"):
+            with CodeProfiler("saver_save"):
                 # Ensure files with identical name cannot be saved simultaneously
                 with EntryLock(dest):
                     # Ensure this new file is unique to prevent duplication

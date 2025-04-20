@@ -56,7 +56,10 @@ if __name__ == "__main__":
             print(f"[#{i}] Test failed because an error occurred!", c=7)
             print(stacktrace(), c=3)
     json.dump(
-        CodeProfiler.get_avg_time_all(),
-        open("test/rt.json", "w", encoding="UTF-8"),
+        {
+            "average": CodeProfiler.get_avg_time_all(),
+            "total": CodeProfiler.get_total_time_all(),
+        },
+        open("test/time_consumption.json", "w", encoding="UTF-8"),
         indent=4,
     )
