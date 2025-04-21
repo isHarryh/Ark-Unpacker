@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import json
 import os.path as osp
+from collections import defaultdict
 
 import bson
 import numpy as np
@@ -147,79 +148,102 @@ class ArkAESLibrary:
 class FBOHandler:
     """Handler for FlatBuffers Objects, implementing conversion to Python dict type."""
 
+    SERIALIZE_AS_IS = Union[bool, int, str, list, tuple, dict, None]
+    SERIALIZE_AS_STR = Union[bytes, bytearray, memoryview]
+    SERIALIZE_ENCODING = "UTF-8"
+
     def __init__(self, data: bytearray, root_type: type):
         self._root = root_type.GetRootAs(data, 0)
 
     @staticmethod
     def _to_literal(obj: object):
-        if obj is None:
-            return None
-        if isinstance(obj, bytes):
-            return str(obj, encoding="UTF-8")
         if isinstance(obj, np.ndarray):
             return obj.tolist()
-        if not isinstance(obj, (bool, int, float, str, dict, list)):
-            return FBOHandler._to_json_dict(obj)
-        return obj
+        if isinstance(obj, FBOHandler.SERIALIZE_AS_IS):
+            return obj
+        if isinstance(obj, FBOHandler.SERIALIZE_AS_STR):
+            return str(obj, encoding=FBOHandler.SERIALIZE_ENCODING)
+        return FBOHandler._to_json_dict(obj)
 
     @staticmethod
     def _to_json_dict(obj: object):
         if obj is None:
             return None
+
         data = {}
-        if "Key" in dir(obj) and "Value" in dir(obj):
-            # As key-value table:
-            val = None
-            val_len_method = getattr(obj, "ValueLength", None)
-            if val_len_method:
-                # As key-array table
-                val = [FBOHandler._to_literal(obj.Value(i)) for i in range(val_len_method())]  # type: ignore
+
+        f_obj_key = getattr(obj, "Key", None)
+        f_obj_value = getattr(obj, "Value", None)
+        f_obj_value_len = getattr(obj, "ValueLength", None)
+
+        if f_obj_key and f_obj_value:
+            # As key-value item:
+            assert isinstance(f_obj_key, Callable) and isinstance(f_obj_value, Callable)
+            if f_obj_value_len:
+                # Value is array
+                assert isinstance(f_obj_value_len, Callable)
+                data[FBOHandler._to_literal(f_obj_key())] = [
+                    FBOHandler._to_literal(f_obj_value(i))
+                    for i in range(f_obj_value_len())
+                ]
             else:
-                val = FBOHandler._to_literal(obj.Value())  # type: ignore
-            data[FBOHandler._to_literal(obj.Key())] = val  # type: ignore
+                # Value is single
+                data[FBOHandler._to_literal(f_obj_key())] = FBOHandler._to_literal(
+                    f_obj_value()
+                )
         else:
-            # As general object:
+            # As table object:
+            # Collect field names
+            field_name_map = defaultdict(lambda: [None, None, None])
             for field_name in dir(obj):
-                # For each fields in the object
-                # Exclude FBO universal fields
-                if field_name in ("Init"):
+                if field_name in ("Init", "Clear"):
                     continue
-                if field_name.startswith(("_", "GetRootAs")):
+                elif field_name.startswith(("_", "GetRootAs")):
                     continue
-                if field_name.endswith(("IsNone", "Length")):
-                    continue
-                # Collect field data from callable
-                field = getattr(obj, field_name)
-                if callable(field):
-                    val = None
-                    # Try as none
-                    is_none_method = getattr(obj, f"{field_name}IsNone", None)
-                    if is_none_method and is_none_method():
+                elif field_name != "IsNone" and field_name.endswith("IsNone"):
+                    field_name_map[field_name[:-6]][0] = getattr(obj, field_name, None)
+                elif field_name != "Length" and field_name.endswith("Length"):
+                    field_name_map[field_name[:-6]][1] = getattr(obj, field_name, None)
+                else:
+                    field_name_map[field_name][2] = getattr(obj, field_name, None)
+
+            # Collect field values
+            for field_name, (
+                f_field_is_none,
+                f_field_len,
+                f_field,
+            ) in field_name_map.items():
+                if isinstance(f_field, Callable):
+                    value = None
+                    if isinstance(f_field_is_none, Callable) and f_field_is_none():
+                        # Value is explicit null
                         continue
-                    # Try as table
-                    field_len_method = getattr(obj, f"{field_name}Length", None)
-                    if field_len_method:
-                        # As table:
-                        field_len = field_len_method()
+                    elif isinstance(f_field_len, Callable):
+                        # Value is table or array
+                        field_len = f_field_len()
                         if field_len:
-                            if "Key" in dir(field(0)):
-                                # As key-value table:
-                                val = {}
+                            if "Key" in dir(f_field(0)):
+                                # Value is table
+                                value = {}
                                 for i in range(field_len):
-                                    val.update(FBOHandler._to_json_dict(field(i)))  # type: ignore
+                                    item = FBOHandler._to_json_dict(f_field(i))
+                                    assert isinstance(item, dict)
+                                    value.update(item)
                             else:
-                                # As general table:
-                                val = []
-                                for i in range(field_len):
-                                    val.append(FBOHandler._to_literal(field(i)))
+                                # Value is array
+                                value = [
+                                    FBOHandler._to_literal(f_field(i))
+                                    for i in range(field_len)
+                                ]
                         else:
                             # TODO handle empty table
                             pass
                     else:
-                        # As other literal field:
-                        val = FBOHandler._to_literal(field())
+                        # Value is common literal
+                        value = FBOHandler._to_literal(f_field())
                     # Add this field to the object data
-                    data[field_name] = val
+                    data[field_name] = value
+
         # Return the whole object data
         return data
 
