@@ -4,6 +4,7 @@
 from typing import Callable, Optional, Union
 
 import json
+import math
 import os.path as osp
 from collections import defaultdict
 
@@ -24,6 +25,22 @@ from .utils.GlobalMethods import (
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
 from .utils.TaskUtils import ThreadCtrl, UICtrl, TaskReporter, TaskReporterTracker
+
+
+class CompatibleFloat(float):
+    def __new__(cls, value: float):
+        f32 = CompatibleFloat.truncate(value, 7)
+        f64 = CompatibleFloat.truncate(value, 16)
+        return super().__new__(cls, f64 if f32 == f64 else f32)
+
+    @staticmethod
+    def truncate(value: float, precision: int) -> str:
+        if value == 0.0:
+            return "0.0"
+        l_digits = int(math.floor(math.log10(value if value > 0.0 else -value))) + 1
+        r_digits = precision - l_digits if l_digits < precision else 0
+        formatted = f"{value:.{r_digits}f}".rstrip("0")
+        return formatted + "0" if formatted.endswith(".") else formatted
 
 
 class ArkFBOLibrary:
@@ -157,6 +174,8 @@ class FBOHandler:
 
     @staticmethod
     def _to_literal(obj: object):
+        if isinstance(obj, float):
+            return CompatibleFloat(obj)
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         if isinstance(obj, FBOHandler.SERIALIZE_AS_IS):
