@@ -181,7 +181,9 @@ class FBOHandler:
         if isinstance(obj, FBOHandler.SERIALIZE_AS_IS):
             return obj
         if isinstance(obj, FBOHandler.SERIALIZE_AS_STR):
-            return str(obj, encoding=FBOHandler.SERIALIZE_ENCODING)
+            return str(
+                obj, encoding=FBOHandler.SERIALIZE_ENCODING, errors="surrogateescape"
+            )
         return FBOHandler._to_json_dict(obj)
 
     @staticmethod
