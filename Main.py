@@ -183,7 +183,7 @@ def run_custom_textasset_decode():
 
 def run_custom_resolve_spine():
     Logger.info("CI: Customized Spine export mode.")
-    prt_subtitle("自定义Spine动画模型导出")
+    prt_subtitle("自定义Spine模型导出")
     ###
     print("\n请输入要导出的目录或文件路径")
     src = UserInput.request_path()
@@ -289,13 +289,11 @@ def run_arkmodels_data_dist():
         if not osp.exists(i):
             print(f'在工作目录下找不到 {i}，请确认您先前已运行了"模型分拣"。', c=3)
             UserInput.request('> 输入符号 "*" 以取消任务，或直接按Enter以强制继续')
-            return
     if not osp.exists(AU_Mdd.ModelsDist.TEMP_DIR):
         print(
             f'在工作目录下找不到 {AU_Mdd.ModelsDist.TEMP_DIR}，请确认您先前已运行了"匿名数据提取"。',
             c=3,
         )
-        UserInput.request('> 输入符号 "*" 以取消任务，或直接按Enter以强制继续')
         return
     AU_Mdd.main()
 
@@ -318,8 +316,8 @@ def run_arkmodels_workflow():
         print(
             f"""功能选择：
 1: 一键执行
-2: 干员基建模型提取 ({visual('chararts')}, {visual('skinpack')})
-3: 敌方战斗模型提取 ({visual('battle')})
+2: 干员基建模型提取 ({visual('chararts')} 和 {visual('skinpack')})
+3: 敌方战斗模型提取 ({visual('battle')} 或 {visual('refs')})
 4: 动态立绘模型提取 ({visual('arts')})
 5: 匿名数据提取 ({visual(AU_Mdd.ModelsDist.GAMEDATA_DIR)})
 6: 模型分拣
@@ -345,7 +343,7 @@ def run_arkmodels_workflow():
         if order == "2" or wildcard:
             run_arkmodels_unpacking(["chararts", "skinpack"], temp_dir_1)
         if order == "3" or wildcard:
-            run_arkmodels_unpacking(["battle/prefabs/enemies"], temp_dir_2)
+            run_arkmodels_unpacking(["battle/prefabs/enemies", "refs/arts"], temp_dir_2)
         if order == "4" or wildcard:
             run_arkmodels_unpacking(["arts/dynchars"], temp_dir_3)
         if order == "5" or wildcard:

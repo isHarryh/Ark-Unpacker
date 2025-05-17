@@ -251,7 +251,7 @@ def main(
     for i in flist:
         ui.request(
             [
-                "正在批量导出Spine...",
+                "正在批量导出Spine模型...",
                 tracker.to_progress_bar_str(),
                 f"当前目录：\t{osp.basename(osp.dirname(i))}",
                 f"当前文件：\t{osp.basename(i)}",
@@ -292,7 +292,7 @@ def main(
     ):
         ui.request(
             [
-                "正在批量导出Spine...",
+                "正在批量导出Spine模型...",
                 tracker.to_progress_bar_str(),
                 f"累计解包：\t{tr_processed.to_progress_str()}",
                 f"累计导出：\t{tr_file_saving.to_progress_str()}",
@@ -303,7 +303,7 @@ def main(
         )
         ui.refresh(post_delay=0.1)
     ui.reset()
-    print("\nSpine批量导出结束!", s=1)
+    print("\nSpine模型批量导出结束!", s=1)
     print(f"  累计解包 {tr_processed.get_done()} 个文件")
     print(f"  累计导出 {tr_file_saving.get_done()} 个文件")
     print(f"  此项用时 {round(tracker.get_rt(), 1)} 秒")
