@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
-from contextlib import ContextDecorator
-from typing import Any, Callable, List, Optional, Sequence, Tuple, Union
+from typing import Callable, List, Optional, Sequence, Union
 
 import os.path as osp
 
@@ -13,10 +12,8 @@ from UnityPy.files.File import File
 from UnityPy.helpers import CompressionHelper
 from UnityPy.streams.EndianBinaryReader import EndianBinaryReader
 
-from .CombineRGBwithA import AlphaRGBCombiner, image_resize
 from .lz4ak.Block import decompress_lz4ak
-from .utils.AtlasFile import AtlasFile
-from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file, stacktrace
+from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
 from .utils.TaskUtils import ThreadCtrl, UICtrl, TaskReporter, TaskReporterTracker
@@ -51,7 +48,6 @@ class Resource:
         self.audioclips: List[uc.AudioClip] = []
         self.materials: List[uc.Material] = []
         self.monobehaviors: List[uc.MonoBehaviour] = []
-        self.spines: List[Resource.SpineAsset] = []
         ###
         for i in [o.read() for o in env.objects]:
             if isinstance(i, uc.Sprite):
@@ -96,200 +92,6 @@ class Resource:
                 return i
         return None
 
-    def sort_skeletons(self):
-        """Sorts the Spine assets.
-
-        :rtype: None;
-        """
-        spines: List[Resource.SpineAsset] = []
-        try:
-            for mono in self.monobehaviors:
-                # (i stands for a MonoBehavior)
-                with Resource.TreeReader(mono) as tree:
-                    # As asset:
-                    if "skeletonDataAsset" not in tree.keys():
-                        continue  # Skip non-skeleton asset
-                    mono_sd = self.get_object_by_pathid(
-                        tree["skeletonDataAsset"], self.monobehaviors
-                    )
-                    with Resource.TreeReader(mono_sd) as tree_sd:
-                        # As skeleton data asset:
-                        skel = self.get_object_by_pathid(
-                            tree_sd["skeletonJSON"], self.textassets
-                        )
-                        mono_ad = self.get_object_by_pathid(
-                            tree_sd["atlasAssets"][0], self.monobehaviors
-                        )
-                        with Resource.TreeReader(mono_ad) as tree_ad:
-                            # As atlas data asset:
-                            atlas = self.get_object_by_pathid(
-                                tree_ad["atlasFile"], self.textassets
-                            )
-                            list2mat = [
-                                self.get_object_by_pathid(i, self.materials)
-                                for i in tree_ad["materials"]
-                            ]
-                            list2tex = []
-                            for mat in list2mat:
-                                tex_rgb, tex_alpha = None, None
-                                with Resource.TreeReader(mat) as tree_mat:
-                                    # As material asset:
-                                    tex_envs = tree_mat["m_SavedProperties"][
-                                        "m_TexEnvs"
-                                    ]
-                                    for tex in tex_envs:
-                                        if tex[0] == "_MainTex":
-                                            tex_rgb = self.get_object_by_pathid(
-                                                tex[1]["m_Texture"], self.texture2ds
-                                            )
-                                        elif tex[0] == "_AlphaTex":
-                                            tex_alpha = self.get_object_by_pathid(
-                                                tex[1]["m_Texture"], self.texture2ds
-                                            )
-                                list2tex.append((tex_rgb, tex_alpha))
-                            # Pack into Spine asset instance
-                            spine = Resource.SpineAsset(
-                                skel, atlas, list2tex, tree.get("_animationName", None)
-                            )
-                            spine.add_prefix()
-                            spines.append(spine)
-            # EndForeach
-        except Exception as arg:
-            Logger.warn(
-                f'ResolveAB: Failed to handle skeletons in resource "{self.name}": {stacktrace()}'
-            )
-        self.spines = spines
-
-    class TreeReader(ContextDecorator):
-        """Reader of the serialized type tree of Unity objects."""
-
-        def __init__(self, obj: Optional[uc.Object]):
-            self.obj = obj.object_reader if isinstance(obj, uc.Object) else obj
-
-        def __enter__(self):
-            if self.obj is None:
-                raise AttributeError("Given object or object reader is none")
-            if self.obj.serialized_type and getattr(self.obj.serialized_type, "nodes"):
-                tree = self.obj.read_typetree()
-                if isinstance(tree, dict):
-                    return tree
-            raise AttributeError("Given object has no serialized type tree")
-
-        def __exit__(self, exc_type, exc_val, exc_tb):
-            return False  # Hand down the exception
-
-    class SpineAsset:
-        UNKNOWN = "Unknown"
-        BUILDING = "Building"
-        BATTLE_FRONT = "BattleFront"
-        BATTLE_BACK = "BattleBack"
-        DYN_ILLUST = "DynIllust"
-
-        def __init__(
-            self,
-            skel: Any,
-            atlas: Any,
-            tex_list: List[Tuple[uc.Texture2D, uc.Texture2D]],
-            anim_list: Optional[List[str]],
-        ):
-            # Validate arguments
-            if not isinstance(skel, uc.TextAsset) or not isinstance(
-                atlas, uc.TextAsset
-            ):
-                raise TypeError("Spine asset unavailable, bad skel or atlas")
-            if not isinstance(tex_list, list) or len(tex_list) == 0:
-                raise TypeError("Spine asset unavailable, bad textures")
-            self.skel = skel
-            self.atlas = atlas
-            self.tex_list = tex_list
-            self.type = Resource.SpineAsset.UNKNOWN
-            # Determine the type
-            if skel.m_Name.lower().startswith("dyn_"):
-                self.type = Resource.SpineAsset.DYN_ILLUST
-            elif (
-                anim_list
-                and "Relax" in anim_list
-                or skel.m_Name.lower().startswith("build_")
-            ):
-                self.type = Resource.SpineAsset.BUILDING
-            else:
-                t = self.atlas.m_Script.lower()
-                if t.count("\nf_") + t.count("\nc_") >= t.count("\nb_"):
-                    self.type = Resource.SpineAsset.BATTLE_FRONT
-                else:
-                    self.type = Resource.SpineAsset.BATTLE_BACK
-
-        def add_prefix(self):
-            """Renames the Spine assets which includes skel, atlas and png files.
-            Since the Spine in Arknights have 4 or more forms (Building, BattleFront, BattleBack, DynIllust),
-            it is necessary to rename them so that name collisions can be avoided.
-
-            :rtype: None;
-            """
-
-            def _add_prefix(obj: Union[uc.TextAsset, uc.Texture2D], pre: str):
-                if obj and not obj.m_Name.startswith(pre):
-                    obj.m_Name = pre + obj.m_Name
-
-            # Get the prefix string
-            prefix = (
-                self.type
-                + osp.sep
-                + osp.splitext(osp.basename(self.atlas.m_Name))[0]
-                + osp.sep
-            )
-            # Do add prefix to skel, atlas and textures
-            _add_prefix(self.skel, prefix)
-            _add_prefix(self.atlas, prefix)
-            for i in self.tex_list:
-                for j in i:
-                    _add_prefix(j, prefix)
-
-        def save_spine(
-            self,
-            destdir: str,
-            on_queued: Optional[Callable],
-            on_saved: Optional[Callable],
-        ):
-            atlas = AtlasFile.loads(self.atlas.m_Script)
-            for i in self.tex_list:
-                if i[0]:
-                    rgb = i[0].image
-                    if i[1]:
-                        Logger.debug(
-                            f'ResolveAB: Spine asset "{i[0].m_Name}" found with Alpha texture.'
-                        )
-                        rgba = AlphaRGBCombiner(i[1].image).combine_with(rgb)
-                    else:
-                        Logger.debug(
-                            f'ResolveAB: Spine asset "{i[0].m_Name}" found with NO Alpha texture.'
-                        )
-                        rgba = AlphaRGBCombiner.apply_premultiplied_alpha(rgb)
-
-                    for p in atlas["pages"]:
-                        n1 = osp.basename(osp.splitext(p["filename"])[0]).lower()
-                        n2 = osp.basename(osp.splitext(i[0].m_Name)[0]).lower()
-                        if n1 == n2:
-                            rgba = image_resize(rgba, p["size"])
-                            break
-
-                    SafeSaver.save_image(
-                        rgba,
-                        destdir,
-                        i[0].m_Name,
-                        on_queued=on_queued,
-                        on_saved=on_saved,
-                    )
-                else:
-                    Logger.warn("ResolveAB: Spine asset RGB texture missing.")
-            for i in (self.atlas, self.skel):
-                SafeSaver.save_object(i, destdir, i.m_Name, on_queued, on_saved)
-                Logger.debug(f'ResolveAB: Spine asset "{i.m_Name}" found.')
-
-        # EndClass
-
-    # EndClass
-
 
 def ab_resolve(
     abfile: str,
@@ -297,7 +99,6 @@ def ab_resolve(
     do_img: bool,
     do_txt: bool,
     do_aud: bool,
-    do_spine: bool,
     on_processed: Optional[Callable] = None,
     on_file_queued: Optional[Callable] = None,
     on_file_saved: Optional[Callable] = None,
@@ -309,7 +110,6 @@ def ab_resolve(
     :param do_img: Whether to extract images;
     :param do_txt: Whether to extract text scripts;
     :param do_aud: Whether to extract audios;
-    :param do_spine: Whether to extract Spine assets, note that the Spine assets may have some identical file with the images/scripts;
     :param on_processed: Callback `f()` for finished, `None` for ignore;
     :param on_file_queued: Callback `f()` invoked when a file was queued, `None` for ignore;
     :param on_file_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
@@ -328,11 +128,7 @@ def ab_resolve(
             )
         elif res.length == 0:
             Logger.info(f'ResolveAB: No object in file "{res.name}".')
-        # Preprocess
-        res.sort_skeletons()
-        if do_spine:
-            for i in res.spines:
-                i.save_spine(destdir, on_file_queued, on_file_saved)
+
         if do_img:
             SafeSaver.save_objects(res.sprites, destdir, on_file_queued, on_file_saved)
             SafeSaver.save_objects(
@@ -364,7 +160,6 @@ def main(
     do_img: bool = True,
     do_txt: bool = True,
     do_aud: bool = True,
-    do_spine: bool = False,
     separate: bool = True,
 ):
     """Extract all the AB files from the given directory or extract a given AB file.
@@ -375,7 +170,6 @@ def main(
     :param do_img: Whether to extract images;
     :param do_txt: Whether to extract text scripts;
     :param do_aud: Whether to extract audios;
-    :param do_spine: Whether to extract Spine assets, note that the Spine assets may have some identical file with the images/scripts;
     :param separate: Whether to sort the extracted files by their source AB file path.
     :rtype: None;
     """
@@ -432,7 +226,6 @@ def main(
                 do_img,
                 do_txt,
                 do_aud,
-                do_spine,
                 tr_processed.report,
                 tr_file_saving.update_demand,
                 tr_file_saving.report,

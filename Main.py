@@ -13,6 +13,7 @@ from src.utils.Logger import Logger
 from src.utils.GlobalMethods import color, input, print, clear, title, stacktrace, rmdir
 
 from src import ResolveAB as AU_Rs
+from src import ResolveSpine as AU_Sp
 from src import DecodeTextAsset as AU_Fb
 from src import CombineRGBwithA as AU_Cb
 from src import CollectModels as AU_Cm
@@ -36,8 +37,9 @@ def prt_homepage():
 2: 自定义资源解包
 3: 自定义图片合并
 4: 自定义文本资源解码
-5: ArkModels提取与分拣工具
-6: ArkVoice提取与分拣工具
+5: 自定义Spine模型导出
+6: ArkModels提取与分拣工具
+7: ArkVoice提取与分拣工具
 0: 退出""",
         c=6,
     )
@@ -103,22 +105,19 @@ def run_custom_resolve_ab():
     ###
     print("\n请输入要导出的资源类型")
     print("  [i]图片，[t]文本，[a]音频", c=3)
-    print("  [s]Spine动画模型", c=3)
     print('  示例输入："ita"，"ia"')
     do_them = input("> ", c=2).lower()
     do_img = True if "i" in do_them else False
     do_txt = True if "t" in do_them else False
     do_aud = True if "a" in do_them else False
-    do_spi = True if "s" in do_them else False
     print(
         f"  [{'√' if do_img else '×'}]图片，[{'√' if do_txt else '×'}]文本，[{'√' if do_aud else '×'}]音频",
         c=6,
     )
-    print(f"  [{'√' if do_spi else '×'}]Spine动画模型", c=6)
     ###
     prt_continue()
     title("ArkUnpacker - Processing")
-    AU_Rs.main(src, destdir, do_del, do_img, do_txt, do_aud, do_spi, separate)
+    AU_Rs.main(src, destdir, do_del, do_img, do_txt, do_aud, separate)
 
 
 def run_custom_combine_image():
@@ -182,6 +181,40 @@ def run_custom_textasset_decode():
     AU_Fb.main(rootdir, destdir, do_del)
 
 
+def run_custom_resolve_spine():
+    Logger.info("CI: Customized Spine export mode.")
+    prt_subtitle("自定义Spine动画模型导出")
+    ###
+    print("\n请输入要导出的目录或文件路径")
+    src = UserInput.request_path()
+    print("导出目标路径：", c=2)
+    print(f"  {osp.abspath(src)}", c=6)
+    ###
+    print("\n请输入导出目录的路径")
+    print("  支持相对路径，留空表示自动创建")
+    destdir = input("> ", c=2)
+    if not destdir:
+        destdir = f"Spine_{int(time.time())}"
+    print("导出目录路径：", c=2)
+    print(f"  {osp.abspath(destdir)}", c=6)
+    ###
+    do_del = False
+    if osp.isdir(destdir):
+        print("\n该导出目录已存在，您要删除它里面的全部文件吗？")
+        print("  请!慎重!选择：[y]删除，[n]保留(默认)", c=3)
+        do_del = UserInput.request_yes_or_no(False)
+    ###
+    separate = True
+    if not osp.isfile(src):
+        print("\n是否对导出的文件按来源进行分组？")
+        print("  [y]是(默认)，[n]否", c=3)
+        separate = UserInput.request_yes_or_no(True)
+    ###
+    prt_continue()
+    title("ArkUnpacker - Processing")
+    AU_Sp.main(src, destdir, do_del, separate)
+
+
 def run_arkmodels_unpacking(dirs, destdir):
     Logger.info("CI: ArkModels unpack mode.")
     prt_subtitle("ArkModels 模型提取")
@@ -198,7 +231,7 @@ def run_arkmodels_unpacking(dirs, destdir):
     print("正在清理...")
     rmdir(destdir)
     for i in dirs:
-        AU_Rs.main(i, destdir, do_img=False, do_txt=False, do_aud=False, do_spine=True)
+        AU_Sp.main(i, destdir, do_del=False, separate=True)
 
 
 def run_arkmodels_anon_unpacking(dirs, destdir):
@@ -217,7 +250,15 @@ def run_arkmodels_anon_unpacking(dirs, destdir):
     print("正在清理...")
     rmdir(destdir)
     for i in dirs:
-        AU_Rs.main(i, destdir, do_img=False, do_txt=True, do_aud=False, do_spine=False)
+        AU_Rs.main(
+            i,
+            destdir,
+            do_del=False,
+            do_img=False,
+            do_txt=True,
+            do_aud=False,
+            separate=True,
+        )
 
 
 def run_arkmodels_filtering(dirs, destdirs):
@@ -360,7 +401,13 @@ def run_arkvoice_unpacking(dir, destdir1, destdir2, wildcard=False):
             rmdir(destdir1)
             title("ArkUnpacker - Processing")
             AU_Rs.main(
-                dir, destdir1, do_img=False, do_txt=False, do_aud=True, do_spine=False
+                dir,
+                destdir1,
+                do_del=False,
+                do_img=False,
+                do_txt=False,
+                do_aud=True,
+                separate=True,
             )
         if order == "2" or wildcard:
             if not osp.exists(destdir1):
@@ -541,8 +588,11 @@ if __name__ == "__main__":
                         run_custom_textasset_decode()
                         prt_continue()
                     elif order == "5":
-                        run_arkmodels_workflow()
+                        run_custom_resolve_spine()
+                        prt_continue()
                     elif order == "6":
+                        run_arkmodels_workflow()
+                    elif order == "7":
                         run_arkvoice_workflow()
                     elif order == "0":
                         print("\n用户退出")
@@ -562,7 +612,14 @@ if __name__ == "__main__":
                     args.image,
                     args.text,
                     args.audio,
-                    args.spine,
+                    args.group,
+                )
+            elif args.mode == "sp":
+                validate_input_output_arg(parser, args, allow_file_input=True)
+                AU_Sp.main(
+                    args.input,
+                    args.output,
+                    args.d,
                     args.group,
                 )
             elif args.mode == "cb":

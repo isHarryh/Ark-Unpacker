@@ -32,8 +32,8 @@ class _ArkUnpackerArgParser(argparse.ArgumentParser):
         parser.add_argument(
             "-m",
             "--mode",
-            choices=["ab", "cb", "fb"],
-            help="working mode, ab=resolve-ab, cb=combine-image, fb=decode-flatbuffers",
+            choices=["ab", "cb", "fb", "sp"],
+            help="working mode, ab=resolve-ab, cb=combine-image, fb=decode-flatbuffers, sp=resolve-spine",
         )
         parser.add_argument("-i", "--input", help="source file or directory path")
         parser.add_argument("-o", "--output", help="destination directory path")
