@@ -48,6 +48,7 @@ class Resource:
         self.audioclips: List[uc.AudioClip] = []
         self.materials: List[uc.Material] = []
         self.monobehaviors: List[uc.MonoBehaviour] = []
+        self.meshes: List[uc.Mesh] = []
         ###
         for i in [o.read() for o in env.objects]:
             if isinstance(i, uc.Sprite):
@@ -62,6 +63,8 @@ class Resource:
                 self.materials.append(i)
             elif isinstance(i, uc.MonoBehaviour):
                 self.monobehaviors.append(i)
+            elif isinstance(i, uc.Mesh):
+                self.meshes.append(i)
             elif isinstance(i, uc.AssetBundle):
                 if getattr(i, "m_Name", None):
                     if self.name != osp.basename(i.m_Name):
@@ -99,6 +102,7 @@ def ab_resolve(
     do_img: bool,
     do_txt: bool,
     do_aud: bool,
+    do_mesh: bool,
     on_processed: Optional[Callable] = None,
     on_file_queued: Optional[Callable] = None,
     on_file_saved: Optional[Callable] = None,
@@ -110,6 +114,7 @@ def ab_resolve(
     :param do_img: Whether to extract images;
     :param do_txt: Whether to extract text scripts;
     :param do_aud: Whether to extract audios;
+    :param do_mesh: Whether to extract mesh;
     :param on_processed: Callback `f()` for finished, `None` for ignore;
     :param on_file_queued: Callback `f()` invoked when a file was queued, `None` for ignore;
     :param on_file_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
@@ -142,6 +147,8 @@ def ab_resolve(
             SafeSaver.save_objects(
                 res.audioclips, destdir, on_file_queued, on_file_saved
             )
+        if do_mesh:
+            SafeSaver.save_objects(res.meshes, destdir, on_file_queued, on_file_saved)
     except BaseException as arg:
         # Error feedback
         Logger.error(
@@ -160,6 +167,7 @@ def main(
     do_img: bool = True,
     do_txt: bool = True,
     do_aud: bool = True,
+    do_mesh: bool = False,
     separate: bool = True,
 ):
     """Extract all the AB files from the given directory or extract a given AB file.
@@ -170,6 +178,7 @@ def main(
     :param do_img: Whether to extract images;
     :param do_txt: Whether to extract text scripts;
     :param do_aud: Whether to extract audios;
+    :param do_mesh: Whether to extract mesh;
     :param separate: Whether to sort the extracted files by their source AB file path.
     :rtype: None;
     """
@@ -179,7 +188,6 @@ def main(
     destdir = osp.normpath(osp.realpath(destdir))
     flist = [src] if osp.isfile(src) else get_filelist(src)
     flist = list(filter(is_ab_file, flist))
-
     if do_del:
         print("\n正在清理...", s=1)
         rmdir(destdir)  # Danger zone
@@ -226,6 +234,7 @@ def main(
                 do_img,
                 do_txt,
                 do_aud,
+                do_mesh,
                 tr_processed.report,
                 tr_file_saving.update_demand,
                 tr_file_saving.report,

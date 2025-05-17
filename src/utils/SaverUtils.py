@@ -3,6 +3,7 @@
 # @ BSD 3-Clause License
 import os
 import os.path as osp
+import re
 import threading
 from contextlib import ContextDecorator
 from io import BytesIO
@@ -150,6 +151,16 @@ class SafeSaver(WorkerCtrl):
                 byte, destdir, name, SafeSaver._EXT_RAW, on_queued, on_saved
             )
             return
+        elif isinstance(obj, uc.Mesh):
+            # As mesh file (.obj):
+            try:
+                obj_data = obj.export()
+                SafeSaver.save_bytes(
+                    obj_data.encode("utf-8"), destdir, name, ".obj", on_queued, on_saved
+                )
+            except Exception as e:
+                Logger.warn(f"SafeSaver: Failed to export Mesh: {e}")
+            return
         else:
             # Not an exportable type:
             pass
@@ -187,7 +198,7 @@ class SafeSaver(WorkerCtrl):
                     # Ensure this new file is unique to prevent duplication
                     if SafeSaver._is_unique(data, dest):
                         # Modify the file name to avoid namesake
-                        dest = SafeSaver._no_namesake(dest)
+                        dest = SafeSaver._purify_name(dest)
                         # Save the file eventually
                         mkdir(osp.dirname(dest))
                         SafeSaver._save_bytes(data, dest)
@@ -228,9 +239,17 @@ class SafeSaver(WorkerCtrl):
         return True
 
     @staticmethod
-    def _no_namesake(dest: str):
+    def _purify_name(dest: str):
         destdir = osp.dirname(dest)
         name, ext = osp.splitext(osp.basename(dest))
+        new_name = re.sub(r"[\\/:*?\"<>|\x00-\x1F]", "#", name)
+        if new_name != name:
+            Logger.debug(
+                f'Saver: File name "{name}" was modified to "{new_name}" to prevent invalid characters'
+            )
+            name = new_name
+
+        dest = osp.join(destdir, name + ext)
         tmp = 0
         while osp.isfile(dest):
             dest = osp.join(destdir, f"{name}${tmp}{ext}")

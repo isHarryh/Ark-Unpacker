@@ -64,6 +64,11 @@ class _ArkUnpackerArgParser(argparse.ArgumentParser):
             help="in resolve ab mode: export spine asset files",
         )
         parser.add_argument(
+            "--mesh",
+            action="store_true",
+            help="in resolve ab mode: export mesh resources",
+        )
+        parser.add_argument(
             "-g",
             "--group",
             action="store_true",
