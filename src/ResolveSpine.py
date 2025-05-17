@@ -132,50 +132,47 @@ class SpineAsset:
     def from_resource(cls, res: Resource) -> List["SpineAsset"]:
         spines = []
         try:
-            for mono in res.monobehaviors:
-                with TreeReader(mono) as tree:
-                    if "skeletonDataAsset" not in tree.keys():
-                        continue
-                    mono_sd = res.get_object_by_pathid(
-                        tree["skeletonDataAsset"], res.monobehaviors
+            for mono_sd in res.monobehaviors:
+                with TreeReader(mono_sd) as tree_sd:  # skelton data
+                    if (
+                        "skeletonJSON" not in tree_sd.keys()
+                        or "atlasAssets" not in tree_sd.keys()
+                    ):
+                        continue  # Not skeleton data
+                    skel = res.get_object_by_pathid(
+                        tree_sd["skeletonJSON"], res.textassets
                     )
-                    with TreeReader(mono_sd) as tree_sd:
-                        skel = res.get_object_by_pathid(
-                            tree_sd["skeletonJSON"], res.textassets
+                    mono_ad = res.get_object_by_pathid(
+                        tree_sd["atlasAssets"][0], res.monobehaviors
+                    )
+                    with TreeReader(mono_ad) as tree_ad:  # atlas data
+                        atlas = res.get_object_by_pathid(
+                            tree_ad["atlasFile"], res.textassets
                         )
-                        mono_ad = res.get_object_by_pathid(
-                            tree_sd["atlasAssets"][0], res.monobehaviors
+                        list2mat = [
+                            res.get_object_by_pathid(i, res.materials)
+                            for i in tree_ad["materials"]
+                        ]
+                        list2tex = []
+                        for mat in list2mat:
+                            tex_rgb, tex_alpha = None, None
+                            with TreeReader(mat) as tree_mat:  # material data
+                                tex_envs = tree_mat["m_SavedProperties"]["m_TexEnvs"]
+                                for tex in tex_envs:
+                                    if tex[0] == "_MainTex":
+                                        tex_rgb = res.get_object_by_pathid(
+                                            tex[1]["m_Texture"], res.texture2ds
+                                        )
+                                    elif tex[0] == "_AlphaTex":
+                                        tex_alpha = res.get_object_by_pathid(
+                                            tex[1]["m_Texture"], res.texture2ds
+                                        )
+                            list2tex.append((tex_rgb, tex_alpha))
+                        spine = cls(
+                            skel, atlas, list2tex, tree_sd.get("_animationName", None)
                         )
-                        with TreeReader(mono_ad) as tree_ad:
-                            atlas = res.get_object_by_pathid(
-                                tree_ad["atlasFile"], res.textassets
-                            )
-                            list2mat = [
-                                res.get_object_by_pathid(i, res.materials)
-                                for i in tree_ad["materials"]
-                            ]
-                            list2tex = []
-                            for mat in list2mat:
-                                tex_rgb, tex_alpha = None, None
-                                with TreeReader(mat) as tree_mat:
-                                    tex_envs = tree_mat["m_SavedProperties"][
-                                        "m_TexEnvs"
-                                    ]
-                                    for tex in tex_envs:
-                                        if tex[0] == "_MainTex":
-                                            tex_rgb = res.get_object_by_pathid(
-                                                tex[1]["m_Texture"], res.texture2ds
-                                            )
-                                        elif tex[0] == "_AlphaTex":
-                                            tex_alpha = res.get_object_by_pathid(
-                                                tex[1]["m_Texture"], res.texture2ds
-                                            )
-                                list2tex.append((tex_rgb, tex_alpha))
-                            spine = cls(
-                                skel, atlas, list2tex, tree.get("_animationName", None)
-                            )
-                            spine.add_prefix()
-                            spines.append(spine)
+                        spine.add_prefix()
+                        spines.append(spine)
         except Exception as arg:
             Logger.warn(
                 f'ResolveSpine: Failed to handle skeletons in resource "{res.name}": {stacktrace()}'
