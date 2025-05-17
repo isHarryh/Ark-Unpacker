@@ -2,6 +2,7 @@
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
 import argparse
+import os
 
 
 class ArgParserFailure(Exception):
@@ -15,6 +16,26 @@ class _ArkUnpackerArgParser(argparse.ArgumentParser):
 
     def error(self, message: str):
         raise ArgParserFailure(message)
+
+    def validate_input_output_arg(self, args, allow_file_input: bool = False):
+        if not getattr(args, "input", None):
+            self.error("input should be defined in this mode")
+        if not getattr(args, "output", None):
+            self.error("output should be defined in this mode")
+        if not allow_file_input and os.path.isfile(args.input):
+            self.error("input should be a directory, not file")
+        if not os.path.isdir(args.input) and not (
+            allow_file_input and os.path.isfile(args.input)
+        ):
+            self.error(
+                f"input should be a {'file or ' if allow_file_input else ''}directory that exists"
+            )
+
+    def validate_logging_level_arg(self, args):
+        if getattr(args, "logging_level", None) is None:
+            return
+        if args.logging_level not in range(5):
+            self.error("invalid logging level")
 
     @staticmethod
     def instantiate():

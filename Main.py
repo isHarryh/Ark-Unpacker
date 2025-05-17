@@ -491,35 +491,6 @@ def run_arkvoice_workflow():
             return
 
 
-def validate_input_output_arg(
-    parser: argparse.ArgumentParser,
-    args: argparse.Namespace,
-    allow_file_input: bool = False,
-):
-    if not getattr(args, "input", None):
-        parser.error("input should be defined in this mode")
-    if not getattr(args, "output", None):
-        parser.error("output should be defined in this mode")
-    if not allow_file_input and os.path.isfile(args.input):
-        parser.error("input should be a directory, not file")
-    if not os.path.isdir(args.input) and not (
-        allow_file_input and os.path.isfile(args.input)
-    ):
-        parser.error(
-            f"input should be a {'file or ' if allow_file_input else ''}directory that exists"
-        )
-
-
-def validate_logging_level_arg(
-    parer: argparse.ArgumentParser, args: argparse.Namespace
-):
-    if getattr(args, "logging_level", None) is None:
-        return
-    if args.logging_level not in range(5):
-        parser.error("invalid logging level")
-    Logger.set_level(args.logging_level)
-
-
 class UserInput:
     CANCEL_CMD = "*"
 
@@ -622,9 +593,10 @@ if __name__ == "__main__":
                     print("\n[InterruptedError] 用户轻度中止", c=3)
         else:
             # Has arguments input -> GOTO -> The specified mode
-            validate_logging_level_arg(parser, args)
+            parser.validate_logging_level_arg(args)
+            Logger.set_level(args.logging_level)
             if args.mode == "ab":
-                validate_input_output_arg(parser, args, allow_file_input=True)
+                parser.validate_input_output_arg(args, allow_file_input=True)
                 AU_Rs.main(
                     args.input,
                     args.output,
@@ -636,7 +608,7 @@ if __name__ == "__main__":
                     args.group,
                 )
             elif args.mode == "sp":
-                validate_input_output_arg(parser, args, allow_file_input=True)
+                parser.validate_input_output_arg(args, allow_file_input=True)
                 AU_Sp.main(
                     args.input,
                     args.output,
@@ -644,10 +616,10 @@ if __name__ == "__main__":
                     args.group,
                 )
             elif args.mode == "cb":
-                validate_input_output_arg(parser, args)
+                parser.validate_input_output_arg(args)
                 AU_Cb.main(args.input, args.output, args.d)
             elif args.mode == "fb":
-                validate_input_output_arg(parser, args)
+                parser.validate_input_output_arg(args)
                 AU_Fb.main(args.input, args.output, args.d)
     # Global error handlers
     except SystemExit as arg:
