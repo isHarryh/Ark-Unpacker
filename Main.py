@@ -559,6 +559,8 @@ if __name__ == "__main__":
         Logger.info("CI: Initialized")
         print("")
         args = parser.parse_args()
+        parser.validate_logging_level_arg(args)
+        Logger.set_level(args.logging_level)
         if getattr(args, "mode", None) is None:
             # No argument input -> ENTER -> Interactive CLI mode
             while True:
@@ -593,8 +595,6 @@ if __name__ == "__main__":
                     print("\n[InterruptedError] 用户轻度中止", c=3)
         else:
             # Has arguments input -> GOTO -> The specified mode
-            parser.validate_logging_level_arg(args)
-            Logger.set_level(args.logging_level)
             if args.mode == "ab":
                 parser.validate_input_output_arg(args, allow_file_input=True)
                 AU_Rs.main(

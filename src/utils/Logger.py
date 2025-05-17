@@ -59,7 +59,8 @@ class Logger:
         self.thread.start()
 
     def _set_level(self, level: int):
-        self._log_level = level
+        if level is not None:
+            self._log_level = level
 
     def _reset_stats(self):
         with self._internal_lock:
