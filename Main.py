@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
+from typing import Callable, Optional
+
 import argparse
 import os
 import os.path as osp
+import re
 import sys
 import time
 
@@ -79,17 +82,16 @@ def run_custom_resolve_ab():
     prt_subtitle("自定义资源解包")
     ###
     print("\n请输入要解包的目录或文件路径")
-    src = UserInput.request_path()
+    src = UserInput.request_input_path()
     print("解包目标路径：", c=2)
-    print(f"  {osp.abspath(src)}", c=6)
+    print(f"  {src}", c=6)
     ###
     print("\n请输入导出目录的路径")
-    print("  支持相对路径，留空表示自动创建")
-    destdir = input("> ", c=2)
-    if not destdir:
-        destdir = f"Unpacked_{int(time.time())}"
+    destdir = UserInput.request_output_path(
+        default_generator=lambda: f"Unpacked_{int(time.time())}"
+    )
     print("导出目录路径：", c=2)
-    print(f"  {osp.abspath(destdir)}", c=6)
+    print(f"  {destdir}", c=6)
     ###
     do_del = False
     if osp.isdir(destdir):
@@ -126,17 +128,16 @@ def run_custom_combine_image():
     prt_subtitle("自定义合并图片")
     ###
     print("\n请输入源图片目录的路径")
-    rootdir = UserInput.request_path()
+    rootdir = UserInput.request_input_path()
     print("源图片目录路径：")
-    print(f"  {osp.abspath(rootdir)}", c=6)
+    print(f"  {rootdir}", c=6)
     ###
     print("\n请输入导出的目的地")
-    print("  支持相对路径，留空表示自动创建")
-    destdir = input("> ", c=2)
-    if not destdir:
-        destdir = f"Combined_{int(time.time())}"
+    destdir = UserInput.request_output_path(
+        default_generator=lambda: f"Combined_{int(time.time())}"
+    )
     print("您选择的导出目录是：")
-    print(f"  {osp.abspath(destdir)}", c=6)
+    print(f"  {destdir}", c=6)
     ###
     do_del = False
     if osp.isdir(destdir):
@@ -159,17 +160,16 @@ def run_custom_textasset_decode():
     print("在资源解包后需要对这些文件进行解码才可得到游戏数据。")
     print("\n请输入源文件目录的路径")
     print("若您不清楚哪些文件是TextAsset，请选择整个解包后的目录。")
-    rootdir = UserInput.request_path()
+    rootdir = UserInput.request_input_path()
     print(" 源文件的目录是：")
-    print(f"  {osp.abspath(rootdir)}", c=6)
+    print(f"  {rootdir}", c=6)
     ###
     print("\n请输入导出的目的地")
-    print("  支持相对路径，留空表示自动创建")
-    destdir = input("> ", c=2)
-    if not destdir:
-        destdir = f"Decoded_{int(time.time())}"
+    destdir = UserInput.request_output_path(
+        default_generator=lambda: f"Decoded_{int(time.time())}"
+    )
     print("您选择的导出目录是：")
-    print(f"  {osp.abspath(destdir)}", c=6)
+    print(f"  {destdir}", c=6)
     ###
     do_del = False
     if osp.isdir(destdir):
@@ -187,17 +187,16 @@ def run_custom_resolve_spine():
     prt_subtitle("自定义Spine模型导出")
     ###
     print("\n请输入要导出的目录或文件路径")
-    src = UserInput.request_path()
+    src = UserInput.request_input_path()
     print("导出目标路径：", c=2)
-    print(f"  {osp.abspath(src)}", c=6)
+    print(f"  {src}", c=6)
     ###
     print("\n请输入导出目录的路径")
-    print("  支持相对路径，留空表示自动创建")
-    destdir = input("> ", c=2)
-    if not destdir:
-        destdir = f"Spine_{int(time.time())}"
+    destdir = UserInput.request_output_path(
+        default_generator=lambda: f"Spine_{int(time.time())}"
+    )
     print("导出目录路径：", c=2)
-    print(f"  {osp.abspath(destdir)}", c=6)
+    print(f"  {destdir}", c=6)
     ###
     do_del = False
     if osp.isdir(destdir):
@@ -542,13 +541,35 @@ class UserInput:
         return uin
 
     @staticmethod
-    def request_path():
+    def request_input_path():
         print(f'  输入符号 "{UserInput.CANCEL_CMD}" 以取消任务，支持输入相对路径')
-        uin = osp.normpath(UserInput.request())
-        while not osp.exists(uin):
-            print("  输入的路径不存在", c=3)
-            uin = osp.normpath(UserInput.request())
-        return uin
+        while True:
+            uin = UserInput.request().strip()
+            if not uin:
+                print("  路径不能为空", c=3)
+                continue
+            uin = osp.normpath(uin)
+            if not osp.exists(uin):
+                print("  输入的路径不存在", c=3)
+                continue
+            return osp.abspath(uin)
+
+    @staticmethod
+    def request_output_path(default_generator: Optional[Callable[[], str]] = None):
+        print("  支持相对路径" + ("，留空表示自动创建" if default_generator else ""))
+        while True:
+            uin = UserInput.request().strip()
+            if not uin:
+                if default_generator:
+                    return osp.abspath(default_generator())
+                else:
+                    print("  路径不能为空", c=3)
+                    continue
+            uin = osp.normpath(uin)
+            if re.search(r'[*?"<>|\x00-\x1F]', uin):
+                print("  路径不能包含非法字符", c=3)
+                continue
+            return osp.abspath(uin)
 
     @staticmethod
     def request_yes_or_no(default: bool):
