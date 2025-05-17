@@ -4,6 +4,7 @@ __pycache__/
 test/cmb
 test/dta
 test/fbo
+test/spi
 test/upk
 
 *.exe

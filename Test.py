@@ -2,58 +2,119 @@
 # Copyright (c) 2022-2023, Harry Huang
 # @ BSD 3-Clause License
 import os, sys, json, shutil
-from src import ResolveAB
-from src import CombineRGBwithA
-from src import DecodeTextAsset
+import subprocess
 from src.utils.Profiler import CodeProfiler
 from src.utils.GlobalMethods import print, stacktrace
 
 
-def __count_files(path):
+def __assert_file_count(path, expected_count):
+    if not os.path.isdir(path):
+        raise AssertionError(f"Directory {path} not found")
     count = 0
     for _, _, files in os.walk(path):
         count += len(files)
-    return count
+    if count != expected_count:
+        raise AssertionError(
+            f"Expected {expected_count} files but got {count} files in {path}"
+        )
+
+
+def __run_cli(args: list):
+    cmd = [sys.executable, "Main.py"] + args
+    result = subprocess.run(
+        cmd, stdout=sys.stdout, stderr=sys.stderr, encoding="utf-8", errors="replace"
+    )
+    return "", "", result.returncode
 
 
 if __name__ == "__main__":
     for i in range(int(sys.argv[1]) if len(sys.argv) > 1 else 1):
         try:
-            print(f"[#{i}] Preparing...", c=0)
+            print(f"[#{i}] Preparing...", c=6)
             DIR_UPK = "test/upk"
             DIR_CMB = "test/cmb"
             DIR_DTA = "test/dta"
+            DIR_SPI = "test/spi"
             shutil.rmtree(DIR_UPK, ignore_errors=True)
             shutil.rmtree(DIR_CMB, ignore_errors=True)
             shutil.rmtree(DIR_DTA, ignore_errors=True)
+            shutil.rmtree(DIR_SPI, ignore_errors=True)
 
-            print(f"[#{i}] Testing...", c=0)
+            print(f"[#{i}] Testing...", c=6)
             with CodeProfiler("unit_1"):
-                ResolveAB.main(
-                    "test/res",
-                    DIR_UPK,
-                    do_del=False,
-                    do_img=True,
-                    do_txt=True,
-                    do_aud=True,
-                    do_spine=False,
+                out, err, code = __run_cli(
+                    [
+                        "-m",
+                        "ab",
+                        "-i",
+                        "test/res",
+                        "-o",
+                        DIR_UPK,
+                        "--image",
+                        "--text",
+                        "--audio",
+                        "-g",
+                    ]
                 )
+                if code != 0:
+                    print(out)
+                    print(err)
+                    raise AssertionError(f"ArkUnpacker ab mode failed, code={code}")
             with CodeProfiler("unit_2"):
-                CombineRGBwithA.main(DIR_UPK, DIR_CMB, do_del=False)
+                out, err, code = __run_cli(
+                    [
+                        "-m",
+                        "cb",
+                        "-i",
+                        DIR_UPK,
+                        "-o",
+                        DIR_CMB,
+                    ]
+                )
+                if code != 0:
+                    print(out)
+                    print(err)
+                    raise AssertionError(f"ArkUnpacker cb mode failed, code={code}")
             with CodeProfiler("unit_3"):
-                DecodeTextAsset.main(DIR_UPK, DIR_DTA, do_del=False)
+                out, err, code = __run_cli(
+                    [
+                        "-m",
+                        "fb",
+                        "-i",
+                        DIR_UPK,
+                        "-o",
+                        DIR_DTA,
+                    ]
+                )
+                if code != 0:
+                    print(out)
+                    print(err)
+                    raise AssertionError(f"ArkUnpacker fb mode failed, code={code}")
+            with CodeProfiler("unit_4"):
+                out, err, code = __run_cli(
+                    [
+                        "-m",
+                        "sp",
+                        "-i",
+                        "test/res",
+                        "-o",
+                        DIR_SPI,
+                    ]
+                )
+                if code != 0:
+                    print(out)
+                    print(err)
+                    raise AssertionError(f"ArkUnpacker sp mode failed, code={code}")
 
-            print(f"[#{i}] Analysing...", c=0)
-            if __count_files(DIR_UPK) != 1390:
-                raise AssertionError("Unpacked files count mismatch")
-            if __count_files(DIR_CMB) != 153:
-                raise AssertionError("Combined images count mismatch")
-            if __count_files(DIR_DTA) != 3:
-                raise AssertionError("Decoded textassets count mismatch")
+            print(f"[#{i}] Analysing...", c=6)
+            __assert_file_count(DIR_UPK, 1387)
+            __assert_file_count(DIR_CMB, 153)
+            __assert_file_count(DIR_DTA, 3)
+            __assert_file_count(DIR_SPI, 199)
 
-            print(f"[#{i}] Test success!", c=0)
+            print(f"[#{i}] Test success!", c=2)
         except BaseException as arg:
-            print(f"[#{i}] Test failed because an error occurred!", c=7)
+            print(f"[#{i}] Test failed because an error occurred!", c=1)
             print(stacktrace(), c=3)
     json.dump(
         {
