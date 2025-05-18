@@ -4,6 +4,7 @@ ArkUnpacker附加说明文档
 此文档描述了运行源程序或参与项目开发的准备工作和具体步骤。
 
 ## 依赖
+
 1. **Python：** 本项目需要 **Python 3.9~3.12** 运行环境，您可[前往下载](https://www.python.org/downloads)。
 2. **IDE：** 建议使用的集成开发环境（IDE）是 **VS Code**，您可[前往下载](https://code.visualstudio.com)。
     > 建议使用的 VS Code 插件：
@@ -17,6 +18,7 @@ ArkUnpacker附加说明文档
 4. **子模块：** 本项目使用 [ArkFBSPy](https://github.com/isHarryh/Ark-FBS-Py) 模块来实现 FlatBuffers 的数据解码，该模块是以 Git Submodule 的形式存储在仓库中的。
 
 ## 项目初始化
+
 1. 使用 Git 克隆仓库到本地，然后使用 IDE 打开项目文件夹。
     > 由于仓库使用了 Git Submodule，因此：  
     > - 在初始化仓库时，您需要运行 `git submodule update --init --recursive` 来初始化子模块。
@@ -26,5 +28,6 @@ ArkUnpacker附加说明文档
 4. 在 VS Code 中启动 `Python: ArkUnpacker` 运行，即可开始调试主程序。
 
 ## 测试与构建
+
 1. **测试：** 在 VS Code 中启动 `Test` 终端任务；或者直接运行 `Test.py` 脚本。这将使用仓库自带的测试用的游戏资源文件（位于 `test/res` 目录中）进行模拟解包。测试完成后会生成运行用时的记录文件 `test/rt.json`。
 2. **构建：** 在 VS Code 中启动 `Build Dist` 终端任务；或者直接运行 `Build.py` 脚本。这将使用 PyInstaller 在项目文件夹的 `build/dist` 目录中自动生成可分发的文件。

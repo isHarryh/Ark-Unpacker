@@ -2,6 +2,7 @@ ArkUnpacker附加说明文档
 # 配置文件指引
 
 ## 概述
+
 在运行程序后，工作目录会生成 ArkUnpacker 的配置文件，以 JSON 格式存储部分设置参数。文件名为 `ArkUnpackerConfig.json`。
 
 > **注意：**  
@@ -9,6 +10,7 @@ ArkUnpacker附加说明文档
 > 2. 修改或删除配置文件后，必须重新启动 ArkUnpacker 才能应用更改。
 
 ## 字段说明
+
 配置文件内容示例如下，文件编码为 `UTF-8`：
 ```json
 {

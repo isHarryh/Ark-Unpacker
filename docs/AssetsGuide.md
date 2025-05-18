@@ -2,13 +2,14 @@ ArkUnpacker附加说明文档
 # 游戏资源查找指南
 
 > **注意：**  
-> - 请在合理范围内使用本程序。根据BSD3许可证，对于非法使用本程序解包出来的资源造成的侵权行为，作者不承担相应责任。
+> - 请在合理范围内使用本程序。根据 BSD3 许可证，对于非法使用本程序解包出来的资源造成的侵权行为，作者不承担相应责任。
 > - 以下内容是基于 **Android `v2.4.01`** 的《明日方舟》编制的，不同版本客户端的特定资源的具体位置可能存在较大差异。
 > - 此文档内的所有内容均为作者独立整理，仅供参考，如需转载请注明出处。 
 
 <!-- spell-checker: disable -->
 
 ## 资源导览
+
 各个子目录储存的资源的内容：
 
 **Android**  
@@ -45,15 +46,18 @@ ArkUnpacker附加说明文档
 
 
 ## 常用资源定位
+
 资源条目较多，可使用浏览器或编辑器的查找功能（如`Ctrl+F`快捷键）来检索关键词。
 
 [返回顶部](#资源导览)
 
 ### Activity
+
 - `activity/[uc]act{xxx}.ab` 某个活动的界面相关资源
 - `activity/commonassets.ab` 活动物资的通用图标
 
 ### Arts
+
 - `arts/building/` 基建相关图标（基建技能图标等）
 - `arts/charportraits/` 干员半身像
 - `arts/dynchars/` 动态立绘资源
@@ -69,6 +73,7 @@ ArkUnpacker附加说明文档
 - `arts/specialized_hub.ab` 技能专精图标
 
 ### Audio
+
 - `audio/sound_beta_2/enemy/` 敌人战斗音效
 - `audio/sound_beta_2/music/` 游戏音乐
 - `audio/sound_beta_2/player/` 干员战斗音效
@@ -83,6 +88,7 @@ ArkUnpacker附加说明文档
 > 解包出的语音包内容取决于您的原始游戏文件。这意味着如果您在游戏里没有下载某个语言的语音包，则不会解包出此语言包。
 
 ### Avg
+
 - `avg/bg/` 剧情背景图
 - `avg/characters/` 剧情人物图
 - `avg/effects/` 剧情特效
@@ -90,21 +96,25 @@ ArkUnpacker附加说明文档
 - `avg/items/` 剧情道具图
 
 ### Battle
+
 - `battle/prefabs/effects/` 战斗特效
 - `battle/prefabs/enemies/` 敌方Spine
 - `battle/prefabs/[uc]tokens.ab` 战斗道具和部分召唤物Spine
 
 ### Building
+
 - `building/blueprint/` 基建UI
 - `building/diy/` 装扮模式素材与家具素材
 - `building/ui/[uc]diy.ab` 基建房间装扮模式UI
 - `building/vault/[uc]arts.ab` 基建功能室Sprite
 
 ### Perfabs
+
 - `prefabs/shop/shopkeeper/` 可露希尔
 - `prefabs/gacha/` 干员寻访相关
 
 ### Spritepack
+
 活动
 - `spritepack/act_achieve_{xxx}.ab` 活动相关插图
 - `spritepack/ui_charm_icon_list.ab` 活动:多索雷斯假日标志物
@@ -172,6 +182,7 @@ ArkUnpacker附加说明文档
 > 为简洁起见，上方列出的Spritepack中的AB文件名不是完整的，通常其后面会有一些分类号比如`_h1`、`_0`等。
 
 ### Ui
+
 - `ui/activity/` 各种活动
 - `ui/bossrush/` 引航者行动
 - `ui/campaign/` 剿灭作战
