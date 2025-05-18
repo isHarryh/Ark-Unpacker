@@ -40,10 +40,11 @@ ArkStudio 是正在开发阶段的，功能更加强大的《明日方舟》游�
 
 | Unity类型 | 描述           | 导出格式 |
 | :-------- | :------------- | :------- |
-| Sprite    | 精灵图         | PNG图片  |
-| Texture2D | 二维纹理图     | PNG图片  |
-| AudioClip | 音频剪辑       | WAV音频  |
+| Sprite    | 精灵图         | PNG 图片 |
+| Texture2D | 二维纹理图     | PNG 图片 |
+| AudioClip | 音频剪辑       | WAV 音频 |
 | TextAsset | 文本或字节数据 | 未指定   |
+| Mesh      | 3D 模型        | OBJ 文件 |
 
 ### 相关文档
 
@@ -80,19 +81,19 @@ ArkStudio 是正在开发阶段的，功能更加强大的《明日方舟》游�
 
 在正式地使用本程序前，您最好对以下内容有初步了解：
 
-- [RGB通道图和A通道图](docs/Essentials.md#rgb通道图和a通道图)
-- [Spine动画小人](docs/Essentials.md#spine动画小人)
+- [RGB 通道图和 A 通道图](docs/Essentials.md#rgb通道图和a通道图)
+- [Spine 动画小人](docs/Essentials.md#spine动画小人)
 
 ### 4.示例用法
 
-首先，将需要解包的文件夹（可以是多个）放到与 exe 相同的目录下，至此，我们的目录结构大致如下：
+一个最简单的用法是，将需要解包的文件夹（可以是多个）放到程序文件所在的目录中。至此，我们的目录结构大致如下：
 
 > **你的目录**  
 > ├─Android (解包整个目录需要很久)  
 > ├─charpack (可以选择解包部分文件夹)  
 > └─ArkUnpacker.exe
 
-然后运行 exe，弹出交互式命令行界面如下，依据其提示操作即可：
+然后直接运行程序，弹出交互式命令行界面如下，依据其提示操作即可：
 
 ```
 欢迎使用ArkUnpacker  
@@ -102,34 +103,59 @@ ArkStudio 是正在开发阶段的，功能更加强大的《明日方舟》游�
 2: 自定义资源解包  
 3: 自定义图片合并  
 4: 自定义文本资源解码  
-5: ArkModels提取与分拣工具  
-6: ArkVoice提取与分拣工具  
+5: 自定义Spine模型导出  
+6: ArkModels提取与分拣工具  
+7: ArkVoice提取与分拣工具  
+0: 退出  
 输入序号后按回车即可，如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)
 ```
 
-各模式的功能概述如下：
-
-- “一键执行” 模式下，解包出的文件默认放置在 `Unpacked_xxxx` 文件夹中，合并完成的图片默认放置在 `Combined_xxxx` 文件夹中。
-- 若您选择 “自定义资源解包” 或 “自定义图片合并”，还可以**自定义**需要解包的文件类型和保存位置等内容。
-- 关于 “自定义文本资源数据解码”，请参阅[此文档](docs/TextAssetsDecoding.md)了解详情。
-- 关于 “ArkModels提取与分拣工具”，请参阅[此文档](docs/ArkModelsRepoKit.md)了解详情。
-- 关于 “ArkVoice提取与分拣工具”，请参阅[此文档](docs/ArkVoiceRepoKit.md)了解详情。
-
 此外，运行程序后，工作目录会生成配置文件 `ArkUnpackerConfig.json` 与日志文件 `ArkUnpackerLogs.log`。有关配置文件的字段说明，请参阅[此文档](docs/ConfigFile.md)了解详情。
+
+### 5.各模式的功能概述
+
+#### 一键执行
+
+直接解包程序所在目录中的文件，并执行图片合并。解包出的文件默认导出到 `Unpacked_xxxx` 文件夹，合并完成的图片默认导出到 `Combined_xxxx` 文件夹。
+
+#### 自定义资源解包
+
+解包指定路径的游戏资源，并导出到指定目录。可以选择需要解包哪些资源类型。
+
+#### 自定义图片合并
+
+合并指定路径中的 RGB 图和 Alpha 图，并将合并的结果导出到指定目录。
+
+#### 自定义文本数据解码
+
+解码指定目录中的数据文件，并将解码结果导出到指定目录。具体的原理，请参阅[此文档](docs/TextAssetsDecoding.md)了解详情。
+
+#### 自定义Spine模型导出
+
+解包指定路径中的游戏资源，并将其中包含的 Spine 动画小人模型导出到指定目录。
+
+#### ArkModels 提取与分拣工具
+
+此为定制功能，请参阅[此文档](docs/ArkModelsRepoKit.md)了解详情。
+
+#### ArkVoice 提取与分拣工具
+
+此为定制功能，请参阅[此文档](docs/ArkVoiceRepoKit.md)了解详情。
 
 ### 5.命令行用法
 
 除了上述示例用法展示的**交互式**命令行界面外，程序还支持**直接**通过命令行来运行，以便熟悉命令行调用的用户使用。相关参数如下：
+
 ```
-usage: ArkUnpacker [-h] [-v] [-m {ab,cb,fb}] [-i INPUT] [-o OUTPUT] [-d] [--image] [--text] [--audio] [--spine] [-g] [-l {0,1,2,3,4}]
+usage: ArkUnpacker [-h] [-v] [-m {ab,cb,fb,sp}] [-i INPUT] [-o OUTPUT] [-d] [--image] [--text] [--audio] [--spine] [--mesh] [-g] [-l {0,1,2,3,4}]
 
 Arknights Assets Unpacker. Use no argument to run to enter the interactive CLI mode.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -v, --version         show a version message and exit
-  -m {ab,cb,fb}, --mode {ab,cb,fb}
-                        working mode, ab=resolve-ab, cb=combine-image, fb=decode-flatbuffers
+  -m {ab,cb,fb,sp}, --mode {ab,cb,fb,sp}
+                        working mode, ab=resolve-ab, cb=combine-image, fb=decode-flatbuffers, sp=resolve-spine
   -i INPUT, --input INPUT
                         source file or directory path
   -o OUTPUT, --output OUTPUT
@@ -139,12 +165,13 @@ optional arguments:
   --text                in resolve ab mode: export text or binary files
   --audio               in resolve ab mode: export audio files
   --spine               in resolve ab mode: export spine asset files
+  --mesh                in resolve ab mode: export mesh resources
   -g, --group           in resolve ab mode: group files into separate directories named by their source ab file
   -l {0,1,2,3,4}, --logging-level {0,1,2,3,4}
                         logging level, 0=none, 1=error, 2=warn, 3=info, 4=debug
 ```
 
-运行 `ArkUnpacker -h` 命令可以显示此帮助信息。如果您使用的命令不带任何参数，那么程序会以交互式命令行界面的模式启动。
+运行 `ArkUnpacker -h` 命令可以显示此帮助信息。如果您使用的命令不带任何 `mode` 参数，那么程序会以交互式命令行界面的模式启动。
 
 ## 注意事项 <sub>Notice</sub>
 
