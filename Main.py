@@ -63,9 +63,49 @@ def prt_continue():
     UserInput.request("\n> 按Enter以继续...")
 
 
+def warn_large_srcdir(srcdir: str, threshold: int = 10000):
+    if not osp.isdir(srcdir):
+        return
+    count = 0
+    for _, _, files in os.walk(srcdir):
+        count += len(files)
+        if count > threshold:
+            print("\n注意，所选的目录包含大量文件！", c=3)
+            print("  这可能导致耗时过长、占用大量内存和存储空间。")
+            print("  我们建议您仅对部分目录进行单独的操作。")
+            print("  您仍要继续本次任务吗？")
+            print("  请选择：[y]继续任务，[n]取消任务(默认)", c=3)
+            uin = UserInput.request().strip().lower()
+            if uin != "y":
+                print("  已取消任务", c=3)
+                raise InterruptedError("User cancelled due to large directory")
+            break
+
+
+def warn_dir_intersection(srcdir: str, destdir: str):
+    srcdir = os.path.abspath(srcdir)
+    destdir = os.path.abspath(destdir)
+
+    def is_subdir(parent, child):
+        parent = os.path.join(parent, "")
+        child = os.path.join(child, "")
+        return os.path.commonprefix([parent, child]) == parent
+
+    if srcdir == destdir or is_subdir(destdir, srcdir):
+        print("\n注意，源目录包含于导出目录中！", c=3)
+        print("  这可能导致数据覆盖等意外行为。")
+        print("  您仍要继续本次任务吗？")
+        print("  请选择：[y]继续任务，[n]取消任务(默认)", c=3)
+        uin = UserInput.request().strip().lower()
+        if uin != "y":
+            print("  已取消任务", c=3)
+            raise InterruptedError("User cancelled due to directory intersection")
+
+
 def run_quickaccess():
     Logger.info("CI: Run quick access.")
     title("ArkUnpacker - Processing")
+    warn_large_srcdir(".")
     destdir = f"Unpacked_{int(time.time())}"
     ###
     prt_subtitle("步骤1|资源解包")
@@ -85,6 +125,7 @@ def run_custom_resolve_ab():
     src = UserInput.request_input_path()
     print("解包目标路径：", c=2)
     print(f"  {src}", c=6)
+    warn_large_srcdir(src)
     ###
     print("\n请输入导出目录的路径")
     destdir = UserInput.request_output_path(
@@ -92,6 +133,7 @@ def run_custom_resolve_ab():
     )
     print("导出目录路径：", c=2)
     print(f"  {destdir}", c=6)
+    warn_dir_intersection(src, destdir)
     ###
     do_del = False
     if osp.isdir(destdir):
@@ -138,6 +180,7 @@ def run_custom_combine_image():
     )
     print("您选择的导出目录是：")
     print(f"  {destdir}", c=6)
+    warn_dir_intersection(rootdir, destdir)
     ###
     do_del = False
     if osp.isdir(destdir):
@@ -170,6 +213,7 @@ def run_custom_textasset_decode():
     )
     print("您选择的导出目录是：")
     print(f"  {destdir}", c=6)
+    warn_dir_intersection(rootdir, destdir)
     ###
     do_del = False
     if osp.isdir(destdir):
@@ -197,6 +241,7 @@ def run_custom_resolve_spine():
     )
     print("导出目录路径：", c=2)
     print(f"  {destdir}", c=6)
+    warn_dir_intersection(src, destdir)
     ###
     do_del = False
     if osp.isdir(destdir):
