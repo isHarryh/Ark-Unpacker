@@ -27,7 +27,7 @@ def __run_cli(args: list):
     return "", "", result.returncode
 
 
-if __name__ == "__main__":
+def test():
     for i in range(int(sys.argv[1]) if len(sys.argv) > 1 else 1):
         try:
             print(f"[#{i}] Preparing...", c=6)
@@ -53,6 +53,7 @@ if __name__ == "__main__":
                         "--image",
                         "--text",
                         "--audio",
+                        "--mesh",
                         "-g",
                     ]
                 )
@@ -107,10 +108,10 @@ if __name__ == "__main__":
                     raise AssertionError(f"ArkUnpacker sp mode failed, code={code}")
 
             print(f"[#{i}] Analysing...", c=6)
-            __assert_file_count(DIR_UPK, 1387)
-            __assert_file_count(DIR_CMB, 153)
-            __assert_file_count(DIR_DTA, 3)
-            __assert_file_count(DIR_SPI, 199)
+            __assert_file_count(DIR_UPK, 1470)
+            __assert_file_count(DIR_CMB, 157)
+            __assert_file_count(DIR_DTA, 2)
+            __assert_file_count(DIR_SPI, 208)
 
             print(f"[#{i}] Test success!", c=2)
         except BaseException as arg:
@@ -124,3 +125,7 @@ if __name__ == "__main__":
         open("test/time_consumption.json", "w", encoding="UTF-8"),
         indent=4,
     )
+
+
+if __name__ == "__main__":
+    test()
