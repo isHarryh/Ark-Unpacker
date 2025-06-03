@@ -46,8 +46,30 @@ class SpineType(StrEnum):
     DYN_ILLUST = "DynIllust"
 
     @staticmethod
-    def guess_from_skel(skel: uc.TextAsset) -> "SpineType":
-        t = skel.m_Name.lower()
+    def guess(skel: uc.TextAsset, atlas: uc.TextAsset):
+        if not skel or not atlas:
+            return SpineType.UNKNOWN
+
+        name = skel.m_Name.replace(".skel", "")
+        if not name:
+            name = atlas.m_Name.replace(".atlas", "")
+
+        t = SpineType._guess_from_name(name)
+        if t != SpineType.UNKNOWN:
+            return t
+
+        t = SpineType._guess_from_skel(skel)
+        if t != SpineType.UNKNOWN:
+            Logger.info(f'ResolveSpine: Guessed Spine type "{t}" for "{name}" via skel')
+            return t
+
+        t = SpineType._guess_from_atlas(atlas)
+        Logger.info(f'ResolveSpine: Guessed Spine type "{t}" for "{name}" via atlas')
+        return t
+
+    @staticmethod
+    def _guess_from_name(name: str) -> "SpineType":
+        t = name.lower()
         if t.startswith("dyn_"):
             return SpineType.DYN_ILLUST
         elif t.startswith("enemy_"):
@@ -58,7 +80,15 @@ class SpineType(StrEnum):
             return SpineType.UNKNOWN
 
     @staticmethod
-    def guess_from_atlas(atlas: uc.TextAsset) -> "SpineType":
+    def _guess_from_skel(skel: uc.TextAsset) -> "SpineType":
+        t = skel.m_Script.lower()
+        if "default" in t and "relax" in t:
+            return SpineType.BUILDING
+        else:
+            return SpineType.UNKNOWN
+
+    @staticmethod
+    def _guess_from_atlas(atlas: uc.TextAsset) -> "SpineType":
         t = atlas.m_Script.lower()
         if t.count("\nf_") + t.count("\nc_") >= t.count("\nb_"):
             return SpineType.BATTLE_FRONT
@@ -69,21 +99,22 @@ class SpineType(StrEnum):
 class SpineAsset:
     def __init__(
         self,
-        skel: Any,
-        atlas: Any,
+        skel: uc.TextAsset,
+        atlas: uc.TextAsset,
         tex_list: Sequence[Tuple[uc.Texture2D, uc.Texture2D]],
         type: SpineType,
     ):
-        if not isinstance(skel, uc.TextAsset) or not isinstance(atlas, uc.TextAsset):
-            raise TypeError("Spine asset unavailable, bad skel or atlas")
-        if not isinstance(tex_list, Sequence) or len(tex_list) == 0:
-            raise TypeError("Spine asset unavailable, bad textures")
         self.skel = skel
         self.atlas = atlas
         self.tex_list = tex_list
         self.type = type
 
     def add_prefix(self):
+        """Adds a prefix to the names of the Spine assets to avoid conflicts.
+
+        :rtype: None;
+        """
+
         def _add_prefix(obj: Union[uc.TextAsset, uc.Texture2D], pre: str):
             if obj and not obj.m_Name.startswith(pre):
                 obj.m_Name = pre + obj.m_Name
@@ -103,6 +134,16 @@ class SpineAsset:
         on_queued: Optional[Callable],
         on_saved: Optional[Callable],
     ):
+        """Saves the Spine assets to the destination directory.
+
+        :param destdir: Destination directory;
+        :param on_queued: Callback `f(file_path)` invoked when a file was queued, `None` for ignore;
+        :param on_saved: Callback `f(file_path_or_none_for_not_saved)` invoked when a file was saved, `None` for ignore;
+        :rtype: None;
+        """
+        Logger.debug(
+            f'ResolveSpine: Exporting Spine "{self.skel.m_Name}" + "{self.atlas.m_Name}" + {len(self.tex_list)} textures with type "{self.type}"'
+        )
         atlas = AtlasFile.loads(self.atlas.m_Script)
         for i in self.tex_list:
             if i[0]:
@@ -134,19 +175,22 @@ class SpineAsset:
                 Logger.warn("ResolveSpine: Spine asset RGB texture missing.")
         for i in (self.atlas, self.skel):
             SafeSaver.save_object(i, destdir, i.m_Name, on_queued, on_saved)
-            Logger.debug(f'ResolveSpine: Spine asset "{i.m_Name}" found.')
 
     @classmethod
     def from_resource(cls, res: "Resource") -> List["SpineAsset"]:
+        """Gets Spine assets from the given resource.
+
+        :param res: The Resource instance to extract Spine assets from;
+        :returns: A list of SpineAsset instances;
+        """
         spines = []
-        found_front_and_back = list(cls.find_front_and_back_skel_data(res))
+        found_front_and_back = list(cls._find_front_and_back_skel_data(res))
         try:
             # sd = SkeletonData
-            for mono_sd, tree_sd in cls.find_typetree_by_keys(
+            for mono_sd, tree_sd in cls._find_typetree_by_keys(
                 res.monobehaviors, ["atlasAssets", "skeletonJSON"]
             ):
                 skel = res.get_object_by_pathid(tree_sd["skeletonJSON"], res.textassets)
-                assert isinstance(skel, uc.TextAsset)
                 mono_ad = res.get_object_by_pathid(
                     tree_sd["atlasAssets"][0], res.monobehaviors
                 )
@@ -155,8 +199,7 @@ class SpineAsset:
                     atlas = res.get_object_by_pathid(
                         tree_ad["atlasFile"], res.textassets
                     )
-                    assert isinstance(atlas, uc.TextAsset)
-                    list2tex = []
+                    tex_list = []
                     for mat in (
                         res.get_object_by_pathid(i, res.materials)
                         for i in tree_ad["materials"]
@@ -174,34 +217,19 @@ class SpineAsset:
                                     tex_alpha = res.get_object_by_pathid(
                                         tex[1]["m_Texture"], res.texture2ds
                                     )
-                        list2tex.append((tex_rgb, tex_alpha))
+                        tex_list.append((tex_rgb, tex_alpha))
 
-                    sp_type = None
-                    sp_name = skel.m_Name.replace(".skel", "")
+                    if not skel or not atlas or not tex_list:
+                        raise ValueError("Incomplete Spine asset")
+
                     if any(mono_sd is f for f, _ in found_front_and_back):
                         sp_type = SpineType.BATTLE_FRONT
                     elif any(mono_sd is b for _, b in found_front_and_back):
                         sp_type = SpineType.BATTLE_BACK
                     else:
-                        anim_list = tree_sd.get("_animationName", [])
-                        if "Relax" in anim_list:
-                            sp_type = SpineType.BUILDING
-                            Logger.debug(
-                                f'ResolveSpine: Guessed Spine type "{sp_type}" for "{sp_name}" via anim name'
-                            )
-                        else:
-                            sp_type = SpineType.guess_from_skel(skel)
-                            if sp_type == SpineType.UNKNOWN:
-                                sp_type = SpineType.guess_from_atlas(atlas)
-                                Logger.debug(
-                                    f'ResolveSpine: Guessed Spine type "{sp_type}" for "{sp_name}" via atlas'
-                                )
-                            else:
-                                Logger.debug(
-                                    f'ResolveSpine: Guessed Spine type "{sp_type}" for "{sp_name}" via skel'
-                                )
+                        sp_type = SpineType.guess(skel, atlas)
 
-                    spine = cls(skel, atlas, list2tex, sp_type)
+                    spine = cls(skel, atlas, tex_list, sp_type)
                     spines.append(spine)
         except Exception:
             Logger.warn(
@@ -210,10 +238,10 @@ class SpineAsset:
         return spines
 
     @classmethod
-    def find_front_and_back_skel_data(cls, res: "Resource"):
+    def _find_front_and_back_skel_data(cls, res: "Resource"):
         try:
             # ca = CharacterAnimator
-            for _, tree_ca in cls.find_typetree_by_keys(
+            for _, tree_ca in cls._find_typetree_by_keys(
                 res.monobehaviors, ["_animations", "_front", "_back"]
             ):
                 mono_sa_front = res.get_object_by_pathid(
@@ -224,8 +252,6 @@ class SpineAsset:
                 )
                 # sa = SkeletonAnimation
                 if mono_sa_front and mono_sa_back:
-                    assert isinstance(mono_sa_front, uc.MonoBehaviour)
-                    assert isinstance(mono_sa_back, uc.MonoBehaviour)
                     with TreeReader(mono_sa_front) as tree_sa:
                         mono_sd_front = res.get_object_by_pathid(
                             tree_sa["skeletonDataAsset"], res.monobehaviors
@@ -236,8 +262,6 @@ class SpineAsset:
                         )
                     # sd = SkeletonData
                     if mono_sd_front and mono_sd_back:
-                        assert isinstance(mono_sd_front, uc.MonoBehaviour)
-                        assert isinstance(mono_sd_back, uc.MonoBehaviour)
                         yield mono_sd_front, mono_sd_back
         except Exception:
             Logger.warn(
@@ -245,7 +269,7 @@ class SpineAsset:
             )
 
     @classmethod
-    def find_typetree_by_keys(
+    def _find_typetree_by_keys(
         cls, objs: Sequence[uc.Object], contains_keys: Sequence[str]
     ):
         for obj in objs:
@@ -285,9 +309,6 @@ def spine_resolve(
                 f'ResolveSpine: "{res.name}" has {len(spines)} spines, unpacking it may take a long time.'
             )
         for s in spines:
-            Logger.debug(
-                f'ResolveSpine: Exporting Spine "{s.skel.m_Name}" + "{s.atlas.m_Name}" + {len(s.tex_list)} textures with type "{s.type}"'
-            )
             s.add_prefix()
             s.save_spine(destdir, on_file_queued, on_file_saved)
     except BaseException as arg:

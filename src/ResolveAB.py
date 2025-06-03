@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
-from typing import Callable, List, Optional, Sequence, Union
+from typing import Callable, List, Optional, Sequence, TypeVar, Union
 
 import os.path as osp
 
@@ -20,6 +20,9 @@ from .utils.TaskUtils import ThreadCtrl, UICtrl, TaskReporter, TaskReporterTrack
 
 # New compression algorithm introduced in Arknights v2.5.04+
 CompressionHelper.DECOMPRESSION_MAP[CompressionFlags.LZHAM] = decompress_lz4ak
+
+
+_T = TypeVar("_T", bound=uc.Object)
 
 
 class Resource:
@@ -74,8 +77,8 @@ class Resource:
                         self.name = osp.basename(i.m_Name)
 
     def get_object_by_pathid(
-        self, pathid: Union[int, dict], search_in: Sequence[uc.Object]
-    ):
+        self, pathid: Union[int, dict], search_in: Sequence[_T]
+    ) -> Optional[_T]:
         """Gets the object with the given PathID.
 
         :param pathid: PathID in int or a dict containing `m_PathID` field;
@@ -89,7 +92,7 @@ class Resource:
             else:
                 return None
         else:
-            _pathid = pathid
+            _pathid = int(pathid)
         for i in search_in:
             if i.object_reader is not None and i.object_reader.path_id == _pathid:
                 return i
