@@ -12,7 +12,9 @@
    <p>
       <img alt="GitHub Top Language" src="https://img.shields.io/github/languages/top/isHarryh/Ark-Unpacker?label=Python">
       <img alt="GitHub License" src="https://img.shields.io/github/license/isHarryh/Ark-Unpacker?label=License"/>
+      <img alt="Code Factor Grade" src="https://img.shields.io/codefactor/grade/github/isHarryh/Ark-Unpacker?label=CodeFactor">
       <img alt="GitHub Actions" src="https://github.com/isHarryh/Ark-Unpacker/actions/workflows/build.yml/badge.svg">
+      <img alt="GitHub Downloads" src="https://img.shields.io/github/downloads/isHarryh/Ark-Unpacker/total?label=Downloads">
    </p>
    <sub>
       <i> This project only supports Chinese docs. If you are an English user, feel free to contact us. </i>
@@ -187,3 +189,12 @@ options:
 ## 许可证 <sub>Licensing</sub>
 
 本项目基于 **BSD-3 开源协议**。任何人都可以自由地使用和修改项目内的源代码，前提是要在源代码或版权声明中保留作者说明和原有协议，且不可以使用本项目名称或作者名称进行宣传推广。
+
+-----
+
+<div align="center">
+    <p><i>GitHub 历史星标图</i></p>
+    <a href="https://starchart.cc/isHarryh/Ark-Unpacker">
+       <img alt="Stars Chart" src="https://starchart.cc/isHarryh/Ark-Unpacker.svg?variant=adaptive">
+    </a>
+</div>
