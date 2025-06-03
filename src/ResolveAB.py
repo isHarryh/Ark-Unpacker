@@ -120,12 +120,15 @@ def ab_resolve(
     :param on_file_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
     :rtype: None;
     """
+    from .ResolveSpine import SpineAsset
+
     if not osp.isfile(abfile):
         if on_processed:
             on_processed()
         return
     try:
         res = Resource(UnityPy.load(abfile))
+
         Logger.debug(f'ResolveAB: "{res.name}" has {res.length} objects.')
         if res.length >= 10000:
             Logger.info(
@@ -133,6 +136,9 @@ def ab_resolve(
             )
         elif res.length == 0:
             Logger.info(f'ResolveAB: No object in file "{res.name}".')
+
+        for s in SpineAsset.from_resource(res):
+            s.add_prefix()
 
         if do_img:
             SafeSaver.save_objects(res.sprites, destdir, on_file_queued, on_file_saved)
