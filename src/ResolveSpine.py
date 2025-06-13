@@ -148,6 +148,12 @@ class SpineAsset:
         for i in self.tex_list:
             if i[0]:
                 rgb = i[0].image
+                for p in atlas["pages"]:
+                    n1 = osp.basename(osp.splitext(p["filename"])[0]).lower()
+                    n2 = osp.basename(osp.splitext(i[0].m_Name)[0]).lower()
+                    if n1 == n2:
+                        rgb = image_resize(rgb, p["size"])
+                        break
                 if i[1]:
                     Logger.debug(
                         f'ResolveSpine: Spine asset "{i[0].m_Name}" found with Alpha texture.'
@@ -158,12 +164,6 @@ class SpineAsset:
                         f'ResolveSpine: Spine asset "{i[0].m_Name}" found with NO Alpha texture.'
                     )
                     rgba = AlphaRGBCombiner.apply_premultiplied_alpha(rgb)
-                for p in atlas["pages"]:
-                    n1 = osp.basename(osp.splitext(p["filename"])[0]).lower()
-                    n2 = osp.basename(osp.splitext(i[0].m_Name)[0]).lower()
-                    if n1 == n2:
-                        rgba = image_resize(rgba, p["size"])
-                        break
                 SafeSaver.save_image(
                     rgba,
                     destdir,
