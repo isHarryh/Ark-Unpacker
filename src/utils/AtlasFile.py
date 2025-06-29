@@ -13,10 +13,12 @@ def _deserialize_field(line: str) -> Tuple[str, str]:
     return key, value
 
 
-def _serialize_field(key: str, value: Any, indent: int) -> str:
+def _serialize_field(
+    key: str, value: Any, indent: int, dense_tuple: bool = False
+) -> str:
     indent_str = " " * indent
     if isinstance(value, tuple):
-        value_str = ",".join(map(str, value))
+        value_str = ("," if dense_tuple else ", ").join(map(str, value))
     elif isinstance(value, bool):
         value_str = "true" if value else "false"
     else:
@@ -27,7 +29,7 @@ def _serialize_field(key: str, value: Any, indent: int) -> str:
 class AtlasRegion:
     """Atlas region object representing a texture region."""
 
-    def __init__(self, name: str, **attributes):
+    def __init__(self, name: str, **attributes: Any):
         self._name = name
         self._rotate = attributes.get("rotate", False)
         self._xy = attributes.get("xy", (0, 0))
@@ -40,6 +42,10 @@ class AtlasRegion:
             for k, v in attributes.items()
             if k not in {"rotate", "xy", "size", "orig", "offset", "index"}
         }
+        if len(self._extra_attrs) > 0:
+            raise ValueError(
+                f"Unexpected attributes for region '{name}': {', '.join(self._extra_attrs.keys())}"
+            )
 
     @property
     def name(self) -> str:
@@ -69,17 +75,6 @@ class AtlasRegion:
     def index(self) -> int:
         return self._index
 
-    @staticmethod
-    def _parse_value(key: str, value: str) -> Any:
-        if key == "rotate":
-            return value.lower() == "true"
-        elif key in {"xy", "size", "orig", "offset"}:
-            return tuple(map(int, re.split(r"\s*,\s*", value)))
-        elif key == "index":
-            return int(value)
-        else:
-            return value
-
     @classmethod
     def from_lines(
         cls, name: str, lines: Tuple[str, ...], start_index: int = 0
@@ -91,7 +86,19 @@ class AtlasRegion:
             attr_line = lines[line_index].strip()
             try:
                 key, value = _deserialize_field(attr_line)
-                attributes[key] = cls._parse_value(key, value)
+                if key == "rotate":
+                    if value.isdecimal():
+                        attributes[key] = int(value)
+                    elif value.lower() == "true":
+                        attributes[key] = True
+                    elif value.lower() == "false":
+                        attributes[key] = False
+                    else:
+                        raise ValueError(f"Invalid value for 'rotate': {value}")
+                elif key in {"xy", "size", "orig", "offset"}:
+                    attributes[key] = tuple(map(int, re.split(r"\s*,\s*", value)))
+                elif key == "index":
+                    attributes[key] = int(value)
             except Exception as e:
                 raise ValueError(
                     f"Failed to parse region attribute '{attr_line}': {e}"
@@ -102,6 +109,7 @@ class AtlasRegion:
 
     def dumps(self) -> str:
         lines = []
+        lines.append(self.name)
         lines.append(_serialize_field("rotate", self.rotate, 2))
         lines.append(_serialize_field("xy", self.xy, 2))
         lines.append(_serialize_field("size", self.size, 2))
@@ -109,21 +117,20 @@ class AtlasRegion:
         lines.append(_serialize_field("offset", self.offset, 2))
         lines.append(_serialize_field("index", self.index, 2))
 
-        # Add extra attributes
         for key, value in self._extra_attrs.items():
             lines.append(_serialize_field(key, value, 2))
 
         return "\n".join(lines)
 
     def __repr__(self) -> str:
-        return f"AtlasRegion(name='{self.name}', xy={self.xy}, size={self.size})"
+        return f"AtlasRegion(name='{self.name}')"
 
 
 class AtlasPage:
-    """Atlas page object representing a texture page with regions."""
+    """Atlas page object representing a texture page with multiple regions."""
 
     def __init__(
-        self, filename: str, regions: Tuple[AtlasRegion, ...] = (), **attributes
+        self, filename: str, regions: Tuple[AtlasRegion, ...] = (), **attributes: Any
     ):
         self._filename = filename
         self._size = attributes.get("size", (0, 0))
@@ -136,6 +143,10 @@ class AtlasPage:
             for k, v in attributes.items()
             if k not in {"size", "filter", "format", "repeat"}
         }
+        if len(self._extra_attrs) > 0:
+            raise ValueError(
+                f"Unexpected attributes for page '{filename}': {', '.join(self._extra_attrs.keys())}"
+            )
 
     @property
     def filename(self) -> str:
@@ -161,15 +172,6 @@ class AtlasPage:
     def regions(self) -> Tuple[AtlasRegion, ...]:
         return self._regions
 
-    @staticmethod
-    def _parse_value(key: str, value: str) -> Any:
-        if key == "size":
-            return tuple(map(int, re.split(r"\s*,\s*", value)))
-        elif key == "filter":
-            return tuple(map(str.strip, re.split(r"\s*,\s*", value)))
-        else:
-            return value
-
     @classmethod
     def from_block(cls, block: Tuple[str, ...]) -> "AtlasPage":
         if not block:
@@ -186,7 +188,14 @@ class AtlasPage:
             if not line.startswith((" ", "\t")) and ":" in line:
                 try:
                     key, value = _deserialize_field(line)
-                    page_attrs[key] = cls._parse_value(key, value)
+                    if key == "size":
+                        page_attrs[key] = tuple(map(int, re.split(r"\s*,\s*", value)))
+                    elif key == "filter":
+                        page_attrs[key] = tuple(
+                            map(str.strip, re.split(r"\s*,\s*", value))
+                        )
+                    else:
+                        page_attrs[key] = value
                     line_index += 1
                 except Exception as e:
                     raise ValueError(
@@ -227,10 +236,10 @@ class AtlasPage:
     def dumps(self) -> str:
         lines = []
         lines.append(self.filename)
-        lines.append(_serialize_field("size", self.size, 0))
-        lines.append(_serialize_field("format", self.format, 0))
-        lines.append(_serialize_field("filter", self.filter, 0))
-        lines.append(_serialize_field("repeat", self.repeat, 0))
+        lines.append(_serialize_field("size", self.size, 0, dense_tuple=True))
+        lines.append(_serialize_field("format", self.format, 0, dense_tuple=True))
+        lines.append(_serialize_field("filter", self.filter, 0, dense_tuple=True))
+        lines.append(_serialize_field("repeat", self.repeat, 0, dense_tuple=True))
 
         # Add extra attributes
         for key, value in self._extra_attrs.items():
@@ -238,17 +247,16 @@ class AtlasPage:
 
         # Add regions
         for region in self.regions:
-            lines.append(region.name)
             lines.append(region.dumps())
 
         return "\n".join(lines)
 
     def __repr__(self) -> str:
-        return f"AtlasPage(filename='{self.filename}', regions={len(self.regions)}, size={self.size})"
+        return f"AtlasPage(filename='{self.filename}', regions={len(self.regions)})"
 
 
 class AtlasFile:
-    """Atlas file container with pages."""
+    """Atlas file with one or more pages inside."""
 
     def __init__(self, pages: Tuple[AtlasPage, ...] = ()):
         self._pages = pages
@@ -256,25 +264,6 @@ class AtlasFile:
     @property
     def pages(self) -> Tuple[AtlasPage, ...]:
         return self._pages
-
-    @classmethod
-    def loads(cls, text: str) -> "AtlasFile":
-        """Parse Atlas file text content."""
-        if not text.strip():
-            return cls()
-
-        page_blocks = cls._split_into_page_blocks(text)
-        pages = []
-
-        for block in page_blocks:
-            if block:
-                try:
-                    page = AtlasPage.from_block(tuple(block))
-                    pages.append(page)
-                except Exception as e:
-                    raise ValueError(f"Failed to parse page block: {e}") from e
-
-        return cls(tuple(pages))
 
     @classmethod
     def _split_into_page_blocks(cls, text: str) -> Tuple[Tuple[str, ...], ...]:
@@ -295,8 +284,25 @@ class AtlasFile:
         return tuple(page_blocks)
 
     @classmethod
+    def loads(cls, text: str) -> "AtlasFile":
+        if not text.strip():
+            return cls()
+
+        page_blocks = cls._split_into_page_blocks(text)
+        pages = []
+
+        for block in page_blocks:
+            if block:
+                try:
+                    page = AtlasPage.from_block(tuple(block))
+                    pages.append(page)
+                except Exception as e:
+                    raise ValueError(f"Failed to parse page block: {e}") from e
+
+        return cls(tuple(pages))
+
+    @classmethod
     def load(cls, file: Union[str, TextIOBase]) -> "AtlasFile":
-        """Load Atlas file from file path or file object."""
         if isinstance(file, str):
             with open(file, "r") as f:
                 text = f.read()
@@ -307,13 +313,9 @@ class AtlasFile:
         return cls.loads(text)
 
     def dumps(self) -> str:
-        return "\n\n".join(page.dumps() for page in self.pages)
-
-    def __repr__(self) -> str:
-        return f"AtlasFile(pages={len(self.pages)})"
+        return "\n" + "\n\n".join(page.dumps() for page in self.pages) + "\n"
 
     def dump(self, file: Union[str, TextIOBase]):
-        """Write AtlasFile object to file."""
         text = self.dumps()
         if isinstance(file, str):
             with open(file, "w") as f:
@@ -322,6 +324,9 @@ class AtlasFile:
             file.write(text)
         else:
             raise TypeError("Expected str or TextIOBase")
+
+    def __repr__(self) -> str:
+        return f"AtlasFile(pages={len(self.pages)})"
 
 
 if __name__ == "__main__":
@@ -367,10 +372,9 @@ Example_Region_/\\!@#$%
   index: -1
 
 """
-    # Test simplified str -> object -> str workflow
     print("=== Atlas text to object ===")
     atlas_file = AtlasFile.loads(data)
-    print(f"Loaded {len(atlas_file.pages)} pages")
+    print(f"Loaded: {atlas_file}")
 
     for i, page in enumerate(atlas_file.pages):
         print(f"Page {i+1}: {page}")
