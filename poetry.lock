@@ -908,6 +908,23 @@ url = "https://pypi.tuna.tsinghua.edu.cn/simple"
 reference = "PyPI-Tsinghua"
 
 [[package]]
+name = "spine-asset"
+version = "1.1.0"
+description = "Spine Animation Asset Parser Library"
+optional = false
+python-versions = ">=3.9,<4"
+groups = ["main"]
+files = [
+    {file = "spine_asset-1.1.0-py3-none-any.whl", hash = "sha256:8373e41944bd03e9abce7026fc447ff0ffbd918586d06578d4b0fdc7165417ba"},
+    {file = "spine_asset-1.1.0.tar.gz", hash = "sha256:0241383164a15af757d18abeea2cc207acc638696861d12500bac0fc09a755f7"},
+]
+
+[package.source]
+type = "legacy"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+reference = "PyPI-Tsinghua"
+
+[[package]]
 name = "texture2ddecoder"
 version = "1.0.5"
 description = "a python wrapper for Perfare's Texture2DDecoder"
@@ -1104,4 +1121,4 @@ reference = "PyPI-Tsinghua"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9,<3.13"
-content-hash = "4f0c0e4809dffd9b584216872603e0e6f6bff17520a18cc009b999dd82e5b992"
+content-hash = "439b7674b0bf83bfaed1f6d27807d0ee1b682c59c01c890b353614b5212d746f"
