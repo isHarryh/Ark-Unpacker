@@ -2,15 +2,15 @@
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
 from enum import StrEnum
-from typing import Any, Callable, List, Optional, Sequence, Tuple, TYPE_CHECKING, Union
+from typing import Callable, List, Optional, Sequence, TYPE_CHECKING, Union
 
 import os.path as osp
 
 import UnityPy
 import UnityPy.classes as uc
+from spine_asset.v38 import AtlasFile
 
 from .CombineRGBwithA import AlphaRGBCombiner, image_resize
-from .utils.AtlasFile import AtlasFile
 from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file, stacktrace
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
@@ -96,17 +96,27 @@ class SpineType(StrEnum):
             return SpineType.BATTLE_BACK
 
 
+class SpineTexturePairs:
+    def __init__(self, rgb: uc.Texture2D, alpha: Optional[uc.Texture2D] = None):
+        self.rgb = rgb
+        self.alpha = alpha
+
+    @property
+    def name(self) -> str:
+        return self.rgb.m_Name
+
+
 class SpineAsset:
     def __init__(
         self,
         skel: uc.TextAsset,
         atlas: uc.TextAsset,
-        tex_list: Sequence[Tuple[uc.Texture2D, uc.Texture2D]],
+        tex_pairs: Sequence[SpineTexturePairs],
         type: SpineType,
     ):
         self.skel = skel
         self.atlas = atlas
-        self.tex_list = tex_list
+        self.tex_pairs = tex_pairs
         self.type = type
 
     def add_prefix(self):
@@ -124,9 +134,10 @@ class SpineAsset:
         )
         _add_prefix(self.skel, prefix)
         _add_prefix(self.atlas, prefix)
-        for i in self.tex_list:
-            for j in i:
-                _add_prefix(j, prefix)
+        for tex in self.tex_pairs:
+            _add_prefix(tex.rgb, prefix)
+            if tex.alpha:
+                _add_prefix(tex.alpha, prefix)
 
     def save_spine(
         self,
@@ -142,37 +153,34 @@ class SpineAsset:
         :rtype: None;
         """
         Logger.debug(
-            f'ResolveSpine: Exporting Spine "{self.skel.m_Name}" + "{self.atlas.m_Name}" + {len(self.tex_list)} textures with type "{self.type}"'
+            f'ResolveSpine: Exporting Spine "{self.skel.m_Name}" + "{self.atlas.m_Name}" + {len(self.tex_pairs)} textures with type "{self.type}"'
         )
         atlas = AtlasFile.loads(self.atlas.m_Script)
-        for i in self.tex_list:
-            if i[0]:
-                rgb = i[0].image
-                for p in atlas.pages:
-                    n1 = osp.basename(osp.splitext(p.filename)[0]).lower()
-                    n2 = osp.basename(osp.splitext(i[0].m_Name)[0]).lower()
-                    if n1 == n2:
-                        rgb = image_resize(rgb, p.size)
-                        break
-                if i[1]:
-                    Logger.debug(
-                        f'ResolveSpine: Spine asset "{i[0].m_Name}" found with Alpha texture.'
-                    )
-                    rgba = AlphaRGBCombiner(i[1].image).combine_with(rgb)
-                else:
-                    Logger.debug(
-                        f'ResolveSpine: Spine asset "{i[0].m_Name}" found with NO Alpha texture.'
-                    )
-                    rgba = AlphaRGBCombiner.apply_premultiplied_alpha(rgb)
-                SafeSaver.save_image(
-                    rgba,
-                    destdir,
-                    i[0].m_Name,
-                    on_queued=on_queued,
-                    on_saved=on_saved,
+        for tex in self.tex_pairs:
+            img_rgb = tex.rgb.image
+            for p in atlas.pages:
+                n1 = osp.basename(osp.splitext(p.filename)[0]).lower()
+                n2 = osp.basename(osp.splitext(tex.name)[0]).lower()
+                if n1 == n2:
+                    img_rgb = image_resize(tex.rgb.image, p.size)
+                    break
+            if tex.alpha:
+                Logger.debug(
+                    f'ResolveSpine: Spine asset "{tex.name}" found with Alpha texture.'
                 )
+                rgba = AlphaRGBCombiner(tex.alpha.image).combine_with(img_rgb)
             else:
-                Logger.warn("ResolveSpine: Spine asset RGB texture missing.")
+                Logger.debug(
+                    f'ResolveSpine: Spine asset "{tex.name}" found with NO Alpha texture.'
+                )
+                rgba = AlphaRGBCombiner.apply_premultiplied_alpha(img_rgb)
+            SafeSaver.save_image(
+                rgba,
+                destdir,
+                tex.name,
+                on_queued=on_queued,
+                on_saved=on_saved,
+            )
         for i in (self.atlas, self.skel):
             SafeSaver.save_object(i, destdir, i.m_Name, on_queued, on_saved)
 
@@ -199,7 +207,7 @@ class SpineAsset:
                     atlas = res.get_object_by_pathid(
                         tree_ad["atlasFile"], res.textassets
                     )
-                    tex_list = []
+                    tex_pairs: List[SpineTexturePairs] = []
                     for mat in (
                         res.get_object_by_pathid(i, res.materials)
                         for i in tree_ad["materials"]
@@ -217,9 +225,11 @@ class SpineAsset:
                                     tex_alpha = res.get_object_by_pathid(
                                         tex[1]["m_Texture"], res.texture2ds
                                     )
-                        tex_list.append((tex_rgb, tex_alpha))
+                        if tex_rgb is None:
+                            raise ValueError("RGB main texture not found")
+                        tex_pairs.append(SpineTexturePairs(tex_rgb, tex_alpha))
 
-                    if not skel or not atlas or not tex_list:
+                    if not skel or not atlas or not tex_pairs:
                         raise ValueError("Incomplete Spine asset")
 
                     if any(mono_sd is f for f, _ in found_front_and_back):
@@ -229,7 +239,7 @@ class SpineAsset:
                     else:
                         sp_type = SpineType.guess(skel, atlas)
 
-                    spine = cls(skel, atlas, tex_list, sp_type)
+                    spine = cls(skel, atlas, tex_pairs, sp_type)
                     spines.append(spine)
         except Exception:
             Logger.warn(
