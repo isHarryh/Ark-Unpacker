@@ -8,7 +8,7 @@ import os.path as osp
 
 import UnityPy
 import UnityPy.classes as uc
-from spine_asset.v38 import AtlasFile
+from spine_asset.v38 import AtlasFile, SkeletonBinary, SkeletonJson, SkeletonData
 
 from .CombineRGBwithA import AlphaRGBCombiner, image_resize
 from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file, stacktrace
@@ -45,99 +45,126 @@ class SpineType(StrEnum):
     BATTLE_BACK = "BattleBack"
     DYN_ILLUST = "DynIllust"
 
-    @staticmethod
-    def guess(skel: uc.TextAsset, atlas: uc.TextAsset):
-        if not skel or not atlas:
-            return SpineType.UNKNOWN
 
-        name = skel.m_Name.replace(".skel", "")
-        if not name:
-            name = atlas.m_Name.replace(".atlas", "")
+class SpineAssetHandler:
+    def __init__(self, obj: Union[uc.TextAsset, uc.Texture2D]):
+        self.obj = obj
 
-        t = SpineType._guess_from_name(name)
-        if t != SpineType.UNKNOWN:
-            return t
+    @property
+    def name(self) -> str:
+        return self.obj.m_Name
 
-        t = SpineType._guess_from_skel(skel)
-        if t != SpineType.UNKNOWN:
-            Logger.info(f'ResolveSpine: Guessed Spine type "{t}" for "{name}" via skel')
-            return t
+    def add_prefix(self, prefix: str):
+        """Adds a prefix to the name of the Spine asset object to avoid conflicts.
 
-        t = SpineType._guess_from_atlas(atlas)
-        Logger.info(f'ResolveSpine: Guessed Spine type "{t}" for "{name}" via atlas')
-        return t
+        :param prefix: The prefix to add;
+        :rtype: None;
+        """
+        if not self.obj.m_Name.startswith(prefix):
+            self.obj.m_Name = prefix + self.obj.m_Name
 
-    @staticmethod
-    def _guess_from_name(name: str) -> "SpineType":
-        t = name.lower()
-        if t.startswith("dyn_"):
+
+class SpineAtlasHandler(SpineAssetHandler):
+    def __init__(self, atlas: uc.TextAsset):
+        super().__init__(atlas)
+        self.content = atlas.m_Script
+        self.atlas_data = self._load_atlas_data()
+
+    def _load_atlas_data(self) -> AtlasFile:
+        return AtlasFile.loads(self.content)
+
+    def guess_type(self) -> SpineType:
+        t = self.name.lower()
+        if t.startswith("dyn_"):  # Not reliable, DYN_ILLUST_START may also match this
             return SpineType.DYN_ILLUST
-        elif t.startswith("enemy_"):
+        elif t.startswith("enemy_"):  # Reliable
             return SpineType.BATTLE_FRONT
-        elif t.startswith("build_"):
+        elif t.startswith("build_"):  # Not reliable, few BUILDING may bypass this
             return SpineType.BUILDING
-        else:
-            return SpineType.UNKNOWN
 
-    @staticmethod
-    def _guess_from_skel(skel: uc.TextAsset) -> "SpineType":
-        t = skel.m_Script.lower()
-        if "default" in t and "relax" in t:
-            return SpineType.BUILDING
-        else:
-            return SpineType.UNKNOWN
-
-    @staticmethod
-    def _guess_from_atlas(atlas: uc.TextAsset) -> "SpineType":
-        t = atlas.m_Script.lower()
+        t = self.content.lower()
         if t.count("\nf_") + t.count("\nc_") >= t.count("\nb_"):
             return SpineType.BATTLE_FRONT
         else:
             return SpineType.BATTLE_BACK
 
 
-class SpineTexturePairs:
-    def __init__(self, rgb: uc.Texture2D, alpha: Optional[uc.Texture2D] = None):
-        self.rgb = rgb
-        self.alpha = alpha
+class SpineSkeletonHandler(SpineAssetHandler):
+    def __init__(self, skel: uc.TextAsset):
+        super().__init__(skel)
+        self.content = skel.m_Script
+        self.skeleton_data = self._load_skeleton_data()
 
-    @property
-    def name(self) -> str:
-        return self.rgb.m_Name
+    def _load_skeleton_data(self) -> SkeletonData:
+        if self.content.startswith("{"):
+            return SkeletonJson().read_skeleton_data(self.content)
+        else:
+            bytes_content = self.content.encode("utf-8", "surrogateescape")
+            return SkeletonBinary().read_skeleton_data(bytes_content)
+
+    def guess_type(self) -> SpineType:
+        t = self.name.lower()
+        if t.startswith("dyn_"):  # Not reliable, DYN_ILLUST_START may also match this
+            return SpineType.DYN_ILLUST
+        elif t.startswith("enemy_"):  # Reliable
+            return SpineType.BATTLE_FRONT
+
+        anim_names = [a.name.lower() for a in self.skeleton_data.animations]
+        if "default" in anim_names and "relax" in anim_names:  # Reliable
+            return SpineType.BUILDING
+        else:  # Need more info
+            return SpineType.UNKNOWN
+
+
+class SpineTextureHandler(SpineAssetHandler):
+    def __init__(self, tex_rgb: uc.Texture2D, tex_alpha: Optional[uc.Texture2D] = None):
+        super().__init__(tex_rgb)
+        self.tex_rgb = tex_rgb
+        self.tex_alpha = tex_alpha
+        self.rgb = tex_rgb.image
+        self.alpha = tex_alpha.image if tex_alpha else None
+
+    def add_prefix(self, prefix: str):
+        super().add_prefix(prefix)
+        if self.tex_alpha and not self.tex_alpha.m_Name.startswith(prefix):
+            self.tex_alpha.m_Name = prefix + self.tex_alpha.m_Name
 
 
 class SpineAsset:
     def __init__(
         self,
-        skel: uc.TextAsset,
-        atlas: uc.TextAsset,
-        tex_pairs: Sequence[SpineTexturePairs],
-        type: SpineType,
+        atlas_handler: SpineAtlasHandler,
+        skel_handler: SpineSkeletonHandler,
+        tex_pairs: Sequence[SpineTextureHandler],
+        type_: Optional[SpineType],
     ):
-        self.skel = skel
-        self.atlas = atlas
-        self.tex_pairs = tex_pairs
-        self.type = type
+        """Initializes a Spine asset with the given handlers.
+
+        :param atlas_handler: The SpineAtlasHandler instance for the atlas;
+        :param skel_handler: The SpineSkeletonHandler instance for the skeleton;
+        :param tex_pairs: A sequence of SpineTextureHandler instances for the textures;
+        :param type_: The explicit SpineType of the asset, `None` for auto-detection;
+        """
+        self.atlas_handler = atlas_handler
+        self.skel_handler = skel_handler
+        self.tex_handlers = tex_pairs
+
+        if type_ is None:
+            type_ = skel_handler.guess_type()
+            if type_ == SpineType.UNKNOWN:
+                type_ = atlas_handler.guess_type()
+        self.type = type_
 
     def add_prefix(self):
-        """Adds a prefix to the names of the Spine assets to avoid conflicts.
+        """Adds a prefix to the names of the Spine asset objects to avoid conflicts.
 
         :rtype: None;
         """
-
-        def _add_prefix(obj: Union[uc.TextAsset, uc.Texture2D], pre: str):
-            if obj and not obj.m_Name.startswith(pre):
-                obj.m_Name = pre + obj.m_Name
-
-        prefix = (
-            f"{self.type.value}/{osp.splitext(osp.basename(self.atlas.m_Name))[0]}/"
-        )
-        _add_prefix(self.skel, prefix)
-        _add_prefix(self.atlas, prefix)
-        for tex in self.tex_pairs:
-            _add_prefix(tex.rgb, prefix)
-            if tex.alpha:
-                _add_prefix(tex.alpha, prefix)
+        prefix = f"{self.type.value}/{osp.splitext(osp.basename(self.atlas_handler.name))[0]}/"
+        for h in list((self.atlas_handler, self.skel_handler)) + list(
+            self.tex_handlers
+        ):
+            h.add_prefix(prefix)
 
     def save_spine(
         self,
@@ -153,27 +180,25 @@ class SpineAsset:
         :rtype: None;
         """
         Logger.debug(
-            f'ResolveSpine: Exporting Spine "{self.skel.m_Name}" + "{self.atlas.m_Name}" + {len(self.tex_pairs)} textures with type "{self.type}"'
+            f'ResolveSpine: Exporting Spine "{self.skel_handler.name}" + "{self.atlas_handler.name}" + {len(self.tex_handlers)} textures with type "{self.type}"'
         )
-        atlas = AtlasFile.loads(self.atlas.m_Script)
-        for tex in self.tex_pairs:
-            img_rgb = tex.rgb.image
-            for p in atlas.pages:
+        for tex in self.tex_handlers:
+            for p in self.atlas_handler.atlas_data.pages:
                 n1 = osp.basename(osp.splitext(p.filename)[0]).lower()
                 n2 = osp.basename(osp.splitext(tex.name)[0]).lower()
                 if n1 == n2:
-                    img_rgb = image_resize(tex.rgb.image, p.size)
+                    tex.rgb = image_resize(tex.rgb, p.size)
                     break
             if tex.alpha:
                 Logger.debug(
                     f'ResolveSpine: Spine asset "{tex.name}" found with Alpha texture.'
                 )
-                rgba = AlphaRGBCombiner(tex.alpha.image).combine_with(img_rgb)
+                rgba = AlphaRGBCombiner(tex.alpha).combine_with(tex.rgb)
             else:
                 Logger.debug(
                     f'ResolveSpine: Spine asset "{tex.name}" found with NO Alpha texture.'
                 )
-                rgba = AlphaRGBCombiner.apply_premultiplied_alpha(img_rgb)
+                rgba = AlphaRGBCombiner.apply_premultiplied_alpha(tex.rgb)
             SafeSaver.save_image(
                 rgba,
                 destdir,
@@ -181,8 +206,8 @@ class SpineAsset:
                 on_queued=on_queued,
                 on_saved=on_saved,
             )
-        for i in (self.atlas, self.skel):
-            SafeSaver.save_object(i, destdir, i.m_Name, on_queued, on_saved)
+        for i in (self.atlas_handler, self.skel_handler):
+            SafeSaver.save_object(i.obj, destdir, i.name, on_queued, on_saved)
 
     @classmethod
     def from_resource(cls, res: "Resource") -> List["SpineAsset"]:
@@ -207,7 +232,7 @@ class SpineAsset:
                     atlas = res.get_object_by_pathid(
                         tree_ad["atlasFile"], res.textassets
                     )
-                    tex_pairs: List[SpineTexturePairs] = []
+                    tex_handlers: List[SpineTextureHandler] = []
                     for mat in (
                         res.get_object_by_pathid(i, res.materials)
                         for i in tree_ad["materials"]
@@ -227,19 +252,23 @@ class SpineAsset:
                                     )
                         if tex_rgb is None:
                             raise ValueError("RGB main texture not found")
-                        tex_pairs.append(SpineTexturePairs(tex_rgb, tex_alpha))
+                        tex_handlers.append(SpineTextureHandler(tex_rgb, tex_alpha))
 
-                    if not skel or not atlas or not tex_pairs:
+                    if not skel or not atlas or not tex_handlers:
                         raise ValueError("Incomplete Spine asset")
 
+                    sp_type = None
                     if any(mono_sd is f for f, _ in found_front_and_back):
                         sp_type = SpineType.BATTLE_FRONT
                     elif any(mono_sd is b for _, b in found_front_and_back):
                         sp_type = SpineType.BATTLE_BACK
-                    else:
-                        sp_type = SpineType.guess(skel, atlas)
 
-                    spine = cls(skel, atlas, tex_pairs, sp_type)
+                    spine = cls(
+                        SpineAtlasHandler(atlas),
+                        SpineSkeletonHandler(skel),
+                        tex_handlers,
+                        sp_type,
+                    )
                     spines.append(spine)
         except Exception:
             Logger.warn(
