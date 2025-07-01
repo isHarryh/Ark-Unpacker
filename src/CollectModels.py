@@ -7,6 +7,7 @@ import os.path as osp
 import re
 import shutil
 
+from .ResolveSpine import SpineType
 from .utils.GlobalMethods import print, rmdir, get_dirlist
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
@@ -39,26 +40,27 @@ def collect_models(
             if not model.islower():
                 # To solve model typo caused by Arknights side
                 model = model.lower()
-                Logger.debug(
-                    f'CollectModels: model dir "{model_dir}" has uppercase char'
-                )
+                Logger.debug(f'CollectModels: Found "{model_dir}" has uppercase char')
             try:
                 newname = None
-                if model_type.startswith("Building") and PATTERN_BUILDING.match(model):
+                if model_type == SpineType.BUILDING.value and PATTERN_BUILDING.match(
+                    model
+                ):
                     newname = PATTERN_BUILDING.match(model).group(2)  # type: ignore
-                elif model_type.startswith("Battle") and PATTERN_ENEMY.match(model):
+                elif model_type in [
+                    SpineType.BATTLE_FRONT.value,
+                    SpineType.BATTLE_BACK.value,
+                ] and PATTERN_ENEMY.match(model):
                     newname = PATTERN_ENEMY.match(model).group(1)  # type: ignore
-                elif (
-                    model_type.startswith("DynIllust")
-                    and PATTERN_ILLUST.match(model)
-                    and not model.endswith("_start")
+                elif model_type == SpineType.DYN_ILLUST.value and PATTERN_ILLUST.match(
+                    model
                 ):
                     newname = "dyn_illust_" + PATTERN_ILLUST.match(model).group(1)  # type: ignore
 
                 if newname:
                     # Move
                     dest = osp.join(destdir, newname)
-                    Logger.debug(f'CollectModels: "{model_dir}" -> "{dest}"')
+                    Logger.debug(f'CollectModels: Moving "{model_dir}" -> "{dest}"')
                     shutil.copytree(model_dir, dest, dirs_exist_ok=True)
                     rmdir(model_dir)
                     if on_collected:
@@ -66,7 +68,7 @@ def collect_models(
                 else:
                     # Not match any rules
                     Logger.debug(
-                        f'CollectModels: "{model_dir}" does not match any rules'
+                        f'CollectModels: Passed "{model_dir}", no rule matched'
                     )
             except Exception as arg:
                 error_occurred = True
