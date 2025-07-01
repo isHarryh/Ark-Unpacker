@@ -332,6 +332,7 @@ class ModelsDist:
 
 ########## Main-主程序 ##########
 def main():
+    Logger.reset_stats()
     md = ModelsDist()
     md.update_operator_data()
     md.update_skin_data()

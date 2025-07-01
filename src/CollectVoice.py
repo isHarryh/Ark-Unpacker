@@ -126,6 +126,7 @@ def main(srcdir: str, destdir: str, force_std_name: bool):
     flist = list(filter(lambda x: osp.basename(x[0]).startswith("char_"), flist))
     info_merged = {}
 
+    Logger.reset_stats()
     thread_ctrl = ThreadCtrl()
     collected = Counter()
     ui = UICtrl()

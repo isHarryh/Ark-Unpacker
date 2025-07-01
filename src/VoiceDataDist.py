@@ -319,6 +319,7 @@ class VoiceDist:
 
 ########## Main-主程序 ##########
 def main():
+    Logger.reset_stats()
     vd = VoiceDist()
     vd.retrieve()
     vd.sort()

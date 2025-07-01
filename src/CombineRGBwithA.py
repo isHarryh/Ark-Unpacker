@@ -286,6 +286,8 @@ def main(rootdir: str, destdir: str, do_del: bool = False):
     if do_del:
         print("\n正在清理...", s=1)
         rmdir(destdir)  # 慎用，会预先删除目的地目录的所有内容
+
+    Logger.reset_stats()
     SafeSaver.get_instance().reset_counter()
     thread_ctrl = ThreadCtrl()
     ui = UICtrl()

@@ -112,6 +112,7 @@ def main(srcdirs: Sequence[str], destdirs: Sequence[str]):
         for upkdir in get_dirlist(srcdir, max_depth=1):
             flist.append((upkdir, destdir))
 
+    Logger.reset_stats()
     thread_ctrl = ThreadCtrl()
     collected = Counter()
     ui = UICtrl()

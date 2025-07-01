@@ -408,6 +408,8 @@ def main(
     if do_del:
         print("\n正在清理...", s=1)
         rmdir(destdir)
+
+    Logger.reset_stats()
     SafeSaver.get_instance().reset_counter()
     thread_ctrl = ThreadCtrl()
     ui = UICtrl()
