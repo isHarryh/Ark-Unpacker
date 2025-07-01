@@ -7,7 +7,7 @@
    <img alt="ArkUnpacker icon" width="64" src="https://raw.githubusercontent.com/isHarryh/Ark-Unpacker/v3.x/ArkUnpacker.ico"/>
    <p>
       Arknights Assets Unpacker | 明日方舟游戏资源批量解包器 <br>
-      <code><b> v4.1 </b></code>
+      <code><b> v4.2 </b></code>
    </p>
    <p>
       <img alt="GitHub Top Language" src="https://img.shields.io/github/languages/top/isHarryh/Ark-Unpacker?label=Python">

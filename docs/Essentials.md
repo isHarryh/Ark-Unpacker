@@ -23,3 +23,5 @@ A 通道图中，完全白色的部分表示这里是不透明的，完全黑色
 - `BattleBack` 战斗小人背面
 - `Building` 干员基建小人
 - `DynIllust` 动态立绘
+- `DynIllustStart` 动态立绘入场动画
+- `DynPortrait` 动态立绘肖像
