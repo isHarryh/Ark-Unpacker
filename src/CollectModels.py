@@ -19,6 +19,11 @@ from .utils.TaskUtils import (
 )
 
 
+PATTERN_BUILDING = re.compile(r"^(build_)?char_(\d+_[0-9a-zA-Z]+(_[0-9a-zA-Z#]+)?)$")
+PATTERN_ENEMY = re.compile(r"^enemy_(\d+_[0-9a-zA-Z]+(_\d+)?)$")
+PATTERN_ILLUST = re.compile(r"^dyn_illust_char_(\d+_[0-9a-zA-Z]+(_[0-9a-zA-Z#]+)?)$")
+
+
 def collect_models(
     upkdir: str,
     destdir: str,
@@ -34,19 +39,22 @@ def collect_models(
             if not model.islower():
                 # To solve model typo caused by Arknights side
                 model = model.lower()
-                Logger.info(f'CollectModels: "{model_dir}" may has a typo name')
+                Logger.debug(
+                    f'CollectModels: model dir "{model_dir}" has uppercase char'
+                )
             try:
                 newname = None
-                if model_type.startswith("Building") and re.match(
-                    r"(build_)?char_", model
+                if model_type.startswith("Building") and PATTERN_BUILDING.match(model):
+                    newname = PATTERN_BUILDING.match(model).group(2)  # type: ignore
+                elif model_type.startswith("Battle") and PATTERN_ENEMY.match(model):
+                    newname = PATTERN_ENEMY.match(model).group(1)  # type: ignore
+                elif (
+                    model_type.startswith("DynIllust")
+                    and PATTERN_ILLUST.match(model)
+                    and not model.endswith("_start")
                 ):
-                    newname = re.match(r"(build_)?char_(\d+_[0-9a-zA-Z]+(_[0-9a-zA-Z#]+)?)", model).group(2)  # type: ignore
-                elif model_type.startswith("Battle") and re.match(r"enemy_", model):
-                    newname = re.match(r"enemy_(\d+_[0-9a-zA-Z]+(_\d+)?)", model).group(1)  # type: ignore
-                elif model_type.startswith("DynIllust") and re.match(
-                    r"dyn_illust_char_", model
-                ):
-                    newname = "dyn_illust_" + re.match(r"dyn_illust_char_(\d+_[0-9a-zA-Z]+(_[0-9a-zA-Z#]+)?)", model).group(1)  # type: ignore
+                    newname = "dyn_illust_" + PATTERN_ILLUST.match(model).group(1)  # type: ignore
+
                 if newname:
                     # Move
                     dest = osp.join(destdir, newname)
@@ -56,13 +64,16 @@ def collect_models(
                     if on_collected:
                         on_collected()
                 else:
-                    # Not matched any rules
-                    pass
+                    # Not match any rules
+                    Logger.debug(
+                        f'CollectModels: "{model_dir}" does not match any rules'
+                    )
             except Exception as arg:
                 error_occurred = True
                 Logger.error(
                     f'CollectModels: Error occurred while handling "{model_dir}": Exception{type(arg)} {arg}'
                 )
+
     if do_del and not error_occurred:
         rmdir(upkdir)
     if on_finished:
