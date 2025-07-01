@@ -14,7 +14,7 @@ dependencies = [
     "numpy (~=1.26)",
     "Pillow (~=9.5)",
     "pycryptodome (~=3.22)",
-    "pydub (~=0.25)",
+    "pydub-ng (~=0.1)",
     "spine-asset (~=1.1)",
     "UnityPy (~=1.22)"
 ]
