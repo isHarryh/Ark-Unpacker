@@ -44,6 +44,9 @@ class SpineType(StrEnum):
     BATTLE_FRONT = "BattleFront"
     BATTLE_BACK = "BattleBack"
     DYN_ILLUST = "DynIllust"
+    DYN_ILLUST_START = "DynIllustStart"
+    DYN_PORTRAIT = "DynPortrait"
+    DYN_UNKNOWN = "DynUnknown"
 
 
 class SpineAssetHandler:
@@ -75,12 +78,21 @@ class SpineAtlasHandler(SpineAssetHandler):
 
     def guess_type(self) -> SpineType:
         t = self.name.lower()
-        if t.startswith("dyn_"):  # Not reliable, DYN_ILLUST_START may also match this
-            return SpineType.DYN_ILLUST
-        elif t.startswith("enemy_"):  # Reliable
-            return SpineType.BATTLE_FRONT
-        elif t.startswith("build_"):  # Not reliable, few BUILDING may bypass this
-            return SpineType.BUILDING
+
+        if t.startswith("dyn_"):
+            if t.startswith("dyn_portrait_"):
+                return SpineType.DYN_PORTRAIT  # Reliable
+            elif t.startswith("dyn_illust_"):
+                return (
+                    SpineType.DYN_ILLUST
+                )  # Not reliable, DYN_ILLUST_START may also match this
+            else:
+                Logger.info(f'ResolveSpine: Unknown dynamic illust Spine type of "{t}"')
+                return SpineType.DYN_UNKNOWN  # Unrecognized
+        elif t.startswith("enemy_"):
+            return SpineType.BATTLE_FRONT  # Reliable
+        elif t.startswith("build_"):
+            return SpineType.BUILDING  # Not reliable, few BUILDING may bypass this
 
         t = self.content.lower()
         if t.count("\nf_") + t.count("\nc_") >= t.count("\nb_"):
@@ -104,16 +116,31 @@ class SpineSkeletonHandler(SpineAssetHandler):
 
     def guess_type(self) -> SpineType:
         t = self.name.lower()
-        if t.startswith("dyn_"):  # Not reliable, DYN_ILLUST_START may also match this
-            return SpineType.DYN_ILLUST
-        elif t.startswith("enemy_"):  # Reliable
-            return SpineType.BATTLE_FRONT
-
         anim_names = [a.name.lower() for a in self.skeleton_data.animations]
-        if "default" in anim_names and "relax" in anim_names:  # Reliable
-            return SpineType.BUILDING
-        else:  # Need more info
-            return SpineType.UNKNOWN
+
+        if t.startswith("dyn_"):
+            if t.startswith("dyn_portrait_"):
+                return SpineType.DYN_PORTRAIT  # Reliable
+            elif t.startswith("dyn_illust_"):
+                if "idle" in anim_names and "interact" in anim_names:
+                    return SpineType.DYN_ILLUST  # Reliable
+                elif "start" in anim_names:
+                    return SpineType.DYN_ILLUST_START  # Reliable
+                else:
+                    Logger.info(
+                        f'ResolveSpine: Unknown dynamic illust Spine type of "{t}", animations={anim_names}'
+                    )
+                    return SpineType.DYN_UNKNOWN  # Unrecognized
+            else:
+                Logger.info(f'ResolveSpine: Unknown dynamic illust Spine type of "{t}"')
+                return SpineType.DYN_UNKNOWN  # Unrecognized
+        elif t.startswith("enemy_"):
+            return SpineType.BATTLE_FRONT  # Reliable
+
+        if "default" in anim_names and "relax" in anim_names:
+            return SpineType.BUILDING  # Reliable
+        else:
+            return SpineType.UNKNOWN  # Need more info, please use atlas to guess
 
 
 class SpineTextureHandler(SpineAssetHandler):
