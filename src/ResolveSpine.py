@@ -432,14 +432,17 @@ def main(
                 f"运行状态统计：\t{Logger.to_ew_stats_str()}",
             ]
         )
-        subdestdir = osp.dirname(i).strip(osp.sep).replace(src, "").strip(osp.sep)
         curdestdir = (
             destdir
             if osp.samefile(i, src)
             else (
-                osp.join(destdir, subdestdir, osp.splitext(osp.basename(i))[0])
+                osp.join(
+                    destdir,
+                    osp.relpath(osp.dirname(i), src),
+                    osp.splitext(osp.basename(i))[0],
+                )
                 if separate
-                else osp.join(destdir, subdestdir)
+                else osp.join(destdir, osp.relpath(osp.dirname(i), src))
             )
         )
         thread_ctrl.run_subthread(
