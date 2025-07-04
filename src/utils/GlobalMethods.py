@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
+from typing import List
+
 import builtins
 import importlib
 import os
@@ -16,7 +18,7 @@ import types
 os.system("")
 
 
-def color(c: int = 7, s: int = 0):
+def color(c: int = 7, s: int = 0) -> str:
     """Gets a color controller string in interactive CLI.
 
     :param c: The color [0=black,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
@@ -27,7 +29,7 @@ def color(c: int = 7, s: int = 0):
     return f"\033[{s};3{c}m"
 
 
-def input(text: str = "", c: int = 7, s: int = 0, y: int = 0):
+def input(text: str = "", c: int = 7, s: int = 0, y: int = 0) -> str:
     """Enhanced version of inputting in interactive CLI.
 
     :param text: The text to display;
@@ -41,7 +43,7 @@ def input(text: str = "", c: int = 7, s: int = 0, y: int = 0):
     return builtins.input(f"{ctrl}{color(c, s)}{text}\033[?25h")
 
 
-def print(obj: object = "", c: int = 7, s: int = 0, y: int = 0):
+def print(obj: object = "", c: int = 7, s: int = 0, y: int = 0) -> None:
     """Enhanced version of printing in interactive CLI.
 
     :param obj: The object to print;
@@ -54,10 +56,11 @@ def print(obj: object = "", c: int = 7, s: int = 0, y: int = 0):
     builtins.print(f"\033[?25l{ctrl}{color(c, s)}{obj}")
 
 
-def clear(use_ansi: bool = False):
+def clear(use_ansi: bool = False) -> None:
     """Clears the CLI output.
 
-    rtype: None;
+    :param use_ansi: If `True`, uses ANSI codes to clear the screen;
+    :rtype: None;
     """
     if use_ansi:
         builtins.print("\033[2J")
@@ -65,57 +68,33 @@ def clear(use_ansi: bool = False):
         os.system("cls" if os.name == "nt" else "clear")
 
 
-def title(text: str):
+def title(text: str) -> None:
     """Sets the CLI window title. Windows only.
 
     :param text: The text of the title;
-    rtype: None;
+    :rtype: None;
     """
     if os.name == "nt":
         os.system(f"title {text}")
 
 
-def stacktrace():
+def stacktrace() -> str:
     return traceback.format_exc()
 
 
 ##### ↓ IO related ↓ #####
 
 
-def mkdir(path: str):
-    """Creates a directory.
+def rmdir(path: str):
+    """Deletes a directory.
 
-    :param path: Path to the directory to be created;
+    :param path: Path to the directory;
     :rtype: None;
     """
-    try:
-        path = path.strip().strip("/\\")
-        os.makedirs(path, exist_ok=True)
-    except BaseException:
-        pass
-
-
-def rmdir(path: str):
-    """Deletes a directory."""
     shutil.rmtree(path, ignore_errors=True)
 
 
-def get_dir_size(path: str):
-    """Gets the size of the given directory.
-
-    :param path: Path to the directory;
-    :returns: Size in bytes;
-    :rtype: int;
-    """
-    size = 0
-    lst = get_filelist(path)
-    for i in lst:
-        if osp.isfile(i):
-            size += osp.getsize(i)
-    return size
-
-
-def get_filelist(path: str, max_depth=0):
+def get_filelist(path: str, max_depth: int = 0) -> List[str]:
     """Gets a list containing all the files in the given dir and its sub dirs.
     Note that If `max_depth` is specified to unlimited,
     `os.walk` (the most efficient way) will be used in this method instead of `os.listdir`.
@@ -123,7 +102,7 @@ def get_filelist(path: str, max_depth=0):
     :param path: Path to the specified parent dir;
     :param max_depth: Max searching depth, `0` for unlimited;
     :returns: A list of paths;
-    :rtype: list[str];
+    :rtype: List[str];
     """
     lst = []
     max_depth = int(max_depth)
@@ -137,7 +116,7 @@ def get_filelist(path: str, max_depth=0):
     return lst
 
 
-def get_dirlist(path: str, max_depth=0):
+def get_dirlist(path: str, max_depth: int = 0) -> List[str]:
     """Gets a list containing all the sub dirs in the given dir.
     Note that If `max_depth` is specified to unlimited,
     `os.walk` (the most efficient way) will be used in this method instead of `os.listdir`.
@@ -145,7 +124,7 @@ def get_dirlist(path: str, max_depth=0):
     :param path: Path to the specified parent dir;
     :param max_depth: Max searching depth, `0` for unlimited;
     :returns: A list of paths;
-    :rtype: list[str];
+    :rtype: List[str];
     """
     lst = []
     max_depth = int(max_depth)
@@ -163,20 +142,9 @@ def get_dirlist(path: str, max_depth=0):
     return lst
 
 
-_EXT_IMAGE = (".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tiff")
+_EXT_IMAGE = {".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tiff"}
 
-
-def is_image_file(path: str):
-    """Returns `True` if the given file is an image judging from its path.
-
-    :param path: Path;
-    :returns: `True` if the file is an image;
-    :rtype: bool;
-    """
-    return any(path.lower().endswith(ext) for ext in _EXT_IMAGE)
-
-
-_EXT_KNOWN = (
+_EXT_KNOWN = {
     ".atlas",
     ".skel",
     ".wav",
@@ -187,11 +155,22 @@ _EXT_KNOWN = (
     ".mov",
     ".mkv",
     ".flv",
-)
-_EXT_AB = (".ab", ".bin")
+}
+
+_EXT_AB = {".ab", ".bin"}
 
 
-def is_known_asset_file(path: str):
+def is_image_file(path: str) -> bool:
+    """Returns `True` if the given file is an image judging from its path.
+
+    :param path: Path;
+    :returns: `True` if the file is an image;
+    :rtype: bool;
+    """
+    return any(path.lower().endswith(ext) for ext in _EXT_IMAGE)
+
+
+def is_known_asset_file(path: str) -> bool:
     """Returns `True` if the given file is a known asset type from its judging from its name.
     Images, audios, videos and Spine are all known asset types.
 
@@ -202,7 +181,7 @@ def is_known_asset_file(path: str):
     return is_image_file(path) or any(path.lower().endswith(ext) for ext in _EXT_KNOWN)
 
 
-def is_ab_file(path: str):
+def is_ab_file(path: str) -> bool:
     """Returns `True` if the given file is an asset bundle judging from its name.
 
     :param path: Path;
@@ -212,7 +191,7 @@ def is_ab_file(path: str):
     return any(path.lower().endswith(ext) for ext in _EXT_AB)
 
 
-def is_binary_file(path: str, guess_encoding: str = "UTF-8"):
+def is_binary_file(path: str, guess_encoding: str = "UTF-8") -> bool:
     """Returns `True` if the given file is a binary file rather than text file.
 
     :param path: Path;
@@ -231,12 +210,24 @@ def is_binary_file(path: str, guess_encoding: str = "UTF-8"):
 ##### ↓ Dynamic import related ↓ #####
 
 
-def get_modules_from_package(package: types.ModuleType):
+def get_modules_from_package(package: types.ModuleType) -> List[types.ModuleType]:
+    """Gets all the modules from the given package.
+
+    :param package: The package to get modules from;
+    :returns: A list of modules;
+    :rtype: List[types.ModuleType];
+    """
     walk_result = pkgutil.walk_packages(package.__path__, package.__name__ + ".")
     module_names = [name for _, name, is_pkg in walk_result if not is_pkg]
     return [importlib.import_module(name) for name in module_names]
 
 
-def get_modules_from_package_name(package_name: str):
+def get_modules_from_package_name(package_name: str) -> List[types.ModuleType]:
+    """Gets all the modules from the package with the given name.
+
+    :param package_name: The name of the package to get modules from;
+    :returns: A list of modules;
+    :rtype: List[types.ModuleType];
+    """
     package = importlib.import_module(package_name)
     return get_modules_from_package(package)

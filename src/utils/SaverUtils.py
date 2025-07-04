@@ -14,7 +14,6 @@ from PIL import Image
 
 from .Profiler import CodeProfiler
 from .Config import Config, PerformanceLevel
-from .GlobalMethods import mkdir
 from .Logger import Logger
 from .TaskUtils import WorkerCtrl
 
@@ -200,7 +199,7 @@ class SafeSaver(WorkerCtrl):
                         # Modify the file name to avoid namesake
                         dest = SafeSaver._purify_name(dest)
                         # Save the file eventually
-                        mkdir(osp.dirname(dest))
+                        os.makedirs(osp.dirname(dest), exist_ok=True)
                         SafeSaver._save_bytes(data, dest)
                         # Invoke callback with destination path as argument
                         if on_saved:
