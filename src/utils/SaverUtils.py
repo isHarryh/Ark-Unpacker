@@ -15,7 +15,7 @@ from PIL import Image
 from .Profiler import CodeProfiler
 from .Config import Config, PerformanceLevel
 from .Logger import Logger
-from .TaskUtils import WorkerCtrl
+from .TaskUtils import CoroutineCtrl
 
 
 class EntryLock(ContextDecorator):
@@ -41,7 +41,7 @@ class EntryLock(ContextDecorator):
     # EndClass
 
 
-class SafeSaver(WorkerCtrl):
+class SafeSaver(CoroutineCtrl):
     """The file saver class to save file and avoid file name collision."""
 
     __instance = None
@@ -50,9 +50,11 @@ class SafeSaver(WorkerCtrl):
 
     def __init__(self):
         """Not recommended to use. Please use the static methods."""
-        max_workers = PerformanceLevel.get_thread_limit(Config.get("performance_level"))
+        max_concurrency = PerformanceLevel.get_thread_limit(
+            Config.get("performance_level")
+        )
         super(SafeSaver, self).__init__(
-            self._save, max_workers=max_workers, name="Saver"
+            self._save_async, max_concurrency=max_concurrency, name="Saver"
         )
 
     @staticmethod
@@ -186,7 +188,7 @@ class SafeSaver(WorkerCtrl):
             )
 
     @staticmethod
-    def _save(
+    def _save_async(
         data: bytes, destdir: str, name: str, ext: str, on_saved: Optional[Callable]
     ):
         dest = osp.join(destdir, name + ext)
@@ -200,7 +202,8 @@ class SafeSaver(WorkerCtrl):
                         dest = SafeSaver._purify_name(dest)
                         # Save the file eventually
                         os.makedirs(osp.dirname(dest), exist_ok=True)
-                        SafeSaver._save_bytes(data, dest)
+                        with open(dest, "wb") as f:
+                            f.write(data)
                         # Invoke callback with destination path as argument
                         if on_saved:
                             on_saved(dest)
@@ -213,11 +216,6 @@ class SafeSaver(WorkerCtrl):
         # Invoke call back with `None` indicating the file was not saved
         if on_saved:
             on_saved(None)
-
-    @staticmethod
-    def _save_bytes(data: bytes, dest: str):
-        with open(dest, "wb") as f:
-            f.write(data)
 
     @staticmethod
     def _is_unique(data: bytes, dest: str):

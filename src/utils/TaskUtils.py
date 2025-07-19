@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
-from typing import Callable, Optional, Union
+from typing import Callable, Optional, Set, Union
 
+import asyncio
 import queue
 import threading
 import time
@@ -56,55 +57,49 @@ class ThreadCtrl:
     # EndClass
 
 
-class WorkerCtrl:
-    """Controller for Permanent Worker Threads."""
+class CoroutineCtrl:
+    """Controller for Coroutine-based Task Processing."""
 
-    LAYOFF_INTERVAL = 5
-    BACKUP_THRESHOLD = 5
+    def __init__(self, handler: Callable, max_concurrency: int = 1, name: str = ""):
+        """Initializes a Coroutine Controller.
 
-    def __init__(self, handler: Callable, max_workers: int = 1, name: str = ""):
-        """Initializes a Worker Controller.
-
-        :param handler: The handler function of the workers;
-        :param max_workers: The maximum number of workers;
-        :param name: The optional name for the workers;
+        :param handler: The handler function of the tasks;
+        :param max_concurrency: The maximum number of concurrent tasks;
+        :param name: The optional name for the controller;
         """
-        if max_workers < 1:
-            raise ValueError("max_workers should not be less than 1")
-        self.__queue = queue.Queue()
+        if max_concurrency < 1:
+            raise ValueError("max_concurrency should not be less than 1")
         self.__handler = handler
         self.__opened = True
-        self.__workers = []
-        self.__idle_timestamp = time.time()
-        self.__max_workers = max_workers
+        self.__max_concurrency = max_concurrency
         self._name = name
         self._total_requested = Counter()
         self._total_processed = Counter()
-        self._backup_worker()
-        Logger.debug(f"Worker: Workers are ready to work for {name}!")
+        self.__thread = None
+        self.__loop: Optional[asyncio.AbstractEventLoop] = None
+        self.__queue: Optional[asyncio.Queue] = None
+        self.__semaphore: Optional[asyncio.Semaphore] = None
+        self._start()
 
     def submit(self, data: tuple):
-        """Submits new data to workers.
+        """Submits new data to the controller.
 
         :param data: A tuple that contains the arguments that the handler required;
         :rtype: None;
         """
-        if self.__opened:
-            self.__queue.put(data)
+        if self.__opened and self.__loop and self.__queue:
+            # Schedule the task in the event loop
+            asyncio.run_coroutine_threadsafe(self.__queue.put(data), self.__loop)
             self._total_requested.update()
         else:
-            raise RuntimeError("The worker controller has terminated")
+            raise RuntimeError("The coroutine controller has terminated")
 
-    def terminate(self, block: bool = False):
-        """Requests the workers to terminate and stop receiving new data.
+    def terminate(self):
+        """Requests the controller to terminate.
 
-        :param block: Whether to wait for workers to complete.
         :rtype: None;
         """
-        if self.__opened:
-            self.__opened = False
-            if block:
-                self.__queue.join()
+        self.__opened = False
 
     def completed(self):
         """Returns `True` if there is no data in queue or in handler.
@@ -136,52 +131,104 @@ class WorkerCtrl:
             self._total_requested = Counter()
             self._total_processed = Counter()
         else:
-            raise RuntimeError("Cannot reset counter while the workers are busy")
+            raise RuntimeError("Cannot reset counter while the controller is busy")
 
-    def _loop(self):
-        while self.__opened or not self.__queue.empty():
-            # Intelligent scheduling
-            if self.__queue.empty():
-                if self.__idle_timestamp <= 0:
-                    self.__idle_timestamp = time.time()
-                elif self.__idle_timestamp + WorkerCtrl.LAYOFF_INTERVAL < time.time():
-                    cur_worker = threading.current_thread()
-                    if (
-                        cur_worker in self.__workers
-                        and self.__workers.index(cur_worker) != 0
-                    ):
-                        self._layoff_worker(cur_worker)
-                        break
-            else:
-                self.__idle_timestamp = 0
-                if self.__queue.qsize() > WorkerCtrl.BACKUP_THRESHOLD:
-                    self._backup_worker()
-            # Task receiving
-            try:
-                args = self.__queue.get(timeout=WorkerCtrl.LAYOFF_INTERVAL)
+    def _start(self):
+        """Starts the event loop in a separate thread."""
+        loop_ready = threading.Event()
+
+        def thread_function():
+            # Initialize the event loop in this thread
+            self.__loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.__loop)
+
+            # Initialize async objects within the event loop
+            self.__queue = asyncio.Queue()
+            self.__semaphore = asyncio.Semaphore(self.__max_concurrency)
+            loop_ready.set()
+
+            # Start the processing loop
+            self.__loop.run_until_complete(self._loop())
+
+        self.__thread = threading.Thread(
+            target=thread_function, name=f"CoroutineCtrl:{self._name}", daemon=True
+        )
+        self.__thread.start()
+        loop_ready.wait()
+
+    async def _loop(self):
+        """Main processing loop that handles tasks from the queue."""
+        if not self.__queue:
+            raise RuntimeError("Queue not initialized")
+
+        async def task_function(data: tuple):
+            """Handles a single task with semaphore control."""
+            if not self.__semaphore:
+                raise RuntimeError("Semaphore not initialized")
+
+            async with self.__semaphore:
                 try:
-                    self.__handler(*args)
+                    # Check if handler is async
+                    if asyncio.iscoroutinefunction(self.__handler):
+                        await self.__handler(*data)
+                    else:
+                        # Run sync handler in thread pool
+                        loop = asyncio.get_event_loop()
+                        await loop.run_in_executor(None, self.__handler, *data)
+                except Exception as e:
+                    Logger.error(f"CoroutineCtrl: {self._name}: Error handling task: {e}")
                 finally:
-                    self.__queue.task_done()
                     self._total_processed.update()
-            except queue.Empty:
-                pass
 
-    def _backup_worker(self):
-        if len(self.__workers) < self.__max_workers:
-            t = threading.Thread(
-                target=self._loop, name=f"Worker:{self._name}", daemon=True
-            )
-            self.__workers.append(t)
-            t.start()
-            if len(self.__workers) >= self.__max_workers:
-                Logger.debug("Worker: Workers are in full load, slogging guts out!")
+        Logger.debug(f"CoroutineCtrl: {self._name}: Loop started")
 
-    def _layoff_worker(self, worker: threading.Thread):
-        if worker in self.__workers:
-            self.__workers.remove(worker)
-            if len(self.__workers) <= 1:
-                Logger.debug("Worker: Workers nodded off, sleeping for new tasks!")
+        running_tasks: Set[asyncio.Task] = set()
+
+        while True:
+            try:
+                # Check if we should shutdown
+                if not self.__opened and self.__queue.empty():
+                    break
+
+                # Clean up completed tasks
+                if running_tasks:
+                    running_tasks -= set(map(asyncio.Task.done, running_tasks))
+
+                # Check if we have room for more tasks
+                if len(running_tasks) < self.__max_concurrency:
+                    # Try to get a new task
+                    try:
+                        data = await asyncio.wait_for(self.__queue.get(), timeout=0.1)
+                        task = asyncio.create_task(task_function(data))
+                        running_tasks.add(task)
+                        self.__queue.task_done()
+                    except asyncio.TimeoutError:
+                        # No task available for now
+                        continue
+                else:
+                    # Wait for at least one task to complete
+                    if running_tasks:
+                        _, pending = await asyncio.wait(
+                            running_tasks,
+                            return_when=asyncio.FIRST_COMPLETED,
+                            timeout=0.1,
+                        )
+                        running_tasks = pending
+                    else:
+                        raise RuntimeError(
+                            "No running tasks but max concurrency reached"
+                        )
+
+            except Exception as e:
+                Logger.error(f"CoroutineCtrl: {self._name}: Error in loop: {e}")
+
+        # Wait for all remaining tasks to complete after the shutdown request
+        if running_tasks:
+            await asyncio.gather(*running_tasks, return_exceptions=True)
+
+        Logger.debug(f"CoroutineCtrl: {self._name}: Loop finished")
+
+    # EndClass
 
 
 class UICtrl:
