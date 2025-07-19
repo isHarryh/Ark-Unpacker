@@ -4,6 +4,7 @@
 from typing import Callable, Optional, Set, Union
 
 import asyncio
+import psutil
 import queue
 import threading
 import time
@@ -60,18 +61,22 @@ class ThreadCtrl:
 class CoroutineCtrl:
     """Controller for Coroutine-based Task Processing."""
 
-    def __init__(self, handler: Callable, max_concurrency: int = 1, name: str = ""):
+    def __init__(
+        self,
+        handler: Callable,
+        name: str = "",
+        max_concurrency: Optional[int] = None,
+        min_spare_memory_mb: Optional[int] = None,
+    ):
         """Initializes a Coroutine Controller.
 
         :param handler: The handler function of the tasks;
-        :param max_concurrency: The maximum number of concurrent tasks;
         :param name: The optional name for the controller;
+        :param max_concurrency: The maximum number of concurrent tasks;
+        :param min_spare_memory_mb: The minimum spare system memory in MB to allow new tasks;
         """
-        if max_concurrency < 1:
-            raise ValueError("max_concurrency should not be less than 1")
         self.__handler = handler
         self.__opened = True
-        self.__max_concurrency = max_concurrency
         self._name = name
         self._total_requested = Counter()
         self._total_processed = Counter()
@@ -79,20 +84,45 @@ class CoroutineCtrl:
         self.__loop: Optional[asyncio.AbstractEventLoop] = None
         self.__queue: Optional[asyncio.Queue] = None
         self.__semaphore: Optional[asyncio.Semaphore] = None
+
+        if max_concurrency is None:
+            max_concurrency = PerformanceLevel.get_thread_limit(
+                Config.get("performance_level")
+            )
+        if not isinstance(max_concurrency, int) or max_concurrency < 1:
+            raise ValueError("max_concurrency must be an integer that not less than 1")
+        self.__max_concurrency = max_concurrency
+
+        if min_spare_memory_mb is None:
+            min_spare_memory_mb = Config.get("min_spare_memory_mb")
+        if not isinstance(min_spare_memory_mb, (int, float)) or min_spare_memory_mb < 0:
+            raise ValueError("min_spare_memory_mb must be a positive number")
+        self.__min_spare_memory_mb = min_spare_memory_mb
+
         self._start()
 
     def submit(self, data: tuple):
         """Submits new data to the controller.
+        If system memory is low, it will block until enough memory is available.
 
         :param data: A tuple that contains the arguments that the handler required;
         :rtype: None;
         """
-        if self.__opened and self.__loop and self.__queue:
-            # Schedule the task in the event loop
-            asyncio.run_coroutine_threadsafe(self.__queue.put(data), self.__loop)
-            self._total_requested.update()
-        else:
+        if not self.__opened:
             raise RuntimeError("The coroutine controller has terminated")
+        if not self.__loop or not self.__queue:
+            raise RuntimeError("The coroutine controller is not ready")
+
+        # Check memory condition if queue has tasks
+        mb = self._get_spare_memory_mb()
+        while mb < self.__min_spare_memory_mb and not self.__queue.empty():
+            for _ in range(100):
+                time.sleep(0)
+            mb = self._get_spare_memory_mb()
+
+        # Schedule the task in the event loop
+        asyncio.run_coroutine_threadsafe(self.__queue.put(data), self.__loop)
+        self._total_requested.update()
 
     def terminate(self):
         """Requests the controller to terminate.
@@ -132,6 +162,17 @@ class CoroutineCtrl:
             self._total_processed = Counter()
         else:
             raise RuntimeError("Cannot reset counter while the controller is busy")
+
+    def _get_spare_memory_mb(self) -> float:
+        """Gets the available system memory in MB.
+
+        :returns: Available memory in MB, `inf` if not available;
+        """
+        try:
+            memory_info = psutil.virtual_memory()
+            return memory_info.available / 1024 / 1024
+        except Exception:
+            return float("inf")
 
     def _start(self):
         """Starts the event loop in a separate thread."""
@@ -176,7 +217,9 @@ class CoroutineCtrl:
                         loop = asyncio.get_event_loop()
                         await loop.run_in_executor(None, self.__handler, *data)
                 except Exception as e:
-                    Logger.error(f"CoroutineCtrl: {self._name}: Error handling task: {e}")
+                    Logger.error(
+                        f"CoroutineCtrl: {self._name}: Error handling task: {e}"
+                    )
                 finally:
                     self._total_processed.update()
 

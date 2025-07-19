@@ -46,6 +46,7 @@ class Config:
     __default_config = {
         "log_file": "ArkUnpackerLogs.log",
         "log_level": Logger.LV_INFO,
+        "min_spare_memory_mb": 256,
         "performance_level": PerformanceLevel.STANDARD,
     }
 
