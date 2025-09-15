@@ -13,11 +13,13 @@ dependencies = [
     "flatbuffers (~=25.2)",
     "numpy (~=1.26)",
     "Pillow (~=9.5)",
+    "psutil (~=7.0)",
     "pycryptodome (~=3.22)",
     "pydub-ng (~=0.1)",
+    "python-json-logger (~=3.3)",
     "spine-asset (~=1.1)",
     "UnityPy (~=1.22)",
-    "psutil (~=7.0)"
+    "wannacri (~=0.3)"
 ]
 
 [tool.poetry]
