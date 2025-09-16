@@ -103,6 +103,24 @@ def warn_dir_intersection(srcdir: str, destdir: str):
             raise InterruptedError("User cancelled due to directory intersection")
 
 
+def warn_ffmpeg_not_available():
+    print("正在检查FFmpeg可用性...")
+    if AU_Usm.is_ffmpeg_available():
+        print("  通过！", c=2)
+        return
+    print("  失败！", c=1)
+    print("\n注意，检测到FFmpeg似乎不可用！", c=3)
+    print("  如果您未在计算机中安装FFmpeg，请访问它的官网来下载合适的版本")
+    print("  并将FFmpeg的bin目录添加到系统环境变量Path。")
+    print("  FFmpeg 官网：https://ffmpeg.org/download.html\n")
+    print("  您仍要继续本次任务吗？")
+    print("  请选择：[y]继续任务，[n]取消任务(默认)", c=3)
+    uin = UserInput.request().strip().lower()
+    if uin != "y":
+        print("  已取消任务", c=3)
+        raise InterruptedError("User cancelled due to FFmpeg not available")
+
+
 def run_quickaccess():
     Logger.info("CI: Run quick access.")
     title("ArkUnpacker - Processing")
@@ -265,6 +283,7 @@ def run_custom_resolve_usm():
     Logger.info("CI: Customized Criware USM extraction mode.")
     prt_subtitle("自定义Criware USM音视频提取")
     ###
+    warn_ffmpeg_not_available()
     print("\n请输入要处理的USM文件的目录路径")
     src = UserInput.request_input_path()
     print("USM文件路径：", c=2)

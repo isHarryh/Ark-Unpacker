@@ -19,6 +19,29 @@ from .utils.Config import Config
 FFMPEG_RUN_PARAMS = {"quiet": True}
 
 
+def is_ffmpeg_available() -> bool:
+    """Checks if FFmpeg is available.
+    This will create a small test video file and delete it afterwards.
+
+    :returns: True if FFmpeg is available, False otherwise;
+    :rtype: bool;
+    """
+    test_file = "ArkUnpackerFFmpegTest.mp4"
+    try:
+        s_in = ffmpeg.input("testsrc=duration=1:size=320x240:rate=1", f="lavfi")
+        s_out = s_in.output(test_file, vcodec="h264", acodec="aac", t=1, y=None)
+        s_out.run(**FFMPEG_RUN_PARAMS)
+        return True
+    except Exception:
+        return False
+    finally:
+        try:
+            if osp.exists(test_file):
+                os.unlink(test_file)
+        except Exception:
+            pass
+
+
 class UsmProcessor:
     """USM file processor for parsing and exporting Criware USM format video files."""
 
