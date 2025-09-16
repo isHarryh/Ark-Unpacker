@@ -53,8 +53,8 @@ class _ArkUnpackerArgParser(argparse.ArgumentParser):
         parser.add_argument(
             "-m",
             "--mode",
-            choices=["ab", "cb", "fb", "sp"],
-            help="working mode, ab=resolve-ab, cb=combine-image, fb=decode-flatbuffers, sp=resolve-spine",
+            choices=["ab", "cb", "fb", "sp", "cu"],
+            help="working mode, ab=resolve-ab, cb=combine-image, fb=decode-flatbuffers, sp=resolve-spine, cu=resolve-usm",
         )
         parser.add_argument("-i", "--input", help="source file or directory path")
         parser.add_argument("-o", "--output", help="destination directory path")
@@ -94,6 +94,16 @@ class _ArkUnpackerArgParser(argparse.ArgumentParser):
             "--group",
             action="store_true",
             help="in resolve ab mode: group files into separate directories named by their source ab file",
+        )
+        parser.add_argument(
+            "--no-video",
+            action="store_true",
+            help="in resolve usm mode: skip video processing",
+        )
+        parser.add_argument(
+            "--no-audio",
+            action="store_true",
+            help="in resolve usm mode: skip audio processing",
         )
         parser.add_argument(
             "-l",

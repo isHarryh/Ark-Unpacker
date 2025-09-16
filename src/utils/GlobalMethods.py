@@ -191,6 +191,16 @@ def is_ab_file(path: str) -> bool:
     return any(path.lower().endswith(ext) for ext in _EXT_AB)
 
 
+def is_usm_file(path: str) -> bool:
+    """Returns `True` if the given file is a Criware USM file judging from its name.
+
+    :param path: Path;
+    :returns: `True` if the file is a USM video file;
+    :rtype: bool;
+    """
+    return path.lower().endswith(".usm")
+
+
 def is_binary_file(path: str, guess_encoding: str = "UTF-8") -> bool:
     """Returns `True` if the given file is a binary file rather than text file.
 

@@ -48,6 +48,11 @@ class Config:
         "log_level": Logger.LV_INFO,
         "min_spare_memory_mb": 256,
         "performance_level": PerformanceLevel.STANDARD,
+        "usm_encoding": "gbk",
+        "usm_export_video_codec": "vp9",
+        "usm_export_audio_codec": "libvorbis",
+        "usm_export_video_ext": ".mkv",
+        "usm_export_audio_ext": ".ogg",
     }
 
     def __init__(self):

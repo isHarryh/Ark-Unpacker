@@ -22,6 +22,7 @@ from src import CollectModels as AU_Cm
 from src import CollectVoice as AU_Cv
 from src import ModelsDataDist as AU_Mdd
 from src import VoiceDataDist as AU_Vdd
+from src import ResolveUSM as AU_Usm
 
 ARKUNPACKER_VERSION = "v4.1"
 ARKUNPACKER_LOCAL = "zh-CN"
@@ -40,8 +41,9 @@ def prt_homepage():
 3: 自定义图片合并
 4: 自定义文本资源解码
 5: 自定义Spine模型导出
-6: ArkModels提取与分拣工具
-7: ArkVoice提取与分拣工具
+6: 自定义Criware USM音视频提取
+7: ArkModels提取与分拣工具
+8: ArkVoice提取与分拣工具
 0: 退出""",
         c=6,
     )
@@ -257,6 +259,51 @@ def run_custom_resolve_spine():
     prt_continue()
     title("ArkUnpacker - Processing")
     AU_Sp.main(src, destdir, do_del, separate)
+
+
+def run_custom_resolve_usm():
+    Logger.info("CI: Customized Criware USM extraction mode.")
+    prt_subtitle("自定义Criware USM音视频提取")
+    ###
+    print("\n请输入要处理的USM文件的目录路径")
+    src = UserInput.request_input_path()
+    print("USM文件路径：", c=2)
+    print(f"  {src}", c=6)
+    warn_large_srcdir(src)
+    ###
+    print("\n请输入导出目录的路径")
+    destdir = UserInput.request_output_path(
+        default_generator=lambda: f"USM_Extracted_{int(time.time())}"
+    )
+    print("导出目录路径：", c=2)
+    print(f"  {destdir}", c=6)
+    warn_dir_intersection(src, destdir)
+    ###
+    do_del = False
+    if osp.isdir(destdir):
+        print("\n该导出目录已存在，您要删除它里面的全部文件吗？")
+        print("  请!慎重!选择：[y]删除，[n]保留(默认)", c=3)
+        do_del = UserInput.request_yes_or_no(False)
+    ###
+    print("\n请选择提取方式")
+    print("  [1]仅导出音频文件", c=3)
+    print("  [2]仅导出视频文件", c=3)
+    print("  [3]将音频与视频合并之后导出", c=3)
+    extract_mode = UserInput.request_options(["1", "2", "3"])
+    print("提取方式：", c=2)
+    if extract_mode == "1":
+        print("  仅导出音频文件", c=6)
+        do_vid, do_aud = False, True
+    elif extract_mode == "2":
+        print("  仅导出视频文件", c=6)
+        do_vid, do_aud = True, False
+    else:  # extract_mode == "3"
+        print("  将音频与视频合并之后导出", c=6)
+        do_vid, do_aud = True, True
+    ###
+    prt_continue()
+    title("ArkUnpacker - Processing")
+    AU_Usm.main(src, destdir, do_del, do_vid, do_aud)
 
 
 def run_arkmodels_unpacking(dirs, destdir):
@@ -628,8 +675,11 @@ if __name__ == "__main__":
                         run_custom_resolve_spine()
                         prt_continue()
                     elif order == "6":
-                        run_arkmodels_workflow()
+                        run_custom_resolve_usm()
+                        prt_continue()
                     elif order == "7":
+                        run_arkmodels_workflow()
+                    elif order == "8":
                         run_arkvoice_workflow()
                     elif order == "0":
                         print("\n用户退出")
@@ -665,6 +715,17 @@ if __name__ == "__main__":
             elif args.mode == "fb":
                 parser.validate_input_output_arg(args)
                 AU_Fb.main(args.input, args.output, args.d)
+            elif args.mode == "cu":
+                parser.validate_input_output_arg(args, allow_file_input=True)
+                do_vid = not getattr(args, "no_video", False)
+                do_aud = not getattr(args, "no_audio", False)
+                AU_Usm.main(
+                    args.input,
+                    args.output,
+                    args.d,
+                    do_vid,
+                    do_aud,
+                )
     # Global error handlers
     except SystemExit as arg:
         Logger.info(f"CI: Program received explicit exit code {arg.code}")
