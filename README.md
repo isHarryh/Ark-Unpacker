@@ -98,17 +98,17 @@ ArkStudio 是正在开发阶段的，功能更加强大的《明日方舟》游�
 然后直接运行程序，弹出交互式命令行界面如下，依据其提示操作即可：
 
 ```
-欢迎使用ArkUnpacker  
+欢迎使用ArkUnpacker
 ====================
-模式选择：  
-1: 一键执行  
-2: 自定义资源解包  
-3: 自定义图片合并  
-4: 自定义文本资源解码  
-5: 自定义Spine模型导出  
-6: ArkModels提取与分拣工具  
-7: ArkVoice提取与分拣工具  
-0: 退出  
+模式选择：
+1: 一键执行
+2: 自定义资源解包
+3: 自定义图片合并
+5: 自定义Spine模型导出
+6: 自定义Criware USM音视频提取
+7: ArkModels提取与分拣工具
+8: ArkVoice提取与分拣工具
+0: 退出
 输入序号后按回车即可，如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)
 ```
 
@@ -132,9 +132,13 @@ ArkStudio 是正在开发阶段的，功能更加强大的《明日方舟》游�
 
 解码指定目录中的数据文件，并将解码结果导出到指定目录。具体的原理，请参阅[此文档](docs/TextAssetsDecoding.md)了解详情。
 
-#### 自定义Spine模型导出
+#### 自定义 Spine 模型导出
 
 解包指定路径中的游戏资源，并将其中包含的 Spine 动画小人模型导出到指定目录。
+
+#### 自定义 Criware USM 音视频提取
+
+解包指定路径中的 Criware USM 文件（通常包含过场动画），并将其中包含的音视频文件导出到指定目录。
 
 #### ArkModels 提取与分拣工具
 
@@ -149,15 +153,17 @@ ArkStudio 是正在开发阶段的，功能更加强大的《明日方舟》游�
 除了上述示例用法展示的**交互式**命令行界面外，程序还支持**直接**通过命令行来运行，以便熟悉命令行调用的用户使用。相关参数如下：
 
 ```
-usage: ArkUnpacker [-h] [-v] [-m {ab,cb,fb,sp}] [-i INPUT] [-o OUTPUT] [-d] [--image] [--text] [--audio] [--spine] [--mesh] [-g] [-l {0,1,2,3,4}]
+usage: ArkUnpacker [-h] [-v] [-m {ab,cb,fb,sp,cu}] [-i INPUT] [-o OUTPUT] [-d]
+                   [--image] [--text] [--audio] [--spine] [--mesh] [-g]
+                   [--no-video] [--no-audio] [-l {0,1,2,3,4}]
 
 Arknights Assets Unpacker. Use no argument to run to enter the interactive CLI mode.
 
 options:
   -h, --help            show this help message and exit
   -v, --version         show a version message and exit
-  -m {ab,cb,fb,sp}, --mode {ab,cb,fb,sp}
-                        working mode, ab=resolve-ab, cb=combine-image, fb=decode-flatbuffers, sp=resolve-spine
+  -m {ab,cb,fb,sp,cu}, --mode {ab,cb,fb,sp,cu}
+                        working mode, ab=resolve-ab, cb=combine-image, fb=decode-flatbuffers, sp=resolve-spine, cu=resolve-usm
   -i INPUT, --input INPUT
                         source file or directory path
   -o OUTPUT, --output OUTPUT
@@ -169,6 +175,8 @@ options:
   --spine               in resolve ab mode: export spine asset files
   --mesh                in resolve ab mode: export mesh resources
   -g, --group           in resolve ab mode: group files into separate directories named by their source ab file
+  --no-video            in resolve usm mode: skip video processing
+  --no-audio            in resolve usm mode: skip audio processing
   -l {0,1,2,3,4}, --logging-level {0,1,2,3,4}
                         logging level, 0=none, 1=error, 2=warn, 3=info, 4=debug
 ```
