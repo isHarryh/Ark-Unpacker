@@ -7,7 +7,7 @@ from src.utils.Profiler import CodeProfiler
 from src.utils.GlobalMethods import print, stacktrace
 
 
-def __assert_file_count(path, expected_count):
+def __assert_file_count(path: str, expected_count: int):
     if not os.path.isdir(path):
         raise AssertionError(f"Directory {path} not found")
     count = 0
@@ -16,6 +16,20 @@ def __assert_file_count(path, expected_count):
     if count != expected_count:
         raise AssertionError(
             f"Expected {expected_count} files but got {count} files in {path}"
+        )
+
+
+def __assert_file_count_ext(path: str, expected_ext: str, expected_count: int):
+    if not os.path.isdir(path):
+        raise AssertionError(f"Directory {path} not found")
+    count = 0
+    for _, _, files in os.walk(path):
+        for file in files:
+            if file.lower().endswith(expected_ext.lower()):
+                count += 1
+    if count != expected_count:
+        raise AssertionError(
+            f"Expected {expected_count} files ends with {expected_ext} but got {count} in {path}"
         )
 
 
@@ -35,10 +49,12 @@ def test():
             DIR_CMB = "test/cmb"
             DIR_DTA = "test/dta"
             DIR_SPI = "test/spi"
+            DIR_USM = "test/usm"
             shutil.rmtree(DIR_UPK, ignore_errors=True)
             shutil.rmtree(DIR_CMB, ignore_errors=True)
             shutil.rmtree(DIR_DTA, ignore_errors=True)
             shutil.rmtree(DIR_SPI, ignore_errors=True)
+            shutil.rmtree(DIR_USM, ignore_errors=True)
 
             print(f"[#{i}] Testing...", c=6)
             with CodeProfiler("unit_1"):
@@ -106,12 +122,28 @@ def test():
                     print(out)
                     print(err)
                     raise AssertionError(f"ArkUnpacker sp mode failed, code={code}")
+            with CodeProfiler("unit_5"):
+                out, err, code = __run_cli(
+                    [
+                        "-m",
+                        "cu",
+                        "-i",
+                        "test/res",
+                        "-o",
+                        DIR_USM,
+                    ]
+                )
+                if code != 0:
+                    print(out)
+                    print(err)
+                    raise AssertionError(f"ArkUnpacker cu mode failed, code={code}")
 
             print(f"[#{i}] Analysing...", c=6)
             __assert_file_count(DIR_UPK, 1470)
             __assert_file_count(DIR_CMB, 157)
-            __assert_file_count(DIR_DTA, 2)
+            __assert_file_count_ext(DIR_DTA, ".json", 2)
             __assert_file_count(DIR_SPI, 208)
+            __assert_file_count_ext(DIR_USM, ".mkv", 1)
 
             print(f"[#{i}] Test success!", c=2)
         except BaseException as arg:

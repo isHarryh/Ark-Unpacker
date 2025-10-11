@@ -6,6 +6,7 @@ test/dta
 test/fbo
 test/spi
 test/upk
+test/usm
 
 *.exe
 *.json
