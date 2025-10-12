@@ -53,7 +53,7 @@ class ModelsDist:
         self.data = {
             "storageDirectory": ModelsDist.MODELS_DIR,
             "sortTags": ModelsDist.SORT_TAGS_L10N,
-            "gameDataVersionDescription": f"Producer: ArkUnpacker 3\nDate: {datetime.now().date()}\n",
+            "gameDataVersionDescription": f"Producer: ArkUnpacker 4\nDate: {datetime.now().date()}\n",
             "gameDataServerRegion": ModelsDist.SERVER_REGION,
             "data": {},
             "arkPetsCompatibility": ModelsDist.ARK_PETS_COMPATIBILITY,
