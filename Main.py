@@ -24,7 +24,7 @@ from src import ModelsDataDist as AU_Mdd
 from src import VoiceDataDist as AU_Vdd
 from src import ResolveUSM as AU_Usm
 
-ARKUNPACKER_VERSION = "v4.1"
+ARKUNPACKER_VERSION = "v4.3"
 ARKUNPACKER_LOCAL = "zh-CN"
 
 
