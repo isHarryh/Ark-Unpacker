@@ -125,7 +125,7 @@ class UsmProcessor:
             return
 
         if v and not a:
-            # Convert video only (silent video)
+            # Request to convert video only (silent video)
             for video_path in self.video_paths:
                 out_path = osp.join(
                     output_dir, f"{osp.splitext(osp.basename(video_path))[0]}{v_ext}"
@@ -144,7 +144,7 @@ class UsmProcessor:
                     raise e
 
         elif not v and a:
-            # Convert audio only
+            # Request to convert audio only
             for audio_path in self.audio_paths:
                 out_path = osp.join(
                     output_dir, f"{osp.splitext(osp.basename(audio_path))[0]}{a_ext}"
@@ -163,35 +163,62 @@ class UsmProcessor:
                     raise e
 
         else:
-            # Convert both video and audio, then concatenate
-            if len(self.video_paths) != len(self.audio_paths):
-                raise ValueError("Mismatched video and audio counts")
-            for video_path, audio_path in zip(self.video_paths, self.audio_paths):
-                out_path = osp.join(
-                    output_dir, f"{osp.splitext(osp.basename(video_path))[0]}{v_ext}"
-                )
+            # Request to convert both video and audio
+            if len(self.audio_paths) == 0:
+                # No audio files, convert video only
+                for video_path in self.video_paths:
+                    out_path = osp.join(
+                        output_dir,
+                        f"{osp.splitext(osp.basename(video_path))[0]}{v_ext}",
+                    )
+                    try:
+                        ffmpeg.input(video_path).output(
+                            out_path,
+                            vcodec=v_codec,
+                            y=None,
+                        ).run(**FFMPEG_RUN_PARAMS)
+                        Logger.debug(
+                            f'ResolveUSM: Conversion (v) completed: "{out_path}"'
+                        )
+                    except ffmpeg.Error as e:
+                        Logger.error(
+                            f'ResolveUSM: Conversion (v) failed for "{video_path}": {stacktrace()}'
+                        )
+                        raise e
+            elif len(self.video_paths) == len(self.audio_paths):
+                # Equal counts, merge them sequentially
+                for video_path, audio_path in zip(self.video_paths, self.audio_paths):
+                    out_path = osp.join(
+                        output_dir,
+                        f"{osp.splitext(osp.basename(video_path))[0]}{v_ext}",
+                    )
 
-                try:
-                    # Output combined video with both video and audio
-                    ffmpeg.concat(
-                        ffmpeg.input(video_path),
-                        ffmpeg.input(audio_path),
-                        v=1,
-                        a=1,
-                    ).output(
-                        out_path,
-                        vcodec=v_codec,
-                        acodec=a_codec,
-                        y=None,
-                    ).run(
-                        **FFMPEG_RUN_PARAMS
-                    )
-                    Logger.debug(f'ResolveUSM: Conversion (va) completed: "{out_path}"')
-                except ffmpeg.Error as e:
-                    Logger.error(
-                        f'ResolveUSM: Conversion (va) failed for "{video_path}" + "{audio_path}": {stacktrace()}'
-                    )
-                    raise e
+                    try:
+                        # Concat video and audio
+                        ffmpeg.concat(
+                            ffmpeg.input(video_path),
+                            ffmpeg.input(audio_path),
+                            v=1,
+                            a=1,
+                        ).output(
+                            out_path,
+                            vcodec=v_codec,
+                            acodec=a_codec,
+                            y=None,
+                        ).run(
+                            **FFMPEG_RUN_PARAMS
+                        )
+                        Logger.debug(
+                            f'ResolveUSM: Conversion (va) completed: "{out_path}"'
+                        )
+                    except ffmpeg.Error as e:
+                        Logger.error(
+                            f'ResolveUSM: Conversion (va) failed for "{video_path}" + "{audio_path}": {stacktrace()}'
+                        )
+                        raise e
+            else:
+                # Mismatched counts and audio is not empty
+                raise ValueError("Mismatched video and audio counts")
 
 
 def process_usm_file(
@@ -283,7 +310,7 @@ def main(
     ui = UICtrl()
     tr_processed = TaskReporter(1, len(flist))
     tr_converted = TaskReporter(1)
-    tracker = TaskReporterTracker(tr_processed, tr_converted)
+    tracker = TaskReporterTracker(tr_processed)
 
     ui.reset()
     ui.loop_start()
