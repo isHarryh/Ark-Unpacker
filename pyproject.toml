@@ -10,15 +10,15 @@ readme = "README.md"
 requires-python = ">=3.9,<3.13"
 dependencies = [
     "bson (~=0.5)",
-    "flatbuffers (~=25.2)",
+    "flatbuffers (~=25.9)",
     "numpy (~=1.26)",
     "Pillow (~=9.5)",
-    "psutil (~=7.0)",
+    "psutil (~=7.1)",
     "pycryptodome (~=3.22)",
     "pydub-ng (~=0.1)",
     "python-json-logger (~=3.3)",
     "spine-asset (~=1.1)",
-    "UnityPy (~=1.22)",
+    "UnityPy (~=1.23)",
     "wannacri (~=0.3)"
 ]
 
@@ -44,5 +44,5 @@ hidden-import = "flatbuffers|UnityPy.resources"
 log-level = "WARN"
 
 [build-system]
-requires = ["poetry-core>=2.0"]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
