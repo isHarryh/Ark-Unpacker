@@ -211,8 +211,19 @@ class ModelsDist:
                     key_char = re.findall(r"[0-9]+.+", key)
                     if len(key_char) > 0:
                         key_char = key_char[0]  # 该动态立绘对应的原干员的key
+                        origin = None
                         if key_char in self.data["data"]:
                             origin = self.data["data"][key_char]
+                        else:
+                            # 回退到模糊查找（有些动态立绘的名称缺少尾号）
+                            for k in self.data["data"].keys():
+                                if k.startswith(key_char):
+                                    origin = self.data["data"][k]
+                                    Logger.info(
+                                        f'ModelsDataDist: The operator-key of the dyn illust "{key}" not found by exact match, fallback to fuzzy match with "{k}".'
+                                    )
+                                    break
+                        if origin:
                             sort_tags = origin["sortTags"] + ["DynIllust"]
                             collected[key] = self.get_item_data(
                                 key,
