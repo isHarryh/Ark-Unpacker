@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
-from typing import Callable, Optional
-
 import os
 import os.path as osp
-import re
 import sys
 import time
 
 from src.utils import ArgParser
 from src.utils.Config import Config
 from src.utils.Logger import Logger
-from src.utils.GlobalMethods import color, input, print, clear, title, stacktrace, rmdir
+from src.utils.GlobalMethods import color, print, clear, title, stacktrace, rmdir
+from src.utils.UserInput import UserInput
 
 from src import ResolveAB as AU_Rs
 from src import ResolveSpine as AU_Sp
@@ -169,7 +167,7 @@ def run_custom_resolve_ab():
     print("\n请输入要导出的资源类型")
     print("  [i]图片(纹理)，[t]文本，[a]音频，[m]3D模型(Mesh)", c=3)
     print('  可多选，示例输入："itam"，"it"')
-    do_them = input("> ", c=2).lower()
+    do_them = UserInput.request().lower()
     do_img = True if "i" in do_them else False
     do_txt = True if "t" in do_them else False
     do_aud = True if "a" in do_them else False
@@ -446,7 +444,7 @@ def run_arkmodels_workflow():
     while True:
         title("ArkUnpacker")
         prt_arkmodels_menu()
-        order = input("> ", c=2)
+        order = UserInput.request()
         wildcard = False
         if order == "1":
             wildcard = True
@@ -496,7 +494,7 @@ def run_arkvoice_unpacking(dir, destdir1, destdir2, wildcard=False):
         prt_arkvoice_unpacking_menu(dir, destdir1)
         order = "0"
         if not wildcard:
-            order = input("> ", c=2)
+            order = UserInput.request()
         if order == "3":
             wildcard = True
         if order == "1" or wildcard:
@@ -566,7 +564,7 @@ def run_arkvoice_workflow():
     while True:
         title("ArkUnpacker")
         prt_arkvoice_menu()
-        order = input("> ", c=2)
+        order = UserInput.request()
         wildcard = False
         if order == "1":
             wildcard = True
@@ -601,67 +599,6 @@ def run_arkvoice_workflow():
             return
 
 
-class UserInput:
-    CANCEL_CMD = "*"
-
-    @staticmethod
-    def request(prompt: str = "> "):
-        uin = input(prompt, c=2)
-        if uin == UserInput.CANCEL_CMD:
-            print("  已取消任务", c=3)
-            raise InterruptedError("User cancelled")
-        return uin
-
-    @staticmethod
-    def request_options(options: list):
-        print(f'  输入符号 "{UserInput.CANCEL_CMD}" 以取消任务')
-        uin = UserInput.request()
-        while uin not in options:
-            print("  输入的选项不合法", c=3)
-            uin = UserInput.request()
-        return uin
-
-    @staticmethod
-    def request_input_path():
-        print(f'  输入符号 "{UserInput.CANCEL_CMD}" 以取消任务，支持输入相对路径')
-        while True:
-            uin = UserInput.request().strip()
-            if not uin:
-                print("  路径不能为空", c=3)
-                continue
-            uin = osp.normpath(uin)
-            if not osp.exists(uin):
-                print("  输入的路径不存在", c=3)
-                continue
-            return osp.abspath(uin)
-
-    @staticmethod
-    def request_output_path(default_generator: Optional[Callable[[], str]] = None):
-        print("  支持相对路径" + ("，留空表示自动创建" if default_generator else ""))
-        while True:
-            uin = UserInput.request().strip()
-            if not uin:
-                if default_generator:
-                    return osp.abspath(default_generator())
-                else:
-                    print("  路径不能为空", c=3)
-                    continue
-            uin = osp.normpath(uin)
-            if re.search(r'[*?"<>|\x00-\x1F]', uin):
-                print("  路径不能包含非法字符", c=3)
-                continue
-            return osp.abspath(uin)
-
-    @staticmethod
-    def request_yes_or_no(default: bool):
-        print(f'  输入符号 "{UserInput.CANCEL_CMD}" 以取消任务')
-        uin = UserInput.request().strip().lower()
-        if default:
-            return False if uin == "n" else True
-        else:
-            return True if uin == "y" else False
-
-
 if __name__ == "__main__":
     parser = ArgParser.INSTANCE
     try:
@@ -677,7 +614,7 @@ if __name__ == "__main__":
                 try:
                     title("ArkUnpacker")
                     prt_homepage()
-                    order = input("> ", c=2)
+                    order = UserInput.request()
                     if order == "1":
                         run_quickaccess()
                         prt_continue()
@@ -766,6 +703,6 @@ if __name__ == "__main__":
         Logger.error(f"CI: Oops! Unexpected error occurred: {stacktrace()}")
         print(f"\n[{type(arg).__name__}] 发生了未处理的异常", c=1, s=7)
         print(stacktrace(), c=3)
-        input("> 按Enter退出...", c=1)
+        UserInput.press_enter_to_exit()
         sys.exit(1)
     sys.exit(0)
