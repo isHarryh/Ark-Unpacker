@@ -122,10 +122,12 @@ class SpineSkeletonHandler(SpineAssetHandler):
             if t.startswith("dyn_portrait_"):
                 return SpineType.DYN_PORTRAIT  # Reliable
             elif t.startswith("dyn_illust_"):
-                if "idle" in anim_names and "interact" in anim_names:
+                if "interact" in anim_names and "idle" in anim_names:
                     return SpineType.DYN_ILLUST  # Reliable
                 elif "start" in anim_names:
                     return SpineType.DYN_ILLUST_START  # Reliable
+                elif "idle" in anim_names:
+                    return SpineType.DYN_ILLUST  # Fallback
                 else:
                     Logger.info(
                         f'ResolveSpine: Unknown dynamic illust Spine type of "{t}", animations={anim_names}'
