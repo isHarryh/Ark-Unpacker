@@ -34,6 +34,7 @@ class UserInput:
         print(f'  输入符号 "{UserInput.CANCEL_CMD}" 以取消任务，支持输入相对路径')
         while True:
             uin = UserInput.request().strip()
+            uin = re.sub(r'^(?:& )?(["\'])(.*)\1$', r"\2", uin)
             if not uin:
                 print("  路径不能为空", c=3)
                 continue
@@ -48,6 +49,7 @@ class UserInput:
         print("  支持相对路径" + ("，留空表示自动创建" if default_generator else ""))
         while True:
             uin = UserInput.request().strip()
+            uin = re.sub(r'^(?:& )?(["\'])(.*)\1$', r"\2", uin)
             if not uin:
                 if default_generator:
                     return osp.abspath(default_generator())
@@ -55,6 +57,9 @@ class UserInput:
                     print("  路径不能为空", c=3)
                     continue
             uin = osp.normpath(uin)
+            if len(uin) > 4096:
+                print("  路径长度太长", c=3)
+                continue
             if re.search(r'[*?"<>|\x00-\x1F]', uin):
                 print("  路径不能包含非法字符", c=3)
                 continue
