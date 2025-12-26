@@ -12,6 +12,7 @@ test/usm
 *.json
 *.log
 *.csv
+*.out
 
 # Include
 !.github/
