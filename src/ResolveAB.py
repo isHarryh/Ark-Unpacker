@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
-from typing import Callable, List, Optional, Sequence, TypeVar, Union
+from typing import Callable, List, Literal, Optional, Tuple, TypeVar, Union
 
 import os.path as osp
 
 import UnityPy
 import UnityPy.classes as uc
 from UnityPy.enums.BundleFile import CompressionFlags
-from UnityPy.files.File import File
+from UnityPy.files.File import File, ObjectReader
 from UnityPy.helpers import CompressionHelper
 from UnityPy.streams.EndianBinaryReader import EndianBinaryReader
 
@@ -44,59 +44,138 @@ class Resource:
             )
         self.env: UnityPy.Environment = env
         self.length: int = len(env.objects)
-        ###
-        self.sprites: List[uc.Sprite] = []
-        self.texture2ds: List[uc.Texture2D] = []
-        self.textassets: List[uc.TextAsset] = []
-        self.audioclips: List[uc.AudioClip] = []
-        self.materials: List[uc.Material] = []
-        self.monobehaviors: List[uc.MonoBehaviour] = []
-        self.meshes: List[uc.Mesh] = []
-        ###
-        for i in [o.read() for o in env.objects]:
-            if isinstance(i, uc.Sprite):
-                self.sprites.append(i)
-            elif isinstance(i, uc.Texture2D):
-                self.texture2ds.append(i)
-            elif isinstance(i, uc.TextAsset) and not isinstance(i, uc.MonoScript):
-                self.textassets.append(i)
-            elif isinstance(i, uc.AudioClip):
-                self.audioclips.append(i)
-            elif isinstance(i, uc.Material):
-                self.materials.append(i)
-            elif isinstance(i, uc.MonoBehaviour):
-                self.monobehaviors.append(i)
-            elif isinstance(i, uc.Mesh):
-                self.meshes.append(i)
-            elif isinstance(i, uc.AssetBundle):
-                if getattr(i, "m_Name", None):
-                    if self.name != osp.basename(i.m_Name):
-                        Logger.debug(
-                            f'ResolveAB: Resource "{self.name}" internally named "{i.m_Name}"'
-                        )
-                        self.name = osp.basename(i.m_Name)
+
+        self._build_pathid_lut()
+        self._build_type_lut()
+        self._build_roi_type_lut()
+
+        for obj in self.get_objects_by_type(uc.TextAsset):
+            if getattr(obj, "m_Name", None):
+                if self.name != osp.basename(obj.m_Name):
+                    Logger.debug(
+                        f'ResolveAB: Resource "{self.name}" internally named "{obj.m_Name}"'
+                    )
+                    self.name = osp.basename(obj.m_Name)
+
+    def _build_pathid_lut(self):
+        all_pathid = set()
+        for reader in self.env.objects:
+            all_pathid.add(reader.path_id)
+        max_pathid = max(all_pathid) if all_pathid else 0
+
+        self._lut_pathid: dict[int, Tuple[ObjectReader, Optional[uc.Object]]] = {}
+        for reader in self.env.objects:
+            if reader.path_id in self._lut_pathid:
+                other_reader, _ = self._lut_pathid[reader.path_id]
+                replace_pathid = max_pathid + 1
+                max_pathid += 1
+                Logger.info(
+                    f'Resource: Duplicate PathID found when building LUT for "{self.name}"\n'
+                    f"- Existing: {other_reader.peek_name()} ({other_reader.type.name}) PathID={other_reader.path_id}\n"
+                    f"- Incoming: {reader.peek_name()} ({reader.type.name}) PathID={reader.path_id}"
+                    f" (will be reassigned to {replace_pathid})"
+                )
+                reader.path_id = replace_pathid
+            self._lut_pathid[reader.path_id] = (reader, None)
+
+    def _build_type_lut(self):
+        self._lut_type: dict[str, List[int]] = {}
+        for reader in self.env.objects:
+            clz = reader.get_class()
+            if not clz:
+                continue
+            if clz.__name__ not in self._lut_type:
+                self._lut_type[clz.__name__] = []
+            self._lut_type[clz.__name__].append(reader.path_id)
+
+    def _build_roi_type_lut(self):
+        self._lut_roi_type: dict[str, List[int]] = {}
+        for reader in self.env.objects:
+            clz = reader.get_class()
+            if not clz:
+                continue
+            if issubclass(clz, uc.Sprite) or issubclass(clz, uc.Texture2D):
+                roi = "Image"
+            elif issubclass(clz, uc.TextAsset) and not issubclass(clz, uc.MonoScript):
+                roi = "Text"
+            elif issubclass(clz, uc.AudioClip):
+                roi = "Audio"
+            elif issubclass(clz, uc.Mesh):
+                roi = "Mesh"
+            elif issubclass(clz, uc.AssetBundle):
+                roi = "AssetBundle"
+            else:
+                continue
+            if roi not in self._lut_roi_type:
+                self._lut_roi_type[roi] = []
+            self._lut_roi_type[roi].append(reader.path_id)
 
     def get_object_by_pathid(
-        self, pathid: Union[int, dict], search_in: Sequence[_T]
+        self, pathid: Union[int, dict], assert_type: type[_T] = uc.Object
     ) -> Optional[_T]:
         """Gets the object with the given PathID.
 
         :param pathid: PathID in int or a dict containing `m_PathID` field;
-        :param search_in: Searching range;
+        :param assert_type: The expected type of the object;
         :returns: The object, `None` for not found;
         """
-        _key = "m_PathID"
-        if isinstance(pathid, dict):
-            if _key in pathid:
-                _pathid = int(pathid[_key])
-            else:
-                return None
-        else:
-            _pathid = int(pathid)
-        for i in search_in:
-            if i.object_reader is not None and i.object_reader.path_id == _pathid:
-                return i
-        return None
+        if not self.env:
+            raise RuntimeError("Environment has been disposed or not initialized")
+        pid = pathid["m_PathID"] if isinstance(pathid, dict) else pathid
+        if pid not in self._lut_pathid:
+            return None
+        reader, obj = self._lut_pathid[pid]
+        if obj is None:
+            obj = reader.read()
+            self._lut_pathid[pid] = (reader, obj)
+        if not isinstance(obj, assert_type):
+            raise TypeError(
+                f"Object with PathID {pid} is not of type {assert_type}, but {type(obj)}"
+            )
+        return obj
+
+    def get_objects_by_type(self, obj_type: type[_T]) -> List[_T]:
+        """Gets all the objects of the given type.
+
+        :param obj_type: The expected type of the objects;
+        :returns: The list of objects;
+        """
+        if not self.env:
+            raise RuntimeError("Environment has been disposed or not initialized")
+        tn = obj_type.__name__
+        if tn not in self._lut_type:
+            return []
+        objs: List[_T] = []
+        for pid in self._lut_type[tn]:
+            reader, obj = self._lut_pathid[pid]
+            if obj is None:
+                obj = reader.read()
+                self._lut_pathid[pid] = (reader, obj)
+            if obj is not None:
+                objs.append(obj)  # type: ignore
+        return objs
+
+    def get_objects_by_roi_type(
+        self, roi_type: Literal["Image", "Text", "Audio", "Mesh", "AssetBundle"]
+    ) -> List[uc.Object]:
+        """Gets all the objects of the given ROI type.
+
+        :param roi_type: The expected ROI type of the objects;
+        :returns: The list of objects;
+        """
+        if not self.env:
+            raise RuntimeError("Environment has been disposed or not initialized")
+        if roi_type not in self._lut_roi_type:
+            return []
+        objs: List[uc.Object] = []
+        for pid in self._lut_roi_type[roi_type]:
+            reader, obj = self._lut_pathid[pid]
+            if obj is None:
+                obj = reader.read()
+                self._lut_pathid[pid] = (reader, obj)
+            if obj is not None:
+                objs.append(obj)
+        return objs
 
 
 def ab_resolve(
@@ -144,25 +223,19 @@ def ab_resolve(
             for s in SpineAsset.from_resource(res):
                 s.add_prefix()
 
-            if do_img:
-                SafeSaver.save_objects(
-                    res.sprites, destdir, on_file_queued, on_file_saved
-                )
-                SafeSaver.save_objects(
-                    res.texture2ds, destdir, on_file_queued, on_file_saved
-                )
-            if do_txt:
-                SafeSaver.save_objects(
-                    res.textassets, destdir, on_file_queued, on_file_saved
-                )
-            if do_aud:
-                SafeSaver.save_objects(
-                    res.audioclips, destdir, on_file_queued, on_file_saved
-                )
-            if do_mesh:
-                SafeSaver.save_objects(
-                    res.meshes, destdir, on_file_queued, on_file_saved
-                )
+            for roi_flag, roi_type in [
+                (do_img, "Image"),
+                (do_txt, "Text"),
+                (do_aud, "Audio"),
+                (do_mesh, "Mesh"),
+            ]:
+                if roi_flag:
+                    SafeSaver.save_objects(
+                        res.get_objects_by_roi_type(roi_type),  # type: ignore
+                        destdir,
+                        on_file_queued,
+                        on_file_saved,
+                    )
     except BaseException as arg:
         # Error feedback
         Logger.error(

@@ -250,20 +250,19 @@ class SpineAsset:
         try:
             # sd = SkeletonData
             for mono_sd, tree_sd in cls._find_typetree_by_keys(
-                res.monobehaviors, ["atlasAssets", "skeletonJSON"]
+                res.get_objects_by_type(uc.MonoBehaviour),
+                ["atlasAssets", "skeletonJSON"],
             ):
-                skel = res.get_object_by_pathid(tree_sd["skeletonJSON"], res.textassets)
+                skel = res.get_object_by_pathid(tree_sd["skeletonJSON"], uc.TextAsset)
                 mono_ad = res.get_object_by_pathid(
-                    tree_sd["atlasAssets"][0], res.monobehaviors
+                    tree_sd["atlasAssets"][0], uc.MonoBehaviour
                 )
                 # ad = AtlasData
                 with TreeReader(mono_ad) as tree_ad:
-                    atlas = res.get_object_by_pathid(
-                        tree_ad["atlasFile"], res.textassets
-                    )
+                    atlas = res.get_object_by_pathid(tree_ad["atlasFile"], uc.TextAsset)
                     tex_handlers: List[SpineTextureHandler] = []
                     for mat in (
-                        res.get_object_by_pathid(i, res.materials)
+                        res.get_object_by_pathid(i, uc.Material)
                         for i in tree_ad["materials"]
                     ):
                         # mat = MaterialData
@@ -273,11 +272,11 @@ class SpineAsset:
                             for tex in tex_envs:
                                 if tex[0] == "_MainTex":
                                     tex_rgb = res.get_object_by_pathid(
-                                        tex[1]["m_Texture"], res.texture2ds
+                                        tex[1]["m_Texture"], uc.Texture2D
                                     )
                                 elif tex[0] == "_AlphaTex":
                                     tex_alpha = res.get_object_by_pathid(
-                                        tex[1]["m_Texture"], res.texture2ds
+                                        tex[1]["m_Texture"], uc.Texture2D
                                     )
                         if tex_rgb is None:
                             raise ValueError("RGB main texture not found")
@@ -310,23 +309,24 @@ class SpineAsset:
         try:
             # ca = CharacterAnimator
             for _, tree_ca in cls._find_typetree_by_keys(
-                res.monobehaviors, ["_animations", "_front", "_back"]
+                res.get_objects_by_type(uc.MonoBehaviour),
+                ["_animations", "_front", "_back"],
             ):
                 mono_sa_front = res.get_object_by_pathid(
-                    tree_ca["_front"]["skeleton"], res.monobehaviors
+                    tree_ca["_front"]["skeleton"], uc.MonoBehaviour
                 )
                 mono_sa_back = res.get_object_by_pathid(
-                    tree_ca["_back"]["skeleton"], res.monobehaviors
+                    tree_ca["_back"]["skeleton"], uc.MonoBehaviour
                 )
                 # sa = SkeletonAnimation
                 if mono_sa_front and mono_sa_back:
                     with TreeReader(mono_sa_front) as tree_sa:
                         mono_sd_front = res.get_object_by_pathid(
-                            tree_sa["skeletonDataAsset"], res.monobehaviors
+                            tree_sa["skeletonDataAsset"], uc.MonoBehaviour
                         )
                     with TreeReader(mono_sa_back) as tree_sa:
                         mono_sd_back = res.get_object_by_pathid(
-                            tree_sa["skeletonDataAsset"], res.monobehaviors
+                            tree_sa["skeletonDataAsset"], uc.MonoBehaviour
                         )
                     # sd = SkeletonData
                     if mono_sd_front and mono_sd_back:
