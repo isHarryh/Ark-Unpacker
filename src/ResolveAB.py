@@ -130,34 +130,39 @@ def ab_resolve(
             on_processed()
         return
     try:
-        res = Resource(UnityPy.load(abfile))
+        with open(abfile, "rb") as f:
+            res = Resource(UnityPy.load(f))
 
-        Logger.debug(f'ResolveAB: "{res.name}" has {res.length} objects.')
-        if res.length >= 10000:
-            Logger.info(
-                f'ResolveAB: Too many objects in file "{res.name}", unpacking it may take a long time.'
-            )
-        elif res.length == 0:
-            Logger.info(f'ResolveAB: No object in file "{res.name}".')
+            Logger.debug(f'ResolveAB: "{res.name}" has {res.length} objects.')
+            if res.length >= 10000:
+                Logger.info(
+                    f'ResolveAB: Too many objects in file "{res.name}", unpacking it may take a long time.'
+                )
+            elif res.length == 0:
+                Logger.info(f'ResolveAB: No object in file "{res.name}".')
 
-        for s in SpineAsset.from_resource(res):
-            s.add_prefix()
+            for s in SpineAsset.from_resource(res):
+                s.add_prefix()
 
-        if do_img:
-            SafeSaver.save_objects(res.sprites, destdir, on_file_queued, on_file_saved)
-            SafeSaver.save_objects(
-                res.texture2ds, destdir, on_file_queued, on_file_saved
-            )
-        if do_txt:
-            SafeSaver.save_objects(
-                res.textassets, destdir, on_file_queued, on_file_saved
-            )
-        if do_aud:
-            SafeSaver.save_objects(
-                res.audioclips, destdir, on_file_queued, on_file_saved
-            )
-        if do_mesh:
-            SafeSaver.save_objects(res.meshes, destdir, on_file_queued, on_file_saved)
+            if do_img:
+                SafeSaver.save_objects(
+                    res.sprites, destdir, on_file_queued, on_file_saved
+                )
+                SafeSaver.save_objects(
+                    res.texture2ds, destdir, on_file_queued, on_file_saved
+                )
+            if do_txt:
+                SafeSaver.save_objects(
+                    res.textassets, destdir, on_file_queued, on_file_saved
+                )
+            if do_aud:
+                SafeSaver.save_objects(
+                    res.audioclips, destdir, on_file_queued, on_file_saved
+                )
+            if do_mesh:
+                SafeSaver.save_objects(
+                    res.meshes, destdir, on_file_queued, on_file_saved
+                )
     except BaseException as arg:
         # Error feedback
         Logger.error(

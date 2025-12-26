@@ -370,15 +370,16 @@ def spine_resolve(
             on_processed()
         return
     try:
-        res = Resource(UnityPy.load(abfile))
-        spines = SpineAsset.from_resource(res)
-        if len(spines) >= 10:
-            Logger.info(
-                f'ResolveSpine: "{res.name}" has {len(spines)} spines, unpacking it may take a long time.'
-            )
-        for s in spines:
-            s.add_prefix()
-            s.save_spine(destdir, on_file_queued, on_file_saved)
+        with open(abfile, "rb") as f:
+            res = Resource(UnityPy.load(abfile))
+            spines = SpineAsset.from_resource(res)
+            if len(spines) >= 10:
+                Logger.info(
+                    f'ResolveSpine: "{res.name}" has {len(spines)} spines, unpacking it may take a long time.'
+                )
+            for s in spines:
+                s.add_prefix()
+                s.save_spine(destdir, on_file_queued, on_file_saved)
     except BaseException as arg:
         Logger.error(
             f'ResolveSpine: Error occurred while unpacking file "{abfile}": Exception{type(arg)} {arg}'
