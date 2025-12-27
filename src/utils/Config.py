@@ -53,6 +53,8 @@ class Config:
         "usm_export_audio_codec": "libvorbis",
         "usm_export_video_ext": ".mkv",
         "usm_export_audio_ext": ".ogg",
+        "export_encoding": "utf-8",
+        "export_json_indent": 4,
     }
 
     def __init__(self):

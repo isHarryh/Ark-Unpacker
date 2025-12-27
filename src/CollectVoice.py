@@ -9,6 +9,7 @@ import threading
 from io import BytesIO
 from pydub import AudioSegment
 
+from .utils.Config import Config
 from .utils.GlobalMethods import print, rmdir, get_dirlist, get_filelist
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
@@ -185,8 +186,12 @@ def main(srcdir: str, destdir: str, force_std_name: bool):
     if len(info_merged):
         json.dump(
             info_merged,
-            open(osp.join(destdir, "voice_data_part.json"), "w", encoding="UTF-8"),
-            indent=4,
+            open(
+                osp.join(destdir, "voice_data_part.json"),
+                "w",
+                encoding=Config.get("export_encoding"),
+            ),
+            indent=Config.get("export_json_indent"),
             ensure_ascii=False,
         )
         Logger.info("CollectVoice: Saved voice data")

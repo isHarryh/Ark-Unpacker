@@ -57,6 +57,9 @@ class SafeSaver(CoroutineCtrl):
         super(SafeSaver, self).__init__(
             self._save_async, max_concurrency=max_concurrency, name="Saver"
         )
+        # Cache config values to avoid repeated reads
+        self._export_encoding = Config.get("export_encoding")
+        self._export_json_indent = Config.get("export_json_indent")
 
     @staticmethod
     def get_instance():
@@ -209,11 +212,14 @@ class SafeSaver(CoroutineCtrl):
                     tree[k] = v
 
         try:
+            instance = SafeSaver.get_instance()
             new_data = data.copy()
             serialize_inplace(new_data)
-            json_str = json.dumps(new_data, indent=4, ensure_ascii=False)
+            json_str = json.dumps(
+                new_data, indent=instance._export_json_indent, ensure_ascii=False
+            )
             SafeSaver.save_bytes(
-                json_str.encode("utf-8", errors="surrogateescape"),
+                json_str.encode(instance._export_encoding, errors="surrogateescape"),
                 destdir,
                 name,
                 ".json",

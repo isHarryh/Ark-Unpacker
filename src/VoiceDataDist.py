@@ -5,6 +5,7 @@ import json
 import os.path as osp
 from datetime import datetime
 
+from .utils.Config import Config
 from .utils.GlobalMethods import print
 from .utils.Logger import Logger
 
@@ -288,7 +289,9 @@ class VoiceDist:
                     failed = True
                 else:
                     data_part: dict = json.load(
-                        open(data_part_file, "r", encoding="UTF-8")
+                        open(
+                            data_part_file, "r", encoding=Config.get("export_encoding")
+                        )
                     )
                     for cha, lst in data_part.items():
                         cnt += 1
@@ -309,9 +312,13 @@ class VoiceDist:
 
     def export_json(self):
         Logger.info("VoiceDataDist: Writing to json.")
-        with open("voice_data.json", "w", encoding="UTF-8") as f:
+        with open("voice_data.json", "w", encoding=Config.get("export_encoding")) as f:
             json.dump(
-                self.data, f, ensure_ascii=False, indent=None, separators=(",", ":")
+                self.data,
+                f,
+                ensure_ascii=False,
+                indent=None,
+                separators=(",", ":"),
             )
         Logger.info("VoiceDataDist: Succeeded in writing to json.")
         print("\n已写入总数据集文件", c=2)

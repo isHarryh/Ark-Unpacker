@@ -10,6 +10,7 @@ import re
 from datetime import datetime
 
 from .DecodeTextAsset import ArkFBOLibrary
+from .utils.Config import Config
 from .utils.GlobalMethods import color, print, get_dirlist, get_filelist
 from .utils.Logger import Logger
 
@@ -336,8 +337,13 @@ class ModelsDist:
 
     def export_json(self):
         Logger.info("ModelsDataDist: Writing to json.")
-        with open("models_data.json", "w", encoding="UTF-8") as f:
-            json.dump(self.data, f, ensure_ascii=False, indent=4)
+        with open("models_data.json", "w", encoding=Config.get("export_encoding")) as f:
+            json.dump(
+                self.data,
+                f,
+                ensure_ascii=False,
+                indent=Config.get("export_json_indent"),
+            )
         Logger.info("ModelsDataDist: Succeeded in writing to json.")
 
 

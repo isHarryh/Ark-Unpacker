@@ -13,6 +13,7 @@ import numpy as np
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 
+from .utils.Config import Config
 from .utils.GlobalMethods import (
     print,
     rmdir,
@@ -167,10 +168,16 @@ class FBOHandler:
 
     SERIALIZE_AS_IS = Union[bool, int, str, list, tuple, dict, None]
     SERIALIZE_AS_STR = Union[bytes, bytearray, memoryview]
-    SERIALIZE_ENCODING = "UTF-8"
+    SERIALIZE_ENCODING = None  # Will be dynamically retrieved
 
     def __init__(self, data: bytearray, root_type: type):
         self._root = root_type.GetRootAs(data, 0)
+
+    @staticmethod
+    def _get_serialize_encoding():
+        if FBOHandler.SERIALIZE_ENCODING is None:
+            FBOHandler.SERIALIZE_ENCODING = Config.get("export_encoding")
+        return FBOHandler.SERIALIZE_ENCODING
 
     @staticmethod
     def _to_literal(obj: object):
@@ -182,7 +189,9 @@ class FBOHandler:
             return obj
         if isinstance(obj, FBOHandler.SERIALIZE_AS_STR):
             return str(
-                obj, encoding=FBOHandler.SERIALIZE_ENCODING, errors="surrogateescape"
+                obj,
+                encoding=FBOHandler._get_serialize_encoding(),
+                errors="surrogateescape",
             )
         return FBOHandler._to_json_dict(obj)
 
@@ -295,7 +304,13 @@ def text_asset_resolve(
             dic = ArkFBOLibrary.decode(fp, typ) if typ else ArkAESLibrary.decode(fp)
             if dic:
                 byt = bytes(
-                    json.dumps(dic, ensure_ascii=False, indent=2), encoding="UTF-8"
+                    json.dumps(
+                        dic,
+                        ensure_ascii=False,
+                        indent=Config.get("export_json_indent"),
+                        encoding=Config.get("export_encoding"),
+                    ),
+                    encoding=Config.get("export_encoding"),
                 )
                 SafeSaver.save_bytes(
                     byt,
