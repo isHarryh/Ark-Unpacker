@@ -323,14 +323,34 @@ def run_custom_resolve_usm():
     AU_Usm.main(src, destdir, do_del, do_vid, do_aud)
 
 
-def run_arkmodels_unpacking(dirs, destdir):
+def run_arkmodels_unpacking(*, and_dirs=None, or_dirs=None, destdir):
     Logger.info("CI: ArkModels unpack mode.")
     prt_subtitle("ArkModels 模型提取")
     ###
-    for i in dirs:
-        if not osp.exists(i):
+    assert (and_dirs is not None) ^ (or_dirs is not None)
+    dirs = []
+    if and_dirs is not None:
+        for i in and_dirs:
+            if not osp.exists(i):
+                print(
+                    f"在工作目录下找不到文件夹 {i}"
+                    "请确保该文件夹直接位于工作目录中。"
+                    "也有可能是本程序版本与您的资源版本不兼容，可尝试获取其他版本的程序。",
+                    c=3,
+                )
+                return
+        dirs = and_dirs[:]
+    if or_dirs is not None:
+        found = False
+        for i in or_dirs:
+            if osp.exists(i):
+                found = True
+                dirs.append(i)
+        if not found:
             print(
-                f"在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是本程序版本与您的资源版本不兼容，可尝试获取其他版本的程序。",
+                f"在工作目录下找不到以下任一文件夹：{', '.join(or_dirs)}\n"
+                "请确保其中至少有一个文件夹直接位于工作目录中。"
+                "也有可能是本程序版本与您的资源版本不兼容，可尝试获取其他版本的程序。",
                 c=3,
             )
             return
@@ -449,13 +469,27 @@ def run_arkmodels_workflow():
         if order == "1":
             wildcard = True
         if order == "2" or wildcard:
-            run_arkmodels_unpacking(["chararts", "skinpack"], temp_dir_1)
+            run_arkmodels_unpacking(
+                and_dirs=["chararts", "skinpack"],
+                destdir=temp_dir_1,
+            )
         if order == "3" or wildcard:
-            run_arkmodels_unpacking(["battle/prefabs/enemies", "refs/arts"], temp_dir_2)
+            # battle/prefabs/enemies: enemy spine for game version <= v2.5.05
+            # refs/arts: enemy spine for game version >= v2.5.60
+            run_arkmodels_unpacking(
+                or_dirs=["battle/prefabs/enemies", "refs/arts"],
+                destdir=temp_dir_2,
+            )
         if order == "4" or wildcard:
-            run_arkmodels_unpacking(["arts/dynchars"], temp_dir_3)
+            run_arkmodels_unpacking(
+                and_dirs=["arts/dynchars"],
+                destdir=temp_dir_3,
+            )
         if order == "5" or wildcard:
-            run_arkmodels_anon_unpacking([AU_Mdd.ModelsDist.GAMEDATA_DIR], temp_dir_4)
+            run_arkmodels_anon_unpacking(
+                [AU_Mdd.ModelsDist.GAMEDATA_DIR],
+                temp_dir_4,
+            )
         if order == "6" or wildcard:
             run_arkmodels_filtering(
                 [temp_dir_1, temp_dir_2, temp_dir_3],
