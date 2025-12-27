@@ -1,6 +1,6 @@
 [project]
 name = "ArkUnpacker"
-version = "4.4.0"
+version = "4.5.0"
 description = "Arknights Assets Unpacker"
 authors = [
     {name = "Harry Huang", email = "harryhuang2652@qq.com"}
