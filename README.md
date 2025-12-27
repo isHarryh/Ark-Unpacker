@@ -7,7 +7,7 @@
    <img alt="ArkUnpacker icon" width="64" src="https://raw.githubusercontent.com/isHarryh/Ark-Unpacker/v3.x/ArkUnpacker.ico"/>
    <p>
       Arknights Assets Unpacker | 明日方舟游戏资源批量解包器 <br>
-      <code><b> v4.4 </b></code>
+      <code><b> v4.5 </b></code>
    </p>
    <p>
       <img alt="GitHub Top Language" src="https://img.shields.io/github/languages/top/isHarryh/Ark-Unpacker?label=Python">
@@ -40,13 +40,14 @@ ArkStudio 是正在开发阶段的，功能更加强大的《明日方舟》游�
 
 ### 支持的类型
 
-| Unity类型 | 描述           | 导出格式 |
-| :-------- | :------------- | :------- |
-| Sprite    | 精灵图         | PNG 图片 |
-| Texture2D | 二维纹理图     | PNG 图片 |
-| AudioClip | 音频剪辑       | WAV 音频 |
-| TextAsset | 文本或字节数据 | 未指定   |
-| Mesh      | 3D 模型        | OBJ 文件 |
+| 类型      | 描述           | 导出格式  |
+| :-------- | :------------- | :-------- |
+| Sprite    | 精灵图         | PNG 图片  |
+| Texture2D | 二维纹理图     | PNG 图片  |
+| AudioClip | 音频剪辑       | WAV 音频  |
+| TextAsset | 文本或字节数据 | 未指定    |
+| Mesh      | 3D 模型        | OBJ 文件  |
+| TypeTree  | 对象结构       | JSON 文件 |
 
 ### 相关文档
 
@@ -154,7 +155,7 @@ ArkStudio 是正在开发阶段的，功能更加强大的《明日方舟》游�
 
 ```
 usage: ArkUnpacker [-h] [-v] [-m {ab,cb,fb,sp,cu}] [-i INPUT] [-o OUTPUT] [-d]
-                   [--image] [--text] [--audio] [--spine] [--mesh] [-g]
+                   [--image] [--text] [--audio] [--spine] [--mesh] [--typetree] [-g]
                    [--no-video] [--no-audio] [-l {0,1,2,3,4}]
 
 Arknights Assets Unpacker. Use no argument to run to enter the interactive CLI mode.
@@ -174,6 +175,7 @@ options:
   --audio               in resolve ab mode: export audio files
   --spine               in resolve ab mode: export spine asset files
   --mesh                in resolve ab mode: export mesh resources
+  --typetree            in resolve ab mode: export typetree JSON files
   -g, --group           in resolve ab mode: group files into separate directories named by their source ab file
   --no-video            in resolve usm mode: skip video processing
   --no-audio            in resolve usm mode: skip audio processing
