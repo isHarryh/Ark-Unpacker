@@ -70,7 +70,6 @@ def test():
             DIR_DTA = "test/dta"
             DIR_SPI = "test/spi"
             DIR_USM = "test/usm"
-            DIR_SUM = "test/_summary"
             shutil.rmtree(DIR_UPK, ignore_errors=True)
             shutil.rmtree(DIR_CMB, ignore_errors=True)
             shutil.rmtree(DIR_DTA, ignore_errors=True)
@@ -91,6 +90,7 @@ def test():
                         "--text",
                         "--audio",
                         "--mesh",
+                        "--typetree",
                         "-g",
                     ]
                 )
