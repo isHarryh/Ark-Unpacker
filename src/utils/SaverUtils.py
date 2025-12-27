@@ -4,6 +4,7 @@
 import os
 import os.path as osp
 import re
+import json
 import threading
 from contextlib import ContextDecorator
 from io import BytesIO
@@ -165,6 +166,62 @@ class SafeSaver(CoroutineCtrl):
         else:
             # Not an exportable type:
             pass
+
+    @staticmethod
+    def save_json(
+        data: dict,
+        destdir: str,
+        name: str,
+        on_queued: Optional[Callable] = None,
+        on_saved: Optional[Callable] = None,
+    ):
+        """Saves the given data as a JSON file.
+
+        :param data: The data dictionary to save;
+        :param destdir: Destination directory;
+        :param name: File name (without the extension);
+        :param on_queued: Callback `f()` invoked when the file was queued, `None` for ignore;
+        :param on_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
+        :rtype: None;
+        """
+
+        def serialize_inplace(tree: dict):
+            for k, v in tree.items():
+                if isinstance(v, dict):
+                    serialize_inplace(v)
+                    tree[k] = v
+                elif isinstance(v, list):
+                    new_list = []
+                    for item in v:
+                        if isinstance(item, dict):
+                            serialize_inplace(item)
+                            new_list.append(item)
+                        elif isinstance(item, bytes):
+                            new_list.append(
+                                str(item, "utf-8", errors="surrogateescape")
+                            )
+                        else:
+                            new_list.append(item)
+                    tree[k] = new_list
+                elif isinstance(v, bytes):
+                    tree[k] = str(v, "utf-8", errors="surrogateescape")
+                else:
+                    tree[k] = v
+
+        try:
+            new_data = data.copy()
+            serialize_inplace(new_data)
+            json_str = json.dumps(new_data, indent=4, ensure_ascii=False)
+            SafeSaver.save_bytes(
+                json_str.encode("utf-8", errors="surrogateescape"),
+                destdir,
+                name,
+                ".json",
+                on_queued,
+                on_saved,
+            )
+        except Exception as e:
+            Logger.warn(f"SafeSaver: Failed to save data as JSON: {e}")
 
     @staticmethod
     def save_objects(

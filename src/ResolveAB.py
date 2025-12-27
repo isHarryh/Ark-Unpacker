@@ -49,7 +49,7 @@ class Resource:
         self._build_type_lut()
         self._build_roi_type_lut()
 
-        for obj in self.get_objects_by_type(uc.TextAsset):
+        for obj in self.get_objects_by_type(uc.AssetBundle):
             if getattr(obj, "m_Name", None):
                 if self.name != osp.basename(obj.m_Name):
                     Logger.debug(
@@ -185,6 +185,7 @@ def ab_resolve(
     do_txt: bool,
     do_aud: bool,
     do_mesh: bool,
+    do_tree: bool,
     on_processed: Optional[Callable] = None,
     on_file_queued: Optional[Callable] = None,
     on_file_saved: Optional[Callable] = None,
@@ -197,6 +198,7 @@ def ab_resolve(
     :param do_txt: Whether to extract text scripts;
     :param do_aud: Whether to extract audios;
     :param do_mesh: Whether to extract mesh;
+    :param do_tree: Whether to export typetrees as JSON;
     :param on_processed: Callback `f()` for finished, `None` for ignore;
     :param on_file_queued: Callback `f()` invoked when a file was queued, `None` for ignore;
     :param on_file_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
@@ -236,6 +238,30 @@ def ab_resolve(
                         on_file_queued,
                         on_file_saved,
                     )
+
+            # Export typetrees as JSON
+            if do_tree:
+                typetrees = {}
+                for obj in res.env.objects:
+                    if hasattr(obj, "read_typetree"):
+                        try:
+                            tree = obj.read_typetree()
+                            if tree:
+                                typetrees[str(obj.path_id)] = tree
+                        except Exception as e:
+                            Logger.debug(
+                                f"ResolveAB: Failed to read typetree for {obj.type.name}_{obj.path_id}: {e}"
+                            )
+
+                if typetrees:
+                    result = {res.name: typetrees}
+                    SafeSaver.save_json(
+                        result,
+                        destdir,
+                        f"TT_{res.name}",
+                        on_file_queued,
+                        on_file_saved,
+                    )
     except BaseException as arg:
         # Error feedback
         Logger.error(
@@ -254,7 +280,8 @@ def main(
     do_img: bool = True,
     do_txt: bool = True,
     do_aud: bool = True,
-    do_mesh: bool = False,
+    do_mesh: bool = True,
+    do_tree: bool = False,
     separate: bool = True,
 ):
     """Extract all the AB files from the given directory or extract a given AB file.
@@ -266,6 +293,7 @@ def main(
     :param do_txt: Whether to extract text scripts;
     :param do_aud: Whether to extract audios;
     :param do_mesh: Whether to extract mesh;
+    :param do_tree: Whether to export typetrees as JSON;
     :param separate: Whether to sort the extracted files by their source AB file path.
     :rtype: None;
     """
@@ -327,6 +355,7 @@ def main(
                 do_txt,
                 do_aud,
                 do_mesh,
+                do_tree,
                 tr_processed.report,
                 tr_file_saving.update_demand,
                 tr_file_saving.report,

@@ -90,6 +90,11 @@ class _ArkUnpackerArgParser(argparse.ArgumentParser):
             help="in resolve ab mode: export mesh resources",
         )
         parser.add_argument(
+            "--typetree",
+            action="store_true",
+            help="in resolve ab mode: export typetree JSON files",
+        )
+        parser.add_argument(
             "-g",
             "--group",
             action="store_true",

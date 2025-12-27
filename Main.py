@@ -165,21 +165,22 @@ def run_custom_resolve_ab():
         separate = UserInput.request_yes_or_no(True)
     ###
     print("\n请输入要导出的资源类型")
-    print("  [i]图片(纹理)，[t]文本，[a]音频，[m]3D模型(Mesh)", c=3)
+    print("  [i]图片(纹理)，[t]文本，[a]音频，[m]3D模型(Mesh)，[j]Typetree(JSON)", c=3)
     print('  可多选，示例输入："itam"，"it"')
     do_them = UserInput.request().lower()
     do_img = True if "i" in do_them else False
     do_txt = True if "t" in do_them else False
     do_aud = True if "a" in do_them else False
     do_mesh = True if "m" in do_them else False
+    do_tree = True if "j" in do_them else False
     print(
-        f"  [{'√' if do_img else '×'}]图片(纹理)，[{'√' if do_txt else '×'}]文本，[{'√' if do_aud else '×'}]音频，[{'√' if do_mesh else '×'}]3D模型(Mesh)",
+        f"  [{'√' if do_img else '×'}]图片(纹理)，[{'√' if do_txt else '×'}]文本，[{'√' if do_aud else '×'}]音频，[{'√' if do_mesh else '×'}]3D模型(Mesh)，[{'√' if do_tree else '×'}]Typetree(JSON)",
         c=6,
     )
     ###
     prt_continue()
     title("ArkUnpacker - Processing")
-    AU_Rs.main(src, destdir, do_del, do_img, do_txt, do_aud, do_mesh, separate)
+    AU_Rs.main(src, destdir, do_del, do_img, do_txt, do_aud, do_mesh, do_tree, separate)
 
 
 def run_custom_combine_image():
@@ -692,6 +693,7 @@ if __name__ == "__main__":
                     args.text,
                     args.audio,
                     args.mesh,
+                    args.typetree,
                     args.group,
                 )
             elif args.mode == "sp":
