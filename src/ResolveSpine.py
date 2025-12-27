@@ -338,6 +338,9 @@ class SpineAsset:
                             with TreeReader(animator_obj) as tree_animator:
                                 skeleton_ref = tree_animator.get("_skeleton", {})
                                 if "m_PathID" not in skeleton_ref:
+                                    Logger.info(
+                                        f'ResolveSpine: Pfb mapping skeleton reference not found in animator of "{m_name}", may be non-spine character'
+                                    )
                                     continue
                                 skeleton_obj = res.get_object_by_pathid(
                                     skeleton_ref, uc.MonoBehaviour
@@ -353,15 +356,15 @@ class SpineAsset:
                                         skel_data_pathid = skel_data_ref["m_PathID"]
                                         mapping[skel_data_pathid] = m_name
                                         Logger.debug(
-                                            f'ResolveSpine: Mapped skeleton data asset {skel_data_pathid} to "{m_name}"'
+                                            f'ResolveSpine: Pfb mapping mapped skeleton data asset {skel_data_pathid} to "{m_name}"'
                                         )
                                         break
         except Exception:
             Logger.warn(
-                f'ResolveSpine: Failed to extract skeleton name mapping from pfb "{res.name}": {stacktrace()}'
+                f'ResolveSpine: Pfb mapping failed to process pfb "{res.name}": {stacktrace()}'
             )
         Logger.info(
-            f'ResolveSpine: Extracted total {len(mapping)} skeleton name mappings from pfb "{res.name}"'
+            f'ResolveSpine: Pfb mapping extracted total {len(mapping)} skeleton name mappings from pfb "{res.name}"'
         )
         return mapping
 
@@ -479,9 +482,42 @@ class SpineAsset:
                 yield obj, tree
 
 
+def pfb_resolve(srcdir: str) -> dict:
+    """Extracts skeleton data asset path id to GameObject name mappings from all pfb files.
+
+    :param srcdir: Source directory containing pfb files;
+    :returns: A dict mapping skeleton data asset path id to GameObject m_Name;
+    """
+    from .ResolveAB import Resource
+
+    Logger.info(f'ResolveSpine: Pfb resolve started for directory "{srcdir}"')
+    srcdir = osp.normpath(osp.realpath(srcdir))
+    pfb_files = get_filelist(srcdir) if osp.isdir(srcdir) else [srcdir]
+    pfb_files = [f for f in pfb_files if is_ab_file(f) and "enm_pfb_" in f]
+
+    all_mappings = {}
+    for pfb_file in pfb_files:
+        try:
+            Logger.debug(f'ResolveSpine: Pfb resolve processing "{pfb_file}"')
+            with open(pfb_file, "rb") as f:
+                res_pfb = Resource(UnityPy.load(f))
+                mapping = SpineAsset._extract_skeleton_name_mapping_from_pfb(res_pfb)
+                all_mappings.update(mapping)
+        except Exception:
+            Logger.warn(
+                f'ResolveSpine: Pfb resolve failed to process "{pfb_file}": {stacktrace()}'
+            )
+
+    Logger.info(
+        f"ResolveSpine: Pfb resolve completed with {len(all_mappings)} total mappings from {len(pfb_files)} pfb files"
+    )
+    return all_mappings
+
+
 def spine_resolve(
     abfile: str,
     destdir: str,
+    sd_name_mapping: dict,
     on_processed: Optional[Callable] = None,
     on_file_queued: Optional[Callable] = None,
     on_file_saved: Optional[Callable] = None,
@@ -490,6 +526,7 @@ def spine_resolve(
 
     :param abfile: Path to the AB file;
     :param destdir: Destination directory;
+    :param sd_name_mapping: Skeleton data asset path id to name mapping;
     :param on_processed: Callback `f()` for finished, `None` for ignore;
     :param on_file_queued: Callback `f()` invoked when a file was queued, `None` for ignore;
     :param on_file_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
@@ -502,27 +539,6 @@ def spine_resolve(
             on_processed()
         return
     try:
-        skel_name_mapping = {}
-        if "enm_art_" in abfile:
-            # Try to find corresponding pfb file to get skeleton name mapping
-            # This works on game >= v2.5.60
-            pfb_path = abfile.replace("\\", "/")
-            pfb_path = pfb_path.replace("refs/arts/enm_art_", "battle/enm_pfb_")
-
-            if osp.isfile(pfb_path):
-                Logger.info(
-                    f'ResolveSpine: Found corresponding pfb file: "{pfb_path}" for "{abfile}"'
-                )
-                with open(pfb_path, "rb") as f_:
-                    res_pfb = Resource(UnityPy.load(f_))
-                    skel_name_mapping = (
-                        SpineAsset._extract_skeleton_name_mapping_from_pfb(res_pfb)
-                    )
-            else:
-                Logger.warn(
-                    f'ResolveSpine: No corresponding pfb file found at "{pfb_path}", extraction may be incomplete.'
-                )
-
         # Now extract Spine assets from the given AB file
         with open(abfile, "rb") as f:
             res = Resource(UnityPy.load(f))
@@ -532,7 +548,7 @@ def spine_resolve(
                     f'ResolveSpine: "{res.name}" has {len(spines)} spines, unpacking it may take a long time.'
                 )
             for s in spines:
-                s.rename_by_sd_mapping(skel_name_mapping)
+                s.rename_by_sd_mapping(sd_name_mapping)
                 s.add_prefix()
                 s.save_spine(destdir, on_file_queued, on_file_saved)
     except BaseException as arg:
@@ -548,6 +564,7 @@ def main(
     destdir: str,
     do_del: bool = False,
     separate: bool = True,
+    pfb_dir: Optional[str] = None,
 ):
     """Extracts all Spine assets from the given directory or a given AB file.
 
@@ -555,6 +572,7 @@ def main(
     :param destdir: Destination directory;
     :param do_del: Whether to delete the existing files in the destination directory, `False` for default;
     :param separate: Whether to sort the extracted files by their source AB file path;
+    :param pfb_dir: Directory containing pfb files for skeleton name mapping, `None` to disable;
     :rtype: None;
     """
     print("\n正在解析路径...", s=1)
@@ -566,6 +584,12 @@ def main(
     if do_del:
         print("\n正在清理...", s=1)
         rmdir(destdir)
+
+    # Extract skeleton name mapping from pfb files if pfb_dir is provided
+    sd_name_mapping = {}
+    if pfb_dir is not None and osp.isdir(pfb_dir):
+        print(f"\n正在从 {pfb_dir} 中提取额外的骨骼名称映射...", s=1)
+        sd_name_mapping = pfb_resolve(pfb_dir)
 
     Logger.reset_stats()
     SafeSaver.get_instance().reset_counter()
@@ -608,6 +632,7 @@ def main(
             (
                 i,
                 curdestdir,
+                sd_name_mapping,
                 tr_processed.report,
                 tr_file_saving.update_demand,
                 tr_file_saving.report,

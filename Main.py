@@ -359,7 +359,10 @@ def run_arkmodels_unpacking(*, and_dirs=None, or_dirs=None, destdir):
     print("正在清理...")
     rmdir(destdir)
     for i in dirs:
-        AU_Sp.main(i, destdir, do_del=False, separate=True)
+        if "refs/arts" == i:
+            AU_Sp.main(i, destdir, do_del=False, separate=True, pfb_dir="battle")
+        else:
+            AU_Sp.main(i, destdir, do_del=False, separate=True, pfb_dir=None)
 
 
 def run_arkmodels_anon_unpacking(dirs, destdir):
