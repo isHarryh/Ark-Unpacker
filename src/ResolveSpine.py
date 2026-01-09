@@ -2,7 +2,7 @@
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
 from enum import StrEnum
-from typing import Callable, List, Optional, Sequence, TYPE_CHECKING, Union
+from typing import Callable, List, Optional, Sequence, Union
 
 import os.path as osp
 

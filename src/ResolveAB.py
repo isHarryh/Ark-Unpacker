@@ -1,8 +1,17 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
-from typing import Callable, Collection, List, Literal, Optional, Tuple, TypeVar, Union
-
+from typing import (
+    Callable,
+    Collection,
+    Generator,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 import os.path as osp
 
 import UnityPy
@@ -177,66 +186,60 @@ class Resource:
             )
         return obj
 
-    def get_objects_by_type(self, obj_type: type[_T]) -> List[_T]:
+    def get_objects_by_type(self, obj_type: type[_T]) -> Generator[_T, None, None]:
         """Gets all the objects of the given type.
 
         :param obj_type: The expected type of the objects;
-        :returns: The list of objects;
+        :returns: A generator of the objects;
         """
         if not self.env:
             raise RuntimeError("Environment has been disposed or not initialized")
         tn = obj_type.__name__
         if tn not in self._lut_type:
-            return []
-        objs: List[_T] = []
+            return
         for pid in self._lut_type[tn]:
             reader, obj = self._lut_pathid[pid]
             if obj is None:
                 obj = reader.read()
                 self._lut_pathid[pid] = (reader, obj)
             if obj is not None:
-                objs.append(obj)  # type: ignore
-        return objs
+                yield obj  # type: ignore
 
     def get_objects_by_roi_type(
         self, roi_type: Literal["Image", "Text", "Audio", "Mesh", "AssetBundle"]
-    ) -> List[uc.Object]:
+    ) -> Generator[uc.Object, None, None]:
         """Gets all the objects of the given ROI type.
 
         :param roi_type: The expected ROI type of the objects;
-        :returns: The list of objects;
+        :returns: A generator of the objects;
         """
         if not self.env:
             raise RuntimeError("Environment has been disposed or not initialized")
         if roi_type not in self._lut_roi_type:
-            return []
-        objs: List[uc.Object] = []
+            return
         for pid in self._lut_roi_type[roi_type]:
             reader, obj = self._lut_pathid[pid]
             if obj is None:
                 obj = reader.read()
                 self._lut_pathid[pid] = (reader, obj)
             if obj is not None:
-                objs.append(obj)
-        return objs
+                yield obj
 
     def find_object_and_typetree_with_key(
         self, obj_type: type[_T], contains_keys: Collection[str]
-    ) -> List[Tuple[_T, dict]]:
+    ) -> Generator[Tuple[_T, dict], None, None]:
         """Finds all the objects of the given type whose typetree contains all the given keys.
 
         :param obj_type: The expected type of the objects;
         :param contains_keys: The collection of keys that the typetree should contain;
-        :returns: The list of tuples of the object and its typetree;
+        :returns: A generator of tuples of the object and its typetree;
         """
         if not self.env:
             raise RuntimeError("Environment has been disposed or not initialized")
-        result: List[Tuple[_T, dict]] = []
         for obj in self.get_objects_by_type(obj_type):
             with TreeReader(obj) as tree:
                 if all(k in tree for k in contains_keys):
-                    result.append((obj, tree))
-        return result
+                    yield (obj, tree)
 
 
 def ab_resolve(
