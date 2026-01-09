@@ -10,32 +10,12 @@ import UnityPy
 import UnityPy.classes as uc
 from spine_asset.v38 import AtlasFile, SkeletonBinary, SkeletonJson, SkeletonData
 
+from .ResolveAB import Resource, TreeReader
 from .CombineRGBwithA import AlphaRGBCombiner, image_resize
 from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file, stacktrace
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
 from .utils.TaskUtils import ThreadCtrl, UICtrl, TaskReporter, TaskReporterTracker
-
-if TYPE_CHECKING:
-    from .ResolveAB import Resource
-
-
-class TreeReader:
-    def __init__(self, obj: Optional[uc.Object]):
-        self.obj = getattr(obj, "object_reader", obj)
-
-    def __enter__(self):
-        if self.obj is None:
-            raise AttributeError("Given object or object reader is none")
-        read_typetree = getattr(self.obj, "read_typetree", None)
-        if callable(read_typetree):
-            tree = read_typetree()
-            if isinstance(tree, dict):
-                return tree
-        raise AttributeError("Given object has no serialized type tree")
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        return False
 
 
 class SpineType(StrEnum):
@@ -65,6 +45,9 @@ class SpineAssetHandler:
         """
         if not self.obj.m_Name.startswith(prefix):
             self.obj.m_Name = prefix + self.obj.m_Name
+
+    def __repr__(self) -> str:
+        return f"<SpineAssetHandler name={self.name}>"
 
 
 class SpineAtlasHandler(SpineAssetHandler):
@@ -297,6 +280,9 @@ class SpineAsset:
         for i in (self.atlas_handler, self.skel_handler):
             SafeSaver.save_object(i.obj, destdir, i.name, on_queued, on_saved)
 
+    def __repr__(self) -> str:
+        return f"<SpineAsset type={self.type}>"
+
     @classmethod
     def _extract_skeleton_name_mapping_from_pfb(cls, res: "Resource") -> dict:
         """Extracts skeleton data asset path id to GameObject name mapping from pfb resource.
@@ -309,56 +295,55 @@ class SpineAsset:
         """
         mapping = {}
         try:
-            for obj in res.get_objects_by_type(uc.GameObject):
-                with TreeReader(obj) as tree_go:
-                    m_name = tree_go.get("m_Name", "")
-                    if not m_name.startswith("enemy_"):
+            for _, tree_go in res.find_object_and_typetree_with_key(
+                uc.GameObject,
+                ["m_Name", "m_Component"],
+            ):
+                m_name = tree_go.get("m_Name", "")
+                if not m_name.startswith("enemy_"):
+                    continue
+
+                for comp in tree_go.get("m_Component", []):
+                    comp_ref = comp.get("component", {})
+                    if "m_PathID" not in comp_ref:
                         continue
+                    comp_obj = res.get_object_by_pathid(comp_ref, uc.Component)
 
-                    for comp in tree_go.get("m_Component", []):
-                        comp_ref = comp.get("component", {})
-                        if "m_PathID" not in comp_ref:
+                    with TreeReader(comp_obj) as tree_comp:
+                        if "_animator" not in tree_comp:
                             continue
-                        comp_obj = res.get_object_by_pathid(comp_ref, uc.Component)
-                        if comp_obj is None:
+                        animator_ref = tree_comp.get("_animator", {})
+                        if "m_PathID" not in animator_ref:
                             continue
+                        animator_obj = res.get_object_by_pathid(
+                            animator_ref, uc.MonoBehaviour
+                        )
 
-                        with TreeReader(comp_obj) as tree_comp:
-                            if "_animator" not in tree_comp:
-                                continue
-                            animator_ref = tree_comp.get("_animator", {})
-                            if "m_PathID" not in animator_ref:
-                                continue
-                            animator_obj = res.get_object_by_pathid(
-                                animator_ref, uc.MonoBehaviour
-                            )
-                            if animator_obj is None:
-                                continue
-
-                            with TreeReader(animator_obj) as tree_animator:
-                                skeleton_ref = tree_animator.get("_skeleton", {})
-                                if "m_PathID" not in skeleton_ref:
-                                    Logger.info(
-                                        f'ResolveSpine: Pfb mapping skeleton reference not found in animator of "{m_name}", may be non-spine character'
-                                    )
-                                    continue
-                                skeleton_obj = res.get_object_by_pathid(
-                                    skeleton_ref, uc.MonoBehaviour
+                        with TreeReader(animator_obj) as tree_animator:
+                            skeleton_ref = tree_animator.get("_skeleton", {})
+                            if "m_PathID" not in skeleton_ref:
+                                Logger.info(
+                                    f'ResolveSpine: Pfb mapping skeleton reference not found in animator of "{m_name}", may be non-spine character'
                                 )
-                                if skeleton_obj is None:
-                                    continue
+                                continue
+                            skeleton_obj = res.get_object_by_pathid(
+                                skeleton_ref, uc.MonoBehaviour
+                            )
 
-                                with TreeReader(skeleton_obj) as tree_skel:
-                                    skel_data_ref = tree_skel.get(
-                                        "skeletonDataAsset", {}
-                                    )
-                                    if "m_PathID" in skel_data_ref:
-                                        skel_data_pathid = skel_data_ref["m_PathID"]
-                                        mapping[skel_data_pathid] = m_name
-                                        Logger.debug(
-                                            f'ResolveSpine: Pfb mapping mapped skeleton data asset {skel_data_pathid} to "{m_name}"'
+                            with TreeReader(skeleton_obj) as tree_skel:
+                                skel_data_ref = tree_skel.get("skeletonDataAsset", {})
+                                if "m_PathID" in skel_data_ref:
+                                    skel_data_pathid = skel_data_ref["m_PathID"]
+                                    if mapping.get(skel_data_pathid, None):
+                                        Logger.warn(
+                                            f'ResolveSpine: Pfb mapping skeleton data asset {skel_data_pathid} already mapped to "{mapping[skel_data_pathid]}", skipping duplicate mapping to "{m_name}"'
                                         )
-                                        break
+                                        continue
+                                    mapping[skel_data_pathid] = m_name
+                                    Logger.debug(
+                                        f'ResolveSpine: Pfb mapping mapped skeleton data asset {skel_data_pathid} to "{m_name}"'
+                                    )
+                                    break
         except Exception:
             Logger.warn(
                 f'ResolveSpine: Pfb mapping failed to process pfb "{res.name}": {stacktrace()}'
@@ -379,8 +364,8 @@ class SpineAsset:
         found_front_and_back = list(cls._find_front_and_back_skel_data(res))
         try:
             # sd = SkeletonData
-            for mono_sd, tree_sd in cls._find_typetree_by_keys(
-                res.get_objects_by_type(uc.MonoBehaviour),
+            for mono_sd, tree_sd in res.find_object_and_typetree_with_key(
+                uc.MonoBehaviour,
                 ["atlasAssets", "skeletonJSON"],
             ):
                 skel = res.get_object_by_pathid(tree_sd["skeletonJSON"], uc.TextAsset)
@@ -405,7 +390,7 @@ class SpineAsset:
                                         tex[1]["m_Texture"], uc.Texture2D
                                     )
                                 elif tex[0] == "_AlphaTex":
-                                    tex_alpha = res.get_object_by_pathid(
+                                    tex_alpha = res.try_get_object_by_pathid(
                                         tex[1]["m_Texture"], uc.Texture2D
                                     )
                         if tex_rgb is None:
@@ -443,8 +428,8 @@ class SpineAsset:
     def _find_front_and_back_skel_data(cls, res: "Resource"):
         try:
             # ca = CharacterAnimator
-            for _, tree_ca in cls._find_typetree_by_keys(
-                res.get_objects_by_type(uc.MonoBehaviour),
+            for _, tree_ca in res.find_object_and_typetree_with_key(
+                uc.MonoBehaviour,
                 ["_animations", "_front", "_back"],
             ):
                 mono_sa_front = res.get_object_by_pathid(
@@ -470,16 +455,6 @@ class SpineAsset:
             Logger.warn(
                 f'ResolveSpine: Failed to find front-and-back skeleton data in resource "{res.name}": {stacktrace()}'
             )
-
-    @classmethod
-    def _find_typetree_by_keys(
-        cls, objs: Sequence[uc.Object], contains_keys: Sequence[str]
-    ):
-        for obj in objs:
-            with TreeReader(obj) as tree:
-                if not all(k in tree for k in contains_keys):
-                    continue
-                yield obj, tree
 
 
 def pfb_resolve(srcdir: str) -> dict:

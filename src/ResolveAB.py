@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2022-2025, Harry Huang
 # @ BSD 3-Clause License
-from typing import Callable, List, Literal, Optional, Tuple, TypeVar, Union
+from typing import Callable, Collection, List, Literal, Optional, Tuple, TypeVar, Union
 
 import os.path as osp
 
@@ -23,6 +23,24 @@ CompressionHelper.DECOMPRESSION_MAP[CompressionFlags.LZHAM] = decompress_lz4ak
 
 
 _T = TypeVar("_T", bound=uc.Object)
+
+
+class TreeReader:
+    def __init__(self, obj: Optional[uc.Object]):
+        self.obj = getattr(obj, "object_reader", obj)
+
+    def __enter__(self):
+        if self.obj is None:
+            raise AttributeError("Given object or object reader is none")
+        read_typetree = getattr(self.obj, "read_typetree", None)
+        if callable(read_typetree):
+            tree = read_typetree()
+            if isinstance(tree, dict):
+                return tree
+        raise AttributeError("Given object has no serialized type tree")
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return False
 
 
 class Resource:
@@ -110,27 +128,52 @@ class Resource:
                 self._lut_roi_type[roi] = []
             self._lut_roi_type[roi].append(reader.path_id)
 
-    def get_object_by_pathid(
-        self, pathid: Union[int, dict], assert_type: type[_T] = uc.Object
+    def try_get_object_by_pathid(
+        self,
+        pathid: Union[int, dict],
+        assert_type: type[_T] = uc.Object,
     ) -> Optional[_T]:
+        """Tries to get the object with the given PathID.
+
+        :param pathid: PathID in int or a dict containing `m_PathID` field;
+        :param assert_type: The expected type of the object;
+        :returns: The first object matching the PathID and type, or `None` if failed;
+        """
+        try:
+            return self.get_object_by_pathid(pathid, assert_type)
+        except (KeyError, TypeError):
+            return None
+
+    def get_object_by_pathid(
+        self,
+        pathid: Union[int, dict],
+        assert_type: type[_T] = uc.Object,
+    ) -> _T:
         """Gets the object with the given PathID.
 
         :param pathid: PathID in int or a dict containing `m_PathID` field;
         :param assert_type: The expected type of the object;
-        :returns: The object, `None` for not found;
+        :returns: The first object matching the PathID and type;
         """
         if not self.env:
             raise RuntimeError("Environment has been disposed or not initialized")
-        pid = pathid["m_PathID"] if isinstance(pathid, dict) else pathid
+        if isinstance(pathid, dict):
+            if "m_PathID" not in pathid:
+                raise KeyError(f"Given dict does not contain m_PathID field")
+            pid = pathid["m_PathID"]
+        elif isinstance(pathid, int):
+            pid = pathid
+        else:
+            raise TypeError(f"Argument pathid must be int or dict")
         if pid not in self._lut_pathid:
-            return None
+            raise KeyError(f"Object with PathID {pid} not found")
         reader, obj = self._lut_pathid[pid]
         if obj is None:
             obj = reader.read()
             self._lut_pathid[pid] = (reader, obj)
         if not isinstance(obj, assert_type):
             raise TypeError(
-                f"Object with PathID {pid} is not of type {assert_type}, but {type(obj)}"
+                f"Object with PathID {pid} is not of type {assert_type}, but {type(obj).__name__}"
             )
         return obj
 
@@ -176,6 +219,24 @@ class Resource:
             if obj is not None:
                 objs.append(obj)
         return objs
+
+    def find_object_and_typetree_with_key(
+        self, obj_type: type[_T], contains_keys: Collection[str]
+    ) -> List[Tuple[_T, dict]]:
+        """Finds all the objects of the given type whose typetree contains all the given keys.
+
+        :param obj_type: The expected type of the objects;
+        :param contains_keys: The collection of keys that the typetree should contain;
+        :returns: The list of tuples of the object and its typetree;
+        """
+        if not self.env:
+            raise RuntimeError("Environment has been disposed or not initialized")
+        result: List[Tuple[_T, dict]] = []
+        for obj in self.get_objects_by_type(obj_type):
+            with TreeReader(obj) as tree:
+                if all(k in tree for k in contains_keys):
+                    result.append((obj, tree))
+        return result
 
 
 def ab_resolve(
