@@ -286,7 +286,7 @@ def ab_resolve(
                 Logger.info(f'ResolveAB: No object in file "{res.name}".')
 
             for s in SpineAsset.from_resource(res):
-                s.add_prefix()
+                s.process_path()
 
             for roi_flag, roi_type in [
                 (do_img, "Image"),

@@ -1,7 +1,7 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
 from enum import StrEnum
-from typing import Callable, List, Optional, Sequence, Union
+from typing import Callable, Dict, List, Optional, Sequence, Union
 
 import os.path as osp
 
@@ -15,6 +15,9 @@ from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file, stacktr
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
 from .utils.TaskUtils import ThreadCtrl, UICtrl, TaskReporter, TaskReporterTracker
+
+
+SDPathID2NamesMap = Dict[int, Union[str, List[str]]]
 
 
 class SpineType(StrEnum):
@@ -31,19 +34,19 @@ class SpineType(StrEnum):
 class SpineAssetHandler:
     def __init__(self, obj: Union[uc.TextAsset, uc.Texture2D]):
         self.obj = obj
+        self.original_name = obj.m_Name
 
     @property
     def name(self) -> str:
         return self.obj.m_Name
 
-    def add_prefix(self, prefix: str):
-        """Adds a prefix to the name of the Spine asset object to avoid conflicts.
+    def set_path_prefix(self, prefix: str):
+        """Sets the path prefix for the Spine asset object using its original name.
 
-        :param prefix: The prefix to add;
+        :param prefix: The directory prefix to use;
         :rtype: None;
         """
-        if not self.obj.m_Name.startswith(prefix):
-            self.obj.m_Name = prefix + self.obj.m_Name
+        self.obj.m_Name = prefix + self.original_name
 
     def __repr__(self) -> str:
         return f"<SpineAssetHandler name={self.name}>"
@@ -134,11 +137,12 @@ class SpineTextureHandler(SpineAssetHandler):
         self.tex_alpha = tex_alpha
         self.rgb = tex_rgb.image
         self.alpha = tex_alpha.image if tex_alpha else None
+        self.original_alpha_name = tex_alpha.m_Name if tex_alpha else None
 
-    def add_prefix(self, prefix: str):
-        super().add_prefix(prefix)
-        if self.tex_alpha and not self.tex_alpha.m_Name.startswith(prefix):
-            self.tex_alpha.m_Name = prefix + self.tex_alpha.m_Name
+    def set_path_prefix(self, prefix: str):
+        super().set_path_prefix(prefix)
+        if self.tex_alpha and self.original_alpha_name:
+            self.tex_alpha.m_Name = prefix + self.original_alpha_name
 
 
 class SpineAsset:
@@ -169,72 +173,22 @@ class SpineAsset:
                 type_ = atlas_handler.guess_type()
         self.type = type_
 
-    def rename_by_sd_mapping(self, skel_name_mapping: dict):
-        """Renames the Spine asset based on skeleton data mapping.
+    def process_path(self, custom_folder_name: Optional[str] = None):
+        """Sets the path prefix for all associated Spine asset objects based on type and folder name.
 
-        This is used to differentiate same-skeleton different-skin models.
-        Renames skeleton, atlas, and texture assets to match the GameObject name.
-
-        :param skel_name_mapping: Dict mapping skeleton data asset path id to names;
+        :param custom_folder_name: Custom folder name to use instead of the atlas name, optional;
         :rtype: None;
         """
-        if not self.sd_pathid:
-            return
-        if self.sd_pathid not in skel_name_mapping:
-            return
-
-        custom_name = skel_name_mapping[self.sd_pathid]
-        modified = 0
-
-        # Rename skeleton
-        old_skel_base = osp.splitext(self.skel_handler.name)[0]
-        skel_ext = osp.splitext(self.skel_handler.name)[1]
-        new_skel_name = custom_name + skel_ext
-        if self.skel_handler.obj.m_Name != new_skel_name:
-            self.skel_handler.obj.m_Name = new_skel_name
-            modified += 1
-
-        # Rename atlas to match skeleton name
-        old_atlas_base = osp.splitext(self.atlas_handler.name)[0]
-        atlas_ext = osp.splitext(self.atlas_handler.name)[1]
-        new_atlas_name = custom_name + atlas_ext
-        if self.atlas_handler.obj.m_Name != new_atlas_name:
-            self.atlas_handler.obj.m_Name = new_atlas_name
-            modified += 1
-
-        # Rename textures to match skeleton name
-        for tex_handler in self.tex_handlers:
-            old_tex_base = osp.splitext(tex_handler.name)[0]
-            tex_ext = osp.splitext(tex_handler.name)[1]
-
-            # If texture has a suffix (e.g., _02), preserve it
-            if old_tex_base != old_atlas_base and old_tex_base.startswith(
-                old_atlas_base
-            ):
-                suffix = old_tex_base[len(old_atlas_base) :]
-                new_tex_name = custom_name + suffix + tex_ext
-            else:
-                new_tex_name = custom_name + tex_ext
-
-            if tex_handler.tex_rgb.m_Name != new_tex_name:
-                tex_handler.tex_rgb.m_Name = new_tex_name
-                modified += 1
-
-        if modified > 0:
-            Logger.info(
-                f'ResolveSpine: Renamed Spine assets to "{custom_name}" based on skeleton data mapping (modified {modified} objects)'
-            )
-
-    def add_prefix(self):
-        """Adds a prefix to the names of the Spine asset objects to avoid conflicts.
-
-        :rtype: None;
-        """
-        prefix = f"{self.type.value}/{osp.splitext(osp.basename(self.atlas_handler.name))[0]}/"
+        folder_name = (
+            custom_folder_name
+            if custom_folder_name
+            else osp.splitext(osp.basename(self.atlas_handler.original_name))[0]
+        )
+        prefix = f"{self.type.value}/{folder_name}/"
         for h in list((self.atlas_handler, self.skel_handler)) + list(
             self.tex_handlers
         ):
-            h.add_prefix(prefix)
+            h.set_path_prefix(prefix)
 
     def save_spine(
         self,
@@ -283,14 +237,16 @@ class SpineAsset:
         return f"<SpineAsset type={self.type}>"
 
     @classmethod
-    def _extract_skeleton_name_mapping_from_pfb(cls, res: "Resource") -> dict:
+    def _extract_skeleton_name_mapping_from_pfb(
+        cls, res: Resource
+    ) -> SDPathID2NamesMap:
         """Extracts skeleton data asset path id to GameObject name mapping from pfb resource.
 
         This is used to differentiate same-skeleton different-skin models that have
         identical internal skeleton names (e.g., enemy_1046_agent vs enemy_1046_agent_2).
 
         :param res: The Resource instance (pfb file) to extract mappings from;
-        :returns: A dict mapping skeleton data asset path id to GameObject m_Name;
+        :returns: A dict mapping skeleton data asset path id to list of GameObject m_Names;
         """
         mapping = {}
         try:
@@ -333,16 +289,12 @@ class SpineAsset:
                                 skel_data_ref = tree_skel.get("skeletonDataAsset", {})
                                 if "m_PathID" in skel_data_ref:
                                     skel_data_pathid = skel_data_ref["m_PathID"]
-                                    if mapping.get(skel_data_pathid, None):
-                                        Logger.warn(
-                                            f'ResolveSpine: Pfb mapping skeleton data asset {skel_data_pathid} already mapped to "{mapping[skel_data_pathid]}", skipping duplicate mapping to "{m_name}"'
-                                        )
-                                        continue
-                                    mapping[skel_data_pathid] = m_name
+                                    if skel_data_pathid not in mapping:
+                                        mapping[skel_data_pathid] = []
+                                    mapping[skel_data_pathid].append(m_name)
                                     Logger.debug(
                                         f'ResolveSpine: Pfb mapping mapped skeleton data asset {skel_data_pathid} to "{m_name}"'
                                     )
-                                    break
         except Exception:
             Logger.warn(
                 f'ResolveSpine: Pfb mapping failed to process pfb "{res.name}": {stacktrace()}'
@@ -353,7 +305,7 @@ class SpineAsset:
         return mapping
 
     @classmethod
-    def from_resource(cls, res: "Resource") -> List["SpineAsset"]:
+    def from_resource(cls, res: Resource) -> List["SpineAsset"]:
         """Gets Spine assets from the given resource.
 
         :param res: The Resource instance to extract Spine assets from;
@@ -424,7 +376,7 @@ class SpineAsset:
         return spines
 
     @classmethod
-    def _find_front_and_back_skel_data(cls, res: "Resource"):
+    def _find_front_and_back_skel_data(cls, res: Resource):
         try:
             # ca = CharacterAnimator
             for _, tree_ca in res.find_object_and_typetree_with_key(
@@ -460,7 +412,7 @@ def pfb_resolve(srcdir: str) -> dict:
     """Extracts skeleton data asset path id to GameObject name mappings from all pfb files.
 
     :param srcdir: Source directory containing pfb files;
-    :returns: A dict mapping skeleton data asset path id to GameObject m_Name;
+    :returns: A dict mapping skeleton data asset path id to list of GameObject m_Names;
     """
     from .ResolveAB import Resource
 
@@ -476,7 +428,12 @@ def pfb_resolve(srcdir: str) -> dict:
             with open(pfb_file, "rb") as f:
                 res_pfb = Resource(UnityPy.load(f))
                 mapping = SpineAsset._extract_skeleton_name_mapping_from_pfb(res_pfb)
-                all_mappings.update(mapping)
+                for pid, names in mapping.items():
+                    if pid not in all_mappings:
+                        all_mappings[pid] = []
+                    for name in names:
+                        if name not in all_mappings[pid]:
+                            all_mappings[pid].append(name)
         except Exception:
             Logger.warn(
                 f'ResolveSpine: Pfb resolve failed to process "{pfb_file}": {stacktrace()}'
@@ -491,7 +448,7 @@ def pfb_resolve(srcdir: str) -> dict:
 def spine_resolve(
     abfile: str,
     destdir: str,
-    sd_name_mapping: dict,
+    sd_name_mapping: SDPathID2NamesMap,
     on_processed: Optional[Callable] = None,
     on_file_queued: Optional[Callable] = None,
     on_file_saved: Optional[Callable] = None,
@@ -500,7 +457,7 @@ def spine_resolve(
 
     :param abfile: Path to the AB file;
     :param destdir: Destination directory;
-    :param sd_name_mapping: Skeleton data asset path id to name mapping;
+    :param sd_name_mapping: Skeleton data asset path id to names mapping;
     :param on_processed: Callback `f()` for finished, `None` for ignore;
     :param on_file_queued: Callback `f()` invoked when a file was queued, `None` for ignore;
     :param on_file_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
@@ -522,9 +479,18 @@ def spine_resolve(
                     f'ResolveSpine: "{res.name}" has {len(spines)} spines, unpacking it may take a long time.'
                 )
             for s in spines:
-                s.rename_by_sd_mapping(sd_name_mapping)
-                s.add_prefix()
-                s.save_spine(destdir, on_file_queued, on_file_saved)
+                assert s.sd_pathid is not None
+                mapped_names = sd_name_mapping.get(s.sd_pathid)
+                if mapped_names:
+                    if not isinstance(mapped_names, list):
+                        mapped_names = [mapped_names]
+
+                    for name in mapped_names:
+                        s.process_path(name)
+                        s.save_spine(destdir, on_file_queued, on_file_saved)
+                else:
+                    s.process_path()
+                    s.save_spine(destdir, on_file_queued, on_file_saved)
     except BaseException as arg:
         Logger.error(
             f'ResolveSpine: Error occurred while unpacking file "{abfile}": Exception{type(arg)} {arg}'
