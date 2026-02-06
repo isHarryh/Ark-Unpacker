@@ -307,9 +307,7 @@ def text_asset_resolve(
                         dic,
                         ensure_ascii=False,
                         indent=Config.get("export_json_indent"),
-                        encoding=Config.get("export_encoding"),
-                    ),
-                    encoding=Config.get("export_encoding"),
+                    ).encode(Config.get("export_encoding"), errors="surrogateescape"),
                 )
                 SafeSaver.save_bytes(
                     byt,
