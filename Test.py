@@ -17,9 +17,7 @@ def __check_file_list(dir_path: str):
     actual_list = []
     for root, _, files in os.walk(dir_path):
         for file in files:
-            rel_path = os.path.normpath(
-                os.path.relpath(os.path.join(root, file), dir_path)
-            )
+            rel_path = os.path.normpath(os.path.relpath(os.path.join(root, file), dir_path))
             actual_list.append(rel_path.replace("\\", "/"))
     actual_list.sort()
     with open(actual_path, "w", encoding="utf-8") as f:
@@ -47,16 +45,12 @@ def __check_file_list(dir_path: str):
                 print(f"    - {f}", c=1)
             if len(removed) > 10:
                 print(f"    ... and {len(removed) - 10} more", c=1)
-        raise AssertionError(
-            f"File list mismatch for {actual_path}: {len(added)} added, {len(removed)} removed"
-        )
+        raise AssertionError(f"File list mismatch for {actual_path}: {len(added)} added, {len(removed)} removed")
 
 
 def __run_cli(args: list):
     cmd = [sys.executable, "Main.py"] + args
-    result = subprocess.run(
-        cmd, stdout=sys.stdout, stderr=sys.stderr, encoding="utf-8", errors="replace"
-    )
+    result = subprocess.run(cmd, stdout=sys.stdout, stderr=sys.stderr, encoding="utf-8", errors="replace")
     return "", "", result.returncode
 
 

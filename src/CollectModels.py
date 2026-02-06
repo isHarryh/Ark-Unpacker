@@ -42,18 +42,14 @@ def collect_models(
                 Logger.debug(f'CollectModels: Found "{model_dir}" has uppercase char')
             try:
                 newname = None
-                if model_type == SpineType.BUILDING.value and PATTERN_BUILDING.match(
-                    model
-                ):
+                if model_type == SpineType.BUILDING.value and PATTERN_BUILDING.match(model):
                     newname = PATTERN_BUILDING.match(model).group(2)  # type: ignore
                 elif model_type in [
                     SpineType.BATTLE_FRONT.value,
                     SpineType.BATTLE_BACK.value,
                 ] and PATTERN_ENEMY.match(model):
                     newname = PATTERN_ENEMY.match(model).group(1)  # type: ignore
-                elif model_type == SpineType.DYN_ILLUST.value and PATTERN_ILLUST.match(
-                    model
-                ):
+                elif model_type == SpineType.DYN_ILLUST.value and PATTERN_ILLUST.match(model):
                     newname = "dyn_illust_" + PATTERN_ILLUST.match(model).group(1)  # type: ignore
 
                 if newname:
@@ -66,14 +62,10 @@ def collect_models(
                         on_collected()
                 else:
                     # Not match any rules
-                    Logger.debug(
-                        f'CollectModels: Passed "{model_dir}", no rule matched'
-                    )
+                    Logger.debug(f'CollectModels: Passed "{model_dir}", no rule matched')
             except Exception as arg:
                 error_occurred = True
-                Logger.error(
-                    f'CollectModels: Error occurred while handling "{model_dir}": Exception{type(arg)} {arg}'
-                )
+                Logger.error(f'CollectModels: Error occurred while handling "{model_dir}": Exception{type(arg)} {arg}')
 
     if do_del and not error_occurred:
         rmdir(upkdir)
@@ -142,11 +134,7 @@ def main(srcdirs: Sequence[str], destdirs: Sequence[str]):
 
     ui.reset()
     ui.loop_stop()
-    while (
-        thread_ctrl.count_subthread()
-        or not SafeSaver.get_instance().completed()
-        or tracker.get_progress() < 1
-    ):
+    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
         ui.request(
             [
                 "正在分拣模型...",

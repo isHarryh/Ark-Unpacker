@@ -281,25 +281,17 @@ class VoiceDist:
             else:
                 data_part_file = osp.join(dir, VoiceDist.DATA_PART_FILE)
                 if not osp.isfile(data_part_file):
-                    Logger.error(
-                        f"VoiceDataDist: Data part file {data_part_file} not found."
-                    )
+                    Logger.error(f"VoiceDataDist: Data part file {data_part_file} not found.")
                     print(f"\t未找到子数据集文件 {data_part_file}", c=3)
                     failed = True
                 else:
-                    data_part: dict = json.load(
-                        open(
-                            data_part_file, "r", encoding=Config.get("export_encoding")
-                        )
-                    )
+                    data_part: dict = json.load(open(data_part_file, "r", encoding=Config.get("export_encoding")))
                     for cha, lst in data_part.items():
                         cnt += 1
                         if cha not in self.data["data"]:
                             self.data["data"][cha] = {"variations": {}}
                         self.data["data"][cha]["variations"][var] = lst
-                    Logger.info(
-                        f"VoiceDataDist: Variation {var} includes {cnt} voice file."
-                    )
+                    Logger.info(f"VoiceDataDist: Variation {var} includes {cnt} voice file.")
                     print(f"\t语种 {var} 包含 {cnt} 套语音文件", c=2)
         if failed:
             print("读取子数据集时发生警告，因此总数据集可能不完整", c=1)

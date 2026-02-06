@@ -144,9 +144,7 @@ def run_custom_resolve_ab():
     warn_large_srcdir(src)
     ###
     print("\n请输入导出目录的路径")
-    destdir = UserInput.request_output_path(
-        default_generator=lambda: f"Unpacked_{int(time.time())}"
-    )
+    destdir = UserInput.request_output_path(default_generator=lambda: f"Unpacked_{int(time.time())}")
     print("导出目录路径：", c=2)
     print(f"  {destdir}", c=6)
     warn_dir_intersection(src, destdir)
@@ -192,9 +190,7 @@ def run_custom_combine_image():
     print(f"  {rootdir}", c=6)
     ###
     print("\n请输入导出的目的地")
-    destdir = UserInput.request_output_path(
-        default_generator=lambda: f"Combined_{int(time.time())}"
-    )
+    destdir = UserInput.request_output_path(default_generator=lambda: f"Combined_{int(time.time())}")
     print("您选择的导出目录是：")
     print(f"  {destdir}", c=6)
     warn_dir_intersection(rootdir, destdir)
@@ -214,9 +210,7 @@ def run_custom_textasset_decode():
     Logger.info("CI: Customized textasset decoding mode.")
     prt_subtitle("自定义文本资源解码")
     ###
-    print(
-        "Arknights游戏内数据文件主要位于TextAsset中，采用FlatBuffers格式或AES加密存储。"
-    )
+    print("Arknights游戏内数据文件主要位于TextAsset中，采用FlatBuffers格式或AES加密存储。")
     print("在资源解包后需要对这些文件进行解码才可得到游戏数据。")
     print("\n请输入源文件目录的路径")
     print("若您不清楚哪些文件是TextAsset，请选择整个解包后的目录。")
@@ -225,9 +219,7 @@ def run_custom_textasset_decode():
     print(f"  {rootdir}", c=6)
     ###
     print("\n请输入导出的目的地")
-    destdir = UserInput.request_output_path(
-        default_generator=lambda: f"Decoded_{int(time.time())}"
-    )
+    destdir = UserInput.request_output_path(default_generator=lambda: f"Decoded_{int(time.time())}")
     print("您选择的导出目录是：")
     print(f"  {destdir}", c=6)
     warn_dir_intersection(rootdir, destdir)
@@ -253,9 +245,7 @@ def run_custom_resolve_spine():
     print(f"  {src}", c=6)
     ###
     print("\n请输入导出目录的路径")
-    destdir = UserInput.request_output_path(
-        default_generator=lambda: f"Spine_{int(time.time())}"
-    )
+    destdir = UserInput.request_output_path(default_generator=lambda: f"Spine_{int(time.time())}")
     print("导出目录路径：", c=2)
     print(f"  {destdir}", c=6)
     warn_dir_intersection(src, destdir)
@@ -289,9 +279,7 @@ def run_custom_resolve_usm():
     warn_large_srcdir(src)
     ###
     print("\n请输入导出目录的路径")
-    destdir = UserInput.request_output_path(
-        default_generator=lambda: f"USM_Extracted_{int(time.time())}"
-    )
+    destdir = UserInput.request_output_path(default_generator=lambda: f"USM_Extracted_{int(time.time())}")
     print("导出目录路径：", c=2)
     print(f"  {destdir}", c=6)
     warn_dir_intersection(src, destdir)
@@ -456,9 +444,7 @@ def run_arkmodels_workflow():
 0: 返回""",
             c=6,
         )
-        print(
-            "输入序号后按Enter即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker"
-        )
+        print("输入序号后按Enter即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker")
 
     temp_dir_1 = "temp/am_upk_operator"
     temp_dir_2 = "temp/am_upk_enemy"
@@ -536,9 +522,7 @@ def run_arkvoice_unpacking(dir, destdir1, destdir2, wildcard=False):
             wildcard = True
         if order == "1" or wildcard:
             if not osp.exists(dir):
-                print(
-                    f"在工作目录下找不到 {dir}，请确保该文件夹直接位于工作目录中。", c=3
-                )
+                print(f"在工作目录下找不到 {dir}，请确保该文件夹直接位于工作目录中。", c=3)
                 return
             print("正在清理...")
             rmdir(destdir1)
@@ -594,9 +578,7 @@ def run_arkvoice_workflow():
 0: 返回""",
             c=6,
         )
-        print(
-            "输入序号后按Enter即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker"
-        )
+        print("输入序号后按Enter即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker")
 
     while True:
         title("ArkUnpacker")
@@ -606,21 +588,13 @@ def run_arkvoice_workflow():
         if order == "1":
             wildcard = True
         if order == "2" or wildcard:
-            run_arkvoice_unpacking(
-                "audio/sound_beta_2/voice", "temp/av_upk", "voice", wildcard
-            )
+            run_arkvoice_unpacking("audio/sound_beta_2/voice", "temp/av_upk", "voice", wildcard)
         if order == "3" or wildcard:
-            run_arkvoice_unpacking(
-                "audio/sound_beta_2/voice_cn", "temp/av_upk_cn", "voice_cn", wildcard
-            )
+            run_arkvoice_unpacking("audio/sound_beta_2/voice_cn", "temp/av_upk_cn", "voice_cn", wildcard)
         if order == "4" or wildcard:
-            run_arkvoice_unpacking(
-                "audio/sound_beta_2/voice_en", "temp/av_upk_en", "voice_en", wildcard
-            )
+            run_arkvoice_unpacking("audio/sound_beta_2/voice_en", "temp/av_upk_en", "voice_en", wildcard)
         if order == "5" or wildcard:
-            run_arkvoice_unpacking(
-                "audio/sound_beta_2/voice_kr", "temp/av_upk_kr", "voice_kr", wildcard
-            )
+            run_arkvoice_unpacking("audio/sound_beta_2/voice_kr", "temp/av_upk_kr", "voice_kr", wildcard)
         if order == "6" or wildcard:
             run_arkvoice_unpacking(
                 "audio/sound_beta_2/voice_custom",

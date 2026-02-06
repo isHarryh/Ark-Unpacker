@@ -50,12 +50,8 @@ class SafeSaver(CoroutineCtrl):
 
     def __init__(self):
         """Not recommended to use. Please use the static methods."""
-        max_concurrency = PerformanceLevel.get_thread_limit(
-            Config.get("performance_level")
-        )
-        super(SafeSaver, self).__init__(
-            self._save_async, max_concurrency=max_concurrency, name="Saver"
-        )
+        max_concurrency = PerformanceLevel.get_thread_limit(Config.get("performance_level"))
+        super(SafeSaver, self).__init__(self._save_async, max_concurrency=max_concurrency, name="Saver")
         # Cache config values to avoid repeated reads
         self._export_encoding = Config.get("export_encoding")
         self._export_json_indent = Config.get("export_json_indent")
@@ -135,33 +131,25 @@ class SafeSaver(CoroutineCtrl):
         elif isinstance(obj, (uc.Sprite, uc.Texture2D)):
             # As image file:
             if obj.image.width > 0 and obj.image.height > 0:
-                SafeSaver.save_image(
-                    obj.image, destdir, name, SafeSaver._EXT_IMAGE, on_queued, on_saved
-                )
+                SafeSaver.save_image(obj.image, destdir, name, SafeSaver._EXT_IMAGE, on_queued, on_saved)
                 return
         elif isinstance(obj, uc.AudioClip):
             # As audio file:
             samples = obj.samples
             if samples:
                 for name, byte in samples.items():
-                    SafeSaver.save_bytes(
-                        byte, destdir, name, SafeSaver._EXT_RAW, on_queued, on_saved
-                    )
+                    SafeSaver.save_bytes(byte, destdir, name, SafeSaver._EXT_RAW, on_queued, on_saved)
             return
         elif isinstance(obj, uc.TextAsset):
             # As raw file:
             byte = obj.m_Script.encode("utf-8", "surrogateescape")
-            SafeSaver.save_bytes(
-                byte, destdir, name, SafeSaver._EXT_RAW, on_queued, on_saved
-            )
+            SafeSaver.save_bytes(byte, destdir, name, SafeSaver._EXT_RAW, on_queued, on_saved)
             return
         elif isinstance(obj, uc.Mesh):
             # As mesh file (.obj):
             try:
                 obj_data = obj.export()
-                SafeSaver.save_bytes(
-                    obj_data.encode("utf-8"), destdir, name, ".obj", on_queued, on_saved
-                )
+                SafeSaver.save_bytes(obj_data.encode("utf-8"), destdir, name, ".obj", on_queued, on_saved)
             except Exception as e:
                 Logger.warn(f"SafeSaver: Failed to export Mesh: {e}")
             return
@@ -199,9 +187,7 @@ class SafeSaver(CoroutineCtrl):
                             serialize_inplace(item)
                             new_list.append(item)
                         elif isinstance(item, bytes):
-                            new_list.append(
-                                str(item, "utf-8", errors="surrogateescape")
-                            )
+                            new_list.append(str(item, "utf-8", errors="surrogateescape"))
                         else:
                             new_list.append(item)
                     tree[k] = new_list
@@ -214,9 +200,7 @@ class SafeSaver(CoroutineCtrl):
             instance = SafeSaver.get_instance()
             new_data = data.copy()
             serialize_inplace(new_data)
-            json_str = json.dumps(
-                new_data, indent=instance._export_json_indent, ensure_ascii=False
-            )
+            json_str = json.dumps(new_data, indent=instance._export_json_indent, ensure_ascii=False)
             SafeSaver.save_bytes(
                 json_str.encode(instance._export_encoding, errors="surrogateescape"),
                 destdir,
@@ -245,14 +229,10 @@ class SafeSaver(CoroutineCtrl):
         :rtype: None;
         """
         for i in lst:
-            SafeSaver.save_object(
-                i, destdir, getattr(i, "m_Name", "Unknown"), on_queued, on_saved
-            )
+            SafeSaver.save_object(i, destdir, getattr(i, "m_Name", "Unknown"), on_queued, on_saved)
 
     @staticmethod
-    def _save_async(
-        data: bytes, destdir: str, name: str, ext: str, on_saved: Optional[Callable]
-    ):
+    def _save_async(data: bytes, destdir: str, name: str, ext: str, on_saved: Optional[Callable]):
         dest = osp.join(destdir, name + ext)
         try:
             with CodeProfiler("saver_save"):
@@ -272,9 +252,7 @@ class SafeSaver(CoroutineCtrl):
                             Logger.debug(f'Saver: Saved file "{dest}"')
                             return
         except Exception as arg:
-            Logger.error(
-                f'Saver: Failed to save file "{dest}" because: Exception{type(arg)} {arg}'
-            )
+            Logger.error(f'Saver: Failed to save file "{dest}" because: Exception{type(arg)} {arg}')
         # Invoke call back with `None` indicating the file was not saved
         if on_saved:
             on_saved(None)
@@ -285,15 +263,11 @@ class SafeSaver(CoroutineCtrl):
         name, ext = osp.splitext(osp.basename(dest))
         if not osp.isdir(destdir):
             return True
-        flist = filter(
-            lambda x: x.startswith(name) and x.endswith(ext), os.listdir(destdir)
-        )
+        flist = filter(lambda x: x.startswith(name) and x.endswith(ext), os.listdir(destdir))
         for i in flist:
             with open(osp.join(destdir, i), "rb") as f:
                 if f.read() == data:
-                    Logger.debug(
-                        f'Saver: File "{i}" duplication was prevented, size {len(data)}'
-                    )
+                    Logger.debug(f'Saver: File "{i}" duplication was prevented, size {len(data)}')
                     return False
         return True
 
@@ -303,9 +277,7 @@ class SafeSaver(CoroutineCtrl):
         name, ext = osp.splitext(osp.basename(dest))
         new_name = re.sub(r"[\\/:*?\"<>|\x00-\x1F]", "#", name)
         if new_name != name:
-            Logger.debug(
-                f'Saver: File name "{name}" was modified to "{new_name}" to prevent invalid characters'
-            )
+            Logger.debug(f'Saver: File name "{name}" was modified to "{new_name}" to prevent invalid characters')
             name = new_name
 
         dest = osp.join(destdir, name + ext)

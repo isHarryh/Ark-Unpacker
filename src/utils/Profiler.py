@@ -35,9 +35,7 @@ class CodeProfiler(ContextDecorator):
             with CodeProfiler._internal_lock:
                 while len(CodeProfiler._records[self._name]) >= 65536:
                     CodeProfiler._records[self._name].pop(0)
-                CodeProfiler._records[self._name].append(
-                    time.perf_counter() - self._start_time
-                )
+                CodeProfiler._records[self._name].append(time.perf_counter() - self._start_time)
         return False  # Hand down the exception
 
     @staticmethod

@@ -65,9 +65,7 @@ class Resource:
         elif isinstance(env.file, EndianBinaryReader):
             self.name: str = ""
         else:
-            raise TypeError(
-                f"Unknown type of UnityPy Environment file: {type(env.file).__name__}"
-            )
+            raise TypeError(f"Unknown type of UnityPy Environment file: {type(env.file).__name__}")
         self.env: UnityPy.Environment = env
         self.length: int = len(env.objects)
 
@@ -78,9 +76,7 @@ class Resource:
         for obj in self.get_objects_by_type(uc.AssetBundle):
             if getattr(obj, "m_Name", None):
                 if self.name != osp.basename(obj.m_Name):
-                    Logger.debug(
-                        f'ResolveAB: Resource "{self.name}" internally named "{obj.m_Name}"'
-                    )
+                    Logger.debug(f'ResolveAB: Resource "{self.name}" internally named "{obj.m_Name}"')
                     self.name = osp.basename(obj.m_Name)
 
     def _build_pathid_lut(self):
@@ -180,9 +176,7 @@ class Resource:
             obj = reader.read()
             self._lut_pathid[pid] = (reader, obj)
         if not isinstance(obj, assert_type):
-            raise TypeError(
-                f"Object with PathID {pid} is not of type {assert_type}, but {type(obj).__name__}"
-            )
+            raise TypeError(f"Object with PathID {pid} is not of type {assert_type}, but {type(obj).__name__}")
         return obj
 
     def get_objects_by_type(self, obj_type: type[_T]) -> Generator[_T, None, None]:
@@ -279,9 +273,7 @@ def ab_resolve(
 
             Logger.debug(f'ResolveAB: "{res.name}" has {res.length} objects.')
             if res.length >= 10000:
-                Logger.info(
-                    f'ResolveAB: Too many objects in file "{res.name}", unpacking it may take a long time.'
-                )
+                Logger.info(f'ResolveAB: Too many objects in file "{res.name}", unpacking it may take a long time.')
             elif res.length == 0:
                 Logger.info(f'ResolveAB: No object in file "{res.name}".')
 
@@ -312,9 +304,7 @@ def ab_resolve(
                             if tree:
                                 typetrees[str(obj.path_id)] = tree
                         except Exception as e:
-                            Logger.debug(
-                                f"ResolveAB: Failed to read typetree for {obj.type.name}_{obj.path_id}: {e}"
-                            )
+                            Logger.debug(f"ResolveAB: Failed to read typetree for {obj.type.name}_{obj.path_id}: {e}")
 
                 if typetrees:
                     result = {res.name: typetrees}
@@ -327,9 +317,7 @@ def ab_resolve(
                     )
     except BaseException as arg:
         # Error feedback
-        Logger.error(
-            f'ResolveAB: Error occurred while unpacking file "{abfile}": Exception{type(arg)} {arg}'
-        )
+        Logger.error(f'ResolveAB: Error occurred while unpacking file "{abfile}": Exception{type(arg)} {arg}')
         # raise(arg)
     if on_processed:
         on_processed()
@@ -428,11 +416,7 @@ def main(
 
     ui.reset()
     ui.loop_stop()
-    while (
-        thread_ctrl.count_subthread()
-        or not SafeSaver.get_instance().completed()
-        or tracker.get_progress() < 1
-    ):
+    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
         ui.request(
             [
                 "正在批量解包...",

@@ -74,9 +74,7 @@ def collect_voice(
 
     if clips:
         # Save the final audio file
-        Logger.debug(
-            f'CollectVoice: Completed collection at "{ori_name}", {len(clips)} clips merged'
-        )
+        Logger.debug(f'CollectVoice: Completed collection at "{ori_name}", {len(clips)} clips merged')
         voice_io = BytesIO()
         voice_merged.export(voice_io, format="ogg", parameters=["-q:a", str(3)])
         voice_bytes = voice_io.read()
@@ -165,11 +163,7 @@ def main(srcdir: str, destdir: str, force_std_name: bool):
 
     ui.reset()
     ui.loop_stop()
-    while (
-        thread_ctrl.count_subthread()
-        or not SafeSaver.get_instance().completed()
-        or tracker.get_progress() < 1
-    ):
+    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
         ui.request(
             [
                 "正在分拣语音...",

@@ -20,9 +20,7 @@ class ThreadCtrl:
         """Initializes a tool for multi threading."""
         self.__sts: "list[threading.Thread]" = []
         if not max_subthread:
-            max_subthread = PerformanceLevel.get_thread_limit(
-                Config.get("performance_level")
-            )
+            max_subthread = PerformanceLevel.get_thread_limit(Config.get("performance_level"))
         self.set_max_subthread(max_subthread)
 
     def set_max_subthread(self, max_subthread: int):
@@ -85,9 +83,7 @@ class CoroutineCtrl:
         self.__semaphore: Optional[asyncio.Semaphore] = None
 
         if max_concurrency is None:
-            max_concurrency = PerformanceLevel.get_thread_limit(
-                Config.get("performance_level")
-            )
+            max_concurrency = PerformanceLevel.get_thread_limit(Config.get("performance_level"))
         if not isinstance(max_concurrency, int) or max_concurrency < 1:
             raise ValueError("max_concurrency must be an integer that not less than 1")
         self.__max_concurrency = max_concurrency
@@ -190,9 +186,7 @@ class CoroutineCtrl:
             # Start the processing loop
             self.__loop.run_until_complete(self._loop())
 
-        self.__thread = threading.Thread(
-            target=thread_function, name=f"CoroutineCtrl:{self._name}", daemon=True
-        )
+        self.__thread = threading.Thread(target=thread_function, name=f"CoroutineCtrl:{self._name}", daemon=True)
         self.__thread.start()
         loop_ready.wait()
 
@@ -216,9 +210,7 @@ class CoroutineCtrl:
                         loop = asyncio.get_event_loop()
                         await loop.run_in_executor(None, self.__handler, *data)
                 except Exception as e:
-                    Logger.error(
-                        f"CoroutineCtrl: {self._name}: Error handling task: {e}"
-                    )
+                    Logger.error(f"CoroutineCtrl: {self._name}: Error handling task: {e}")
                 finally:
                     self._total_processed.update()
 
@@ -257,9 +249,7 @@ class CoroutineCtrl:
                         )
                         running_tasks = pending
                     else:
-                        raise RuntimeError(
-                            "No running tasks but max concurrency reached"
-                        )
+                        raise RuntimeError("No running tasks but max concurrency reached")
 
             except Exception as e:
                 Logger.error(f"CoroutineCtrl: {self._name}: Error in loop: {e}")
@@ -296,9 +286,7 @@ class UICtrl:
         """Starts auto-refresh."""
         self.__status = True
         self.__cache_lines = []
-        threading.Thread(
-            target=self.__loop, daemon=True, name=UICtrl.THREAD_NAME
-        ).start()
+        threading.Thread(target=self.__loop, daemon=True, name=UICtrl.THREAD_NAME).start()
 
     def loop_stop(self):
         """Stops auto-refresh."""
@@ -489,9 +477,7 @@ class TaskReporterTracker:
         :rtype: float;
         """
         done = sum(reporter._done * reporter._weight for reporter in self._reporters)
-        demand = sum(
-            reporter._demand * reporter._weight for reporter in self._reporters
-        )
+        demand = sum(reporter._demand * reporter._weight for reporter in self._reporters)
         pg = max(0.0, min(1.0, done / demand)) if demand > 0 else 1.0
         self._cache_pg = max(self._cache_pg, pg)
         return self._cache_pg if force_inc else pg

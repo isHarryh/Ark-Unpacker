@@ -63,9 +63,7 @@ class UsmProcessor:
             self.usm_obj = usm.Usm.open(self._usm_path, encoding=self._encoding)
             Logger.info(f'ResolveUSM: USM file loaded successfully: "{self._usm_path}"')
         except Exception as e:
-            Logger.error(
-                f'ResolveUSM: Failed to load USM file "{self._usm_path}": {stacktrace()}'
-            )
+            Logger.error(f'ResolveUSM: Failed to load USM file "{self._usm_path}": {stacktrace()}')
             raise e
 
     def extract_media(self, output_dir: str):
@@ -93,9 +91,7 @@ class UsmProcessor:
                 f'ResolveUSM: Media extraction completed for "{self._usm_path}": {len(self.video_paths)} videos, {len(self.audio_paths)} audios'
             )
         except Exception as e:
-            Logger.error(
-                f'ResolveUSM: Media extraction failed for "{self._usm_path}": {stacktrace()}'
-            )
+            Logger.error(f'ResolveUSM: Media extraction failed for "{self._usm_path}": {stacktrace()}')
             raise e
 
     def convert_formats(
@@ -126,9 +122,7 @@ class UsmProcessor:
         if v and not a:
             # Request to convert video only (silent video)
             for video_path in self.video_paths:
-                out_path = osp.join(
-                    output_dir, f"{osp.splitext(osp.basename(video_path))[0]}{v_ext}"
-                )
+                out_path = osp.join(output_dir, f"{osp.splitext(osp.basename(video_path))[0]}{v_ext}")
                 try:
                     ffmpeg.input(video_path).output(
                         out_path,
@@ -137,17 +131,13 @@ class UsmProcessor:
                     ).run(**FFMPEG_RUN_PARAMS)
                     Logger.debug(f'ResolveUSM: Conversion (v) completed: "{out_path}"')
                 except ffmpeg.Error as e:
-                    Logger.error(
-                        f'ResolveUSM: Conversion (v) failed for "{video_path}": {stacktrace()}'
-                    )
+                    Logger.error(f'ResolveUSM: Conversion (v) failed for "{video_path}": {stacktrace()}')
                     raise e
 
         elif not v and a:
             # Request to convert audio only
             for audio_path in self.audio_paths:
-                out_path = osp.join(
-                    output_dir, f"{osp.splitext(osp.basename(audio_path))[0]}{a_ext}"
-                )
+                out_path = osp.join(output_dir, f"{osp.splitext(osp.basename(audio_path))[0]}{a_ext}")
                 try:
                     ffmpeg.input(audio_path).output(
                         out_path,
@@ -156,9 +146,7 @@ class UsmProcessor:
                     ).run(**FFMPEG_RUN_PARAMS)
                     Logger.debug(f'ResolveUSM: Conversion (a) completed: "{out_path}"')
                 except ffmpeg.Error as e:
-                    Logger.error(
-                        f'ResolveUSM: Conversion (a) failed for "{audio_path}": {stacktrace()}'
-                    )
+                    Logger.error(f'ResolveUSM: Conversion (a) failed for "{audio_path}": {stacktrace()}')
                     raise e
 
         else:
@@ -176,13 +164,9 @@ class UsmProcessor:
                             vcodec=v_codec,
                             y=None,
                         ).run(**FFMPEG_RUN_PARAMS)
-                        Logger.debug(
-                            f'ResolveUSM: Conversion (v) completed: "{out_path}"'
-                        )
+                        Logger.debug(f'ResolveUSM: Conversion (v) completed: "{out_path}"')
                     except ffmpeg.Error as e:
-                        Logger.error(
-                            f'ResolveUSM: Conversion (v) failed for "{video_path}": {stacktrace()}'
-                        )
+                        Logger.error(f'ResolveUSM: Conversion (v) failed for "{video_path}": {stacktrace()}')
                         raise e
             elif len(self.video_paths) == len(self.audio_paths):
                 # Equal counts, merge them sequentially
@@ -204,12 +188,8 @@ class UsmProcessor:
                             vcodec=v_codec,
                             acodec=a_codec,
                             y=None,
-                        ).run(
-                            **FFMPEG_RUN_PARAMS
-                        )
-                        Logger.debug(
-                            f'ResolveUSM: Conversion (va) completed: "{out_path}"'
-                        )
+                        ).run(**FFMPEG_RUN_PARAMS)
+                        Logger.debug(f'ResolveUSM: Conversion (va) completed: "{out_path}"')
                     except ffmpeg.Error as e:
                         Logger.error(
                             f'ResolveUSM: Conversion (va) failed for "{video_path}" + "{audio_path}": {stacktrace()}'
@@ -267,9 +247,7 @@ def process_usm_file(
         Logger.info(f'ResolveUSM: USM file processing completed: "{usm_file_path}"')
 
     except Exception:
-        Logger.error(
-            f'ResolveUSM: USM file processing failed for "{usm_file_path}": {stacktrace()}'
-        )
+        Logger.error(f'ResolveUSM: USM file processing failed for "{usm_file_path}": {stacktrace()}')
 
     if on_processed:
         on_processed()
@@ -346,11 +324,7 @@ def main(
     ui.reset()
     ui.loop_stop()
 
-    while (
-        thread_ctrl.count_subthread()
-        or not SafeSaver.get_instance().completed()
-        or tracker.get_progress() < 1
-    ):
+    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
         ui.request(
             [
                 "正在批量处理Criware USM文件...",

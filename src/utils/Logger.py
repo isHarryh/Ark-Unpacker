@@ -52,9 +52,7 @@ class Logger:
                 except BaseException:
                     pass
 
-        self.thread = threading.Thread(
-            name=self.__class__.__name__, target=loop, args=(self,), daemon=True
-        )
+        self.thread = threading.Thread(name=self.__class__.__name__, target=loop, args=(self,), daemon=True)
         self.thread.start()
 
     def _set_level(self, level: int):
@@ -72,9 +70,7 @@ class Logger:
 
     def _log(self, tag: str, msg: str):
         try:
-            self._queue.put(
-                f"{datetime.now().strftime(Logger.__time_format)} [{tag}] {msg}\n"
-            )
+            self._queue.put(f"{datetime.now().strftime(Logger.__time_format)} [{tag}] {msg}\n")
         except BaseException:
             pass
 

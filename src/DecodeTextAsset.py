@@ -90,9 +90,7 @@ class ArkFBOLibrary:
             data = bytearray(f.read())[128:]
             handle = FBOHandler(data, root_type)
             dic = handle.to_json_dict()
-            Logger.debug(
-                f'DecodeTextAsset: FBS decoded "{path}" with type {root_type.__name__}'
-            )
+            Logger.debug(f'DecodeTextAsset: FBS decoded "{path}" with type {root_type.__name__}')
             return dic
 
 
@@ -125,9 +123,7 @@ class ArkAESLibrary:
         :rtype: bytes;
         """
         if not isinstance(data, bytes) or len(data) < 16:
-            raise ValueError(
-                "The data argument should be a bytes object longer than 16 bytes"
-            )
+            raise ValueError("The data argument should be a bytes object longer than 16 bytes")
         if not isinstance(mask, bytes) or len(mask) != 32:
             raise ValueError("The mask argument should be a 32-byte-long bytes object")
         # Trim the signature
@@ -212,14 +208,11 @@ class FBOHandler:
                 # Value is array
                 assert isinstance(f_obj_value_len, Callable)
                 data[FBOHandler._to_literal(f_obj_key())] = [
-                    FBOHandler._to_literal(f_obj_value(i))
-                    for i in range(f_obj_value_len())
+                    FBOHandler._to_literal(f_obj_value(i)) for i in range(f_obj_value_len())
                 ]
             else:
                 # Value is single
-                data[FBOHandler._to_literal(f_obj_key())] = FBOHandler._to_literal(
-                    f_obj_value()
-                )
+                data[FBOHandler._to_literal(f_obj_key())] = FBOHandler._to_literal(f_obj_value())
         else:
             # As table object:
             # Collect field names
@@ -260,10 +253,7 @@ class FBOHandler:
                                     value.update(item)
                             else:
                                 # Value is array
-                                value = [
-                                    FBOHandler._to_literal(f_field(i))
-                                    for i in range(field_len)
-                                ]
+                                value = [FBOHandler._to_literal(f_field(i)) for i in range(field_len)]
                         else:
                             # TODO handle empty table
                             pass
@@ -320,9 +310,7 @@ def text_asset_resolve(
         else:
             Logger.debug(f'DecodeTextAsset: "{fp}" not binary file')
     except Exception as arg:
-        Logger.error(
-            f'DecodeTextAsset: Failed to handle "{fp}": Exception{type(arg)} {arg}'
-        )
+        Logger.error(f'DecodeTextAsset: Failed to handle "{fp}": Exception{type(arg)} {arg}')
     if on_processed:
         on_processed()
 
@@ -388,11 +376,7 @@ def main(rootdir: str, destdir: str, do_del: bool = False):
 
     ui.reset()
     ui.loop_stop()
-    while (
-        thread_ctrl.count_subthread()
-        or not SafeSaver.get_instance().completed()
-        or tracker.get_progress() < 1
-    ):
+    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
         ui.request(
             [
                 "正在批量解码文本资源...",

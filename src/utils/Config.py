@@ -31,9 +31,7 @@ class PerformanceLevel:
     @staticmethod
     def get_thread_limit(performance_level: int):
         """Gets the maximum thread count according to the given performance level."""
-        return PerformanceLevel.__MAP.get(
-            performance_level, PerformanceLevel.__MAP[PerformanceLevel.STANDARD]
-        )
+        return PerformanceLevel.__MAP.get(performance_level, PerformanceLevel.__MAP[PerformanceLevel.STANDARD])
 
 
 class Config:
@@ -66,9 +64,7 @@ class Config:
     def _read_config(self):
         if osp.isfile(Config.__config_path):
             try:
-                loaded_config = json.load(
-                    open(Config.__config_path, "r", encoding=Config.__file_encoding)
-                )
+                loaded_config = json.load(open(Config.__config_path, "r", encoding=Config.__file_encoding))
                 if isinstance(loaded_config, dict):
                     for k in Config.__default_config.keys():
                         default_val = Config.__default_config[k]
@@ -84,9 +80,7 @@ class Config:
                 self._config = Config.__default_config
                 Logger.set_instance(self.get("log_file"), self.get("log_level"))
                 Logger.set_level(self.get("log_level"))
-                Logger.error(
-                    f"Config: Failed to parsing config, now using default config, cause: {arg}"
-                )
+                Logger.error(f"Config: Failed to parsing config, now using default config, cause: {arg}")
         else:
             self._config = Config.__default_config
             Logger.set_instance(self.get("log_file"), self.get("log_level"))

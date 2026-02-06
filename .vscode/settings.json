@@ -1,4 +1,5 @@
 {
+    "black-formatter.args": [ "-l", "120" ],
     "python.analysis.typeCheckingMode": "standard",
     "cSpell.language": "en,en-US,en-GB",
     "cSpell.words": [

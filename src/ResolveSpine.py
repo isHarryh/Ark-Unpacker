@@ -68,9 +68,7 @@ class SpineAtlasHandler(SpineAssetHandler):
             if t.startswith("dyn_portrait_"):
                 return SpineType.DYN_PORTRAIT  # Reliable
             elif t.startswith("dyn_illust_"):
-                return (
-                    SpineType.DYN_ILLUST
-                )  # Not reliable, DYN_ILLUST_START may also match this
+                return SpineType.DYN_ILLUST  # Not reliable, DYN_ILLUST_START may also match this
             else:
                 Logger.info(f'ResolveSpine: Unknown dynamic illust Spine type of "{t}"')
                 return SpineType.DYN_UNKNOWN  # Unrecognized
@@ -114,9 +112,7 @@ class SpineSkeletonHandler(SpineAssetHandler):
                 elif "idle" in anim_names:
                     return SpineType.DYN_ILLUST  # Fallback
                 else:
-                    Logger.info(
-                        f'ResolveSpine: Unknown dynamic illust Spine type of "{t}", animations={anim_names}'
-                    )
+                    Logger.info(f'ResolveSpine: Unknown dynamic illust Spine type of "{t}", animations={anim_names}')
                     return SpineType.DYN_UNKNOWN  # Unrecognized
             else:
                 Logger.info(f'ResolveSpine: Unknown dynamic illust Spine type of "{t}"')
@@ -185,9 +181,7 @@ class SpineAsset:
             else osp.splitext(osp.basename(self.atlas_handler.original_name))[0]
         )
         prefix = f"{self.type.value}/{folder_name}/"
-        for h in list((self.atlas_handler, self.skel_handler)) + list(
-            self.tex_handlers
-        ):
+        for h in list((self.atlas_handler, self.skel_handler)) + list(self.tex_handlers):
             h.set_path_prefix(prefix)
 
     def save_spine(
@@ -214,14 +208,10 @@ class SpineAsset:
                     tex.rgb = image_resize(tex.rgb, p.size)
                     break
             if tex.alpha:
-                Logger.debug(
-                    f'ResolveSpine: Spine asset "{tex.name}" found with Alpha texture.'
-                )
+                Logger.debug(f'ResolveSpine: Spine asset "{tex.name}" found with Alpha texture.')
                 rgba = AlphaRGBCombiner(tex.alpha).combine_with(tex.rgb)
             else:
-                Logger.debug(
-                    f'ResolveSpine: Spine asset "{tex.name}" found with NO Alpha texture.'
-                )
+                Logger.debug(f'ResolveSpine: Spine asset "{tex.name}" found with NO Alpha texture.')
                 rgba = AlphaRGBCombiner.apply_premultiplied_alpha(tex.rgb)
             SafeSaver.save_image(
                 rgba,
@@ -237,9 +227,7 @@ class SpineAsset:
         return f"<SpineAsset type={self.type}>"
 
     @classmethod
-    def _extract_skeleton_name_mapping_from_pfb(
-        cls, res: Resource
-    ) -> SDPathID2NamesMap:
+    def _extract_skeleton_name_mapping_from_pfb(cls, res: Resource) -> SDPathID2NamesMap:
         """Extracts skeleton data asset path id to GameObject name mapping from pfb resource.
 
         This is used to differentiate same-skeleton different-skin models that have
@@ -270,9 +258,7 @@ class SpineAsset:
                         animator_ref = tree_comp.get("_animator", {})
                         if "m_PathID" not in animator_ref:
                             continue
-                        animator_obj = res.get_object_by_pathid(
-                            animator_ref, uc.MonoBehaviour
-                        )
+                        animator_obj = res.get_object_by_pathid(animator_ref, uc.MonoBehaviour)
 
                         with TreeReader(animator_obj) as tree_animator:
                             skeleton_ref = tree_animator.get("_skeleton", {})
@@ -281,9 +267,7 @@ class SpineAsset:
                                     f'ResolveSpine: Pfb mapping skeleton reference not found in animator of "{m_name}", may be non-spine character'
                                 )
                                 continue
-                            skeleton_obj = res.get_object_by_pathid(
-                                skeleton_ref, uc.MonoBehaviour
-                            )
+                            skeleton_obj = res.get_object_by_pathid(skeleton_ref, uc.MonoBehaviour)
 
                             with TreeReader(skeleton_obj) as tree_skel:
                                 skel_data_ref = tree_skel.get("skeletonDataAsset", {})
@@ -296,9 +280,7 @@ class SpineAsset:
                                         f'ResolveSpine: Pfb mapping mapped skeleton data asset {skel_data_pathid} to "{m_name}"'
                                     )
         except Exception:
-            Logger.warn(
-                f'ResolveSpine: Pfb mapping failed to process pfb "{res.name}": {stacktrace()}'
-            )
+            Logger.warn(f'ResolveSpine: Pfb mapping failed to process pfb "{res.name}": {stacktrace()}')
         Logger.info(
             f'ResolveSpine: Pfb mapping extracted total {len(mapping)} skeleton name mappings from pfb "{res.name}"'
         )
@@ -320,30 +302,21 @@ class SpineAsset:
                 ["atlasAssets", "skeletonJSON"],
             ):
                 skel = res.get_object_by_pathid(tree_sd["skeletonJSON"], uc.TextAsset)
-                mono_ad = res.get_object_by_pathid(
-                    tree_sd["atlasAssets"][0], uc.MonoBehaviour
-                )
+                mono_ad = res.get_object_by_pathid(tree_sd["atlasAssets"][0], uc.MonoBehaviour)
                 # ad = AtlasData
                 with TreeReader(mono_ad) as tree_ad:
                     atlas = res.get_object_by_pathid(tree_ad["atlasFile"], uc.TextAsset)
                     tex_handlers: List[SpineTextureHandler] = []
-                    for mat in (
-                        res.get_object_by_pathid(i, uc.Material)
-                        for i in tree_ad["materials"]
-                    ):
+                    for mat in (res.get_object_by_pathid(i, uc.Material) for i in tree_ad["materials"]):
                         # mat = MaterialData
                         tex_rgb, tex_alpha = None, None
                         with TreeReader(mat) as tree_mat:
                             tex_envs = tree_mat["m_SavedProperties"]["m_TexEnvs"]
                             for tex in tex_envs:
                                 if tex[0] == "_MainTex":
-                                    tex_rgb = res.get_object_by_pathid(
-                                        tex[1]["m_Texture"], uc.Texture2D
-                                    )
+                                    tex_rgb = res.get_object_by_pathid(tex[1]["m_Texture"], uc.Texture2D)
                                 elif tex[0] == "_AlphaTex":
-                                    tex_alpha = res.try_get_object_by_pathid(
-                                        tex[1]["m_Texture"], uc.Texture2D
-                                    )
+                                    tex_alpha = res.try_get_object_by_pathid(tex[1]["m_Texture"], uc.Texture2D)
                         if tex_rgb is None:
                             raise ValueError("RGB main texture not found")
                         tex_handlers.append(SpineTextureHandler(tex_rgb, tex_alpha))
@@ -351,9 +324,7 @@ class SpineAsset:
                     if not skel or not atlas or not tex_handlers:
                         raise ValueError("Incomplete Spine asset")
 
-                    sd_pathid = (
-                        mono_sd.object_reader.path_id if mono_sd.object_reader else None
-                    )
+                    sd_pathid = mono_sd.object_reader.path_id if mono_sd.object_reader else None
 
                     sp_type = None
                     if any(mono_sd is f for f, _ in found_front_and_back):
@@ -370,9 +341,7 @@ class SpineAsset:
                     )
                     spines.append(spine)
         except Exception:
-            Logger.warn(
-                f'ResolveSpine: Failed to handle skeletons in resource "{res.name}": {stacktrace()}'
-            )
+            Logger.warn(f'ResolveSpine: Failed to handle skeletons in resource "{res.name}": {stacktrace()}')
         return spines
 
     @classmethod
@@ -383,22 +352,14 @@ class SpineAsset:
                 uc.MonoBehaviour,
                 ["_animations", "_front", "_back"],
             ):
-                mono_sa_front = res.get_object_by_pathid(
-                    tree_ca["_front"]["skeleton"], uc.MonoBehaviour
-                )
-                mono_sa_back = res.get_object_by_pathid(
-                    tree_ca["_back"]["skeleton"], uc.MonoBehaviour
-                )
+                mono_sa_front = res.get_object_by_pathid(tree_ca["_front"]["skeleton"], uc.MonoBehaviour)
+                mono_sa_back = res.get_object_by_pathid(tree_ca["_back"]["skeleton"], uc.MonoBehaviour)
                 # sa = SkeletonAnimation
                 if mono_sa_front and mono_sa_back:
                     with TreeReader(mono_sa_front) as tree_sa:
-                        mono_sd_front = res.get_object_by_pathid(
-                            tree_sa["skeletonDataAsset"], uc.MonoBehaviour
-                        )
+                        mono_sd_front = res.get_object_by_pathid(tree_sa["skeletonDataAsset"], uc.MonoBehaviour)
                     with TreeReader(mono_sa_back) as tree_sa:
-                        mono_sd_back = res.get_object_by_pathid(
-                            tree_sa["skeletonDataAsset"], uc.MonoBehaviour
-                        )
+                        mono_sd_back = res.get_object_by_pathid(tree_sa["skeletonDataAsset"], uc.MonoBehaviour)
                     # sd = SkeletonData
                     if mono_sd_front and mono_sd_back:
                         yield mono_sd_front, mono_sd_back
@@ -435,9 +396,7 @@ def pfb_resolve(srcdir: str) -> dict:
                         if name not in all_mappings[pid]:
                             all_mappings[pid].append(name)
         except Exception:
-            Logger.warn(
-                f'ResolveSpine: Pfb resolve failed to process "{pfb_file}": {stacktrace()}'
-            )
+            Logger.warn(f'ResolveSpine: Pfb resolve failed to process "{pfb_file}": {stacktrace()}')
 
     Logger.info(
         f"ResolveSpine: Pfb resolve completed with {len(all_mappings)} total mappings from {len(pfb_files)} pfb files"
@@ -475,9 +434,7 @@ def spine_resolve(
             res = Resource(UnityPy.load(f))
             spines = SpineAsset.from_resource(res)
             if len(spines) >= 10:
-                Logger.info(
-                    f'ResolveSpine: "{res.name}" has {len(spines)} spines, unpacking it may take a long time.'
-                )
+                Logger.info(f'ResolveSpine: "{res.name}" has {len(spines)} spines, unpacking it may take a long time.')
             for s in spines:
                 assert s.sd_pathid is not None
                 mapped_names = sd_name_mapping.get(s.sd_pathid)
@@ -492,9 +449,7 @@ def spine_resolve(
                     s.process_path()
                     s.save_spine(destdir, on_file_queued, on_file_saved)
     except BaseException as arg:
-        Logger.error(
-            f'ResolveSpine: Error occurred while unpacking file "{abfile}": Exception{type(arg)} {arg}'
-        )
+        Logger.error(f'ResolveSpine: Error occurred while unpacking file "{abfile}": Exception{type(arg)} {arg}')
     if on_processed:
         on_processed()
 
@@ -581,11 +536,7 @@ def main(
         )
     ui.reset()
     ui.loop_stop()
-    while (
-        thread_ctrl.count_subthread()
-        or not SafeSaver.get_instance().completed()
-        or tracker.get_progress() < 1
-    ):
+    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
         ui.request(
             [
                 "正在批量导出Spine模型...",

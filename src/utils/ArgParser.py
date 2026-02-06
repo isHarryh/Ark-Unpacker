@@ -23,12 +23,8 @@ class _ArkUnpackerArgParser(argparse.ArgumentParser):
             self.error("output should be defined in this mode")
         if not allow_file_input and os.path.isfile(args.input):
             self.error("input should be a directory, not file")
-        if not os.path.isdir(args.input) and not (
-            allow_file_input and os.path.isfile(args.input)
-        ):
-            self.error(
-                f"input should be a {'file or ' if allow_file_input else ''}directory that exists"
-            )
+        if not os.path.isdir(args.input) and not (allow_file_input and os.path.isfile(args.input)):
+            self.error(f"input should be a {'file or ' if allow_file_input else ''}directory that exists")
 
     def validate_logging_level_arg(self, args):
         if getattr(args, "logging_level", None) is None:

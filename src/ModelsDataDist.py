@@ -105,9 +105,7 @@ class ModelsDist:
 
     def get_enemy_sort_tags(self, item: dict):
         rst = ["Enemy"]
-        additional = {0: "EnemyNormal", 1: "EnemyElite", 2: "EnemyBoss"}.get(
-            item["LevelType"]["MValue"], None
-        )
+        additional = {0: "EnemyNormal", 1: "EnemyElite", 2: "EnemyBoss"}.get(item["LevelType"]["MValue"], None)
         return rst + [additional] if additional else rst
 
     def update_operator_data(self):
@@ -158,13 +156,9 @@ class ModelsDist:
                             v["DisplaySkin"]["SkinGroupName"],
                         )
                     else:
-                        Logger.info(
-                            f'ModelsDataDist: The skin-key of the skin "{k}" collided with an existed one.'
-                        )
+                        Logger.info(f'ModelsDataDist: The skin-key of the skin "{k}" collided with an existed one.')
                 else:
-                    Logger.warn(
-                        f'ModelsDataDist: The operator-key of the skin "{k}" not found.'
-                    )
+                    Logger.warn(f'ModelsDataDist: The operator-key of the skin "{k}" not found.')
                     print(f"\t皮肤 {k} 找不到对应的干员Key", c=3)
         self.data["data"].update(collected)
         Logger.info(f"ModelsDataDist: Found {len(collected)} skins.")
@@ -201,9 +195,7 @@ class ModelsDist:
         print("分析动态立绘信息...")
         collected = {}
         if osp.isdir(self.data["storageDirectory"]["DynIllust"]):
-            for i in get_dirlist(
-                self.data["storageDirectory"]["DynIllust"], max_depth=1
-            ):
+            for i in get_dirlist(self.data["storageDirectory"]["DynIllust"], max_depth=1):
                 # (i是每个动态立绘的文件夹)
                 base = osp.basename(i)
                 if base.startswith("dyn_"):
@@ -236,9 +228,7 @@ class ModelsDist:
                                 origin["skinGroupName"],
                             )
                         else:
-                            Logger.warn(
-                                f'ModelsDataDist: The operator-key of the dyn illust "{key}" not found.'
-                            )
+                            Logger.warn(f'ModelsDataDist: The operator-key of the dyn illust "{key}" not found.')
                             print(f"\t动态立绘 {key} 找不到对应的干员Key", c=3)
                     else:
                         Logger.warn(
@@ -274,15 +264,11 @@ class ModelsDist:
                         ext_verified = False
                         for ext in ext_alt:
                             # (ext是文件扩展名)
-                            asset_list_specified = list(
-                                filter(lambda x: osp.splitext(x)[1] == ext, file_list)
-                            )
+                            asset_list_specified = list(filter(lambda x: osp.splitext(x)[1] == ext, file_list))
                             if len(asset_list_specified) > 0:
                                 # 以ext为扩展名的文件存在
                                 if len(asset_list_specified) == 1:
-                                    asset_list_pending[ext_type] = asset_list_specified[
-                                        0
-                                    ]
+                                    asset_list_pending[ext_type] = asset_list_specified[0]
                                 else:
                                     Logger.debug(
                                         f'ModelsDataDist: The {ext_type} asset of "{k}" is multiple, see in "{d}".'
@@ -293,9 +279,7 @@ class ModelsDist:
                                 break  # 跳出对ext的遍历
                         # 如果ext_alt组所指定的文件不存在
                         if not ext_verified:
-                            Logger.info(
-                                f'ModelsDataDist: The {ext_type} asset of "{k}" not found, see in "{d}".'
-                            )
+                            Logger.info(f'ModelsDataDist: The {ext_type} asset of "{k}" not found, see in "{d}".')
                             print(
                                 f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：{color(1)}{ext_type} 文件缺失{color(7)}"
                             )
@@ -306,33 +290,21 @@ class ModelsDist:
                     else:
                         cur_fail += 1
                 else:
-                    Logger.info(
-                        f'ModelsDataDist: The model directory of "{k}" not found, expected path "{d}".'
-                    )
-                    print(
-                        f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：模型不存在"
-                    )
+                    Logger.info(f'ModelsDataDist: The model directory of "{k}" not found, expected path "{d}".')
+                    print(f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：模型不存在")
                     cur_fail += 1
             else:
                 Logger.info(
                     f"ModelsDataDist: The model asset of \"{k}\" is the type of \"{v['type']}\" which is not declared in the prefab."
                 )
-                print(
-                    f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：未在脚本预设中找到其类型的存储目录"
-                )
+                print(f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：未在脚本预设中找到其类型的存储目录")
                 cur_fail += 1
             self.data["data"][k]["assetList"] = asset_list
             cur_done += 1
             if cur_done % 100 == 0:
-                print(
-                    f"\t已处理完成 {color(2)}{round(cur_done / total * 100)}%{color(7)}"
-                )
-        Logger.info(
-            f"ModelsDataDist: Verify models completed, {cur_done - cur_fail} success, {cur_fail} failure."
-        )
-        print(
-            f"\n\t校验完成：{color(2)}成功{cur_done - cur_fail}{color(7)}，失败{cur_fail}"
-        )
+                print(f"\t已处理完成 {color(2)}{round(cur_done / total * 100)}%{color(7)}")
+        Logger.info(f"ModelsDataDist: Verify models completed, {cur_done - cur_fail} success, {cur_fail} failure.")
+        print(f"\n\t校验完成：{color(2)}成功{cur_done - cur_fail}{color(7)}，失败{cur_fail}")
 
     def export_json(self):
         Logger.info("ModelsDataDist: Writing to json.")

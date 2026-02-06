@@ -68,9 +68,7 @@ class AlphaRGBCombiner:
         return img_rgba
 
     @staticmethod
-    def apply_premultiplied_alpha(
-        rgba: Union[str, Image.Image], resize: Optional[tuple] = None
-    ):
+    def apply_premultiplied_alpha(rgba: Union[str, Image.Image], resize: Optional[tuple] = None):
         """Multiplies the RGB channels with the alpha channel.
         Useful when handling non-PMA Spine textures.
 
@@ -119,22 +117,14 @@ class AlphaRGBSearcher:
         dirname = osp.dirname(self.fp_alpha)
         flist = os.listdir(dirname)
         flist = list(filter(is_image_file, flist))
-        flist = list(
-            filter(
-                lambda x: x == real + ext or (x.startswith(real) and "$" in x), flist
-            )
-        )
+        flist = list(filter(lambda x: x == real + ext or (x.startswith(real) and "$" in x), flist))
         flist = [osp.join(dirname, x) for x in flist]
 
         if len(flist) == 0:
-            Logger.info(
-                f'CombineRGBwithA: No RGB-image could be matched to "{self.fp_alpha}"'
-            )
+            Logger.info(f'CombineRGBwithA: No RGB-image could be matched to "{self.fp_alpha}"')
             raise NoRGBImageMatchedError(self.fp_alpha)
         elif len(flist) == 1:
-            Logger.debug(
-                f'CombineRGBwithA: "{flist[0]}" matched "{self.fp_alpha}" exclusively'
-            )
+            Logger.debug(f'CombineRGBwithA: "{flist[0]}" matched "{self.fp_alpha}" exclusively')
             return flist[0]
         else:
             best, similarity = self.choose_most_similar_rgb(flist)
@@ -194,10 +184,7 @@ class AlphaRGBSearcher:
         diff = []
         for y in range(precision):
             for x in range(precision):
-                diff.append(
-                    (((px_rgb[x, y] if px_rgb[x, y] < 255 else 0) - px_a[x, y]) ** 2)
-                    / 256.0
-                )
+                diff.append((((px_rgb[x, y] if px_rgb[x, y] < 255 else 0) - px_a[x, y]) ** 2) / 256.0)
         # Return the similarity
         diff_mean = round(sum(diff) / len(diff))
         return 0 if diff_mean >= 255 else (255 if diff_mean <= 0 else 255 - diff_mean)
@@ -254,9 +241,7 @@ def image_resolve(
         pass
     except BaseException as arg:
         # Error feedback
-        Logger.error(
-            f'CombineRGBwithA: Error occurred while processing alpha image "{fp}": Exception{type(arg)} {arg}'
-        )
+        Logger.error(f'CombineRGBwithA: Error occurred while processing alpha image "{fp}": Exception{type(arg)} {arg}')
         # raise(arg)
     if on_processed:
         on_processed()
@@ -278,9 +263,7 @@ def main(rootdir: str, destdir: str, do_del: bool = False):
     destdir = osp.normpath(osp.realpath(destdir))
     flist = get_filelist(rootdir)
     flist = list(filter(is_image_file, flist))
-    flist = list(
-        filter(lambda x: AlphaRGBSearcher.calc_real_name(x) is not None, flist)
-    )
+    flist = list(filter(lambda x: AlphaRGBSearcher.calc_real_name(x) is not None, flist))
 
     if do_del:
         print("\n正在清理...", s=1)
@@ -326,11 +309,7 @@ def main(rootdir: str, destdir: str, do_del: bool = False):
 
     ui.reset()
     ui.loop_stop()
-    while (
-        thread_ctrl.count_subthread()
-        or not SafeSaver.get_instance().completed()
-        or tracker.get_progress() < 1
-    ):
+    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
         ui.request(
             [
                 "正在批量合并图片...",
