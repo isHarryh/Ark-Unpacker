@@ -33,23 +33,15 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v4
-        with:
-          poetry-version: 2.1.2
-
-      - name: Define venv location
         run: |
-          poetry config virtualenvs.create true --local
-          poetry config virtualenvs.in-project true --local
-
-      - name: Define venv caching
-        uses: actions/cache@v5
-        with:
-          path: ./.venv
-          key: venv-${{ env.matrix-name }}-${{ hashFiles('poetry.lock') }}
+          pip install pipx
+          pipx install poetry==2.1.2
+          pipx ensurepath
 
       - name: Install dependencies
         run: |
+          poetry env use ${{ matrix.python-version }}
+          poetry env info
           poetry install
 
       - name: Build distributable
