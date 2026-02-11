@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9.13", "3.10.11", "3.11.9", "3.12.9"]
+        python-version: ["3.10.11", "3.11.9", "3.12.10"]
         os: ["windows"]
 
     runs-on: ${{ matrix.os }}-latest
@@ -35,7 +35,7 @@ jobs:
       - name: Install Poetry
         run: |
           pip install pipx
-          pipx install poetry==2.1.2
+          pipx install poetry==2.3.2
           pipx ensurepath
 
       - name: Install dependencies
