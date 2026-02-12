@@ -10,15 +10,15 @@ readme = "README.md"
 requires-python = ">=3.10,<3.13"
 dependencies = [
     "bson (~=0.5)",
-    "flatbuffers (~=25.9)",
+    "flatbuffers (~=25.12)",
     "numpy (~=2.2)",
     "Pillow (~=11.3)",
-    "psutil (~=7.1)",
+    "psutil (~=7.2)",
     "pycryptodome (~=3.22)",
     "pydub-ng (~=0.1)",
     "python-json-logger (~=3.3)",
     "spine-asset (~=1.1)",
-    "UnityPy (~=1.23)",
+    "UnityPy (~=1.24)",
     "wannacri (~=0.3)"
 ]
 
