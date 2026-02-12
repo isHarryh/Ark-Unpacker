@@ -47,9 +47,8 @@ class ModelsDist:
         ".skel": [".skel", ""],
     }
     GAMEDATA_DIR = "anon"
-    TEMP_DIR = "temp/am_upk_mdd"
 
-    def __init__(self):
+    def __init__(self, mdd_temp_dir: str):
         self.data = {
             "storageDirectory": ModelsDist.MODELS_DIR,
             "sortTags": ModelsDist.SORT_TAGS_L10N,
@@ -58,9 +57,10 @@ class ModelsDist:
             "data": {},
             "arkPetsCompatibility": ModelsDist.ARK_PETS_COMPATIBILITY,
         }
+        self.mdd_temp_dir = mdd_temp_dir
 
     def get_gamedata(self, alias: tuple):
-        for i in get_filelist(ModelsDist.TEMP_DIR):
+        for i in get_filelist(self.mdd_temp_dir):
             if any(osp.basename(i).startswith(a) for a in alias):
                 rst = ArkFBOLibrary.decode(i)
                 if rst is None:
@@ -319,9 +319,9 @@ class ModelsDist:
 
 
 ########## Main-主程序 ##########
-def main():
+def main(mdd_temp_dir: str):
     Logger.reset_stats()
-    md = ModelsDist()
+    md = ModelsDist(mdd_temp_dir)
     md.update_operator_data()
     md.update_skin_data()
     md.update_enemy_data()

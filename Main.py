@@ -400,7 +400,7 @@ def run_arkmodels_filtering(dirs, destdirs):
     AU_Cm.main(dirs_, destdirs_)
 
 
-def run_arkmodels_data_dist():
+def run_arkmodels_data_dist(mdd_temp_dir):
     Logger.info("CI: ArkModels dataset mode.")
     prt_subtitle("ArkModels 生成数据集")
     ###
@@ -408,13 +408,13 @@ def run_arkmodels_data_dist():
         if not osp.exists(i):
             print(f'在工作目录下找不到 {i}，请确认您先前已运行了"模型分拣"。', c=3)
             UserInput.request('> 输入符号 "*" 以取消任务，或直接按Enter以强制继续')
-    if not osp.exists(AU_Mdd.ModelsDist.TEMP_DIR):
+    if not osp.exists(mdd_temp_dir):
         print(
-            f'在工作目录下找不到 {AU_Mdd.ModelsDist.TEMP_DIR}，请确认您先前已运行了"匿名数据提取"。',
+            f'找不到 {mdd_temp_dir}，请确认您先前已运行了"匿名数据提取"。',
             c=3,
         )
         return
-    AU_Mdd.main()
+    AU_Mdd.main(mdd_temp_dir)
 
 
 def run_arkmodels_workflow():
@@ -455,7 +455,7 @@ def run_arkmodels_workflow():
     temp_dir_1 = norm_tmp_dir("temp/am_upk_operator")
     temp_dir_2 = norm_tmp_dir("temp/am_upk_enemy")
     temp_dir_3 = norm_tmp_dir("temp/am_upk_dynillust")
-    temp_dir_4 = norm_tmp_dir(AU_Mdd.ModelsDist.TEMP_DIR)
+    temp_dir_4 = norm_tmp_dir("temp/am_upk_mdd")
 
     while True:
         title("ArkUnpacker")
@@ -492,7 +492,7 @@ def run_arkmodels_workflow():
                 ["models", "models_enemies", "models_illust"],
             )
         if order == "7" or wildcard:
-            run_arkmodels_data_dist()
+            run_arkmodels_data_dist(temp_dir_4)
         if order in ["1", "2", "3", "4", "5", "6", "7"]:
             prt_continue()
         if order == "0":
