@@ -383,14 +383,14 @@ reference = "PyPI-Tsinghua"
 
 [[package]]
 name = "fsspec"
-version = "2025.10.0"
+version = "2026.2.0"
 description = "File-system specification"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "fsspec-2025.10.0-py3-none-any.whl", hash = "sha256:7c7712353ae7d875407f97715f0e1ffcc21e33d5b24556cb1e090ae9409ec61d"},
-    {file = "fsspec-2025.10.0.tar.gz", hash = "sha256:b6789427626f068f9a83ca4e8a3cc050850b6c0f71f99ddb4f542b8266a26a59"},
+    {file = "fsspec-2026.2.0-py3-none-any.whl", hash = "sha256:98de475b5cb3bd66bedd5c4679e87b4fdfe1a3bf4d707b151b3c07e58c9a2437"},
+    {file = "fsspec-2026.2.0.tar.gz", hash = "sha256:6544e34b16869f5aacd5b90bdf1a71acb37792ea3ddf6125ee69a22a53fb8bff"},
 ]
 
 [package.extras]
@@ -401,9 +401,9 @@ dask = ["dask", "distributed"]
 dev = ["pre-commit", "ruff (>=0.5)"]
 doc = ["numpydoc", "sphinx", "sphinx-design", "sphinx-rtd-theme", "yarl"]
 dropbox = ["dropbox", "dropboxdrivefs", "requests"]
-full = ["adlfs", "aiohttp (!=4.0.0a0,!=4.0.0a1)", "dask", "distributed", "dropbox", "dropboxdrivefs", "fusepy", "gcsfs", "libarchive-c", "ocifs", "panel", "paramiko", "pyarrow (>=1)", "pygit2", "requests", "s3fs", "smbprotocol", "tqdm"]
+full = ["adlfs", "aiohttp (!=4.0.0a0,!=4.0.0a1)", "dask", "distributed", "dropbox", "dropboxdrivefs", "fusepy", "gcsfs (>2024.2.0)", "libarchive-c", "ocifs", "panel", "paramiko", "pyarrow (>=1)", "pygit2", "requests", "s3fs (>2024.2.0)", "smbprotocol", "tqdm"]
 fuse = ["fusepy"]
-gcs = ["gcsfs"]
+gcs = ["gcsfs (>2024.2.0)"]
 git = ["pygit2"]
 github = ["requests"]
 gs = ["gcsfs"]
@@ -412,13 +412,13 @@ hdfs = ["pyarrow (>=1)"]
 http = ["aiohttp (!=4.0.0a0,!=4.0.0a1)"]
 libarchive = ["libarchive-c"]
 oci = ["ocifs"]
-s3 = ["s3fs"]
+s3 = ["s3fs (>2024.2.0)"]
 sftp = ["paramiko"]
 smb = ["smbprotocol"]
 ssh = ["paramiko"]
 test = ["aiohttp (!=4.0.0a0,!=4.0.0a1)", "numpy", "pytest", "pytest-asyncio (!=0.22.0)", "pytest-benchmark", "pytest-cov", "pytest-mock", "pytest-recording", "pytest-rerunfailures", "requests"]
 test-downstream = ["aiobotocore (>=2.5.4,<3.0.0)", "dask[dataframe,test]", "moto[server] (>4,<5)", "pytest-timeout", "xarray"]
-test-full = ["adlfs", "aiohttp (!=4.0.0a0,!=4.0.0a1)", "cloudpickle", "dask", "distributed", "dropbox", "dropboxdrivefs", "fastparquet", "fusepy", "gcsfs", "jinja2", "kerchunk", "libarchive-c", "lz4", "notebook", "numpy", "ocifs", "pandas", "panel", "paramiko", "pyarrow", "pyarrow (>=1)", "pyftpdlib", "pygit2", "pytest", "pytest-asyncio (!=0.22.0)", "pytest-benchmark", "pytest-cov", "pytest-mock", "pytest-recording", "pytest-rerunfailures", "python-snappy", "requests", "smbprotocol", "tqdm", "urllib3", "zarr", "zstandard ; python_version < \"3.14\""]
+test-full = ["adlfs", "aiohttp (!=4.0.0a0,!=4.0.0a1)", "backports-zstd ; python_version < \"3.14\"", "cloudpickle", "dask", "distributed", "dropbox", "dropboxdrivefs", "fastparquet", "fusepy", "gcsfs", "jinja2", "kerchunk", "libarchive-c", "lz4", "notebook", "numpy", "ocifs", "pandas (<3.0.0)", "panel", "paramiko", "pyarrow", "pyarrow (>=1)", "pyftpdlib", "pygit2", "pytest", "pytest-asyncio (!=0.22.0)", "pytest-benchmark", "pytest-cov", "pytest-mock", "pytest-recording", "pytest-rerunfailures", "python-snappy", "requests", "smbprotocol", "tqdm", "urllib3", "zarr", "zstandard ; python_version < \"3.14\""]
 tqdm = ["tqdm"]
 
 [package.source]
@@ -613,14 +613,14 @@ reference = "PyPI-Tsinghua"
 
 [[package]]
 name = "packaging"
-version = "25.0"
+version = "26.0"
 description = "Core utilities for Python packages"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
 files = [
-    {file = "packaging-25.0-py3-none-any.whl", hash = "sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484"},
-    {file = "packaging-25.0.tar.gz", hash = "sha256:d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f"},
+    {file = "packaging-26.0-py3-none-any.whl", hash = "sha256:b36f1fef9334a5588b4166f8bcd26a14e521f2b55e6b9de3aaa80d3ff7a37529"},
+    {file = "packaging-26.0.tar.gz", hash = "sha256:00243ae351a257117b6a241061796684b084ed1c516a08c48a3f7e147a9d80b4"},
 ]
 
 [package.source]
@@ -874,18 +874,18 @@ reference = "PyPI-Tsinghua"
 
 [[package]]
 name = "pydub-ng"
-version = "0.1.0"
-description = "Manipulate audio with an simple and easy high level interface"
+version = "0.2.0"
+description = "Manipulate audio with a simple and easy high level interface"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "pydub_ng-0.1.0-py3-none-any.whl", hash = "sha256:bb347b566091741eb30d7e8736d3ac4d89fd00ab44182dfd78f6fdc41d546a52"},
-    {file = "pydub_ng-0.1.0.tar.gz", hash = "sha256:684f49af8012203f0487ba77c5f7a70e8063d46384643def93f85cd5c50f967b"},
+    {file = "pydub_ng-0.2.0-py3-none-any.whl", hash = "sha256:dc3bf2b13152fc94c1110d926b0223c65305a71e81bba3a7936772923833d0d3"},
+    {file = "pydub_ng-0.2.0.tar.gz", hash = "sha256:d5e82e59395afa5a36a329b3d19651143f8281afad9c0b13d8a2bb646c5a3f01"},
 ]
 
 [package.extras]
-dev = ["build (>=1.0.0)", "pytest (>=8.0.0)", "pytest-cov (>=4.1.0)", "pytest-datadir (>=1.4.1)"]
+dev = ["build (>=1.0.0)", "pytest (>=8.0.0)", "pytest-cov (>=4.1.0)", "pytest-datadir (>=1.4.1)", "ruff (>=0.1.0)"]
 
 [package.source]
 type = "legacy"
@@ -951,14 +951,14 @@ reference = "PyPI-Tsinghua"
 
 [[package]]
 name = "pyinstaller-hooks-contrib"
-version = "2025.10"
+version = "2026.0"
 description = "Community maintained hooks for PyInstaller"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
 files = [
-    {file = "pyinstaller_hooks_contrib-2025.10-py3-none-any.whl", hash = "sha256:aa7a378518772846221f63a84d6306d9827299323243db890851474dfd1231a9"},
-    {file = "pyinstaller_hooks_contrib-2025.10.tar.gz", hash = "sha256:a1a737e5c0dccf1cf6f19a25e2efd109b9fec9ddd625f97f553dac16ee884881"},
+    {file = "pyinstaller_hooks_contrib-2026.0-py3-none-any.whl", hash = "sha256:0590db8edeba3e6c30c8474937021f5cd39c0602b4d10f74a064c73911efaca5"},
+    {file = "pyinstaller_hooks_contrib-2026.0.tar.gz", hash = "sha256:0120893de491a000845470ca9c0b39284731ac6bace26f6849dea9627aaed48e"},
 ]
 
 [package.dependencies]
@@ -1030,24 +1030,24 @@ reference = "PyPI-Tsinghua"
 
 [[package]]
 name = "setuptools"
-version = "80.9.0"
+version = "82.0.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "setuptools-80.9.0-py3-none-any.whl", hash = "sha256:062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922"},
-    {file = "setuptools-80.9.0.tar.gz", hash = "sha256:f36b47402ecde768dbfafc46e8e4207b4360c654f1f3bb84475f0a28628fb19c"},
+    {file = "setuptools-82.0.0-py3-none-any.whl", hash = "sha256:70b18734b607bd1da571d097d236cfcfacaf01de45717d59e6e04b96877532e0"},
+    {file = "setuptools-82.0.0.tar.gz", hash = "sha256:22e0a2d69474c6ae4feb01951cb69d515ed23728cf96d05513d36e42b62b37cb"},
 ]
 
 [package.extras]
-check = ["pytest-checkdocs (>=2.4)", "pytest-ruff (>=0.2.1) ; sys_platform != \"cygwin\"", "ruff (>=0.8.0) ; sys_platform != \"cygwin\""]
+check = ["pytest-checkdocs (>=2.4)", "pytest-ruff (>=0.2.1) ; sys_platform != \"cygwin\"", "ruff (>=0.13.0) ; sys_platform != \"cygwin\""]
 core = ["importlib_metadata (>=6) ; python_version < \"3.10\"", "jaraco.functools (>=4)", "jaraco.text (>=3.7)", "more_itertools", "more_itertools (>=8.8)", "packaging (>=24.2)", "platformdirs (>=4.2.2)", "tomli (>=2.0.1) ; python_version < \"3.11\"", "wheel (>=0.43.0)"]
 cover = ["pytest-cov"]
 doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "pyproject-hooks (!=1.1)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-favicon", "sphinx-inline-tabs", "sphinx-lint", "sphinx-notfound-page (>=1,<2)", "sphinx-reredirects", "sphinxcontrib-towncrier", "towncrier (<24.7)"]
 enabler = ["pytest-enabler (>=2.2)"]
 test = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "ini2toml[lite] (>=0.14)", "jaraco.develop (>=7.21) ; python_version >= \"3.9\" and sys_platform != \"cygwin\"", "jaraco.envs (>=2.2)", "jaraco.path (>=3.7.2)", "jaraco.test (>=5.5)", "packaging (>=24.2)", "pip (>=19.1)", "pyproject-hooks (!=1.1)", "pytest (>=6,!=8.1.*)", "pytest-home (>=0.5)", "pytest-perf ; sys_platform != \"cygwin\"", "pytest-subprocess", "pytest-timeout", "pytest-xdist (>=3)", "tomli-w (>=1.0.0)", "virtualenv (>=13.0.0)", "wheel (>=0.44.0)"]
-type = ["importlib_metadata (>=7.0.2) ; python_version < \"3.10\"", "jaraco.develop (>=7.21) ; sys_platform != \"cygwin\"", "mypy (==1.14.*)", "pytest-mypy"]
+type = ["importlib_metadata (>=7.0.2) ; python_version < \"3.10\"", "jaraco.develop (>=7.21) ; sys_platform != \"cygwin\"", "mypy (==1.18.*)", "pytest-mypy"]
 
 [package.source]
 type = "legacy"
@@ -1090,52 +1090,104 @@ reference = "PyPI-Tsinghua"
 
 [[package]]
 name = "texture2ddecoder"
-version = "1.0.5"
+version = "1.0.6"
 description = "a python wrapper for Perfare's Texture2DDecoder"
 optional = false
 python-versions = ">=3.7"
 groups = ["main"]
 files = [
-    {file = "texture2ddecoder-1.0.5-cp37-abi3-macosx_10_9_x86_64.whl", hash = "sha256:d037c4071eaeb1b772ccf17dcd1be0ebd1a01a6565f297182346bbafb7acc25e"},
-    {file = "texture2ddecoder-1.0.5-cp37-abi3-macosx_11_0_arm64.whl", hash = "sha256:073128f915c5ed54d34230c33709b89a88e11b796e57f9d5c734c640b265551d"},
-    {file = "texture2ddecoder-1.0.5-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7d21f2866b2bb21f01910b99164bed8a8cc70d2f2be5fd5bf37db1a87a781389"},
-    {file = "texture2ddecoder-1.0.5-cp37-abi3-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:958e82c0fe8f831e317304193d83110566736fa7b03698a97aeb8f6f09828fa1"},
-    {file = "texture2ddecoder-1.0.5-cp37-abi3-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:185e317b5459f9f4f2429e471f6300a3a8fe11e858048c4105927d342718f946"},
-    {file = "texture2ddecoder-1.0.5-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a9dbf2825d74f26d489a4f971e55d57f85397054daef804cfec2e88b5d5247b8"},
-    {file = "texture2ddecoder-1.0.5-cp37-abi3-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:e449dc9dc7d59bd5fea302b8b80dcef26a31d53a7ff9e59cd7749b5306138f26"},
-    {file = "texture2ddecoder-1.0.5-cp37-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:7a851cf54e0918d52e63b248129dab8a0bdc98d0237e4da7a85812ce0da101e7"},
-    {file = "texture2ddecoder-1.0.5-cp37-abi3-musllinux_1_2_armv7l.whl", hash = "sha256:869c3563bf03eb0af751812d5d42f9b6a33fbd647196e3812060eba89a0b7dcc"},
-    {file = "texture2ddecoder-1.0.5-cp37-abi3-musllinux_1_2_i686.whl", hash = "sha256:3d94ae1a87712908286bc5cc9e6ad173a9357aaf33937507cba2ad4305ed8344"},
-    {file = "texture2ddecoder-1.0.5-cp37-abi3-musllinux_1_2_ppc64le.whl", hash = "sha256:19f00acb3a25b285c5b3e5a7bc22adb4d90db401c450695e98463585998a5715"},
-    {file = "texture2ddecoder-1.0.5-cp37-abi3-musllinux_1_2_s390x.whl", hash = "sha256:719f0e17b66e3269662ff6bb05167b61df6897ec3555caefc58731d14d0dad39"},
-    {file = "texture2ddecoder-1.0.5-cp37-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:1fd60db331483094a9c7b84e1188222bb545987a11e3161f217f829e1e9c165f"},
-    {file = "texture2ddecoder-1.0.5-cp37-abi3-win32.whl", hash = "sha256:49fa46e3f10d226a3ead5a11288f781bdd589ff80e649dec8c68cc04b45384e1"},
-    {file = "texture2ddecoder-1.0.5-cp37-abi3-win_amd64.whl", hash = "sha256:6ee16f7ebb98e227875f3bbd36be3c65b8d84296200b2624e5064f069bb5588f"},
-    {file = "texture2ddecoder-1.0.5-cp37-abi3-win_arm64.whl", hash = "sha256:500e41c12227d5f0e4065ea7047e69fdcbd773a1602ee64f5d34656330bd7c9e"},
-    {file = "texture2ddecoder-1.0.5-pp310-pypy310_pp73-macosx_10_15_x86_64.whl", hash = "sha256:837a52ed52206ea4a414fd468228ad7fab6a07ad5b31ebcc554dab4c59e81af7"},
-    {file = "texture2ddecoder-1.0.5-pp310-pypy310_pp73-macosx_11_0_arm64.whl", hash = "sha256:8d027e52b0ed6f710a70d8ff4164920b9d5b676246eb77dc856ed97e662ddafa"},
-    {file = "texture2ddecoder-1.0.5-pp310-pypy310_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7dbd6eb6b2364b0557ed08f5fa9d189ba6ca005a0b73300ac8f3b5f738e0b8f3"},
-    {file = "texture2ddecoder-1.0.5-pp310-pypy310_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d2a4aa07aabd1f542199c730664d3e6d4b6cde6622bc90d3bd70267301f70f62"},
-    {file = "texture2ddecoder-1.0.5-pp310-pypy310_pp73-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:ffc86b8b0d6c88c82eb0485e74de3f68d0f136fd5d19fd99efd95fc682bad52b"},
-    {file = "texture2ddecoder-1.0.5-pp310-pypy310_pp73-win_amd64.whl", hash = "sha256:f5216e848774a396fa58c9674be6333d0b9f0d8f923fdc3ce82b59dc29196e06"},
-    {file = "texture2ddecoder-1.0.5-pp37-pypy37_pp73-macosx_10_9_x86_64.whl", hash = "sha256:ca0d30fefaf87414efd73df0089da87ca5e0db2159b8229e2cad32c098436b4f"},
-    {file = "texture2ddecoder-1.0.5-pp37-pypy37_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a61c40d96ab0567e0b850114e215885ac8f9786580df10a076e6ac7ef33aa75b"},
-    {file = "texture2ddecoder-1.0.5-pp37-pypy37_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a0eb8160949a2f5b79ff1eff24eec79d578e1da8a0f3261f61b879c4522e45bc"},
-    {file = "texture2ddecoder-1.0.5-pp37-pypy37_pp73-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:bca2468fae272cc73d50fa81b54f5584a0b5b4b76327c32cf735246785f34382"},
-    {file = "texture2ddecoder-1.0.5-pp37-pypy37_pp73-win_amd64.whl", hash = "sha256:3be7cc2bce9ce117fa0d8cac2fd8c13a362bd0512625bf39989581796927d6d9"},
-    {file = "texture2ddecoder-1.0.5-pp38-pypy38_pp73-macosx_10_9_x86_64.whl", hash = "sha256:bbb8b288582a32e6f0e850261a6e19d67fee0cd7b80c58f0479d930587c3f797"},
-    {file = "texture2ddecoder-1.0.5-pp38-pypy38_pp73-macosx_11_0_arm64.whl", hash = "sha256:35153d47b134c61808ae64692bf78b991cd1cacf8e600058b92ac780d81b883b"},
-    {file = "texture2ddecoder-1.0.5-pp38-pypy38_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b0ec4e2d3d1b747a2abc7e0ad64e6162104701592d36bb5b0ae7beb4de61f5b8"},
-    {file = "texture2ddecoder-1.0.5-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:cd5707222d488226fd833eb65409e23038a20e77cc3911581628b2d8dc37c997"},
-    {file = "texture2ddecoder-1.0.5-pp38-pypy38_pp73-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:939dd5773b685ffa4f241d1cfebbef070309a52e78aa4221ff2286499d1ab521"},
-    {file = "texture2ddecoder-1.0.5-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:fb59578961679fac0ef6dfaf5ec42067357c770f291a861a152466bab7c473fd"},
-    {file = "texture2ddecoder-1.0.5-pp39-pypy39_pp73-macosx_10_15_x86_64.whl", hash = "sha256:9a74d7ca2650adb72d5ee84716b5b95803497bb851baf1d59ff35a76cc91eece"},
-    {file = "texture2ddecoder-1.0.5-pp39-pypy39_pp73-macosx_11_0_arm64.whl", hash = "sha256:9b10cdcdde82211f358cee2a85b1ca0fb41a652cc660596b8cc52e8cbb0ba59d"},
-    {file = "texture2ddecoder-1.0.5-pp39-pypy39_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:cc79c8042f792b156d822941c8b57457f0170b89ef52933fe3216a9db30e4a4c"},
-    {file = "texture2ddecoder-1.0.5-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3f620e32e47ca1b8f0f9ea2497e195ac0ac5104aa03511fc8a75fc3476907d73"},
-    {file = "texture2ddecoder-1.0.5-pp39-pypy39_pp73-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:ce2abddad1d6ce670a17908901998d3d6a88984c065079f7123e384f159804a2"},
-    {file = "texture2ddecoder-1.0.5-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:92d083172d9e1e5fd8f2ecaac562184309bd3cd92b28e6ed409103519cf908e6"},
-    {file = "texture2ddecoder-1.0.5.tar.gz", hash = "sha256:7767e865394ad8e0a0609d275caf3e8c99d03df107dfb961cb90ea21c9295dc2"},
+    {file = "texture2ddecoder-1.0.6-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:a92c742dc8158d1f4c0e5478d3697acfe4635cd49eb317626873cd0f19892b48"},
+    {file = "texture2ddecoder-1.0.6-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:adb42991f650b69328b651270b176a48709db50d4aa1319b669db8dc27f05523"},
+    {file = "texture2ddecoder-1.0.6-cp310-cp310-manylinux1_i686.manylinux_2_28_i686.manylinux_2_5_i686.whl", hash = "sha256:a049e2a288419d268b6f984ecbb804db82620c3aa7a13d7774ca4c4a08ca2077"},
+    {file = "texture2ddecoder-1.0.6-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:5b18a4c4e8f1a0336afacba129297b847dd763e749f509796652932ec793d6c8"},
+    {file = "texture2ddecoder-1.0.6-cp310-cp310-manylinux2014_armv7l.manylinux_2_17_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:983511b7e03d55fede185fb008cddf2d225874a5f265a4f116c15108977b8bba"},
+    {file = "texture2ddecoder-1.0.6-cp310-cp310-manylinux2014_ppc64le.manylinux_2_17_ppc64le.manylinux_2_28_ppc64le.whl", hash = "sha256:411d042a5d3423c89241fc0d9b8d6ea856641eb8e7a5efc439efafe3ec69acf5"},
+    {file = "texture2ddecoder-1.0.6-cp310-cp310-manylinux2014_s390x.manylinux_2_17_s390x.manylinux_2_28_s390x.whl", hash = "sha256:49d2c96dd8caa6f5d951cb9fd4b5c7c004b37b989ed9c504eecd1b551e8e2274"},
+    {file = "texture2ddecoder-1.0.6-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:e1e4ee26da0c093720a34a253df864a3ecc68191f6b756613b19069c472f1322"},
+    {file = "texture2ddecoder-1.0.6-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:c91f15bdb324965e811788d53bdee1c27ad52f4b0b22148e63b456c9768224b3"},
+    {file = "texture2ddecoder-1.0.6-cp310-cp310-musllinux_1_2_armv7l.whl", hash = "sha256:943a06abcca61708731d59b0cde11fa15d94f4d8720dc4aeb5dbab0361b6b80a"},
+    {file = "texture2ddecoder-1.0.6-cp310-cp310-musllinux_1_2_i686.whl", hash = "sha256:8b9b555197967eed76c88271a15b1dc94991584250387ba5d8cb174877ca5e28"},
+    {file = "texture2ddecoder-1.0.6-cp310-cp310-musllinux_1_2_ppc64le.whl", hash = "sha256:83452bea1613e6207f3be057f94eba2337767e6405abd59d8d9c0d4899b5610b"},
+    {file = "texture2ddecoder-1.0.6-cp310-cp310-musllinux_1_2_s390x.whl", hash = "sha256:87175720e853a27ebe484ffc4fa1de6d00fc55600fbcf377d3e967ece3d1cf18"},
+    {file = "texture2ddecoder-1.0.6-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:f84f52dea5cd8da6774960edbe41d3880e5a2a09fe28548b3cb6e947ccbbd1f2"},
+    {file = "texture2ddecoder-1.0.6-cp310-cp310-win32.whl", hash = "sha256:5eeabbb52a9b68cd86e210e36ae8b3f2db9b9f9e7bf7a17b2eef68d036057dfb"},
+    {file = "texture2ddecoder-1.0.6-cp310-cp310-win_amd64.whl", hash = "sha256:2bcaa9a37ff903e08241a925aaee8782abdc62ed79a014e5147c9c1cbe7f4fbf"},
+    {file = "texture2ddecoder-1.0.6-cp310-cp310-win_arm64.whl", hash = "sha256:3eda19a8af53e556fcdca37f4e9ea03241779cfbc655f3152a9b3137f85e3f12"},
+    {file = "texture2ddecoder-1.0.6-cp311-abi3-macosx_10_9_x86_64.whl", hash = "sha256:bc09a8f3b5717c8a4a41be57a0a39dee3378aebfcc3ed0a25331728496886548"},
+    {file = "texture2ddecoder-1.0.6-cp311-abi3-macosx_11_0_arm64.whl", hash = "sha256:ebb12555f8774a2e497c92803102224546abe4d9bb8d10c77c2f300f07ce6ed9"},
+    {file = "texture2ddecoder-1.0.6-cp311-abi3-manylinux1_i686.manylinux_2_28_i686.manylinux_2_5_i686.whl", hash = "sha256:b112db3f37a644676bbace585998b17ea09c314f75b85994b31f3857bc4aefc3"},
+    {file = "texture2ddecoder-1.0.6-cp311-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:e83343e9ec30e2c9a5c83c1ae39ff6ec3010bf92b00ddb612f764066528f02bf"},
+    {file = "texture2ddecoder-1.0.6-cp311-abi3-manylinux2014_armv7l.manylinux_2_17_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:c1f1572d2ac8c631e836d2f49a7667781c6c6d763b3bbb34ab4a76b65fff698e"},
+    {file = "texture2ddecoder-1.0.6-cp311-abi3-manylinux2014_ppc64le.manylinux_2_17_ppc64le.manylinux_2_28_ppc64le.whl", hash = "sha256:661c9c49d5af4e8d9fc6959cd1efb55fc11738ddac68ddc684a1982ef3baf99e"},
+    {file = "texture2ddecoder-1.0.6-cp311-abi3-manylinux2014_s390x.manylinux_2_17_s390x.manylinux_2_28_s390x.whl", hash = "sha256:e3fddfbe49d707531333e080e740121cd4d79780cc4b6b45b7a50d73fc0cb141"},
+    {file = "texture2ddecoder-1.0.6-cp311-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:09b98ea4d66e21aca42558727dc609a8a952e2b6eb09d0ee8e0e52ba14b7848a"},
+    {file = "texture2ddecoder-1.0.6-cp311-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:994398efe56552e78180852caf01d58d54bf2a2319fce6e02e0546856ef12a7c"},
+    {file = "texture2ddecoder-1.0.6-cp311-abi3-musllinux_1_2_armv7l.whl", hash = "sha256:7e02b9e5b073f902697999fdd74c1d751fa9729d61091f9bd59e313dcf02e616"},
+    {file = "texture2ddecoder-1.0.6-cp311-abi3-musllinux_1_2_i686.whl", hash = "sha256:778b98f52085ea5024168929e7ae71fd73c28a8b6963a2c14802fcfe399cf51b"},
+    {file = "texture2ddecoder-1.0.6-cp311-abi3-musllinux_1_2_ppc64le.whl", hash = "sha256:a2432186fb81e0e54542d83e51c1aee040499d9a54478347502cc36252d45171"},
+    {file = "texture2ddecoder-1.0.6-cp311-abi3-musllinux_1_2_s390x.whl", hash = "sha256:60c557cfcb0d0915d5181f7fb79bae2af82dcb1e6d7a48db5a6afcaae400c34c"},
+    {file = "texture2ddecoder-1.0.6-cp311-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:b5e758fb4162be3edc980ed6c557ad671449ff4fc184739f7ed7d1a66ebc1a5e"},
+    {file = "texture2ddecoder-1.0.6-cp311-abi3-win32.whl", hash = "sha256:d4acc52adc2a2fa03ae8300240c24b2a503f3fc87f77ebb93ab97b6683e18fdd"},
+    {file = "texture2ddecoder-1.0.6-cp311-abi3-win_amd64.whl", hash = "sha256:1bad8209d9dfbfc7daf13ea2e545236ea2bbc1e423b2992b6e7563909975a47b"},
+    {file = "texture2ddecoder-1.0.6-cp311-abi3-win_arm64.whl", hash = "sha256:77839c81287fdef2409ce664fe059ecc6207ed2b511f1972bdb9971e7555963e"},
+    {file = "texture2ddecoder-1.0.6-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:6f33cacd94e7d5450aade68de31e3a3d333086e67f0412ead532fca091a63e90"},
+    {file = "texture2ddecoder-1.0.6-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:ad969b4aad9366ab8f4aa982bcd25f6f9ddc4c068a7e9241aa0954d057ce2263"},
+    {file = "texture2ddecoder-1.0.6-cp38-cp38-manylinux1_i686.manylinux_2_28_i686.manylinux_2_5_i686.whl", hash = "sha256:be7d71cc3665c7e18753ab0e5b7df1425d0186340ea3dd6aeeb9d75ff569efdf"},
+    {file = "texture2ddecoder-1.0.6-cp38-cp38-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:bf6d4b846969450101f2c6392960e90e5a7a6f9338ae4d44239bff7f3685992d"},
+    {file = "texture2ddecoder-1.0.6-cp38-cp38-manylinux2014_armv7l.manylinux_2_17_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:453a858d9f4de46dffe5e98a3f16bb54c7502eaa14b9cf7a95cf64698695abea"},
+    {file = "texture2ddecoder-1.0.6-cp38-cp38-manylinux2014_ppc64le.manylinux_2_17_ppc64le.manylinux_2_28_ppc64le.whl", hash = "sha256:d3b8facf450dbb72ea5f378af8bfe33c7f2975d6198c22dd31b4677780db588a"},
+    {file = "texture2ddecoder-1.0.6-cp38-cp38-manylinux2014_s390x.manylinux_2_17_s390x.manylinux_2_28_s390x.whl", hash = "sha256:cfb0f695bedddd77a587993331cb9a2ad1c119cb341476b19feb4619d3523708"},
+    {file = "texture2ddecoder-1.0.6-cp38-cp38-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:a1263d32e1bc106b16ede398e4a6867fd0837575f0e66a4fcd6c38c02a30b600"},
+    {file = "texture2ddecoder-1.0.6-cp38-cp38-musllinux_1_2_aarch64.whl", hash = "sha256:3c049b914b545ee2ec604ca721bd6ddbe9b153a83f754d15774e9cd8338e919a"},
+    {file = "texture2ddecoder-1.0.6-cp38-cp38-musllinux_1_2_armv7l.whl", hash = "sha256:bf3b62d987b57eefab5d6b24737e7ef95f6dbed451fc5130cac4dfc7f0a16e6c"},
+    {file = "texture2ddecoder-1.0.6-cp38-cp38-musllinux_1_2_i686.whl", hash = "sha256:8280605be6263fdc8fb9c38a9a51ae439dbaa2a6d51794a9e8c3822400b9d363"},
+    {file = "texture2ddecoder-1.0.6-cp38-cp38-musllinux_1_2_ppc64le.whl", hash = "sha256:b283d425bb1791f7cb97323c274b3155a5e05c3d28a39dd3ef8a6172ba9e2123"},
+    {file = "texture2ddecoder-1.0.6-cp38-cp38-musllinux_1_2_s390x.whl", hash = "sha256:1bb4411ade876b24056f4ad92b7c8d11f6e1916b13e88d5ed70dacc1aaeed2c2"},
+    {file = "texture2ddecoder-1.0.6-cp38-cp38-musllinux_1_2_x86_64.whl", hash = "sha256:798fa3e425035d0b997cac666c960e9effe1ee34d958dfc0168e05be7bc3b9e3"},
+    {file = "texture2ddecoder-1.0.6-cp38-cp38-win32.whl", hash = "sha256:eeccec12f629f564dcfcf6611953fcb054a69e54c09fe502ab3075c4fa67e8df"},
+    {file = "texture2ddecoder-1.0.6-cp38-cp38-win_amd64.whl", hash = "sha256:f1999328d2bc46fccb322b80463f431bb206ebe38a40aca0ea369ba33a39d0bc"},
+    {file = "texture2ddecoder-1.0.6-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:236e9becb9bd949dd2083456d2d07ceddaa363fee960da3ea4f6cc965eae8e8e"},
+    {file = "texture2ddecoder-1.0.6-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:1ee3f18af71528b48fa1d4cbe64ea3e23082c99f837b12b678df41f68f6d6fc0"},
+    {file = "texture2ddecoder-1.0.6-cp39-cp39-manylinux1_i686.manylinux_2_28_i686.manylinux_2_5_i686.whl", hash = "sha256:acdffcb05549f635b0f74c7bab4fd7a2cedd7967ed785a3821a0478a4c32d1e7"},
+    {file = "texture2ddecoder-1.0.6-cp39-cp39-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:4542958c41bbe0143250250af818e372ca8230d7cc2f208545c055aeea1e597a"},
+    {file = "texture2ddecoder-1.0.6-cp39-cp39-manylinux2014_armv7l.manylinux_2_17_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:90f8eb82744e970380720440a94b8b763ed84d408a97b6986ca2dcdd03b56e09"},
+    {file = "texture2ddecoder-1.0.6-cp39-cp39-manylinux2014_ppc64le.manylinux_2_17_ppc64le.manylinux_2_28_ppc64le.whl", hash = "sha256:9f725919eced91b46f2ff05bcab24db8536717a0c439e825469cf4017461aa66"},
+    {file = "texture2ddecoder-1.0.6-cp39-cp39-manylinux2014_s390x.manylinux_2_17_s390x.manylinux_2_28_s390x.whl", hash = "sha256:b135a1d14361bb3d8e866dd776d5c6e10f81f03d0551fa803f725421e44b7952"},
+    {file = "texture2ddecoder-1.0.6-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:de6b660e7c6b9b41a253746d02d073092f6c50b6ed79b81698b3a2eafcec094b"},
+    {file = "texture2ddecoder-1.0.6-cp39-cp39-musllinux_1_2_aarch64.whl", hash = "sha256:121b0d82ab886148d9bbd62d571d777819e257d25d215d7490e5ba9fd88fb068"},
+    {file = "texture2ddecoder-1.0.6-cp39-cp39-musllinux_1_2_armv7l.whl", hash = "sha256:134e7053314d74844fd07b510df375516bbd58e7cab20ef07d1cc1a1a8732c88"},
+    {file = "texture2ddecoder-1.0.6-cp39-cp39-musllinux_1_2_i686.whl", hash = "sha256:0bb07b990feab86a3c7344c7dc16b8d745d681b69c1e435fa24e7fe00ffa757f"},
+    {file = "texture2ddecoder-1.0.6-cp39-cp39-musllinux_1_2_ppc64le.whl", hash = "sha256:a0b09c23564ef2838fda92c6227830e1789ed365a9857f7c7382856a27b39bd0"},
+    {file = "texture2ddecoder-1.0.6-cp39-cp39-musllinux_1_2_s390x.whl", hash = "sha256:26436a2113e5c0dc2b36b53ea7e8999b16bbc689ab6171fd2d5f80bbcddf6d02"},
+    {file = "texture2ddecoder-1.0.6-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:44107568858d1eac34ee54f8a13b1c7e81ecb74d739373e7a18a8c637438f18b"},
+    {file = "texture2ddecoder-1.0.6-cp39-cp39-win32.whl", hash = "sha256:cddf21735fb877d026313e38fe4f4c6fb4f93e8f7b41aedc9abaa002ef129863"},
+    {file = "texture2ddecoder-1.0.6-cp39-cp39-win_amd64.whl", hash = "sha256:3c81a8e39ca40ee6caf3dc65368ea8ebe7432420bdc749263cc07c2c86917e75"},
+    {file = "texture2ddecoder-1.0.6-cp39-cp39-win_arm64.whl", hash = "sha256:4128733e2bb560ae8ebbbfec17d9575fa2703551b34984e33b1f93443d0fca06"},
+    {file = "texture2ddecoder-1.0.6-pp310-pypy310_pp73-macosx_10_15_x86_64.whl", hash = "sha256:ba42c2648bb0025d9b780f55a3caeeca2d9a588ff510bdf4ecf77562e2e191e3"},
+    {file = "texture2ddecoder-1.0.6-pp310-pypy310_pp73-macosx_11_0_arm64.whl", hash = "sha256:71acada6bb364fc759d5faa3af2b543d264f8461c880bce4d80161fadf0fbb36"},
+    {file = "texture2ddecoder-1.0.6-pp310-pypy310_pp73-manylinux1_i686.manylinux_2_28_i686.manylinux_2_5_i686.whl", hash = "sha256:7de7f0736cfa283283352f32f16bd86f44352dbc63e2eb70126247bf32dae067"},
+    {file = "texture2ddecoder-1.0.6-pp310-pypy310_pp73-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:3a892da4780bff740efcbe0a4dac31121b5e86ff2c32199ba32f77ed24823265"},
+    {file = "texture2ddecoder-1.0.6-pp310-pypy310_pp73-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:433cc038ca20fc26af87a90708002bea51386772b3a4fcdc1bb04f59f5500b56"},
+    {file = "texture2ddecoder-1.0.6-pp310-pypy310_pp73-win_amd64.whl", hash = "sha256:63c7ca0ce4ef2c2cfdd4b62ec33737c0c2304a27c5831c0cd73c6a3c33927d96"},
+    {file = "texture2ddecoder-1.0.6-pp311-pypy311_pp73-macosx_10_15_x86_64.whl", hash = "sha256:0a13d55588014972a0f392a6cc7af562d5140071d90e2f2383fe03d5bcdb8be2"},
+    {file = "texture2ddecoder-1.0.6-pp311-pypy311_pp73-macosx_11_0_arm64.whl", hash = "sha256:7faf71031a57b51357718e9b82e0fd2add0e04c465d1ad819e5b77cce4b42f77"},
+    {file = "texture2ddecoder-1.0.6-pp311-pypy311_pp73-manylinux1_i686.manylinux_2_28_i686.manylinux_2_5_i686.whl", hash = "sha256:6c9cf648bb6d8b5e68efa0255903921fc679d9799d88278e8e0b16814a77c6f3"},
+    {file = "texture2ddecoder-1.0.6-pp311-pypy311_pp73-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:c5033c37b9b2f4dc7b082e34006fa69b684eafc20ca0d2315ce46aaf4924941b"},
+    {file = "texture2ddecoder-1.0.6-pp311-pypy311_pp73-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:7d37e99688e99ea3f1f9a65872863daddd683c44800dd2e27e15cf2b506eb304"},
+    {file = "texture2ddecoder-1.0.6-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:71bf13add7119753a702935b0aae716c150933f9e65fe62fb96254ef8902bbdf"},
+    {file = "texture2ddecoder-1.0.6-pp38-pypy38_pp73-macosx_10_9_x86_64.whl", hash = "sha256:89af0688d966eda6cac43621e69a586edf5c186682cfd8b94d3005cdbb6f8182"},
+    {file = "texture2ddecoder-1.0.6-pp38-pypy38_pp73-macosx_11_0_arm64.whl", hash = "sha256:4ef90f82407e964dcd19b23b657def45880674425ab59530575994ab2c027d4a"},
+    {file = "texture2ddecoder-1.0.6-pp38-pypy38_pp73-manylinux1_i686.manylinux_2_28_i686.manylinux_2_5_i686.whl", hash = "sha256:73e280fbdd6d557b043db26462b0329c82fb6e36d037ff05d95ac697f3a5e3e1"},
+    {file = "texture2ddecoder-1.0.6-pp38-pypy38_pp73-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:1ac5a115e2fb2858e2f4cafef48438750ae1f005fc22db5fe78e460bc9eccf48"},
+    {file = "texture2ddecoder-1.0.6-pp38-pypy38_pp73-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:cfe975520108910915627afffa6079d6bb6f379848a7a41c5499242b8336ec10"},
+    {file = "texture2ddecoder-1.0.6-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:b8a93f9b0bf25b0ad00593891d5c7e8b5a6e6eec23d212bd4ee1fdf519362172"},
+    {file = "texture2ddecoder-1.0.6-pp39-pypy39_pp73-macosx_10_15_x86_64.whl", hash = "sha256:eb9a4e2035ccbc36172d39ed04603657d4fadcb2a7f278dc7ae40b3cef1c3e53"},
+    {file = "texture2ddecoder-1.0.6-pp39-pypy39_pp73-macosx_11_0_arm64.whl", hash = "sha256:ec3b3bd7c275da65078b45e2904e94489b4e7fade36aed6e835360c2241fc98e"},
+    {file = "texture2ddecoder-1.0.6-pp39-pypy39_pp73-manylinux1_i686.manylinux_2_28_i686.manylinux_2_5_i686.whl", hash = "sha256:42387f3703a9850d288e156a37fc4a4c9119f6ff8cd17b1d80ddde7c7115678e"},
+    {file = "texture2ddecoder-1.0.6-pp39-pypy39_pp73-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:4a33ce2b931de89b38b7667d10bf129a6517e7d7ba4a1fecf6cfc4e68758dd61"},
+    {file = "texture2ddecoder-1.0.6-pp39-pypy39_pp73-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:daff4d26be777d5a11b53f6bd501856cadc8924bd26082ca7e6c67ce2efa7a4a"},
+    {file = "texture2ddecoder-1.0.6-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:e8165097c3b1829fafd3fda548c1afc6ad2efd9b619608a287c36afb0f4c220f"},
+    {file = "texture2ddecoder-1.0.6.tar.gz", hash = "sha256:88f04d8951018ac13b8dacd07e57e8adad4a6f1cfe5509646e8a1020346a81ca"},
 ]
 
 [package.extras]
