@@ -7,6 +7,7 @@ import importlib
 import os
 import os.path as osp
 import pkgutil
+import re
 import shutil
 import traceback
 import types
@@ -214,6 +215,20 @@ def is_binary_file(path: str, guess_encoding: str = "UTF-8") -> bool:
         return False
     except UnicodeError:
         return True
+
+
+def try_shorten_path(path: str) -> str:
+    """Tries to shorten the path.
+
+    :param path: Path;
+    :returns: A shortened path, or the original path if the path cannot be shortened.
+    :rtype: bool;
+    """
+    matched = re.search(r"(\w+)\s*Game[/\\](\w+)\s*Data[/\\]StreamingAssets([/\\]AB)?([/\\]Windows)?", path)
+    if matched:
+        game_name = matched.group(1)
+        return path.replace(matched.group(), f"{game_name} Unpacked")
+    return path
 
 
 ##### ↓ Dynamic import related ↓ #####

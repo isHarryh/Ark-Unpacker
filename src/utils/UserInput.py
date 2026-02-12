@@ -5,7 +5,7 @@ from typing import Callable, Optional
 import os.path as osp
 import re
 
-from .GlobalMethods import input, print
+from .GlobalMethods import input, print, try_shorten_path
 
 
 class UserInput:
@@ -62,7 +62,18 @@ class UserInput:
             if re.search(r'[*?"<>|\x00-\x1F]', uin):
                 print("  路径不能包含非法字符", c=3)
                 continue
-            return osp.abspath(uin)
+            abs_path = osp.abspath(uin)
+
+            shortened = try_shorten_path(uin)
+            if shortened != uin:
+                print("  当前选择的路径可能较长，推荐更改为：", c=3)
+                print(f"  {shortened}")
+                print("  是否接受此推荐路径？[y]接受更改(默认)，[n]维持原样", c=3)
+                shortened_accepted = UserInput.request_yes_or_no(True)
+                if shortened_accepted:
+                    print("  已接受更改，请熟记新路径的位置", c=3)
+                    return shortened
+            return abs_path
 
     @staticmethod
     def request_yes_or_no(default: bool):

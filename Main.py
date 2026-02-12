@@ -8,7 +8,7 @@ import time
 from src.utils import ArgParser
 from src.utils.Config import Config
 from src.utils.Logger import Logger
-from src.utils.GlobalMethods import color, print, clear, title, stacktrace, rmdir
+from src.utils.GlobalMethods import color, print, clear, title, stacktrace, rmdir, try_shorten_path
 from src.utils.UserInput import UserInput
 
 from src import ResolveAB as AU_Rs
@@ -432,6 +432,11 @@ def run_arkmodels_workflow():
             """ArkModels是作者建立的明日方舟Spine模型仓库（https://github.com/isHarryh/Ark-Models），以下功能专门为ArkModels仓库的更新而设计。
 运行部分功能之前，需要确保括号内所示的资源文件夹已位于程序所在目录中。"""
         )
+        cwd = osp.abspath(osp.normpath(os.getcwd()))
+        cwd_shortened = try_shorten_path(cwd)
+        if cwd != cwd_shortened:
+            print("为了缩短文件路径长度，输出文件将会保存到：", c=3)
+            print(f"  {cwd_shortened}", c=3)
         print(
             f"""功能选择：
 1: 一键执行
@@ -446,10 +451,12 @@ def run_arkmodels_workflow():
         )
         print("输入序号后按Enter即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker")
 
-    temp_dir_1 = "temp/am_upk_operator"
-    temp_dir_2 = "temp/am_upk_enemy"
-    temp_dir_3 = "temp/am_upk_dynillust"
-    temp_dir_4 = AU_Mdd.ModelsDist.TEMP_DIR
+    norm_tmp_dir = lambda x: try_shorten_path(osp.abspath(osp.normpath(x)))
+    temp_dir_1 = norm_tmp_dir("temp/am_upk_operator")
+    temp_dir_2 = norm_tmp_dir("temp/am_upk_enemy")
+    temp_dir_3 = norm_tmp_dir("temp/am_upk_dynillust")
+    temp_dir_4 = norm_tmp_dir(AU_Mdd.ModelsDist.TEMP_DIR)
+
     while True:
         title("ArkUnpacker")
         prt_arkmodels_menu()
