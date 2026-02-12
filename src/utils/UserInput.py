@@ -4,24 +4,25 @@ from typing import Callable, Optional
 
 import os.path as osp
 import re
+import sys
 
 from .GlobalMethods import input, print, try_shorten_path
 
 
 class UserInput:
-    CANCEL_CMD = "*"
+    EOF_TRIGGER = "Ctrl+Z" if "win" in sys.platform else "Ctrl+D"
 
     @staticmethod
     def request(prompt: str = "> "):
-        uin = input(prompt, c=2)
-        if uin == UserInput.CANCEL_CMD:
+        try:
+            return input(prompt, c=2)
+        except EOFError:
             print("  已取消任务", c=3)
             raise InterruptedError("User cancelled")
-        return uin
 
     @staticmethod
     def request_options(options: list):
-        print(f'  输入符号 "{UserInput.CANCEL_CMD}" 以取消任务')
+        print(f"  输入快捷键 {UserInput.EOF_TRIGGER} 可取消")
         uin = UserInput.request()
         while uin not in options:
             print("  输入的选项不合法", c=3)
@@ -30,7 +31,7 @@ class UserInput:
 
     @staticmethod
     def request_input_path():
-        print(f'  输入符号 "{UserInput.CANCEL_CMD}" 以取消任务，支持输入相对路径')
+        print(f"  输入快捷键 {UserInput.EOF_TRIGGER} 可取消，支持输入相对路径")
         while True:
             uin = UserInput.request().strip()
             uin = re.sub(r'^(?:& )?(["\'])(.*)\1$', r"\2", uin)
@@ -77,7 +78,7 @@ class UserInput:
 
     @staticmethod
     def request_yes_or_no(default: bool):
-        print(f'  输入符号 "{UserInput.CANCEL_CMD}" 以取消任务')
+        print(f"  输入快捷键 {UserInput.EOF_TRIGGER} 可取消")
         uin = UserInput.request().strip().lower()
         if default:
             return False if uin == "n" else True
