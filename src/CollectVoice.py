@@ -2,6 +2,7 @@
 # @ BSD 3-Clause License
 from typing import Callable
 
+import glob
 import json
 import os.path as osp
 import threading
@@ -9,7 +10,7 @@ from io import BytesIO
 from pydub import AudioSegment
 
 from .utils.Config import Config
-from .utils.GlobalMethods import print, rmdir, get_dirlist, get_filelist
+from .utils.GlobalMethods import print, rmdir
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
 from .utils.TaskUtils import (
@@ -50,7 +51,7 @@ def collect_voice(
     duration_merged = 0.0
     clips = []
     # For each audio file unpacked
-    for file in sorted(get_filelist(upkdir, max_depth=1)):
+    for file in sorted(i for i in glob.iglob(osp.join(glob.escape(upkdir), "*")) if osp.isfile(i)):
         name, ext = osp.splitext(osp.basename(file))
         # Ensure the audio file is supported
         if not ext.lower() == ".wav":
@@ -119,8 +120,9 @@ def main(srcdir: str, destdir: str, force_std_name: bool):
 
     flist = []  # [(upkdir, destdir), ...]
     print(f"\t正在读取目录 {srcdir}")
-    for upkdir in get_dirlist(srcdir, max_depth=1):
-        flist.append((upkdir, destdir))
+    for upkdir in glob.iglob(osp.join(glob.escape(srcdir), "*")):
+        if osp.isdir(upkdir):
+            flist.append((upkdir, destdir))
     flist = list(filter(lambda x: osp.basename(x[0]).startswith("char_"), flist))
     info_merged = {}
 

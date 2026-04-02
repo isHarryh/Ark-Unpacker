@@ -2,13 +2,14 @@
 # @ BSD 3-Clause License
 from typing import Callable, List, Optional
 
+import glob
 import os
 import os.path as osp
 
 import ffmpeg
 from wannacri import usm
 
-from .utils.GlobalMethods import get_filelist, is_usm_file, print, rmdir, stacktrace
+from .utils.GlobalMethods import is_usm_file, print, rmdir, stacktrace
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
 from .utils.TaskUtils import ThreadCtrl, UICtrl, TaskReporter, TaskReporterTracker
@@ -274,8 +275,10 @@ def main(
     Logger.info("ResolveUSM: Retrieving USM file paths...")
     rootdir = osp.normpath(osp.realpath(rootdir))
     destdir = osp.normpath(osp.realpath(destdir))
-    flist = get_filelist(rootdir)
-    flist = list(filter(is_usm_file, flist))
+    flist = []
+    for i in glob.iglob(osp.join(glob.escape(rootdir), "**", "*"), recursive=True):
+        if osp.isfile(i) and is_usm_file(i):
+            flist.append(i)
 
     if do_del:
         print("\n正在清理目标目录...", s=1)

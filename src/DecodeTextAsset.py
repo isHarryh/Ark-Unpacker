@@ -2,6 +2,7 @@
 # @ BSD 3-Clause License
 from typing import Callable, Optional, Union
 
+import glob
 import json
 import math
 import os.path as osp
@@ -16,7 +17,6 @@ from .utils.Config import Config
 from .utils.GlobalMethods import (
     print,
     rmdir,
-    get_filelist,
     is_ab_file,
     is_known_asset_file,
     is_binary_file,
@@ -329,9 +329,10 @@ def main(rootdir: str, destdir: str, do_del: bool = False):
     Logger.info("DecodeTextAsset: Retrieving file paths...")
     rootdir = osp.normpath(osp.realpath(rootdir))
     destdir = osp.normpath(osp.realpath(destdir))
-    flist = get_filelist(rootdir)
-    flist = list(filter(lambda x: not is_known_asset_file(x), flist))
-    flist = list(filter(lambda x: not is_ab_file(x), flist))
+    flist = []
+    for i in glob.iglob(osp.join(glob.escape(rootdir), "**", "*"), recursive=True):
+        if osp.isfile(i) and not is_known_asset_file(i) and not is_ab_file(i):
+            flist.append(i)
 
     if do_del:
         print("\n正在清理...", s=1)

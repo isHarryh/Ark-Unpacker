@@ -3,6 +3,7 @@
 from enum import StrEnum
 from typing import Callable, Dict, List, Optional, Sequence, Union
 
+import glob
 import os.path as osp
 
 import UnityPy
@@ -11,7 +12,7 @@ from spine_asset.v38 import AtlasFile, SkeletonBinary, SkeletonJson, SkeletonDat
 
 from .ResolveAB import Resource, TreeReader
 from .CombineRGBwithA import AlphaRGBCombiner, image_resize
-from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file, stacktrace
+from .utils.GlobalMethods import print, rmdir, is_ab_file, stacktrace
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
 from .utils.TaskUtils import ThreadCtrl, UICtrl, TaskReporter, TaskReporterTracker
@@ -379,8 +380,13 @@ def pfb_resolve(srcdir: str) -> dict:
 
     Logger.info(f'ResolveSpine: Pfb resolve started for directory "{srcdir}"')
     srcdir = osp.normpath(osp.realpath(srcdir))
-    pfb_files = get_filelist(srcdir) if osp.isdir(srcdir) else [srcdir]
-    pfb_files = [f for f in pfb_files if is_ab_file(f) and "enm_pfb_" in f]
+    pfb_files = [srcdir] if osp.isfile(srcdir) else []
+    if osp.isdir(srcdir):
+        for i in glob.iglob(osp.join(glob.escape(srcdir), "**", "*"), recursive=True):
+            if osp.isfile(i) and is_ab_file(i) and "enm_pfb_" in i:
+                pfb_files.append(i)
+    else:
+        pfb_files = [f for f in pfb_files if is_ab_file(f) and "enm_pfb_" in f]
 
     all_mappings = {}
     for pfb_file in pfb_files:
@@ -474,8 +480,11 @@ def main(
     Logger.info("ResolveSpine: Retrieving file paths...")
     src = osp.normpath(osp.realpath(src))
     destdir = osp.normpath(osp.realpath(destdir))
-    flist = [src] if osp.isfile(src) else get_filelist(src)
-    flist = list(filter(is_ab_file, flist))
+    flist = [src] if osp.isfile(src) else []
+    if osp.isdir(src):
+        for i in glob.iglob(osp.join(glob.escape(src), "**", "*"), recursive=True):
+            if osp.isfile(i) and is_ab_file(i):
+                flist.append(i)
     if do_del:
         print("\n正在清理...", s=1)
         rmdir(destdir)

@@ -11,6 +11,7 @@ from typing import (
     TypeVar,
     Union,
 )
+import glob
 import os.path as osp
 
 import UnityPy
@@ -21,7 +22,7 @@ from UnityPy.helpers import CompressionHelper
 from UnityPy.streams.EndianBinaryReader import EndianBinaryReader
 
 from .lz4ak.Block import decompress_lz4ak
-from .utils.GlobalMethods import print, rmdir, get_filelist, is_ab_file
+from .utils.GlobalMethods import print, rmdir, is_ab_file
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
 from .utils.TaskUtils import ThreadCtrl, UICtrl, TaskReporter, TaskReporterTracker
@@ -352,8 +353,11 @@ def main(
     Logger.info("ResolveAB: Retrieving file paths...")
     src = osp.normpath(osp.realpath(src))
     destdir = osp.normpath(osp.realpath(destdir))
-    flist = [src] if osp.isfile(src) else get_filelist(src)
-    flist = list(filter(is_ab_file, flist))
+    flist = [src] if osp.isfile(src) else []
+    if osp.isdir(src):
+        for i in glob.iglob(osp.join(glob.escape(src), "**", "*"), recursive=True):
+            if osp.isfile(i) and is_ab_file(i):
+                flist.append(i)
     if do_del:
         print("\n正在清理...", s=1)
         rmdir(destdir)  # Danger zone

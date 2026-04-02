@@ -94,54 +94,6 @@ def rmdir(path: str):
     shutil.rmtree(path, ignore_errors=True)
 
 
-def get_filelist(path: str, max_depth: int = 0) -> List[str]:
-    """Gets a list containing all the files in the given dir and its sub dirs.
-    Note that If `max_depth` is specified to unlimited,
-    `os.walk` (the most efficient way) will be used in this method instead of `os.listdir`.
-
-    :param path: Path to the specified parent dir;
-    :param max_depth: Max searching depth, `0` for unlimited;
-    :returns: A list of paths;
-    :rtype: List[str];
-    """
-    lst = []
-    max_depth = int(max_depth)
-    if max_depth <= 0:
-        for root, _, files in os.walk(path):
-            for file in files:
-                lst.append(osp.join(root, file))
-    else:
-        for i in os.listdir(path):
-            lst.append(osp.join(path, i))
-    return lst
-
-
-def get_dirlist(path: str, max_depth: int = 0) -> List[str]:
-    """Gets a list containing all the sub dirs in the given dir.
-    Note that If `max_depth` is specified to unlimited,
-    `os.walk` (the most efficient way) will be used in this method instead of `os.listdir`.
-
-    :param path: Path to the specified parent dir;
-    :param max_depth: Max searching depth, `0` for unlimited;
-    :returns: A list of paths;
-    :rtype: List[str];
-    """
-    lst = []
-    max_depth = int(max_depth)
-    if max_depth <= 0:
-        for root, dirs, _ in os.walk(path):
-            for i in dirs:
-                lst.append(osp.join(root, i))
-    else:
-        for i in os.listdir(path):
-            i = osp.join(path, i)
-            if osp.isdir(i):
-                lst.append(i)
-                if max_depth != 1:
-                    lst.extend(get_filelist(i, max_depth - 1))
-    return lst
-
-
 _EXT_IMAGE = {".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tiff"}
 
 _EXT_KNOWN = {

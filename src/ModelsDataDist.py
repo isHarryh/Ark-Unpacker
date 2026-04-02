@@ -2,15 +2,15 @@
 # @ BSD 3-Clause License
 from typing import Any
 
+import glob
 import json
-import os
 import os.path as osp
 import re
 from datetime import datetime
 
 from .DecodeTextAsset import ArkFBOLibrary
 from .utils.Config import Config
-from .utils.GlobalMethods import color, print, get_dirlist, get_filelist
+from .utils.GlobalMethods import color, print
 from .utils.Logger import Logger
 
 
@@ -60,8 +60,11 @@ class ModelsDist:
         self.mdd_temp_dir = mdd_temp_dir
 
     def get_gamedata(self, alias: tuple):
-        for i in get_filelist(self.mdd_temp_dir):
-            if any(osp.basename(i).startswith(a) for a in alias):
+        for a in alias:
+            pattern = osp.join(glob.escape(self.mdd_temp_dir), "**", f"{glob.escape(a)}*")
+            for i in glob.iglob(pattern, recursive=True):
+                if not osp.isfile(i) or not osp.basename(i).startswith(a):
+                    continue
                 rst = ArkFBOLibrary.decode(i)
                 if rst is None:
                     raise ValueError("Decoded data is none")
@@ -89,6 +92,15 @@ class ModelsDist:
             "skinGroupName": sg_name,
             "sortTags": sort_tags,
         }
+
+    @staticmethod
+    def get_files_by_ext(path: str, ext: str):
+        pattern = osp.join(glob.escape(path), "*" if not ext else f"*{glob.escape(ext)}")
+        rst = []
+        for i in glob.iglob(pattern):
+            if osp.isfile(i) and osp.splitext(i)[1] == ext:
+                rst.append(osp.basename(i))
+        return rst
 
     def get_operator_sort_tags(self, item: dict):
         rst = ["Operator"]
@@ -195,46 +207,48 @@ class ModelsDist:
         print("分析动态立绘信息...")
         collected = {}
         if osp.isdir(self.data["storageDirectory"]["DynIllust"]):
-            for i in get_dirlist(self.data["storageDirectory"]["DynIllust"], max_depth=1):
+            pattern = osp.join(glob.escape(self.data["storageDirectory"]["DynIllust"]), "dyn_*")
+            for i in glob.iglob(pattern):
+                if not osp.isdir(i):
+                    continue
                 # (i是每个动态立绘的文件夹)
                 base = osp.basename(i)
-                if base.startswith("dyn_"):
-                    key = base.lower()
-                    key_char = re.findall(r"[0-9]+.+", key)
-                    if len(key_char) > 0:
-                        key_char = key_char[0]  # 该动态立绘对应的原干员的key
-                        origin = None
-                        if key_char in self.data["data"]:
-                            origin = self.data["data"][key_char]
-                        else:
-                            # 回退到模糊查找（有些动态立绘的名称缺少尾号）
-                            for k in self.data["data"].keys():
-                                if k.startswith(key_char):
-                                    origin = self.data["data"][k]
-                                    Logger.info(
-                                        f'ModelsDataDist: The operator-key of the dyn illust "{key}" not found by exact match, fallback to fuzzy match with "{k}".'
-                                    )
-                                    break
-                        if origin:
-                            sort_tags = origin["sortTags"] + ["DynIllust"]
-                            collected[key] = self.get_item_data(
-                                key,
-                                "DynIllust",
-                                None,
-                                sort_tags,
-                                origin["name"],
-                                origin["appellation"],
-                                origin["skinGroupId"],
-                                origin["skinGroupName"],
-                            )
-                        else:
-                            Logger.warn(f'ModelsDataDist: The operator-key of the dyn illust "{key}" not found.')
-                            print(f"\t动态立绘 {key} 找不到对应的干员Key", c=3)
+                key = base.lower()
+                key_char = re.findall(r"[0-9]+.+", key)
+                if len(key_char) > 0:
+                    key_char = key_char[0]  # 该动态立绘对应的原干员的key
+                    origin = None
+                    if key_char in self.data["data"]:
+                        origin = self.data["data"][key_char]
                     else:
-                        Logger.warn(
-                            f'ModelsDataDist: The operator-key of the dyn illust "{key}" could not pass the regular expression check.'
+                        # 回退到模糊查找（有些动态立绘的名称缺少尾号）
+                        for k in self.data["data"].keys():
+                            if k.startswith(key_char):
+                                origin = self.data["data"][k]
+                                Logger.info(
+                                    f'ModelsDataDist: The operator-key of the dyn illust "{key}" not found by exact match, fallback to fuzzy match with "{k}".'
+                                )
+                                break
+                    if origin:
+                        sort_tags = origin["sortTags"] + ["DynIllust"]
+                        collected[key] = self.get_item_data(
+                            key,
+                            "DynIllust",
+                            None,
+                            sort_tags,
+                            origin["name"],
+                            origin["appellation"],
+                            origin["skinGroupId"],
+                            origin["skinGroupName"],
                         )
-                        print(f"\t动态立绘 {key} 未成功通过正则匹配", c=3)
+                    else:
+                        Logger.warn(f'ModelsDataDist: The operator-key of the dyn illust "{key}" not found.')
+                        print(f"\t动态立绘 {key} 找不到对应的干员Key", c=3)
+                else:
+                    Logger.warn(
+                        f'ModelsDataDist: The operator-key of the dyn illust "{key}" could not pass the regular expression check.'
+                    )
+                    print(f"\t动态立绘 {key} 未成功通过正则匹配", c=3)
         else:
             Logger.warn("ModelsDataDist: The directory of dyn illust not found.")
             print("\t动态立绘根文件夹未找到", c=3)
@@ -258,13 +272,12 @@ class ModelsDist:
                 asset_list_pending = {}
                 if osp.isdir(d):
                     # 如果预期的目录存在
-                    file_list = os.listdir(d)
                     for ext_type, ext_alt in ModelsDist.MODELS_FILE_EXT.items():
                         # 要求每个ext_alt组内的文件扩展名至少存在一种
                         ext_verified = False
                         for ext in ext_alt:
                             # (ext是文件扩展名)
-                            asset_list_specified = list(filter(lambda x: osp.splitext(x)[1] == ext, file_list))
+                            asset_list_specified = ModelsDist.get_files_by_ext(d, ext)
                             if len(asset_list_specified) > 0:
                                 # 以ext为扩展名的文件存在
                                 if len(asset_list_specified) == 1:

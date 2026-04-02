@@ -2,14 +2,14 @@
 # @ BSD 3-Clause License
 from typing import Callable, List, Optional, Union
 
+import glob
 import numpy as np
-import os
 import os.path as osp
 import re
 
 from PIL import Image
 
-from .utils.GlobalMethods import print, rmdir, get_filelist, is_image_file
+from .utils.GlobalMethods import print, rmdir, is_image_file
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
 from .utils.TaskUtils import ThreadCtrl, UICtrl, TaskReporter, TaskReporterTracker
@@ -115,10 +115,14 @@ class AlphaRGBSearcher:
             raise ValueError("Not a image file path")
         ext = osp.splitext(self.fp_alpha)[1]
         dirname = osp.dirname(self.fp_alpha)
-        flist = os.listdir(dirname)
-        flist = list(filter(is_image_file, flist))
-        flist = list(filter(lambda x: x == real + ext or (x.startswith(real) and "$" in x), flist))
-        flist = [osp.join(dirname, x) for x in flist]
+        flist = []
+        pattern = osp.join(glob.escape(dirname), f"{glob.escape(real)}*")
+        for candidate in glob.iglob(pattern):
+            basename = osp.basename(candidate)
+            if not osp.isfile(candidate) or not is_image_file(candidate):
+                continue
+            if basename == real + ext or "$" in basename:
+                flist.append(candidate)
 
         if len(flist) == 0:
             Logger.info(f'CombineRGBwithA: No RGB-image could be matched to "{self.fp_alpha}"')
@@ -261,9 +265,10 @@ def main(rootdir: str, destdir: str, do_del: bool = False):
     Logger.info("CombineRGBwithA: Retrieving file paths...")
     rootdir = osp.normpath(osp.realpath(rootdir))
     destdir = osp.normpath(osp.realpath(destdir))
-    flist = get_filelist(rootdir)
-    flist = list(filter(is_image_file, flist))
-    flist = list(filter(lambda x: AlphaRGBSearcher.calc_real_name(x) is not None, flist))
+    flist = []
+    for i in glob.iglob(osp.join(glob.escape(rootdir), "**", "*"), recursive=True):
+        if osp.isfile(i) and is_image_file(i) and AlphaRGBSearcher.calc_real_name(i) is not None:
+            flist.append(i)
 
     if do_del:
         print("\n正在清理...", s=1)

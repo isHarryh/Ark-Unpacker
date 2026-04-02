@@ -2,12 +2,13 @@
 # @ BSD 3-Clause License
 from typing import Callable, Sequence
 
+import glob
 import os.path as osp
 import re
 import shutil
 
 from .ResolveSpine import SpineType
-from .utils.GlobalMethods import print, rmdir, get_dirlist
+from .utils.GlobalMethods import print, rmdir
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
 from .utils.TaskUtils import (
@@ -32,9 +33,13 @@ def collect_models(
     on_collected: Callable,
 ):
     error_occurred = False
-    for model_type_dir in get_dirlist(upkdir, max_depth=1):
+    for model_type_dir in glob.iglob(osp.join(glob.escape(upkdir), "*")):
+        if not osp.isdir(model_type_dir):
+            continue
         model_type: str = osp.basename(model_type_dir)  # Sub dir of one model type
-        for model_dir in get_dirlist(model_type_dir, max_depth=1):
+        for model_dir in glob.iglob(osp.join(glob.escape(model_type_dir), "*")):
+            if not osp.isdir(model_dir):
+                continue
             model: str = osp.basename(model_dir)  # Sub dir of one determined model
             if not model.islower():
                 # To solve model typo caused by Arknights side
@@ -100,8 +105,9 @@ def main(srcdirs: Sequence[str], destdirs: Sequence[str]):
     flist = []  # [(upkdir, destdir), ...]
     for srcdir, destdir in zip(srcdirs, destdirs):
         print(f"\t正在读取目录 {srcdir}")
-        for upkdir in get_dirlist(srcdir, max_depth=1):
-            flist.append((upkdir, destdir))
+        for upkdir in glob.iglob(osp.join(glob.escape(srcdir), "*")):
+            if osp.isdir(upkdir):
+                flist.append((upkdir, destdir))
 
     Logger.reset_stats()
     thread_ctrl = ThreadCtrl()

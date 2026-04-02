@@ -233,20 +233,16 @@ class SafeSaver(CoroutineCtrl):
 
     @staticmethod
     def _save_async(data: bytes, destdir: str, name: str, ext: str, on_saved: Optional[Callable]):
-        dest = osp.join(destdir, name + ext)
+        dest = SafeSaver._sanitize_dest(osp.join(destdir, name + ext))
         try:
             with CodeProfiler("saver_save"):
-                # Ensure files with identical name cannot be saved simultaneously
+                # Lock on the sanitized canonical target so equivalent names serialize together.
                 with EntryLock(dest):
-                    # Ensure this new file is unique to prevent duplication
                     if SafeSaver._is_unique(data, dest):
-                        # Modify the file name to avoid namesake
                         dest = SafeSaver._purify_name(dest)
-                        # Save the file eventually
                         os.makedirs(osp.dirname(dest), exist_ok=True)
                         with open(dest, "wb") as f:
                             f.write(data)
-                        # Invoke callback with destination path as argument
                         if on_saved:
                             on_saved(dest)
                             Logger.debug(f'Saver: Saved file "{dest}"')
@@ -263,24 +259,33 @@ class SafeSaver(CoroutineCtrl):
         name, ext = osp.splitext(osp.basename(dest))
         if not osp.isdir(destdir):
             return True
-        flist = filter(lambda x: x.startswith(name) and x.endswith(ext), os.listdir(destdir))
-        for i in flist:
-            with open(osp.join(destdir, i), "rb") as f:
+        for entry in os.scandir(destdir):
+            if not entry.is_file():
+                continue
+            entry_name, entry_ext = osp.splitext(entry.name)
+            if not entry_name.startswith(name) or entry_ext != ext:
+                continue
+            with open(entry.path, "rb") as f:
                 if f.read() == data:
-                    Logger.debug(f'Saver: File "{i}" duplication was prevented, size {len(data)}')
+                    Logger.debug(f'Saver: File "{entry.name}" duplication was prevented, size {len(data)}')
                     return False
         return True
 
     @staticmethod
-    def _purify_name(dest: str):
+    def _sanitize_dest(dest: str):
         destdir = osp.dirname(dest)
         name, ext = osp.splitext(osp.basename(dest))
         new_name = re.sub(r"[\\/:*?\"<>|\x00-\x1F]", "#", name)
         if new_name != name:
             Logger.debug(f'Saver: File name "{name}" was modified to "{new_name}" to prevent invalid characters')
             name = new_name
+        return osp.join(destdir, name + ext)
 
-        dest = osp.join(destdir, name + ext)
+    @staticmethod
+    def _purify_name(dest: str):
+        dest = SafeSaver._sanitize_dest(dest)
+        destdir = osp.dirname(dest)
+        name, ext = osp.splitext(osp.basename(dest))
         tmp = 0
         while osp.isfile(dest):
             dest = osp.join(destdir, f"{name}${tmp}{ext}")
