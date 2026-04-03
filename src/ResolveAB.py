@@ -1,7 +1,6 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
 from typing import (
-    Callable,
     Collection,
     Generator,
     List,
@@ -13,6 +12,7 @@ from typing import (
 )
 import glob
 import os.path as osp
+import multiprocessing as mp
 
 import UnityPy
 import UnityPy.classes as uc
@@ -22,14 +22,18 @@ from UnityPy.helpers import CompressionHelper
 from UnityPy.streams.EndianBinaryReader import EndianBinaryReader
 
 from .lz4ak.Block import decompress_lz4ak
+from .mp.FsGuardProcess import FsGuardClient, FsGuardClientSlot, FsGuardProcess
+from .mp.Messages import ResolveABTask, StopMessage
+from .mp.ProcessResultBus import ProcessResultBus, ProcessResultSender
+from .mp.ProcessReporter import ProcessReporter
 from .utils.GlobalMethods import print, rmdir, is_ab_file
+from .utils.Config import Config, PerformanceLevel
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
-from .utils.TaskUtils import ThreadCtrl, UICtrl, TaskReporter, TaskReporterTracker
+from .utils.TaskUtils import UICtrl, TaskReporter, TaskReporterTracker
 
 # New compression algorithm introduced in Arknights v2.5.04+
 CompressionHelper.DECOMPRESSION_MAP[CompressionFlags.LZHAM] = decompress_lz4ak
-
 
 _T = TypeVar("_T", bound=uc.Object)
 
@@ -236,7 +240,66 @@ class Resource:
                     yield (obj, tree)
 
 
-def ab_resolve(
+class ResolveABWorkerSession:
+    def __init__(
+        self,
+        reporter: ProcessReporter,
+        fs_client: FsGuardClient,
+        export_encoding: str,
+        export_json_indent: int,
+    ):
+        self._reporter = reporter
+        self._fs_client = fs_client
+        self._export_encoding = export_encoding
+        self._export_json_indent = export_json_indent
+
+    def log(self, level: str, msg: str):
+        self._reporter.log(level, msg)
+
+    def processed(self, success: bool = True):
+        self._reporter.processed(success)
+
+    def worker_done(self):
+        self._reporter.worker_done()
+
+    def save_item(self, item: SafeSaver.ExportItem, destdir: str):
+        dest = self._fs_client.prepare_write(
+            destdir,
+            item.name,
+            item.ext,
+            SafeSaver.hash_data(item.data),
+        )
+        if dest is None:
+            self._reporter.file_saved(False)
+            return
+        try:
+            SafeSaver.write_data(dest, item.data)
+            self._reporter.file_saved(True)
+        except Exception as arg:
+            self.log("error", f'ResolveAB: Failed to write file "{dest}": {arg}')
+            self._reporter.file_saved(False)
+
+    def save_object(self, obj: uc.Object, destdir: str):
+        try:
+            for item in SafeSaver.iter_object_export_items(obj):
+                self.save_item(item, destdir)
+        except Exception as arg:
+            self.log(
+                "warn", f"ResolveAB: Failed to export {type(obj).__name__} '{getattr(obj, 'm_Name', 'Unknown')}': {arg}"
+            )
+
+    def save_json(self, data: dict, destdir: str, name: str):
+        self.save_item(
+            SafeSaver.ExportItem(
+                name,
+                ".json",
+                SafeSaver.serialize_json_data(data, self._export_encoding, self._export_json_indent),
+            ),
+            destdir,
+        )
+
+
+def _resolve_ab_task(
     abfile: str,
     destdir: str,
     do_img: bool,
@@ -244,39 +307,24 @@ def ab_resolve(
     do_aud: bool,
     do_mesh: bool,
     do_tree: bool,
-    on_processed: Optional[Callable] = None,
-    on_file_queued: Optional[Callable] = None,
-    on_file_saved: Optional[Callable] = None,
+    session: ResolveABWorkerSession,
 ):
-    """Extracts an AB file.
-
-    :param abfile: Path to the AB file;
-    :param destdir: Destination directory;
-    :param do_img: Whether to extract images;
-    :param do_txt: Whether to extract text scripts;
-    :param do_aud: Whether to extract audios;
-    :param do_mesh: Whether to extract mesh;
-    :param do_tree: Whether to export typetrees as JSON;
-    :param on_processed: Callback `f()` for finished, `None` for ignore;
-    :param on_file_queued: Callback `f()` invoked when a file was queued, `None` for ignore;
-    :param on_file_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
-    :rtype: None;
-    """
     from .ResolveSpine import SpineAsset
 
     if not osp.isfile(abfile):
-        if on_processed:
-            on_processed()
+        session.processed()
         return
+
     try:
         with open(abfile, "rb") as f:
             res = Resource(UnityPy.load(f))
 
-            Logger.debug(f'ResolveAB: "{res.name}" has {res.length} objects.')
             if res.length >= 10000:
-                Logger.info(f'ResolveAB: Too many objects in file "{res.name}", unpacking it may take a long time.')
+                session.log(
+                    "info", f'ResolveAB: Too many objects in file "{res.name}", unpacking it may take a long time.'
+                )
             elif res.length == 0:
-                Logger.info(f'ResolveAB: No object in file "{res.name}".')
+                session.log("info", f'ResolveAB: No object in file "{res.name}".')
 
             for s in SpineAsset.from_resource(res):
                 s.process_path()
@@ -288,12 +336,8 @@ def ab_resolve(
                 (do_mesh, "Mesh"),
             ]:
                 if roi_flag:
-                    SafeSaver.save_objects(
-                        res.get_objects_by_roi_type(roi_type),  # type: ignore
-                        destdir,
-                        on_file_queued,
-                        on_file_saved,
-                    )
+                    for obj in res.get_objects_by_roi_type(roi_type):  # type: ignore
+                        session.save_object(obj, destdir)
 
             # Export typetrees as JSON
             if do_tree:
@@ -305,23 +349,51 @@ def ab_resolve(
                             if tree:
                                 typetrees[str(obj.path_id)] = tree
                         except Exception as e:
-                            Logger.debug(f"ResolveAB: Failed to read typetree for {obj.type.name}_{obj.path_id}: {e}")
+                            session.log(
+                                "debug", f"ResolveAB: Failed to read typetree for {obj.type.name}_{obj.path_id}: {e}"
+                            )
 
                 if typetrees:
                     result = {res.name: typetrees}
-                    SafeSaver.save_json(
-                        result,
-                        destdir,
-                        f"TT_{res.name}",
-                        on_file_queued,
-                        on_file_saved,
-                    )
+                    session.save_json(result, destdir, f"TT_{res.name}")
     except BaseException as arg:
-        # Error feedback
-        Logger.error(f'ResolveAB: Error occurred while unpacking file "{abfile}": Exception{type(arg)} {arg}')
-        # raise(arg)
-    if on_processed:
-        on_processed()
+        session.log("error", f'ResolveAB: Error occurred while unpacking file "{abfile}": Exception{type(arg)} {arg}')
+    session.processed()
+
+
+def _worker_loop(
+    task_queue: mp.Queue,
+    fs_client_slot: FsGuardClientSlot,
+    result_sender: ProcessResultSender,
+    export_encoding: str,
+    export_json_indent: int,
+):
+    reporter = result_sender.create_reporter()
+    fs_client = fs_client_slot.create_client(reporter)
+    session = ResolveABWorkerSession(
+        reporter,
+        fs_client,
+        export_encoding,
+        export_json_indent,
+    )
+    while True:
+        task = task_queue.get()
+        if isinstance(task, StopMessage):
+            break
+        if not isinstance(task, ResolveABTask):
+            reporter.log("warn", f'ResolveAB: Ignoring unexpected worker task type "{type(task).__name__}"')
+            continue
+        _resolve_ab_task(
+            task.abfile,
+            task.destdir,
+            task.do_img,
+            task.do_txt,
+            task.do_aud,
+            task.do_mesh,
+            task.do_tree,
+            session,
+        )
+    session.worker_done()
 
 
 ########## Main-主程序 ##########
@@ -363,23 +435,59 @@ def main(
         rmdir(destdir)  # Danger zone
 
     Logger.reset_stats()
-    SafeSaver.get_instance().reset_counter()
-    thread_ctrl = ThreadCtrl()
     ui = UICtrl()
     tr_processed = TaskReporter(50, len(flist))
     tr_file_saving = TaskReporter(1)
     tracker = TaskReporterTracker(tr_processed, tr_file_saving)
 
+    if not flist:
+        print("\n批量解包结束!", s=1)
+        print("  没有找到符合解包条件的文件。")
+        return
+
+    ctx = mp.get_context("spawn")
+    worker_count = min(len(flist), PerformanceLevel.get_process_limit(Config.get("performance_level")))
+    Logger.info(f"ResolveAB: Using {worker_count} worker processes for {len(flist)} files")
+    task_queue: mp.Queue = ctx.Queue(maxsize=max(1, worker_count))
+    result_bus = ProcessResultBus(ctx)
+    result_sender = result_bus.create_sender()
+    fs_guard = FsGuardProcess(
+        ctx,
+        result_sender,
+        worker_count,
+        queue_maxsize=max(2, min(8, worker_count)),
+    )
+
+    export_encoding = Config.get("export_encoding")
+    export_json_indent = Config.get("export_json_indent")
+    workers = [
+        ctx.Process(
+            target=_worker_loop,
+            args=(
+                task_queue,
+                fs_guard.create_client_slot(idx),
+                result_sender,
+                export_encoding,
+                export_json_indent,
+            ),
+            name=f"RsWorker:{idx}",
+            daemon=True,
+        )
+        for idx in range(worker_count)
+    ]
+
+    fs_guard.start()
+    for worker in workers:
+        worker.start()
+
     ui.reset()
     ui.loop_start()
     for i in flist:
-        # (i stands for a file's path)
         ui.request(
             [
                 "正在批量解包...",
                 tracker.to_progress_bar_str(),
                 f"当前目录：\t{osp.basename(osp.dirname(i))}",
-                f"当前文件：\t{osp.basename(i)}",
                 f"累计解包：\t{tr_processed.to_progress_str()}",
                 f"累计导出：\t{tr_file_saving.to_progress_str()}",
                 f"预计剩余时间：\t{tracker.to_eta_str()}",
@@ -401,26 +509,63 @@ def main(
                 else osp.join(destdir, osp.relpath(osp.dirname(i), src))
             )
         )
-        thread_ctrl.run_subthread(
-            ab_resolve,
-            (
-                i,
-                curdestdir,
-                do_img,
-                do_txt,
-                do_aud,
-                do_mesh,
-                do_tree,
-                tr_processed.report,
-                tr_file_saving.update_demand,
-                tr_file_saving.report,
-            ),
-            name=f"RsThread:{id(i)}",
+        task_queue.put(
+            ResolveABTask(
+                abfile=i,
+                destdir=curdestdir,
+                do_img=do_img,
+                do_txt=do_txt,
+                do_aud=do_aud,
+                do_mesh=do_mesh,
+                do_tree=do_tree,
+            )
         )
+    for _ in workers:
+        task_queue.put(StopMessage())
 
     ui.reset()
     ui.loop_stop()
-    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
+    worker_done = set()
+    fs_guard_done = False
+    fs_guard_stop_sent = False
+    fatal_error = None
+
+    def _set_fs_guard_done(_pid: int):
+        nonlocal fs_guard_done
+        fs_guard_done = True
+
+    result_bus = (
+        result_bus.set_on_file_queued(tr_file_saving.update_demand)
+        .set_on_file_saved(tr_file_saving.report)
+        .set_on_processed(tr_processed.report)
+        .set_on_worker_done(worker_done.add)
+        .set_on_fs_guard_done(_set_fs_guard_done)
+        .set_on_log(Logger.log)
+    )
+
+    while len(worker_done) < len(workers) or not fs_guard_done:
+        result_bus.drain(timeout=0.1)
+
+        for worker in workers:
+            if worker.exitcode is not None and worker.pid not in worker_done:
+                if worker.exitcode != 0:
+                    fatal_error = f'Worker process "{worker.name}" exited unexpectedly with code {worker.exitcode}'
+                    Logger.error(f"ResolveAB: {fatal_error}")
+                worker_done.add(worker.pid)
+
+        if len(worker_done) == len(workers) and not fs_guard_stop_sent:
+            fs_guard.stop()
+            fs_guard_stop_sent = True
+
+        if fs_guard.exitcode is not None and not fs_guard_done:
+            if fs_guard.exitcode != 0:
+                fatal_error = f"FsGuard process exited unexpectedly with code {fs_guard.exitcode}"
+                Logger.error(f"ResolveAB: {fatal_error}")
+            fs_guard_done = True
+
+        if fatal_error:
+            break
+
         ui.request(
             [
                 "正在批量解包...",
@@ -433,6 +578,26 @@ def main(
             ]
         )
         ui.refresh(post_delay=0.1)
+
+    if fatal_error:
+        for worker in workers:
+            if worker.is_alive():
+                worker.terminate()
+        if fs_guard.is_alive():
+            fs_guard.terminate()
+        for worker in workers:
+            worker.join(timeout=5)
+        fs_guard.join(timeout=5)
+        raise RuntimeError(fatal_error)
+
+    for worker in workers:
+        worker.join()
+    fs_guard.join()
+    for worker in workers:
+        if worker.exitcode not in (0, None):
+            raise RuntimeError(f'Worker process "{worker.name}" exited with code {worker.exitcode}')
+    if fs_guard.exitcode not in (0, None):
+        raise RuntimeError(f"FsGuard process exited with code {fs_guard.exitcode}")
 
     ui.reset()
     print("\n批量解包结束!", s=1)

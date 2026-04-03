@@ -33,6 +33,11 @@ class PerformanceLevel:
         """Gets the maximum thread count according to the given performance level."""
         return PerformanceLevel.__MAP.get(performance_level, PerformanceLevel.__MAP[PerformanceLevel.STANDARD])
 
+    @staticmethod
+    def get_process_limit(performance_level: int):
+        """Gets the maximum process count according to the given performance level."""
+        return max(1, PerformanceLevel.get_thread_limit(performance_level) // 2)
+
 
 class Config:
     """Configuration class for ArkUnpacker."""

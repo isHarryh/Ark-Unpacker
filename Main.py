@@ -4,6 +4,7 @@ import os
 import os.path as osp
 import sys
 import time
+from multiprocessing import freeze_support
 
 from src.utils import ArgParser
 from src.utils.Config import Config
@@ -618,6 +619,7 @@ def run_arkvoice_workflow():
 
 
 if __name__ == "__main__":
+    freeze_support()
     parser = ArgParser.INSTANCE
     try:
         Logger.set_instance(Config.get("log_file"), Config.get("log_level"))

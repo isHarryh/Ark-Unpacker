@@ -6,8 +6,10 @@ import re
 import json
 import threading
 from contextlib import ContextDecorator
+from dataclasses import dataclass
 from io import BytesIO
-from typing import Callable, Optional, Sequence
+import hashlib
+from typing import Callable, Generator, Optional, Sequence
 
 import UnityPy.classes as uc
 from PIL import Image
@@ -43,6 +45,12 @@ class EntryLock(ContextDecorator):
 
 class SafeSaver(CoroutineCtrl):
     """The file saver class to save file and avoid file name collision."""
+
+    @dataclass(frozen=True)
+    class ExportItem:
+        name: str
+        ext: str
+        data: bytes
 
     __instance = None
     _EXT_IMAGE = ".png"
@@ -104,9 +112,7 @@ class SafeSaver(CoroutineCtrl):
         :param on_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
         :rtype: None;
         """
-        bio = BytesIO()
-        img.save(bio, format=ext.lstrip("."))
-        SafeSaver.save_bytes(bio.getvalue(), destdir, name, ext, on_queued, on_saved)
+        SafeSaver.save_bytes(SafeSaver.encode_image_bytes(img, ext), destdir, name, ext, on_queued, on_saved)
 
     @staticmethod
     def save_object(
@@ -125,37 +131,11 @@ class SafeSaver(CoroutineCtrl):
         :param on_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
         :rtype: None;
         """
-        if obj.object_reader is None or obj.object_reader.byte_size == 0:
-            # No data:
-            pass
-        elif isinstance(obj, (uc.Sprite, uc.Texture2D)):
-            # As image file:
-            if obj.image.width > 0 and obj.image.height > 0:
-                SafeSaver.save_image(obj.image, destdir, name, SafeSaver._EXT_IMAGE, on_queued, on_saved)
-                return
-        elif isinstance(obj, uc.AudioClip):
-            # As audio file:
-            samples = obj.samples
-            if samples:
-                for name, byte in samples.items():
-                    SafeSaver.save_bytes(byte, destdir, name, SafeSaver._EXT_RAW, on_queued, on_saved)
-            return
-        elif isinstance(obj, uc.TextAsset):
-            # As raw file:
-            byte = obj.m_Script.encode("utf-8", "surrogateescape")
-            SafeSaver.save_bytes(byte, destdir, name, SafeSaver._EXT_RAW, on_queued, on_saved)
-            return
-        elif isinstance(obj, uc.Mesh):
-            # As mesh file (.obj):
-            try:
-                obj_data = obj.export()
-                SafeSaver.save_bytes(obj_data.encode("utf-8"), destdir, name, ".obj", on_queued, on_saved)
-            except Exception as e:
-                Logger.warn(f"SafeSaver: Failed to export Mesh: {e}")
-            return
-        else:
-            # Not an exportable type:
-            pass
+        try:
+            for item in SafeSaver.iter_object_export_items(obj, name):
+                SafeSaver.save_bytes(item.data, destdir, item.name, item.ext, on_queued, on_saved)
+        except Exception as e:
+            Logger.warn(f"SafeSaver: Failed to export {type(obj).__name__}: {e}")
 
     @staticmethod
     def save_json(
@@ -174,35 +154,14 @@ class SafeSaver(CoroutineCtrl):
         :param on_saved: Callback `f(file_path_or_none_for_not_saved)`, `None` for ignore;
         :rtype: None;
         """
-
-        def serialize_inplace(tree: dict):
-            for k, v in tree.items():
-                if isinstance(v, dict):
-                    serialize_inplace(v)
-                    tree[k] = v
-                elif isinstance(v, list):
-                    new_list = []
-                    for item in v:
-                        if isinstance(item, dict):
-                            serialize_inplace(item)
-                            new_list.append(item)
-                        elif isinstance(item, bytes):
-                            new_list.append(str(item, "utf-8", errors="surrogateescape"))
-                        else:
-                            new_list.append(item)
-                    tree[k] = new_list
-                elif isinstance(v, bytes):
-                    tree[k] = str(v, "utf-8", errors="surrogateescape")
-                else:
-                    tree[k] = v
-
         try:
             instance = SafeSaver.get_instance()
-            new_data = data.copy()
-            serialize_inplace(new_data)
-            json_str = json.dumps(new_data, indent=instance._export_json_indent, ensure_ascii=False)
             SafeSaver.save_bytes(
-                json_str.encode(instance._export_encoding, errors="surrogateescape"),
+                SafeSaver.serialize_json_data(
+                    data,
+                    instance._export_encoding,
+                    instance._export_json_indent,
+                ),
                 destdir,
                 name,
                 ".json",
@@ -230,6 +189,63 @@ class SafeSaver(CoroutineCtrl):
         """
         for i in lst:
             SafeSaver.save_object(i, destdir, getattr(i, "m_Name", "Unknown"), on_queued, on_saved)
+
+    @staticmethod
+    def hash_data(data: bytes) -> bytes:
+        return hashlib.blake2b(data, digest_size=32).digest()
+
+    @staticmethod
+    def write_data(path: str, data: bytes):
+        with open(path, "wb") as f:
+            f.write(data)
+
+    @staticmethod
+    def serialize_json_data(data: dict, encoding: str, indent: int) -> bytes:
+        def serialize(value):
+            if isinstance(value, dict):
+                return {k: serialize(v) for k, v in value.items()}
+            if isinstance(value, list):
+                return [serialize(i) for i in value]
+            if isinstance(value, bytes):
+                return str(value, "utf-8", errors="surrogateescape")
+            return value
+
+        json_str = json.dumps(serialize(data), indent=indent, ensure_ascii=False)
+        return json_str.encode(encoding, errors="surrogateescape")
+
+    @staticmethod
+    def encode_image_bytes(img: Image.Image, ext: str = _EXT_IMAGE) -> bytes:
+        bio = BytesIO()
+        img.save(bio, format=ext.lstrip("."))
+        return bio.getvalue()
+
+    @staticmethod
+    def iter_object_export_items(
+        obj: uc.Object,
+        name_override: Optional[str] = None,
+    ) -> Generator["SafeSaver.ExportItem", None, None]:
+        if obj.object_reader is None or obj.object_reader.byte_size == 0:
+            return
+
+        name = getattr(obj, "m_Name", "Unknown") if name_override is None else name_override
+        if isinstance(obj, (uc.Sprite, uc.Texture2D)):
+            if obj.image.width > 0 and obj.image.height > 0:
+                yield SafeSaver.ExportItem(name, SafeSaver._EXT_IMAGE, SafeSaver.encode_image_bytes(obj.image))
+            return
+
+        if isinstance(obj, uc.AudioClip):
+            samples = obj.samples
+            if samples:
+                for sample_name, sample_data in samples.items():
+                    yield SafeSaver.ExportItem(sample_name, SafeSaver._EXT_RAW, sample_data)
+            return
+
+        if isinstance(obj, uc.TextAsset):
+            yield SafeSaver.ExportItem(name, SafeSaver._EXT_RAW, obj.m_Script.encode("utf-8", "surrogateescape"))
+            return
+
+        if isinstance(obj, uc.Mesh):
+            yield SafeSaver.ExportItem(name, ".obj", obj.export().encode("utf-8"))
 
     @staticmethod
     def _save_async(data: bytes, destdir: str, name: str, ext: str, on_saved: Optional[Callable]):

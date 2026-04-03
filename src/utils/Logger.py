@@ -173,9 +173,16 @@ class Logger:
         return rst
 
     @staticmethod
-    def log(tag: str, msg: str):
+    def log(level: str, msg: str):
         if Logger.__instance:
-            Logger.__instance._log(tag, msg)
+            if level == "error":
+                Logger.__instance._error(msg)
+            elif level == "warn":
+                Logger.__instance._warn(msg)
+            elif level == "info":
+                Logger.__instance._info(msg)
+            else:
+                Logger.__instance._debug(msg)
 
     @staticmethod
     def error(msg: str):
