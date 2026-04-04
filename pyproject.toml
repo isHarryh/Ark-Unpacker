@@ -16,9 +16,8 @@ dependencies = [
     "psutil (~=7.2)",
     "pycryptodome (~=3.22)",
     "pydub-ng (~=0.1)",
-    "python-json-logger (~=3.3)",
     "spine-asset (~=1.1)",
-    "UnityPy (~=1.24)",
+    "UnityPy (~=1.25)",
     "wannacri (~=0.3)"
 ]
 
