@@ -1,7 +1,7 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
 from dataclasses import dataclass
-from typing import Literal, Optional
+from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -33,5 +33,5 @@ class PrepareWriteRequest:
 @dataclass(frozen=True)
 class PrepareWriteResponse:
     request_id: int
-    decision: Literal["write", "skip"]
+    approved: bool
     path: Optional[str] = None

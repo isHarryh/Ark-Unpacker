@@ -2,6 +2,7 @@
 # @ BSD 3-Clause License
 import multiprocessing as mp
 import queue
+from multiprocessing.context import SpawnContext
 from typing import Callable, Optional
 from .ProcessReporter import (
     RESULT_FILE_QUEUED,
@@ -82,7 +83,7 @@ class ProcessResultSender:
 
 
 class ProcessResultBus:
-    def __init__(self, ctx):
+    def __init__(self, ctx: SpawnContext):
         self._queue: mp.Queue = ctx.Queue()
         self._receiver = _ProcessResultReceiver(self._queue)
         self._sender = ProcessResultSender(self._queue)

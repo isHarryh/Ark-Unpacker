@@ -3,16 +3,29 @@
 import multiprocessing as mp
 import os
 import os.path as osp
-from typing import Optional, TypedDict
+from functools import lru_cache
+from hashlib import blake2b
+from multiprocessing.context import SpawnContext
+from typing import NamedTuple, Optional
 
 from .Messages import PrepareWriteRequest, PrepareWriteResponse, StopMessage
 from .ProcessResultBus import ProcessResultSender
 from .ProcessReporter import ProcessReporter
 
 
-class _FamilyState(TypedDict):
+class _FamilyState(NamedTuple):
     hashes: set[bytes]
     used_paths: set[str]
+
+
+class _DirEntry(NamedTuple):
+    name: str
+    path: str
+    data_hash: Optional[bytes]
+
+
+class _DirState(NamedTuple):
+    files_by_ext: dict[str, list[_DirEntry]]
 
 
 class FsGuardClient:
@@ -43,7 +56,7 @@ class FsGuardClient:
             )
         )
         self._request_id += 1
-        if response.decision != "write":
+        if not response.approved:
             return None
         return response.path
 
@@ -77,22 +90,20 @@ class FsGuardClientSlot:
 class FsGuardProcess:
     def __init__(
         self,
-        ctx,
+        ctx: SpawnContext,
         result_sender: ProcessResultSender,
         worker_count: int,
         *,
-        queue_maxsize: int = 0,
+        request_queue_maxsize: int = 0,
         response_queue_maxsize: int = 0,
-        name: str = "FsGuard",
+        process_name: str = "FsGuard",
     ):
-        self.request_queue: mp.Queue = ctx.Queue(maxsize=queue_maxsize)
-        self.response_queues: list[mp.Queue] = [
-            ctx.Queue(maxsize=response_queue_maxsize) for _ in range(worker_count)
-        ]
+        self.request_queue: mp.Queue = ctx.Queue(maxsize=request_queue_maxsize)
+        self.response_queues: list[mp.Queue] = [ctx.Queue(maxsize=response_queue_maxsize) for _ in range(worker_count)]
         self._process = ctx.Process(
             target=FsGuardProcess._bootstrap,
             args=(self.request_queue, self.response_queues, result_sender),
-            name=name,
+            name=process_name,
             daemon=True,
         )
 
@@ -140,8 +151,6 @@ class _FsGuardRuntime:
         self._response_queues = response_queues
         self._reporter = result_sender.create_reporter()
         self._created_dirs: set[str] = set()
-        self._dir_cache: dict[str, dict[str, list[tuple[str, str, Optional[bytes]]]]] = {}
-        self._family_cache: dict[tuple[str, str, str], _FamilyState] = {}
 
     def run(self, request_queue: mp.Queue):
         while True:
@@ -160,7 +169,7 @@ class _FsGuardRuntime:
                     f'FsGuard: Failed to handle request "{type(request).__name__}": Exception{type(arg)} {arg}',
                 )
                 if isinstance(request, PrepareWriteRequest):
-                    self._respond(request.worker_slot, PrepareWriteResponse(request.request_id, "skip"))
+                    self._respond(request.worker_slot, PrepareWriteResponse(request.request_id, False))
 
         self._reporter.fs_guard_done(os.getpid())
 
@@ -177,59 +186,55 @@ class _FsGuardRuntime:
     def _prepare_write(self, request: PrepareWriteRequest):
         dest = self._sanitize_dest(osp.join(request.destdir, request.name + request.ext))
         destdir = osp.dirname(dest)
+        norm_destdir = self._normalize_path(destdir)
         name, ext = osp.splitext(osp.basename(dest))
-        state = self._get_family_state(destdir, name, ext)
+        state = self._get_family_state(norm_destdir, name, ext)
 
-        if request.data_hash in state["hashes"]:
-            self._respond(request.worker_slot, PrepareWriteResponse(request.request_id, "skip"))
+        if request.data_hash in state.hashes:
+            self._respond(request.worker_slot, PrepareWriteResponse(request.request_id, False))
             return
 
         candidate = dest
         suffix = 0
-        while self._normalize_path(candidate) in state["used_paths"]:
+        while self._normalize_path(candidate) in state.used_paths:
             candidate = osp.join(destdir, f"{name}${suffix}{ext}")
             suffix += 1
 
         self._ensure_dir(destdir)
-        state["hashes"].add(request.data_hash)
+        state.hashes.add(request.data_hash)
         normalized_candidate = self._normalize_path(candidate)
-        state["used_paths"].add(normalized_candidate)
-        self._remember_file(destdir, osp.splitext(osp.basename(candidate))[0], ext, normalized_candidate, request.data_hash)
+        state.used_paths.add(normalized_candidate)
+        self._remember_file(
+            norm_destdir,
+            osp.splitext(osp.basename(candidate))[0],
+            ext,
+            normalized_candidate,
+            request.data_hash,
+        )
         self._respond(
             request.worker_slot,
             PrepareWriteResponse(
                 request_id=request.request_id,
-                decision="write",
+                approved=True,
                 path=candidate,
             ),
         )
 
-    def _get_family_state(self, destdir: str, name: str, ext: str):
-        key = (self._normalize_path(destdir), name, ext)
-        if key in self._family_cache:
-            return self._family_cache[key]
-
-        state: _FamilyState = {
-            "hashes": set(),
-            "used_paths": set(),
-        }
+    @lru_cache(maxsize=1024)
+    def _get_family_state(self, destdir: str, name: str, ext: str) -> _FamilyState:
+        state = _FamilyState(set(), set())
         dir_state = self._get_dir_state(destdir)
-        for entry_name, entry_path, entry_hash in dir_state.get(ext, []):
-            if not entry_name.startswith(name):
+        for entry in dir_state.files_by_ext.get(ext, []):
+            if not entry.name.startswith(name):
                 continue
-            state["used_paths"].add(entry_path)
-            if entry_hash is not None:
-                state["hashes"].add(entry_hash)
-
-        self._family_cache[key] = state
+            state.used_paths.add(entry.path)
+            if entry.data_hash is not None:
+                state.hashes.add(entry.data_hash)
         return state
 
-    def _get_dir_state(self, destdir: str):
-        norm_destdir = self._normalize_path(destdir)
-        if norm_destdir in self._dir_cache:
-            return self._dir_cache[norm_destdir]
-
-        state: dict[str, list[tuple[str, str, Optional[bytes]]]] = {}
+    @lru_cache(maxsize=1024)
+    def _get_dir_state(self, destdir: str) -> _DirState:
+        state: dict[str, list[_DirEntry]] = {}
         if osp.isdir(destdir):
             for entry in os.scandir(destdir):
                 if not entry.is_file():
@@ -246,10 +251,8 @@ class _FsGuardRuntime:
                     )
                 if entry_ext not in state:
                     state[entry_ext] = []
-                state[entry_ext].append((entry_name, entry_path, entry_hash))
-
-        self._dir_cache[norm_destdir] = state
-        return state
+                state[entry_ext].append(_DirEntry(entry_name, entry_path, entry_hash))
+        return _DirState(state)
 
     def _remember_file(
         self,
@@ -259,18 +262,16 @@ class _FsGuardRuntime:
         normalized_path: str,
         data_hash: bytes,
     ):
-        dir_state = self._get_dir_state(destdir)
+        dir_state = self._get_dir_state(destdir).files_by_ext
         if ext not in dir_state:
             dir_state[ext] = []
-        dir_state[ext].append((name, normalized_path, data_hash))
+        dir_state[ext].append(_DirEntry(name, normalized_path, data_hash))
 
     def _hash_file(self, path: str) -> bytes:
-        import hashlib
-
-        h = hashlib.blake2b(digest_size=32)
+        h = blake2b(digest_size=32)
         with open(path, "rb") as f:
             while True:
-                chunk = f.read(1024 * 1024)
+                chunk = f.read(1048576)  # 1 MB
                 if not chunk:
                     break
                 h.update(chunk)

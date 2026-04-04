@@ -455,7 +455,7 @@ def main(
         ctx,
         result_sender,
         worker_count,
-        queue_maxsize=max(2, min(8, worker_count)),
+        request_queue_maxsize=max(2, min(8, worker_count)),
     )
 
     export_encoding = Config.get("export_encoding")
