@@ -15,6 +15,7 @@ from .ResolveAB import Resource, TreeReader
 from .CombineRGBwithA import AlphaRGBCombiner, image_resize
 from .mp.FsGuardProcess import FsGuardClient, FsGuardClientSlot, FsGuardProcess
 from .mp.Messages import ResolveSpineTask, StopMessage
+from .mp.Process import ProcessUtils
 from .mp.ProcessResultBus import ProcessResultBus, ProcessResultSender
 from .mp.ProcessReporter import ProcessReporter
 from .utils.Config import Config, PerformanceLevel
@@ -503,7 +504,9 @@ def _resolve_spine_task(
             for item in _iter_resolved_spine_export_items(res, sd_name_mapping):
                 session.save_item(item, destdir)
     except BaseException as arg:
-        session.log("error", f'ResolveSpine: Error occurred while unpacking file "{abfile}": Exception{type(arg)} {arg}')
+        session.log(
+            "error", f'ResolveSpine: Error occurred while unpacking file "{abfile}": Exception{type(arg)} {arg}'
+        )
     session.processed()
 
 
@@ -578,9 +581,11 @@ def main(
     ctx = mp.get_context("spawn")
     worker_count = min(len(flist), PerformanceLevel.get_process_limit(Config.get("performance_level")))
     Logger.info(f"ResolveSpine: Using {worker_count} worker processes for {len(flist)} files")
+
     task_queue: mp.Queue = ctx.Queue(maxsize=max(1, worker_count))
     result_bus = ProcessResultBus(ctx)
     result_sender = result_bus.create_sender()
+
     fs_guard = FsGuardProcess(
         ctx,
         result_sender,
@@ -601,10 +606,7 @@ def main(
         )
         for idx in range(worker_count)
     ]
-
-    fs_guard.start()
-    for worker in workers:
-        worker.start()
+    ProcessUtils.start_all(fs_guard, *workers)
 
     ui.reset()
     ui.loop_start()
@@ -700,19 +702,10 @@ def main(
         ui.refresh(post_delay=0.1)
 
     if fatal_error:
-        for worker in workers:
-            if worker.is_alive():
-                worker.terminate()
-        if fs_guard.is_alive():
-            fs_guard.terminate()
-        for worker in workers:
-            worker.join(timeout=5)
-        fs_guard.join(timeout=5)
+        ProcessUtils.terminate_all(*workers, fs_guard)
         raise RuntimeError(fatal_error)
 
-    for worker in workers:
-        worker.join()
-    fs_guard.join()
+    ProcessUtils.join_all(*workers, fs_guard)
     for worker in workers:
         if worker.exitcode not in (0, None):
             raise RuntimeError(f'Worker process "{worker.name}" exited with code {worker.exitcode}')

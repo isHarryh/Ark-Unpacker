@@ -24,6 +24,7 @@ from UnityPy.streams.EndianBinaryReader import EndianBinaryReader
 from .lz4ak.Block import decompress_lz4ak
 from .mp.FsGuardProcess import FsGuardClient, FsGuardClientSlot, FsGuardProcess
 from .mp.Messages import ResolveABTask, StopMessage
+from .mp.Process import ProcessUtils
 from .mp.ProcessResultBus import ProcessResultBus, ProcessResultSender
 from .mp.ProcessReporter import ProcessReporter
 from .utils.GlobalMethods import print, rmdir, is_ab_file
@@ -448,16 +449,17 @@ def main(
     ctx = mp.get_context("spawn")
     worker_count = min(len(flist), PerformanceLevel.get_process_limit(Config.get("performance_level")))
     Logger.info(f"ResolveAB: Using {worker_count} worker processes for {len(flist)} files")
+
     task_queue: mp.Queue = ctx.Queue(maxsize=max(1, worker_count))
     result_bus = ProcessResultBus(ctx)
     result_sender = result_bus.create_sender()
+
     fs_guard = FsGuardProcess(
         ctx,
         result_sender,
         worker_count,
         request_queue_maxsize=max(2, min(8, worker_count)),
     )
-
     export_encoding = Config.get("export_encoding")
     export_json_indent = Config.get("export_json_indent")
     workers = [
@@ -475,10 +477,7 @@ def main(
         )
         for idx in range(worker_count)
     ]
-
-    fs_guard.start()
-    for worker in workers:
-        worker.start()
+    ProcessUtils.start_all(fs_guard, *workers)
 
     ui.reset()
     ui.loop_start()
@@ -580,19 +579,10 @@ def main(
         ui.refresh(post_delay=0.1)
 
     if fatal_error:
-        for worker in workers:
-            if worker.is_alive():
-                worker.terminate()
-        if fs_guard.is_alive():
-            fs_guard.terminate()
-        for worker in workers:
-            worker.join(timeout=5)
-        fs_guard.join(timeout=5)
+        ProcessUtils.terminate_all(*workers, fs_guard)
         raise RuntimeError(fatal_error)
 
-    for worker in workers:
-        worker.join()
-    fs_guard.join()
+    ProcessUtils.join_all(*workers, fs_guard)
     for worker in workers:
         if worker.exitcode not in (0, None):
             raise RuntimeError(f'Worker process "{worker.name}" exited with code {worker.exitcode}')

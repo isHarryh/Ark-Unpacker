@@ -9,6 +9,7 @@ from multiprocessing.context import SpawnContext
 from typing import NamedTuple, Optional
 
 from .Messages import PrepareWriteRequest, PrepareWriteResponse, StopMessage
+from .Process import ProcessLike
 from .ProcessResultBus import ProcessResultSender
 from .ProcessReporter import ProcessReporter
 
@@ -87,7 +88,7 @@ class FsGuardClientSlot:
         )
 
 
-class FsGuardProcess:
+class FsGuardProcess(ProcessLike):
     def __init__(
         self,
         ctx: SpawnContext,
@@ -126,10 +127,10 @@ class FsGuardProcess:
     def is_alive(self) -> bool:
         return self._process.is_alive()
 
-    def join(self, timeout: Optional[float] = None):
+    def join(self, timeout: Optional[float] = None) -> None:
         self._process.join(timeout=timeout)
 
-    def start(self):
+    def start(self) -> None:
         self._process.start()
 
     def create_client_slot(self, worker_slot: int) -> FsGuardClientSlot:
@@ -142,7 +143,7 @@ class FsGuardProcess:
     def stop(self):
         self.request_queue.put(StopMessage())
 
-    def terminate(self):
+    def terminate(self) -> None:
         self._process.terminate()
 
 
