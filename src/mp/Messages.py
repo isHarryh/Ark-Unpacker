@@ -21,6 +21,12 @@ class ResolveABTask:
 
 
 @dataclass(frozen=True)
+class ResolveSpineTask:
+    abfile: str
+    destdir: str
+
+
+@dataclass(frozen=True)
 class PrepareWriteRequest:
     worker_slot: int
     request_id: int

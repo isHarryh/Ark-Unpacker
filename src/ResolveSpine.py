@@ -1,7 +1,8 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
 from enum import StrEnum
-from typing import Callable, Dict, List, Optional, Sequence, Union
+import multiprocessing as mp
+from typing import Callable, Dict, Generator, List, Optional, Sequence, Union
 
 import glob
 import os.path as osp
@@ -12,10 +13,15 @@ from spine_asset.v38 import AtlasFile, SkeletonBinary, SkeletonJson, SkeletonDat
 
 from .ResolveAB import Resource, TreeReader
 from .CombineRGBwithA import AlphaRGBCombiner, image_resize
+from .mp.FsGuardProcess import FsGuardClient, FsGuardClientSlot, FsGuardProcess
+from .mp.Messages import ResolveSpineTask, StopMessage
+from .mp.ProcessResultBus import ProcessResultBus, ProcessResultSender
+from .mp.ProcessReporter import ProcessReporter
+from .utils.Config import Config, PerformanceLevel
 from .utils.GlobalMethods import print, rmdir, is_ab_file, stacktrace
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
-from .utils.TaskUtils import ThreadCtrl, UICtrl, TaskReporter, TaskReporterTracker
+from .utils.TaskUtils import UICtrl, TaskReporter, TaskReporterTracker
 
 
 SDPathID2NamesMap = Dict[int, Union[str, List[str]]]
@@ -185,19 +191,7 @@ class SpineAsset:
         for h in list((self.atlas_handler, self.skel_handler)) + list(self.tex_handlers):
             h.set_path_prefix(prefix)
 
-    def save_spine(
-        self,
-        destdir: str,
-        on_queued: Optional[Callable],
-        on_saved: Optional[Callable],
-    ):
-        """Saves the Spine assets to the destination directory.
-
-        :param destdir: Destination directory;
-        :param on_queued: Callback `f(file_path)` invoked when a file was queued, `None` for ignore;
-        :param on_saved: Callback `f(file_path_or_none_for_not_saved)` invoked when a file was saved, `None` for ignore;
-        :rtype: None;
-        """
+    def iter_export_items(self) -> Generator[SafeSaver.ExportItem, None, None]:
         Logger.debug(
             f'ResolveSpine: Exporting Spine "{self.skel_handler.name}" + "{self.atlas_handler.name}" + {len(self.tex_handlers)} textures with type "{self.type}"'
         )
@@ -214,15 +208,9 @@ class SpineAsset:
             else:
                 Logger.debug(f'ResolveSpine: Spine asset "{tex.name}" found with NO Alpha texture.')
                 rgba = AlphaRGBCombiner.apply_premultiplied_alpha(tex.rgb)
-            SafeSaver.save_image(
-                rgba,
-                destdir,
-                tex.name,
-                on_queued=on_queued,
-                on_saved=on_saved,
-            )
+            yield SafeSaver.ExportItem(tex.name, ".png", SafeSaver.encode_image_bytes(rgba))
         for i in (self.atlas_handler, self.skel_handler):
-            SafeSaver.save_object(i.obj, destdir, i.name, on_queued, on_saved)
+            yield from SafeSaver.iter_object_export_items(i.obj, i.name)
 
     def __repr__(self) -> str:
         return f"<SpineAsset type={self.type}>"
@@ -370,6 +358,38 @@ class SpineAsset:
             )
 
 
+class ResolveSpineWorkerSession:
+    def __init__(self, reporter: ProcessReporter, fs_client: FsGuardClient):
+        self._reporter = reporter
+        self._fs_client = fs_client
+
+    def log(self, level: str, msg: str):
+        self._reporter.log(level, msg)
+
+    def processed(self, success: bool = True):
+        self._reporter.processed(success)
+
+    def worker_done(self):
+        self._reporter.worker_done()
+
+    def save_item(self, item: SafeSaver.ExportItem, destdir: str):
+        dest = self._fs_client.prepare_write(
+            destdir,
+            item.name,
+            item.ext,
+            SafeSaver.hash_data(item.data),
+        )
+        if dest is None:
+            self._reporter.file_saved(False)
+            return
+        try:
+            SafeSaver.write_data(dest, item.data)
+            self._reporter.file_saved(True)
+        except Exception as arg:
+            self.log("error", f'ResolveSpine: Failed to write file "{dest}": {arg}')
+            self._reporter.file_saved(False)
+
+
 def pfb_resolve(srcdir: str) -> dict:
     """Extracts skeleton data asset path id to GameObject name mappings from all pfb files.
 
@@ -410,6 +430,28 @@ def pfb_resolve(srcdir: str) -> dict:
     return all_mappings
 
 
+def _iter_resolved_spine_export_items(
+    res: Resource,
+    sd_name_mapping: SDPathID2NamesMap,
+) -> Generator[SafeSaver.ExportItem, None, None]:
+    spines = SpineAsset.from_resource(res)
+    if len(spines) >= 10:
+        Logger.info(f'ResolveSpine: "{res.name}" has {len(spines)} spines, unpacking it may take a long time.')
+
+    for spine in spines:
+        assert spine.sd_pathid is not None
+        mapped_names = sd_name_mapping.get(spine.sd_pathid)
+        if mapped_names:
+            if not isinstance(mapped_names, list):
+                mapped_names = [mapped_names]
+            for name in mapped_names:
+                spine.process_path(name)
+                yield from spine.iter_export_items()
+        else:
+            spine.process_path()
+            yield from spine.iter_export_items()
+
+
 def spine_resolve(
     abfile: str,
     destdir: str,
@@ -435,29 +477,56 @@ def spine_resolve(
             on_processed()
         return
     try:
-        # Now extract Spine assets from the given AB file
         with open(abfile, "rb") as f:
             res = Resource(UnityPy.load(f))
-            spines = SpineAsset.from_resource(res)
-            if len(spines) >= 10:
-                Logger.info(f'ResolveSpine: "{res.name}" has {len(spines)} spines, unpacking it may take a long time.')
-            for s in spines:
-                assert s.sd_pathid is not None
-                mapped_names = sd_name_mapping.get(s.sd_pathid)
-                if mapped_names:
-                    if not isinstance(mapped_names, list):
-                        mapped_names = [mapped_names]
-
-                    for name in mapped_names:
-                        s.process_path(name)
-                        s.save_spine(destdir, on_file_queued, on_file_saved)
-                else:
-                    s.process_path()
-                    s.save_spine(destdir, on_file_queued, on_file_saved)
+            for item in _iter_resolved_spine_export_items(res, sd_name_mapping):
+                SafeSaver.save_bytes(item.data, destdir, item.name, item.ext, on_file_queued, on_file_saved)
     except BaseException as arg:
         Logger.error(f'ResolveSpine: Error occurred while unpacking file "{abfile}": Exception{type(arg)} {arg}')
     if on_processed:
         on_processed()
+
+
+def _resolve_spine_task(
+    abfile: str,
+    destdir: str,
+    sd_name_mapping: SDPathID2NamesMap,
+    session: ResolveSpineWorkerSession,
+):
+    if not osp.isfile(abfile):
+        session.processed()
+        return
+
+    try:
+        with open(abfile, "rb") as f:
+            res = Resource(UnityPy.load(f))
+            for item in _iter_resolved_spine_export_items(res, sd_name_mapping):
+                session.save_item(item, destdir)
+    except BaseException as arg:
+        session.log("error", f'ResolveSpine: Error occurred while unpacking file "{abfile}": Exception{type(arg)} {arg}')
+    session.processed()
+
+
+def _worker_loop(
+    task_queue: mp.Queue,
+    fs_client_slot: FsGuardClientSlot,
+    result_sender: ProcessResultSender,
+    sd_name_mapping: SDPathID2NamesMap,
+):
+    reporter = result_sender.create_reporter()
+    fs_client = fs_client_slot.create_client(reporter)
+    session = ResolveSpineWorkerSession(reporter, fs_client)
+
+    while True:
+        task = task_queue.get()
+        if isinstance(task, StopMessage):
+            break
+        if not isinstance(task, ResolveSpineTask):
+            reporter.log("warn", f'ResolveSpine: Ignoring unexpected worker task type "{type(task).__name__}"')
+            continue
+        _resolve_spine_task(task.abfile, task.destdir, sd_name_mapping, session)
+
+    session.worker_done()
 
 
 def main(
@@ -496,12 +565,47 @@ def main(
         sd_name_mapping = pfb_resolve(pfb_dir)
 
     Logger.reset_stats()
-    SafeSaver.get_instance().reset_counter()
-    thread_ctrl = ThreadCtrl()
     ui = UICtrl()
     tr_processed = TaskReporter(50, len(flist))
     tr_file_saving = TaskReporter(1)
     tracker = TaskReporterTracker(tr_processed, tr_file_saving)
+
+    if not flist:
+        print("\nSpine模型批量导出结束!", s=1)
+        print("  没有找到符合解包条件的文件。")
+        return
+
+    ctx = mp.get_context("spawn")
+    worker_count = min(len(flist), PerformanceLevel.get_process_limit(Config.get("performance_level")))
+    Logger.info(f"ResolveSpine: Using {worker_count} worker processes for {len(flist)} files")
+    task_queue: mp.Queue = ctx.Queue(maxsize=max(1, worker_count))
+    result_bus = ProcessResultBus(ctx)
+    result_sender = result_bus.create_sender()
+    fs_guard = FsGuardProcess(
+        ctx,
+        result_sender,
+        worker_count,
+        request_queue_maxsize=max(2, min(8, worker_count)),
+    )
+    workers = [
+        ctx.Process(
+            target=_worker_loop,
+            args=(
+                task_queue,
+                fs_guard.create_client_slot(idx),
+                result_sender,
+                sd_name_mapping,
+            ),
+            name=f"SpWorker:{idx}",
+            daemon=True,
+        )
+        for idx in range(worker_count)
+    ]
+
+    fs_guard.start()
+    for worker in workers:
+        worker.start()
+
     ui.reset()
     ui.loop_start()
     for i in flist:
@@ -510,7 +614,6 @@ def main(
                 "正在批量导出Spine模型...",
                 tracker.to_progress_bar_str(),
                 f"当前目录：\t{osp.basename(osp.dirname(i))}",
-                f"当前文件：\t{osp.basename(i)}",
                 f"累计解包：\t{tr_processed.to_progress_str()}",
                 f"累计导出：\t{tr_file_saving.to_progress_str()}",
                 f"预计剩余时间：\t{tracker.to_eta_str()}",
@@ -531,21 +634,58 @@ def main(
                 else osp.join(destdir, osp.relpath(osp.dirname(i), src))
             )
         )
-        thread_ctrl.run_subthread(
-            spine_resolve,
-            (
-                i,
-                curdestdir,
-                sd_name_mapping,
-                tr_processed.report,
-                tr_file_saving.update_demand,
-                tr_file_saving.report,
-            ),
-            name=f"SpineThread:{id(i)}",
+        task_queue.put(
+            ResolveSpineTask(
+                abfile=i,
+                destdir=curdestdir,
+            )
         )
+    for _ in workers:
+        task_queue.put(StopMessage())
+
     ui.reset()
     ui.loop_stop()
-    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
+    worker_done = set()
+    fs_guard_done = False
+    fs_guard_stop_sent = False
+    fatal_error = None
+
+    def _set_fs_guard_done(_pid: int):
+        nonlocal fs_guard_done
+        fs_guard_done = True
+
+    result_bus = (
+        result_bus.set_on_file_queued(tr_file_saving.update_demand)
+        .set_on_file_saved(tr_file_saving.report)
+        .set_on_processed(tr_processed.report)
+        .set_on_worker_done(worker_done.add)
+        .set_on_fs_guard_done(_set_fs_guard_done)
+        .set_on_log(Logger.log)
+    )
+
+    while len(worker_done) < len(workers) or not fs_guard_done:
+        result_bus.drain(timeout=0.1)
+
+        for worker in workers:
+            if worker.exitcode is not None and worker.pid not in worker_done:
+                if worker.exitcode != 0:
+                    fatal_error = f'Worker process "{worker.name}" exited unexpectedly with code {worker.exitcode}'
+                    Logger.error(f"ResolveSpine: {fatal_error}")
+                worker_done.add(worker.pid)
+
+        if len(worker_done) == len(workers) and not fs_guard_stop_sent:
+            fs_guard.stop()
+            fs_guard_stop_sent = True
+
+        if fs_guard.exitcode is not None and not fs_guard_done:
+            if fs_guard.exitcode != 0:
+                fatal_error = f"FsGuard process exited unexpectedly with code {fs_guard.exitcode}"
+                Logger.error(f"ResolveSpine: {fatal_error}")
+            fs_guard_done = True
+
+        if fatal_error:
+            break
+
         ui.request(
             [
                 "正在批量导出Spine模型...",
@@ -558,6 +698,27 @@ def main(
             ]
         )
         ui.refresh(post_delay=0.1)
+
+    if fatal_error:
+        for worker in workers:
+            if worker.is_alive():
+                worker.terminate()
+        if fs_guard.is_alive():
+            fs_guard.terminate()
+        for worker in workers:
+            worker.join(timeout=5)
+        fs_guard.join(timeout=5)
+        raise RuntimeError(fatal_error)
+
+    for worker in workers:
+        worker.join()
+    fs_guard.join()
+    for worker in workers:
+        if worker.exitcode not in (0, None):
+            raise RuntimeError(f'Worker process "{worker.name}" exited with code {worker.exitcode}')
+    if fs_guard.exitcode not in (0, None):
+        raise RuntimeError(f"FsGuard process exited with code {fs_guard.exitcode}")
+
     ui.reset()
     print("\nSpine模型批量导出结束!", s=1)
     print(f"  累计解包 {tr_processed.get_done()} 个文件")
