@@ -6,11 +6,12 @@ import sys
 import time
 from multiprocessing import freeze_support
 
+from src.ui.RichCLI import MenuOption, RichCLI
 from src.utils import ArgParser
 from src.utils.Config import Config
 from src.utils.Logger import Logger
-from src.utils.GlobalMethods import color, print, clear, title, stacktrace, rmdir, try_shorten_path
-from src.utils.UserInput import UserInput
+from src.utils.GlobalMethods import stacktrace, rmdir, try_shorten_path
+from src.ui.UserInput import UserInput, ParamInputSession
 
 from src import ResolveAB as AU_Rs
 from src import ResolveSpine as AU_Sp
@@ -24,42 +25,37 @@ from src import ResolveUSM as AU_Usm
 
 ARKUNPACKER_VERSION = "v4.5"
 ARKUNPACKER_LOCAL = "zh-CN"
+CLI = RichCLI.get_instance()
 
 
 def prt_homepage():
     Logger.info("CI: In Homepage.")
-    clear()
+    CLI.clear()
     os.chdir(".")
-    print(f"欢迎使用ArkUnpacker {ARKUNPACKER_VERSION}", s=1)
-    print("=" * 20)
-    print(
-        """模式选择：
-1: 一键执行
-2: 自定义资源解包
-3: 自定义图片合并
-4: 自定义文本资源解码
-5: 自定义Spine模型导出
-6: 自定义Criware USM音视频提取
-7: ArkModels提取与分拣工具
-8: ArkVoice提取与分拣工具
-0: 退出""",
-        c=6,
-    )
-    print(
-        "输入序号后按Enter即可，\n如果您不清楚以上功能的含义，强烈建议您先阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker "
+    CLI.show_menu(
+        f"欢迎使用 ArkUnpacker {ARKUNPACKER_VERSION}",
+        [
+            MenuOption("1", "一键执行", "对当前文件夹依次执行资源解包与图片合并"),
+            MenuOption("2", "自定义资源解包", "批量解包 AB 文件并导出指定类型的资源"),
+            MenuOption("3", "自定义图片合并", "自动匹配 RGB-Alpha 图片并导出合并图片"),
+            MenuOption("4", "自定义文本资源解码", "解码 FlatBuffers/AES 文本资源"),
+            MenuOption("5", "自定义 Spine 模型导出", "提取和导出 Spine 模型资源"),
+            MenuOption("6", "自定义 Criware USM 提取", "提取过场动画并进行格式转换"),
+            MenuOption("7", "ArkModels 工具", "面向 Ark-Models 仓库更新的专用工作流"),
+            MenuOption("8", "ArkVoice 工具", "面向 Ark-Voice 仓库更新的专用工作流"),
+            MenuOption("0", "退出"),
+        ],
     )
 
 
 def prt_subtitle(msg: str):
-    clear()
+    CLI.clear()
     os.chdir(".")
-    print("=" * 10, s=1)
-    print(msg, s=1)
-    print("=" * 10, s=1)
+    CLI.show_section(msg)
 
 
 def prt_continue():
-    UserInput.request("\n> 按Enter以继续...")
+    UserInput.press_enter_to_continue()
 
 
 def warn_large_srcdir(srcdir: str, threshold: int = 10000):
@@ -69,14 +65,15 @@ def warn_large_srcdir(srcdir: str, threshold: int = 10000):
     for _, _, files in os.walk(srcdir):
         count += len(files)
         if count > threshold:
-            print("\n注意，所选的目录包含大量文件！", c=3)
-            print("  这可能导致耗时过长、占用大量内存和存储空间。")
-            print("  我们建议您仅对部分目录进行单独的操作。")
-            print("  您仍要继续本次任务吗？")
-            print("  请选择：[y]继续任务，[n]取消任务(默认)", c=3)
-            uin = UserInput.request().strip().lower()
-            if uin != "y":
-                print("  已取消任务", c=3)
+            CLI.show_notice(
+                "高负载提示",
+                "所选目录包含大量文件，可能导致耗时过长，并显著增加内存和存储占用。\n建议优先针对子目录分批操作。",
+            )
+            if not UserInput.request_yes_or_no(
+                "仍要继续本次任务吗？",
+                default=False,
+                note="默认取消任务",
+            ):
                 raise InterruptedError("User cancelled due to large directory")
             break
 
@@ -91,37 +88,39 @@ def warn_dir_intersection(srcdir: str, destdir: str):
         return os.path.commonprefix([parent, child]) == parent
 
     if srcdir == destdir or is_subdir(destdir, srcdir):
-        print("\n注意，源目录包含于导出目录中！", c=3)
-        print("  这可能导致数据覆盖等意外行为。")
-        print("  您仍要继续本次任务吗？")
-        print("  请选择：[y]继续任务，[n]取消任务(默认)", c=3)
-        uin = UserInput.request().strip().lower()
-        if uin != "y":
-            print("  已取消任务", c=3)
+        CLI.show_notice(
+            "目录重叠警告",
+            "检测到源目录位于导出目录内部，或两者相同。这可能引发覆盖、重复扫描或不可预期的结果。",
+        )
+        if not UserInput.request_yes_or_no(
+            "仍要继续本次任务吗？",
+            default=False,
+            note="默认取消任务",
+        ):
             raise InterruptedError("User cancelled due to directory intersection")
 
 
 def warn_ffmpeg_not_available():
-    print("正在检查FFmpeg可用性...")
-    if AU_Usm.is_ffmpeg_available():
-        print("  通过！", c=2)
+    with CLI.console.status("正在检查 FFmpeg 可用性..."):
+        available = AU_Usm.is_ffmpeg_available()
+    if available:
         return
-    print("  失败！", c=1)
-    print("\n注意，检测到FFmpeg似乎不可用！", c=3)
-    print("  如果您未在计算机中安装FFmpeg，请访问它的官网来下载合适的版本")
-    print("  并将FFmpeg的bin目录添加到系统环境变量Path。")
-    print("  FFmpeg 官网：https://ffmpeg.org/download.html\n")
-    print("  您仍要继续本次任务吗？")
-    print("  请选择：[y]继续任务，[n]取消任务(默认)", c=3)
-    uin = UserInput.request().strip().lower()
-    if uin != "y":
-        print("  已取消任务", c=3)
+    CLI.show_notice(
+        "FFmpeg 不可用",
+        "检测到 FFmpeg 似乎不可用。\n如果尚未安装，请访问官网下载安装，并将 FFmpeg 的 bin 目录加入系统环境变量 Path。\n官网：https://ffmpeg.org/download.html",
+        style="yellow",
+    )
+    if not UserInput.request_yes_or_no(
+        "仍要继续本次任务吗？",
+        default=False,
+        note="默认取消",
+    ):
         raise InterruptedError("User cancelled due to FFmpeg not available")
 
 
 def run_quickaccess():
     Logger.info("CI: Run quick access.")
-    title("ArkUnpacker - Processing")
+    CLI.title("ArkUnpacker - Processing")
     warn_large_srcdir(".")
     destdir = f"Unpacked_{int(time.time())}"
     ###
@@ -136,179 +135,199 @@ def run_quickaccess():
 
 def run_custom_resolve_ab():
     Logger.info("CI: Customized unpack mode.")
-    prt_subtitle("自定义资源解包")
-    ###
-    print("\n请输入要解包的目录或文件路径")
-    src = UserInput.request_input_path()
-    print("解包目标路径：", c=2)
-    print(f"  {src}", c=6)
+    session = ParamInputSession("自定义资源解包")
+    src = session.request_input_path(
+        "输入路径",
+        prompt="需要解包的文件或目录",
+        note="接受资源目录或单个 AB 文件路径，支持相对路径",
+    )
     warn_large_srcdir(src)
-    ###
-    print("\n请输入导出目录的路径")
-    destdir = UserInput.request_output_path(default_generator=lambda: f"Unpacked_{int(time.time())}")
-    print("导出目录路径：", c=2)
-    print(f"  {destdir}", c=6)
+    destdir = session.request_output_path(
+        "导出目录",
+        lambda: f"Unpacked_{int(time.time())}",
+        prompt="用于保存解包后文件的目录",
+    )
     warn_dir_intersection(src, destdir)
-    ###
     do_del = False
     if osp.isdir(destdir):
-        print("\n该导出目录已存在，您要删除它里面的全部文件吗？")
-        print("  请!慎重!选择：[y]删除，[n]保留(默认)", c=3)
-        do_del = UserInput.request_yes_or_no(False)
-    ###
+        do_del = session.request_yes_or_no(
+            "清空目标目录",
+            default=False,
+            prompt="导出目录已存在，是否先清空？",
+            note="默认保留现有内容",
+        )
+    session.set_bool("清空目标目录", do_del)
     separate = True
     if not osp.isfile(src):
-        print("\n是否对导出的文件按来源进行分组？")
-        print("  [y]是(默认)，[n]否", c=3)
-        separate = UserInput.request_yes_or_no(True)
-    ###
-    print("\n请输入要导出的资源类型")
-    print("  [i]图片(纹理)，[t]文本，[a]音频，[m]3D模型(Mesh)，[j]Typetree(JSON)", c=3)
-    print('  可多选，示例输入："itam"，"it"')
-    do_them = UserInput.request().lower()
+        separate = session.request_yes_or_no(
+            "按来源分组",
+            default=True,
+            prompt="是否按来源目录对导出结果分组？",
+            note="默认分组",
+        )
+    session.set_bool("按来源分组", separate)
+    do_them = (
+        session.request(
+            "需要导出的资源类型（可多选，例如 itam 或 it）",
+            note="可选项：i=图片，t=文本，a=音频，m=Mesh，j=Typetree JSON",
+        )
+        .lower()
+        .strip()
+    )
     do_img = True if "i" in do_them else False
     do_txt = True if "t" in do_them else False
     do_aud = True if "a" in do_them else False
     do_mesh = True if "m" in do_them else False
     do_tree = True if "j" in do_them else False
-    print(
-        f"  [{'√' if do_img else '×'}]图片(纹理)，[{'√' if do_txt else '×'}]文本，[{'√' if do_aud else '×'}]音频，[{'√' if do_mesh else '×'}]3D模型(Mesh)，[{'√' if do_tree else '×'}]Typetree(JSON)",
-        c=6,
-    )
-    ###
-    prt_continue()
-    title("ArkUnpacker - Processing")
+    session.set_bool("图片", do_img)
+    session.set_bool("文本", do_txt)
+    session.set_bool("音频", do_aud)
+    session.set_bool("Mesh", do_mesh)
+    session.set_bool("Typetree JSON", do_tree)
+    session.confirm_start()
+    CLI.title("ArkUnpacker - Processing")
     AU_Rs.main(src, destdir, do_del, do_img, do_txt, do_aud, do_mesh, do_tree, separate)
 
 
 def run_custom_combine_image():
     Logger.info("CI: Customized image combine mode.")
-    prt_subtitle("自定义合并图片")
-    ###
-    print("\n请输入源图片目录的路径")
-    rootdir = UserInput.request_input_path()
-    print("源图片目录路径：")
-    print(f"  {rootdir}", c=6)
-    ###
-    print("\n请输入导出的目的地")
-    destdir = UserInput.request_output_path(default_generator=lambda: f"Combined_{int(time.time())}")
-    print("您选择的导出目录是：")
-    print(f"  {destdir}", c=6)
+    session = ParamInputSession("自定义合并图片")
+    rootdir = session.request_input_path(
+        "输入目录",
+        prompt="源图片所在的目录",
+        note="需要包含待合并的 RGB/Alpha 图片，支持相对路径",
+    )
+    destdir = session.request_output_path(
+        "导出目录",
+        lambda: f"Combined_{int(time.time())}",
+        prompt="保存合并结果的目录",
+    )
     warn_dir_intersection(rootdir, destdir)
-    ###
     do_del = False
     if osp.isdir(destdir):
-        print("\n该导出目录已存在，您要删除它里面的全部文件吗？")
-        print("  请!慎重!选择：[y]删除，[n]保留(默认)", c=3)
-        do_del = UserInput.request_yes_or_no(False)
-    ###
-    prt_continue()
-    title("ArkUnpacker - Processing")
+        do_del = session.request_yes_or_no(
+            "清空目标目录",
+            default=False,
+            prompt="导出目录已存在，是否先清空？",
+            note="默认保留现有内容",
+        )
+    session.set_bool("清空目标目录", do_del)
+    session.confirm_start()
+    CLI.title("ArkUnpacker - Processing")
     AU_Cb.main(rootdir, destdir, do_del)
 
 
 def run_custom_textasset_decode():
     Logger.info("CI: Customized textasset decoding mode.")
-    prt_subtitle("自定义文本资源解码")
-    ###
-    print("Arknights游戏内数据文件主要位于TextAsset中，采用FlatBuffers格式或AES加密存储。")
-    print("在资源解包后需要对这些文件进行解码才可得到游戏数据。")
-    print("\n请输入源文件目录的路径")
-    print("若您不清楚哪些文件是TextAsset，请选择整个解包后的目录。")
-    rootdir = UserInput.request_input_path()
-    print(" 源文件的目录是：")
-    print(f"  {rootdir}", c=6)
-    ###
-    print("\n请输入导出的目的地")
-    destdir = UserInput.request_output_path(default_generator=lambda: f"Decoded_{int(time.time())}")
-    print("您选择的导出目录是：")
-    print(f"  {destdir}", c=6)
+    session = ParamInputSession("自定义文本资源解码")
+    rootdir = session.request_input_path(
+        "输入目录",
+        prompt="待解码的文件所在的目录",
+        note="若不确定哪些文件属于 TextAsset，直接选择整个解包目录",
+    )
+    destdir = session.request_output_path(
+        "导出目录",
+        lambda: f"Decoded_{int(time.time())}",
+        prompt="导出解码结果的目录",
+    )
     warn_dir_intersection(rootdir, destdir)
-    ###
     do_del = False
     if osp.isdir(destdir):
-        print("\n该导出目录已存在，您要删除它里面的全部文件吗？")
-        print("  请!慎重!选择：[y]删除，[n]保留(默认)", c=3)
-        do_del = UserInput.request_yes_or_no(False)
-    ###
-    prt_continue()
-    title("ArkUnpacker - Processing")
+        do_del = session.request_yes_or_no(
+            "清空目标目录",
+            default=False,
+            prompt="导出目录已存在，是否先清空？",
+            note="默认保留现有内容",
+        )
+    session.set_bool("清空目标目录", do_del)
+    session.confirm_start()
+    CLI.title("ArkUnpacker - Processing")
     AU_Fb.main(rootdir, destdir, do_del)
 
 
 def run_custom_resolve_spine():
     Logger.info("CI: Customized Spine export mode.")
-    prt_subtitle("自定义Spine模型导出")
-    ###
-    print("\n请输入要导出的目录或文件路径")
-    src = UserInput.request_input_path()
-    print("导出目标路径：", c=2)
-    print(f"  {src}", c=6)
-    ###
-    print("\n请输入导出目录的路径")
-    destdir = UserInput.request_output_path(default_generator=lambda: f"Spine_{int(time.time())}")
-    print("导出目录路径：", c=2)
-    print(f"  {destdir}", c=6)
+    session = ParamInputSession("自定义 Spine 模型导出")
+    src = session.request_input_path(
+        "输入路径",
+        prompt="需要解包的文件或目录",
+        note="接受资源目录或单个文件路径，支持相对路径",
+    )
+    destdir = session.request_output_path(
+        "导出目录",
+        lambda: f"Spine_{int(time.time())}",
+        prompt="导出 Spine 模型的目录",
+    )
     warn_dir_intersection(src, destdir)
-    ###
     do_del = False
     if osp.isdir(destdir):
-        print("\n该导出目录已存在，您要删除它里面的全部文件吗？")
-        print("  请!慎重!选择：[y]删除，[n]保留(默认)", c=3)
-        do_del = UserInput.request_yes_or_no(False)
-    ###
+        do_del = session.request_yes_or_no(
+            "清空目标目录",
+            default=False,
+            prompt="导出目录已存在，是否先清空？",
+            note="默认保留现有内容",
+        )
+    session.set_bool("清空目标目录", do_del)
     separate = True
     if not osp.isfile(src):
-        print("\n是否对导出的文件按来源进行分组？")
-        print("  [y]是(默认)，[n]否", c=3)
-        separate = UserInput.request_yes_or_no(True)
-    ###
-    prt_continue()
-    title("ArkUnpacker - Processing")
+        separate = session.request_yes_or_no(
+            "按来源分组",
+            default=True,
+            prompt="是否按来源目录对导出结果分组？",
+            note="默认分组",
+        )
+    session.set_bool("按来源分组", separate)
+    session.confirm_start()
+    CLI.title("ArkUnpacker - Processing")
     AU_Sp.main(src, destdir, do_del, separate)
 
 
 def run_custom_resolve_usm():
     Logger.info("CI: Customized Criware USM extraction mode.")
-    prt_subtitle("自定义Criware USM音视频提取")
-    ###
+    session = ParamInputSession("自定义 Criware USM 音视频提取")
     warn_ffmpeg_not_available()
-    print("\n请输入要处理的USM文件的目录路径")
-    src = UserInput.request_input_path()
-    print("USM文件路径：", c=2)
-    print(f"  {src}", c=6)
+    src = session.request_input_path(
+        "输入路径",
+        prompt="USM 来源文件或目录",
+        note="接受目录或单个 USM 文件路径，支持相对路径",
+    )
     warn_large_srcdir(src)
-    ###
-    print("\n请输入导出目录的路径")
-    destdir = UserInput.request_output_path(default_generator=lambda: f"USM_Extracted_{int(time.time())}")
-    print("导出目录路径：", c=2)
-    print(f"  {destdir}", c=6)
+    destdir = session.request_output_path(
+        "导出目录",
+        lambda: f"USM_Extracted_{int(time.time())}",
+        prompt="导出输出结果的目录",
+    )
     warn_dir_intersection(src, destdir)
-    ###
     do_del = False
     if osp.isdir(destdir):
-        print("\n该导出目录已存在，您要删除它里面的全部文件吗？")
-        print("  请!慎重!选择：[y]删除，[n]保留(默认)", c=3)
-        do_del = UserInput.request_yes_or_no(False)
-    ###
-    print("\n请选择提取方式")
-    print("  [1]仅导出音频文件", c=3)
-    print("  [2]仅导出视频文件", c=3)
-    print("  [3]将音频与视频合并之后导出", c=3)
+        do_del = session.request_yes_or_no(
+            "清空目标目录",
+            default=False,
+            prompt="导出目录已存在，是否先清空？",
+            note="默认保留现有内容",
+        )
+    session.set_bool("清空目标目录", do_del)
+    CLI.clear()
+    CLI.show_menu(
+        session.title,
+        [
+            MenuOption("1", "仅导出音频文件"),
+            MenuOption("2", "仅导出视频文件"),
+            MenuOption("3", "合并音视频后导出", "（推荐）"),
+        ],
+        intro=[f"{name}: {value}" for name, value in session.rows],
+    )
     extract_mode = UserInput.request_options(["1", "2", "3"])
-    print("提取方式：", c=2)
     if extract_mode == "1":
-        print("  仅导出音频文件", c=6)
         do_vid, do_aud = False, True
     elif extract_mode == "2":
-        print("  仅导出视频文件", c=6)
         do_vid, do_aud = True, False
     else:  # extract_mode == "3"
-        print("  将音频与视频合并之后导出", c=6)
         do_vid, do_aud = True, True
-    ###
-    prt_continue()
-    title("ArkUnpacker - Processing")
+    session.set_bool("导出视频", do_vid)
+    session.set_bool("导出音频", do_aud)
+    session.confirm_start()
+    CLI.title("ArkUnpacker - Processing")
     AU_Usm.main(src, destdir, do_del, do_vid, do_aud)
 
 
@@ -321,12 +340,7 @@ def run_arkmodels_unpacking(*, and_dirs=None, or_dirs=None, destdir):
     if and_dirs is not None:
         for i in and_dirs:
             if not osp.exists(i):
-                print(
-                    f"在工作目录下找不到文件夹 {i}"
-                    "请确保该文件夹直接位于工作目录中。"
-                    "也有可能是本程序版本与您的资源版本不兼容，可尝试获取其他版本的程序。",
-                    c=3,
-                )
+                CLI.show_error("路径缺失", f"在工作目录下找不到文件夹 {i}。请确认资源目录位置或程序版本。")
                 return
         dirs = and_dirs[:]
     if or_dirs is not None:
@@ -336,16 +350,14 @@ def run_arkmodels_unpacking(*, and_dirs=None, or_dirs=None, destdir):
                 found = True
                 dirs.append(i)
         if not found:
-            print(
-                f"在工作目录下找不到以下任一文件夹：{', '.join(or_dirs)}\n"
-                "请确保其中至少有一个文件夹直接位于工作目录中。"
-                "也有可能是本程序版本与您的资源版本不兼容，可尝试获取其他版本的程序。",
-                c=3,
+            CLI.show_error(
+                "路径缺失",
+                f"在工作目录下找不到以下任一文件夹：{', '.join(or_dirs)}。\n请确认资源目录位置或程序版本。",
             )
             return
-    title("ArkUnpacker - Processing")
+    CLI.title("ArkUnpacker - Processing")
     ###
-    print("正在清理...")
+    CLI.show_stage("正在清理...")
     rmdir(destdir)
     for i in dirs:
         if "refs/arts" == i:
@@ -360,14 +372,14 @@ def run_arkmodels_anon_unpacking(dirs, destdir):
     ###
     for i in dirs:
         if not osp.exists(i):
-            print(
-                f"在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是本程序版本与您的资源版本不兼容，可尝试获取其他版本的程序。",
-                c=3,
+            CLI.show_error(
+                "路径缺失",
+                f"在工作目录下找不到 {i}。请确认该文件夹位于工作目录中，或检查程序版本兼容性。",
             )
             return
-    title("ArkUnpacker - Processing")
+    CLI.title("ArkUnpacker - Processing")
     ###
-    print("正在清理...")
+    CLI.show_stage("正在清理...")
     rmdir(destdir)
     for i in dirs:
         AU_Rs.main(
@@ -389,11 +401,14 @@ def run_arkmodels_filtering(dirs, destdirs):
     destdirs_ = []
     for i, j in zip(dirs, destdirs):
         if not osp.exists(i):
-            print(
-                f'在工作目录下找不到 {i}，请确保该文件夹直接位于工作目录中。也有可能是您事先没有进行"模型提取"的步骤。',
-                c=3,
+            CLI.show_error(
+                "路径缺失",
+                f'在工作目录下找不到 {i}。请确认该文件夹直接位于工作目录中，或先执行"模型提取"。',
             )
-            UserInput.request('> 输入符号 "*" 以取消任务，或直接按Enter以强制继续')
+            try:
+                UserInput.request("按 Enter 强制继续")
+            except InterruptedError:
+                return
         else:
             dirs_.append(i)
             destdirs_.append(j)
@@ -407,50 +422,45 @@ def run_arkmodels_data_dist(mdd_temp_dir):
     ###
     for i in ["models", "models_enemies", "models_illust"]:
         if not osp.exists(i):
-            print(f'在工作目录下找不到 {i}，请确认您先前已运行了"模型分拣"。', c=3)
-            UserInput.request('> 输入符号 "*" 以取消任务，或直接按Enter以强制继续')
+            CLI.show_error("路径缺失", f'在工作目录下找不到 {i}。请确认您先前已运行了"模型分拣"。')
+            try:
+                UserInput.request("按 Enter 强制继续")
+            except InterruptedError:
+                return
     if not osp.exists(mdd_temp_dir):
-        print(
-            f'找不到 {mdd_temp_dir}，请确认您先前已运行了"匿名数据提取"。',
-            c=3,
-        )
+        CLI.show_error("路径缺失", f'找不到 {mdd_temp_dir}。请确认您先前已运行了"匿名数据提取"。')
         return
     AU_Mdd.main(mdd_temp_dir)
 
 
 def run_arkmodels_workflow():
-    def visual(fp: str, default_c: int = 6):
-        return f"{color(2 if osp.exists(fp) else 3)}{fp}{color(default_c)}"
+    def visual(fp: str):
+        return RichCLI.format_path_state(fp, osp.exists(fp))
 
     Logger.info("CI: In ArkModels workflow.")
 
     def prt_arkmodels_menu():
-        clear()
+        CLI.clear()
         os.chdir(".")
-        print("ArkModels提取与分拣工具", s=1)
-        print("=" * 20)
-        print(
-            """ArkModels是作者建立的明日方舟Spine模型仓库（https://github.com/isHarryh/Ark-Models），以下功能专门为ArkModels仓库的更新而设计。
-运行部分功能之前，需要确保括号内所示的资源文件夹已位于程序所在目录中。"""
-        )
         cwd = osp.abspath(osp.normpath(os.getcwd()))
         cwd_shortened = try_shorten_path(cwd)
+        intro = []
         if cwd != cwd_shortened:
-            print("为了缩短文件路径长度，输出文件将会保存到：", c=3)
-            print(f"  {cwd_shortened}", c=3)
-        print(
-            f"""功能选择：
-1: 一键执行
-2: 干员基建模型提取 ({visual('chararts')} 和 {visual('skinpack')})
-3: 敌方战斗模型提取 ({visual('battle')} 或 {visual('refs')})
-4: 动态立绘模型提取 ({visual('arts')})
-5: 匿名数据提取 ({visual(AU_Mdd.ModelsDist.GAMEDATA_DIR)})
-6: 模型分拣
-7: 生成数据集
-0: 返回""",
-            c=6,
+            intro.append(f"输出目录: {cwd_shortened}")
+        CLI.show_menu(
+            "ArkModels 提取与分拣工具",
+            [
+                MenuOption("1", "一键执行", "按顺序完成所有步骤"),
+                MenuOption("2", "干员基建模型提取", f"{visual('chararts')}；{visual('skinpack')}"),
+                MenuOption("3", "敌方战斗模型提取", f"{visual('battle/prefabs/enemies')}；{visual('refs/arts')}"),
+                MenuOption("4", "动态立绘模型提取", visual("arts/dynchars")),
+                MenuOption("5", "匿名数据提取", visual(AU_Mdd.ModelsDist.GAMEDATA_DIR)),
+                MenuOption("6", "模型分拣"),
+                MenuOption("7", "生成数据集"),
+                MenuOption("0", "返回"),
+            ],
+            intro=intro or None,
         )
-        print("输入序号后按Enter即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker")
 
     norm_tmp_dir = lambda x: try_shorten_path(osp.abspath(osp.normpath(x)))
     temp_dir_1 = norm_tmp_dir("temp/am_upk_operator")
@@ -459,9 +469,9 @@ def run_arkmodels_workflow():
     temp_dir_4 = norm_tmp_dir("temp/am_upk_mdd")
 
     while True:
-        title("ArkUnpacker")
+        CLI.title("ArkUnpacker")
         prt_arkmodels_menu()
-        order = UserInput.request()
+        order = UserInput.request_options(["0", "1", "2", "3", "4", "5", "6", "7"])
         wildcard = False
         if order == "1":
             wildcard = True
@@ -501,40 +511,39 @@ def run_arkmodels_workflow():
 
 
 def run_arkvoice_unpacking(dir, destdir1, destdir2, wildcard=False):
-    def visual(fp: str, default_c: int = 6):
-        return f"{color(2 if osp.exists(fp) else 3)}{fp}{color(default_c)}"
+    def visual(fp: str):
+        return RichCLI.format_path_state(fp, osp.exists(fp))
 
     Logger.info("CI: ArkVoice unpack mode.")
 
     def prt_arkvoice_unpacking_menu(dir, destdir1):
-        clear()
+        CLI.clear()
         os.chdir(".")
-        print("ArkVoice提取与分拣工具", s=1)
-        print("=" * 20)
-        print(
-            f"""模式选择：
-1: 仅提取 Wav 文件 ({visual(dir)})
-2: 仅合并 Wav 文件为 Ogg 文件 ({visual(destdir1)})
-3: 提取与合并
-0: 取消""",
-            c=6,
+        CLI.show_menu(
+            "ArkVoice 提取与分拣工具",
+            [
+                MenuOption("1", "仅提取 Wav 文件", visual(dir)),
+                MenuOption("2", "仅合并 Wav 为 Ogg", visual(destdir1)),
+                MenuOption("3", "提取并合并"),
+                MenuOption("0", "取消"),
+            ],
         )
 
     while True:
-        title("ArkUnpacker")
+        CLI.title("ArkUnpacker")
         prt_arkvoice_unpacking_menu(dir, destdir1)
         order = "0"
         if not wildcard:
-            order = UserInput.request()
+            order = UserInput.request_options(["0", "1", "2", "3"])
         if order == "3":
             wildcard = True
         if order == "1" or wildcard:
             if not osp.exists(dir):
-                print(f"在工作目录下找不到 {dir}，请确保该文件夹直接位于工作目录中。", c=3)
+                CLI.show_error("路径缺失", f"在工作目录下找不到 {dir}。请确保该文件夹直接位于工作目录中。")
                 return
-            print("正在清理...")
+            CLI.show_stage("正在清理...")
             rmdir(destdir1)
-            title("ArkUnpacker - Processing")
+            CLI.title("ArkUnpacker - Processing")
             AU_Rs.main(
                 dir,
                 destdir1,
@@ -546,11 +555,11 @@ def run_arkvoice_unpacking(dir, destdir1, destdir2, wildcard=False):
             )
         if order == "2" or wildcard:
             if not osp.exists(destdir1):
-                print(f"在工作目录下找不到 {destdir1}，请确保您已执行前置步骤。", c=3)
+                CLI.show_error("路径缺失", f"在工作目录下找不到 {destdir1}。请确保您已执行前置步骤。")
                 return
-            print("正在清理...")
+            CLI.show_stage("正在清理...")
             rmdir(destdir2)
-            title("ArkUnpacker - Processing")
+            CLI.title("ArkUnpacker - Processing")
             AU_Cv.main(destdir1, destdir2, "custom" in destdir2)
         if order == "0":
             return
@@ -567,31 +576,26 @@ def run_arkvoice_workflow():
     Logger.info("CI: In ArkVoice workflow.")
 
     def prt_arkvoice_menu():
-        clear()
+        CLI.clear()
         os.chdir(".")
-        print("ArkVoice提取与分拣工具", s=1)
-        print("=" * 20)
-        print(
-            "ArkVoice是作者建立的明日方舟语音仓库（https://github.com/isHarryh/Ark-Voice），以下功能专门为ArkVoice仓库的更新而设计。"
+        CLI.show_menu(
+            "ArkVoice 提取与分拣工具",
+            [
+                MenuOption("1", "一键执行", "按顺序完成所有步骤"),
+                MenuOption("2", "提取并分拣日文语音", "audio/sound_beta_2/voice"),
+                MenuOption("3", "提取并分拣中文语音", "audio/sound_beta_2/voice_cn"),
+                MenuOption("4", "提取并分拣英文语音", "audio/sound_beta_2/voice_en"),
+                MenuOption("5", "提取并分拣韩文语音", "audio/sound_beta_2/voice_kr"),
+                MenuOption("6", "提取并分拣个性语音", "audio/sound_beta_2/voice_custom"),
+                MenuOption("7", "生成数据集"),
+                MenuOption("0", "返回"),
+            ],
         )
-        print(
-            f"""功能选择：
-1: 一键执行
-2: 提取并分拣日文语音
-3: 提取并分拣中文语音
-4: 提取并分拣英文语音
-5: 提取并分拣韩文语音
-6: 提取并分拣个性语音
-7: 生成数据集
-0: 返回""",
-            c=6,
-        )
-        print("输入序号后按Enter即可，\n如有必要请阅读使用手册(README)：\nhttps://github.com/isHarryh/Ark-Unpacker")
 
     while True:
-        title("ArkUnpacker")
+        CLI.title("ArkUnpacker")
         prt_arkvoice_menu()
-        order = UserInput.request()
+        order = UserInput.request_options(["0", "1", "2", "3", "4", "5", "6", "7"])
         wildcard = False
         if order == "1":
             wildcard = True
@@ -624,17 +628,27 @@ if __name__ == "__main__":
     try:
         Logger.set_instance(Config.get("log_file"), Config.get("log_level"))
         Logger.info("CI: Initialized")
-        print("")
+        CLI.blank()
         args = parser.parse_args()
         parser.validate_logging_level_arg(args)
         Logger.set_level(args.logging_level)
+        if getattr(args, "version", False):
+            CLI.show_summary(
+                "ArkUnpacker 版本信息",
+                [
+                    ("版本", ARKUNPACKER_VERSION),
+                    ("语言", ARKUNPACKER_LOCAL),
+                ],
+                border_style="cyan",
+            )
+            sys.exit(0)
         if getattr(args, "mode", None) is None:
             # No argument input -> ENTER -> Interactive CLI mode
             while True:
                 try:
-                    title("ArkUnpacker")
+                    CLI.title("ArkUnpacker")
                     prt_homepage()
-                    order = UserInput.request()
+                    order = UserInput.request_options(["0", "1", "2", "3", "4", "5", "6", "7", "8"])
                     if order == "1":
                         run_quickaccess()
                         prt_continue()
@@ -658,11 +672,10 @@ if __name__ == "__main__":
                     elif order == "8":
                         run_arkvoice_workflow()
                     elif order == "0":
-                        print("\n用户退出")
                         break
                 except InterruptedError as arg:
                     Logger.warn("CI: Program was slightly interrupted by user.")
-                    print("\n[InterruptedError] 用户轻度中止", c=3)
+                    CLI.show_notice("轻度中止", str(arg), style="yellow")
         else:
             # Has arguments input -> GOTO -> The specified mode
             if args.mode == "ab":
@@ -706,24 +719,26 @@ if __name__ == "__main__":
     # Global error handlers
     except SystemExit as arg:
         Logger.info(f"CI: Program received explicit exit code {arg.code}")
-        print("\n[SystemExit] 显式退出程序", c=3)
+        if arg.code not in (0, None):
+            CLI.blank()
+            CLI.show_error("程序非常规退出", f"程序以显式退出码结束：{arg.code}")
         sys.exit(arg.code)
     except KeyboardInterrupt as arg:
         Logger.error("CI: Program was forcibly interrupted by user.")
-        print("\n[KeyboardInterrupt] 用户强制中止", c=1, s=7)
-        print(stacktrace(), c=3)
+        CLI.blank()
+        CLI.show_error("用户强制中止", "检测到 KeyboardInterrupt，已强制退出程序。")
         sys.exit(1)
     except ArgParser.ArgParserFailure as arg:
         Logger.error(f"CI: Program failed ti parse input arguments, {arg}")
-        print(parser.format_usage())
-        print("[ArgParserFailure] 命令行参数解析失败", c=1, s=7)
-        print(f"{parser.prog} failed to parse arguments", c=1)
-        print(arg, c=3)
+        CLI.blank()
+        CLI.show_error("命令行参数解析失败", str(arg))
+        CLI.show_dim(parser.format_usage().rstrip())
         sys.exit(2)
     except BaseException as arg:
         Logger.error(f"CI: Oops! Unexpected error occurred: {stacktrace()}")
-        print(f"\n[{type(arg).__name__}] 发生了未处理的异常", c=1, s=7)
-        print(stacktrace(), c=3)
+        CLI.blank()
+        CLI.show_error("发生了未处理的异常", f"{type(arg).__name__}: {arg}")
+        CLI.print_exception()
         UserInput.press_enter_to_exit()
         sys.exit(1)
     sys.exit(0)

@@ -4,8 +4,6 @@ import queue
 import threading
 from datetime import datetime
 
-from .GlobalMethods import color
-
 
 class Logger:
     """Logger class for ArkUnpacker"""
@@ -162,15 +160,13 @@ class Logger:
         errors = Logger.get_stats(Logger.LV_ERROR)
         warns = Logger.get_stats(Logger.LV_WARN)
         if errors + warns <= 0:
-            return f"{color()}正常"
-        rst = ""
+            return "正常"
+        parts = []
         if errors > 0:
-            rst += f"{color(1)}{errors}{color()} 个错误"
+            parts.append(f"{errors} 个错误")
         if warns > 0:
-            if rst:
-                rst += "，"
-            rst += f"{color(3)}{warns}{color()} 个警告"
-        return rst
+            parts.append(f"{warns} 个警告")
+        return "，".join(parts)
 
     @staticmethod
     def log(level: str, msg: str):

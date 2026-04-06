@@ -9,7 +9,6 @@ import threading
 import time
 
 from .Config import PerformanceLevel, Config
-from .GlobalMethods import color, print, clear
 from .Logger import Logger
 
 
@@ -263,78 +262,6 @@ class CoroutineCtrl:
     # EndClass
 
 
-class UICtrl:
-    """UI Controller in the separated thread."""
-
-    THREAD_NAME = "UIThread"
-
-    def __init__(self, interval: float = 0.1):
-        """Initializes a UI Controller.
-
-        :param interval: Auto-refresh interval (seconds);
-        """
-        self.__lines = []
-        self.__cache_lines = []
-        self.__status = True
-        self.set_refresh_rate(interval)
-
-    def __loop(self):
-        while self.__status:
-            self.refresh(post_delay=self.__interval)
-
-    def loop_start(self):
-        """Starts auto-refresh."""
-        self.__status = True
-        self.__cache_lines = []
-        threading.Thread(target=self.__loop, daemon=True, name=UICtrl.THREAD_NAME).start()
-
-    def loop_stop(self):
-        """Stops auto-refresh."""
-        self.__status = False
-        self.__cache_lines = []
-
-    def refresh(self, post_delay: float = 0, force_refresh: bool = False):
-        """Requests a immediate refresh.
-
-        :param post_delay: Set the post delay after this refresh (seconds);
-        :param force_refresh: If `True`, do refresh regardless of whether the content has changed or not;
-        :rtype: None;
-        """
-        if self.__lines != self.__cache_lines or force_refresh:
-            try:
-                self.__cache_lines = self.__lines[:]
-                for i in range(len(self.__cache_lines)):
-                    print(self.__cache_lines[i], y=i + 1)
-            except IndexError:
-                pass
-        if post_delay > 0:
-            time.sleep(post_delay)
-
-    def request(self, lines: "list[str]"):
-        """Updates the content
-
-        :param lines: A list containing the content of each line;
-        :rtype: None;
-        """
-        self.__lines = lines
-
-    def reset(self):
-        """Clears the content."""
-        clear()
-        self.__lines = []
-        self.__cache_lines = []
-
-    def set_refresh_rate(self, interval: float):
-        """Sets the auto-refresh interval.
-
-        :param interval: Auto-refresh interval (seconds);
-        :rtype: None;
-        """
-        self.__interval = interval
-
-    # EndClass
-
-
 class Counter:
     """Cumulative Counter."""
 
@@ -432,7 +359,7 @@ class TaskReporter:
         :returns: A human-readable string;
         :rtype: str;
         """
-        return f"{self._done}/{self._demand}"
+        return f"{self._done} / {self._demand}"
 
     # EndClass
 
@@ -482,17 +409,6 @@ class TaskReporterTracker:
         self._cache_pg = max(self._cache_pg, pg)
         return self._cache_pg if force_inc else pg
 
-    def to_progress_bar_str(self, force_inc: bool = True, length: int = 25):
-        """Gets a string representing the current progress.
-
-        :param force_inc: Whether prevent the progress to decrease;
-        :param length: The length of the progress bar;
-        :returns: A progress bar string that can be printed to CLI;
-        :rtype: str;
-        """
-        p = self.get_progress(force_inc)
-        return f"[{TaskReporterTracker._format_progress_bar_str(p, length)}] {color(2, 1)}{p:.1%}"
-
     def to_rt_str(self):
         """Gets a string representing the running time since this instance was initialized.
 
@@ -519,19 +435,5 @@ class TaskReporterTracker:
         if seconds != 0:
             return f"{m:02}:{s:02}"
         return "--:--"
-
-    @staticmethod
-    def _format_progress_bar_str(progress: float, length: int):
-        try:
-            add_chars = (" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█")
-            max_idx = len(add_chars) - 1
-            rst = ""
-            unit = 1 / length
-            for i in range(length):
-                ratio = (progress - i * unit) / unit
-                rst += add_chars[max(0, min(max_idx, round(ratio * max_idx)))]
-            return rst
-        except BaseException:
-            return ""
 
     # EndClass

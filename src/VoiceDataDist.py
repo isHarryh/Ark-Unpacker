@@ -4,9 +4,11 @@ import json
 import os.path as osp
 from datetime import datetime
 
+from .ui.RichCLI import RichCLI
 from .utils.Config import Config
-from .utils.GlobalMethods import print
 from .utils.Logger import Logger
+
+CLI = RichCLI.get_instance()
 
 
 class VoiceDist:
@@ -270,19 +272,19 @@ class VoiceDist:
 
     def retrieve(self):
         Logger.info(f"VoiceDataDist: Starting retrieve voice data.")
-        print("读取各语种的子数据集...")
+        CLI.show_stage("读取各语种的子数据集...")
         failed = False
         for var, dir in VoiceDist.VARIATIONS_DIR.items():
             cnt = 0
             if not osp.isdir(dir):
                 Logger.error(f"VoiceDataDist: Dir {dir} not found.")
-                print(f"\t未找到语种文件夹 {dir}", c=3)
+                CLI.show_issue(var, f"未找到语种文件夹 {dir}")
                 failed = True
             else:
                 data_part_file = osp.join(dir, VoiceDist.DATA_PART_FILE)
                 if not osp.isfile(data_part_file):
                     Logger.error(f"VoiceDataDist: Data part file {data_part_file} not found.")
-                    print(f"\t未找到子数据集文件 {data_part_file}", c=3)
+                    CLI.show_issue(var, f"未找到子数据集文件 {data_part_file}")
                     failed = True
                 else:
                     data_part: dict = json.load(open(data_part_file, "r", encoding=Config.get("export_encoding")))
@@ -292,11 +294,11 @@ class VoiceDist:
                             self.data["data"][cha] = {"variations": {}}
                         self.data["data"][cha]["variations"][var] = lst
                     Logger.info(f"VoiceDataDist: Variation {var} includes {cnt} voice file.")
-                    print(f"\t语种 {var} 包含 {cnt} 套语音文件", c=2)
+                    CLI.show_success(f"  语种 {var} 包含 {cnt} 套语音文件")
         if failed:
-            print("读取子数据集时发生警告，因此总数据集可能不完整", c=1)
+            CLI.show_warning("读取子数据集时发生警告，因此总数据集可能不完整")
         else:
-            print("读取子数据集完毕", c=2)
+            CLI.show_success("读取子数据集完毕")
 
     def sort(self):
         self.data["data"] = dict(sorted(self.data["data"].items()))
@@ -312,7 +314,7 @@ class VoiceDist:
                 separators=(",", ":"),
             )
         Logger.info("VoiceDataDist: Succeeded in writing to json.")
-        print("\n已写入总数据集文件", c=2)
+        CLI.show_summary("ArkVoice 数据集生成完成", [("输出文件", "voice_data.json")])
 
 
 ########## Main-主程序 ##########

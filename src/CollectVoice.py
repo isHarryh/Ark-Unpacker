@@ -6,22 +6,20 @@ import glob
 import json
 import os.path as osp
 import threading
+import time
 from io import BytesIO
 from pydub import AudioSegment
 
+from .ui.RichCLI import RichCLI
+from .ui.TaskLive import TaskDetailField, TaskLiveView, TaskValueField
 from .utils.Config import Config
-from .utils.GlobalMethods import print, rmdir
+from .utils.GlobalMethods import rmdir
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
-from .utils.TaskUtils import (
-    ThreadCtrl,
-    Counter,
-    UICtrl,
-    TaskReporter,
-    TaskReporterTracker,
-)
+from .utils.TaskUtils import ThreadCtrl, Counter, TaskReporter, TaskReporterTracker
 
 _INTERNAL_LOCK = threading.Lock()
+CLI = RichCLI.get_instance()
 
 
 class FixedFloat(float):
@@ -115,68 +113,64 @@ def main(srcdir: str, destdir: str, force_std_name: bool):
     :param force_std_name: Forces the keys to use standard character name;
     :rtype: None;
     """
-    print("\n正在解析目录...", s=1)
-    Logger.info("CollectVoice: Reading directories...")
-
-    flist = []  # [(upkdir, destdir), ...]
-    print(f"\t正在读取目录 {srcdir}")
-    for upkdir in glob.iglob(osp.join(glob.escape(srcdir), "*")):
-        if osp.isdir(upkdir):
-            flist.append((upkdir, destdir))
-    flist = list(filter(lambda x: osp.basename(x[0]).startswith("char_"), flist))
-    info_merged = {}
-
     Logger.reset_stats()
-    thread_ctrl = ThreadCtrl()
+
     collected = Counter()
-    ui = UICtrl()
-    tr_finished = TaskReporter(1, len(flist))
-    tracker = TaskReporterTracker(tr_finished)
+    current_stage = TaskValueField("阶段", "正在解析目录")
+    current_search = TaskValueField("当前搜索")
+    panel = TaskLiveView("正在分拣语音...", progress_getter=lambda: 0.0)
+    panel.set_detail_fields(
+        [
+            current_stage,
+            current_search,
+            TaskDetailField("累计分拣", collected.now),
+            TaskDetailField("运行状态统计", Logger.to_ew_stats_str),
+        ]
+    )
+    panel.start()
 
-    ui.reset()
-    ui.loop_start()
-    for upkdir, destdir in flist:
-        # (i stands for a source dir's path)
-        ui.request(
-            [
-                "正在分拣语音...",
-                tracker.to_progress_bar_str(),
-                f"当前搜索：\t{osp.basename(upkdir)}",
-                f"累计分拣：\t{collected.now()}",
-                f"预计剩余时间：\t{tracker.to_eta_str()}",
-                f"累计消耗时间：\t{tracker.to_rt_str()}",
-                f"运行状态统计：\t{Logger.to_ew_stats_str()}",
-            ]
-        )
-        ###
-        thread_ctrl.run_subthread(
-            collect_voice,
-            (
-                upkdir,
-                destdir,
-                False,
-                force_std_name,
-                info_merged,
-                tr_finished.report,
-                collected.update,
-            ),
-            name=f"CvThread:{id(upkdir)}",
-        )
+    try:
+        Logger.info("CollectVoice: Reading directories...")
+        flist = []  # [(upkdir, destdir), ...]
+        current_stage.set_value("正在读取目录")
+        current_search.set_value(srcdir)
+        panel.update()
+        for upkdir in glob.iglob(osp.join(glob.escape(srcdir), "*")):
+            if osp.isdir(upkdir):
+                flist.append((upkdir, destdir))
+        flist = list(filter(lambda x: osp.basename(x[0]).startswith("char_"), flist))
+        info_merged = {}
 
-    ui.reset()
-    ui.loop_stop()
-    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
-        ui.request(
-            [
-                "正在分拣语音...",
-                tracker.to_progress_bar_str(),
-                f"累计分拣：\t{collected.now()}",
-                f"预计剩余时间：\t{tracker.to_eta_str()}",
-                f"累计消耗时间：\t{tracker.to_rt_str()}",
-                f"运行状态统计：\t{Logger.to_ew_stats_str()}",
-            ]
-        )
-        ui.refresh(post_delay=0.1)
+        thread_ctrl = ThreadCtrl()
+        tr_finished = TaskReporter(1, len(flist))
+        tracker = TaskReporterTracker(tr_finished)
+        panel.bind_tracker(tracker)
+        current_stage.set_value("正在分拣语音")
+
+        for upkdir, destdir in flist:
+            current_search.set_value(osp.basename(upkdir))
+            panel.update()
+            thread_ctrl.run_subthread(
+                collect_voice,
+                (
+                    upkdir,
+                    destdir,
+                    False,
+                    force_std_name,
+                    info_merged,
+                    tr_finished.report,
+                    collected.update,
+                ),
+                name=f"CvThread:{id(upkdir)}",
+            )
+
+        current_search.set_value(None)
+        current_stage.set_value("正在等待任务完成")
+        while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
+            panel.update()
+            time.sleep(0.1)
+    finally:
+        panel.stop()
 
     if len(info_merged):
         json.dump(
@@ -191,8 +185,10 @@ def main(srcdir: str, destdir: str, force_std_name: bool):
         )
         Logger.info("CollectVoice: Saved voice data")
 
-    ui.loop_stop()
-    ui.reset()
-    print("\n分拣语音结束!", s=1)
-    print(f"  累计分拣 {collected.now()} 套语音")
-    print(f"  此项用时 {round(tracker.get_rt(), 1)} 秒")
+    CLI.show_summary(
+        "分拣语音结束",
+        [
+            ("累计分拣", f"{collected.now()} 套语音"),
+            ("耗时", f"{round(tracker.get_rt(), 1)} 秒"),
+        ],
+    )

@@ -5,18 +5,22 @@ from typing import Callable, List, Optional
 import glob
 import os
 import os.path as osp
+import time
 
 import ffmpeg
 from wannacri import usm
 
-from .utils.GlobalMethods import is_usm_file, print, rmdir, stacktrace
+from .ui.RichCLI import RichCLI
+from .ui.TaskLive import TaskDetailField, TaskLiveView, TaskValueField
+from .utils.GlobalMethods import is_usm_file, rmdir, stacktrace
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
-from .utils.TaskUtils import ThreadCtrl, UICtrl, TaskReporter, TaskReporterTracker
+from .utils.TaskUtils import ThreadCtrl, TaskReporter, TaskReporterTracker
 from .utils.Config import Config
 
 
 FFMPEG_RUN_PARAMS = {"quiet": True}
+CLI = RichCLI.get_instance()
 
 
 def is_ffmpeg_available() -> bool:
@@ -271,78 +275,79 @@ def main(
     :param do_aud: Whether to process audio files, `True` for default;
     :rtype: None;
     """
-    print("\n正在解析路径...", s=1)
-    Logger.info("ResolveUSM: Retrieving USM file paths...")
-    rootdir = osp.normpath(osp.realpath(rootdir))
-    destdir = osp.normpath(osp.realpath(destdir))
-    flist = []
-    for i in glob.iglob(osp.join(glob.escape(rootdir), "**", "*"), recursive=True):
-        if osp.isfile(i) and is_usm_file(i):
-            flist.append(i)
-
-    if do_del:
-        print("\n正在清理目标目录...", s=1)
-        rmdir(destdir)
-
     Logger.reset_stats()
     SafeSaver.get_instance().reset_counter()
+
     thread_ctrl = ThreadCtrl()
-    ui = UICtrl()
-    tr_processed = TaskReporter(1, len(flist))
+    tr_processed = TaskReporter(1, 1)
     tr_converted = TaskReporter(1)
     tracker = TaskReporterTracker(tr_processed)
+    current_stage = TaskValueField("阶段", "正在解析路径")
+    current_dir = TaskValueField("当前目录")
+    current_file = TaskValueField("当前文件")
+    panel = TaskLiveView("正在批量处理Criware USM文件...")
+    panel.set_detail_fields(
+        [
+            current_stage,
+            current_dir,
+            current_file,
+            TaskDetailField("累计处理", tr_processed.to_progress_str),
+            TaskDetailField("累计转换", tr_converted.to_progress_str),
+            TaskDetailField("运行状态统计", Logger.to_ew_stats_str),
+        ]
+    )
+    panel.bind_tracker(tracker)
+    panel.start()
 
-    ui.reset()
-    ui.loop_start()
+    try:
+        Logger.info("ResolveUSM: Retrieving USM file paths...")
+        rootdir = osp.normpath(osp.realpath(rootdir))
+        destdir = osp.normpath(osp.realpath(destdir))
+        flist = []
+        for i in glob.iglob(osp.join(glob.escape(rootdir), "**", "*"), recursive=True):
+            if osp.isfile(i) and is_usm_file(i):
+                flist.append(i)
+        tr_processed.update_demand(len(flist) - 1)
 
-    for i in flist:
-        ui.request(
-            [
-                "正在批量处理Criware USM文件...",
-                tracker.to_progress_bar_str(),
-                f"当前目录：\t{osp.basename(osp.dirname(i))}",
-                f"当前文件：\t{osp.basename(i)}",
-                f"累计处理：\t{tr_processed.to_progress_str()}",
-                f"累计转换：\t{tr_converted.to_progress_str()}",
-                f"预计剩余时间：\t{tracker.to_eta_str()}",
-                f"累计消耗时间：\t{tracker.to_rt_str()}",
-                f"运行状态统计：\t{Logger.to_ew_stats_str()}",
-            ]
-        )
+        if do_del:
+            current_stage.set_value("正在清理目标目录")
+            panel.update()
+            rmdir(destdir)
 
-        thread_ctrl.run_subthread(
-            process_usm_file,
-            (
-                i,
-                osp.join(destdir, osp.relpath(os.path.splitext(i)[0], rootdir)),
-                do_vid,
-                do_aud,
-                tr_processed.report,
-                tr_converted.update_demand,
-                tr_converted.report,
-            ),
-            name=f"USMThread:{id(i)}",
-        )
+        current_stage.set_value("正在分发任务")
+        for i in flist:
+            current_dir.set_value(osp.basename(osp.dirname(i)))
+            current_file.set_value(osp.basename(i))
+            panel.update()
 
-    ui.reset()
-    ui.loop_stop()
+            thread_ctrl.run_subthread(
+                process_usm_file,
+                (
+                    i,
+                    osp.join(destdir, osp.relpath(os.path.splitext(i)[0], rootdir)),
+                    do_vid,
+                    do_aud,
+                    tr_processed.report,
+                    tr_converted.update_demand,
+                    tr_converted.report,
+                ),
+                name=f"USMThread:{id(i)}",
+            )
 
-    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
-        ui.request(
-            [
-                "正在批量处理Criware USM文件...",
-                tracker.to_progress_bar_str(),
-                f"累计处理：\t{tr_processed.to_progress_str()}",
-                f"累计转换：\t{tr_converted.to_progress_str()}",
-                f"预计剩余时间：\t{tracker.to_eta_str()}",
-                f"累计消耗时间：\t{tracker.to_rt_str()}",
-                f"运行状态统计：\t{Logger.to_ew_stats_str()}",
-            ]
-        )
-        ui.refresh(post_delay=0.1)
+        current_stage.set_value("正在处理任务")
+        current_dir.set_value(None)
+        current_file.set_value(None)
+        while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
+            panel.update()
+            time.sleep(0.1)
+    finally:
+        panel.stop()
 
-    ui.reset()
-    print("\n批量处理Criware USM文件结束!", s=1)
-    print(f"  累计处理 {tr_processed.get_done()} 个文件")
-    print(f"  累计转换 {tr_converted.get_done()} 个媒体文件")
-    print(f"  此项用时 {round(tracker.get_rt(), 1)} 秒")
+    CLI.show_summary(
+        "批量处理 Criware USM 文件结束",
+        [
+            ("累计处理", f"{tr_processed.get_done()} 个文件"),
+            ("累计转换", f"{tr_converted.get_done()} 个媒体文件"),
+            ("耗时", f"{round(tracker.get_rt(), 1)} 秒"),
+        ],
+    )

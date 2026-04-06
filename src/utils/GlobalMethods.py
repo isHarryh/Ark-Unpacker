@@ -2,7 +2,6 @@
 # @ BSD 3-Clause License
 from typing import List
 
-import builtins
 import importlib
 import os
 import os.path as osp
@@ -12,70 +11,7 @@ import shutil
 import traceback
 import types
 
-
-##### ↓ CLI related ↓ #####
-
 os.system("")
-
-
-def color(c: int = 7, s: int = 0) -> str:
-    """Gets a color controller string in interactive CLI.
-
-    :param c: The color [0=black,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
-    :param s: The style [0=default,1=bold,4=underlined,5=flashing,7=inverted,8=none];
-    :returns: The color controller string.
-    :rtype: str;
-    """
-    return f"\033[{s};3{c}m"
-
-
-def input(text: str = "", c: int = 7, s: int = 0, y: int = 0) -> str:
-    """Enhanced version of inputting in interactive CLI.
-
-    :param text: The text to display;
-    :param c: The color [0=black,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
-    :param s: The style [0=default,1=bold,4=underlined,5=flashing,7=inverted,8=none];
-    :param y: The y-position of the line to print or overwrite [0=append];
-    :returns: The inputted text;
-    :rtype: str;
-    """
-    ctrl = f"\033[K\033[{y};1H" if y > 0 else ""
-    return builtins.input(f"{ctrl}{color(c, s)}{text}\033[?25h")
-
-
-def print(obj: object = "", c: int = 7, s: int = 0, y: int = 0) -> None:
-    """Enhanced version of printing in interactive CLI.
-
-    :param obj: The object to print;
-    :param c: The color [0=black,1=red,2=green,3=yellow,4=blue,5=purple,6=cyan,7=white];
-    :param s: The style [0=default,1=bold,4=underlined,5=flashing,7=inverted,8=none];
-    :param y: The y-position of the line to print or overwrite [0=append];
-    :rtype: None;
-    """
-    ctrl = f"\033[K\033[{y};{1}H" if y > 0 else ""
-    builtins.print(f"\033[?25l{ctrl}{color(c, s)}{obj}")
-
-
-def clear(use_ansi: bool = False) -> None:
-    """Clears the CLI output.
-
-    :param use_ansi: If `True`, uses ANSI codes to clear the screen;
-    :rtype: None;
-    """
-    if use_ansi:
-        builtins.print("\033[2J")
-    else:
-        os.system("cls" if os.name == "nt" else "clear")
-
-
-def title(text: str) -> None:
-    """Sets the CLI window title. Windows only.
-
-    :param text: The text of the title;
-    :rtype: None;
-    """
-    if os.name == "nt":
-        os.system(f"title {text}")
 
 
 def stacktrace() -> str:

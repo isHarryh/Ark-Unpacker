@@ -18,11 +18,15 @@ from .mp.Messages import ResolveSpineTask, StopMessage
 from .mp.Process import ProcessUtils
 from .mp.ProcessResultBus import ProcessResultBus, ProcessResultSender
 from .mp.ProcessReporter import ProcessReporter
+from .ui.RichCLI import RichCLI
+from .ui.TaskLive import TaskDetailField, TaskLiveView, TaskValueField
 from .utils.Config import Config, PerformanceLevel
-from .utils.GlobalMethods import print, rmdir, is_ab_file, stacktrace
+from .utils.GlobalMethods import rmdir, is_ab_file, stacktrace
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
-from .utils.TaskUtils import UICtrl, TaskReporter, TaskReporterTracker
+from .utils.TaskUtils import TaskReporter, TaskReporterTracker
+
+CLI = RichCLI.get_instance()
 
 
 SDPathID2NamesMap = Dict[int, Union[str, List[str]]]
@@ -548,162 +552,165 @@ def main(
     :param pfb_dir: Directory containing pfb files for skeleton name mapping, `None` to disable;
     :rtype: None;
     """
-    print("\n正在解析路径...", s=1)
-    Logger.info("ResolveSpine: Retrieving file paths...")
-    src = osp.normpath(osp.realpath(src))
-    destdir = osp.normpath(osp.realpath(destdir))
-    flist = [src] if osp.isfile(src) else []
-    if osp.isdir(src):
-        for i in glob.iglob(osp.join(glob.escape(src), "**", "*"), recursive=True):
-            if osp.isfile(i) and is_ab_file(i):
-                flist.append(i)
-    if do_del:
-        print("\n正在清理...", s=1)
-        rmdir(destdir)
-
-    # Extract skeleton name mapping from pfb files if pfb_dir is provided
-    sd_name_mapping = {}
-    if pfb_dir is not None and osp.isdir(pfb_dir):
-        print(f"\n正在从 {pfb_dir} 中提取额外的骨骼名称映射...", s=1)
-        sd_name_mapping = pfb_resolve(pfb_dir)
-
     Logger.reset_stats()
-    ui = UICtrl()
-    tr_processed = TaskReporter(50, len(flist))
+
+    tr_processed = TaskReporter(50, 1)
     tr_file_saving = TaskReporter(1)
     tracker = TaskReporterTracker(tr_processed, tr_file_saving)
-
-    if not flist:
-        print("\nSpine模型批量导出结束!", s=1)
-        print("  没有找到符合解包条件的文件。")
-        return
-
-    ctx = mp.get_context("spawn")
-    worker_count = min(len(flist), PerformanceLevel.get_process_limit(Config.get("performance_level")))
-    Logger.info(f"ResolveSpine: Using {worker_count} worker processes for {len(flist)} files")
-
-    task_queue: mp.Queue = ctx.Queue(maxsize=max(1, worker_count))
-    result_bus = ProcessResultBus(ctx)
-    result_sender = result_bus.create_sender()
-
-    fs_guard = FsGuardProcess(
-        ctx,
-        result_sender,
-        worker_count,
-        request_queue_maxsize=max(2, min(8, worker_count)),
+    current_stage = TaskValueField("阶段", "正在解析路径")
+    current_dir = TaskValueField("当前目录")
+    panel = TaskLiveView("正在批量导出Spine模型...")
+    panel.set_detail_fields(
+        [
+            current_stage,
+            current_dir,
+            TaskDetailField("累计解包", tr_processed.to_progress_str),
+            TaskDetailField("累计导出", tr_file_saving.to_progress_str),
+            TaskDetailField("运行状态统计", Logger.to_ew_stats_str),
+        ]
     )
-    workers = [
-        ctx.Process(
-            target=_worker_loop,
-            args=(
-                task_queue,
-                fs_guard.create_client_slot(idx),
-                result_sender,
-                sd_name_mapping,
-            ),
-            name=f"SpWorker:{idx}",
-            daemon=True,
-        )
-        for idx in range(worker_count)
-    ]
-    ProcessUtils.start_all(fs_guard, *workers)
+    panel.bind_tracker(tracker)
+    panel.start()
 
-    ui.reset()
-    ui.loop_start()
-    for i in flist:
-        ui.request(
-            [
-                "正在批量导出Spine模型...",
-                tracker.to_progress_bar_str(),
-                f"当前目录：\t{osp.basename(osp.dirname(i))}",
-                f"累计解包：\t{tr_processed.to_progress_str()}",
-                f"累计导出：\t{tr_file_saving.to_progress_str()}",
-                f"预计剩余时间：\t{tracker.to_eta_str()}",
-                f"累计消耗时间：\t{tracker.to_rt_str()}",
-                f"运行状态统计：\t{Logger.to_ew_stats_str()}",
-            ]
+    try:
+        Logger.info("ResolveSpine: Retrieving file paths...")
+        src = osp.normpath(osp.realpath(src))
+        destdir = osp.normpath(osp.realpath(destdir))
+        flist = [src] if osp.isfile(src) else []
+        if osp.isdir(src):
+            for i in glob.iglob(osp.join(glob.escape(src), "**", "*"), recursive=True):
+                if osp.isfile(i) and is_ab_file(i):
+                    flist.append(i)
+        tr_processed.update_demand(len(flist) - 1)
+
+        if do_del:
+            current_stage.set_value("正在清理目标目录")
+            panel.update()
+            rmdir(destdir)
+
+        # Extract skeleton name mapping from pfb files if pfb_dir is provided
+        sd_name_mapping = {}
+        if pfb_dir is not None and osp.isdir(pfb_dir):
+            current_stage.set_value("正在提取骨骼名称映射")
+            current_dir.set_value(osp.basename(osp.normpath(pfb_dir)))
+            panel.update()
+            sd_name_mapping = pfb_resolve(pfb_dir)
+
+        if not flist:
+            current_stage.set_value("未找到可处理文件")
+            current_dir.set_value(None)
+            panel.update()
+            CLI.show_summary(
+                "Spine 模型批量导出结束", [("结果", "没有找到符合解包条件的文件。")], border_style="yellow"
+            )
+            return
+
+        ctx = mp.get_context("spawn")
+        worker_count = min(len(flist), PerformanceLevel.get_process_limit(Config.get("performance_level")))
+        Logger.info(f"ResolveSpine: Using {worker_count} worker processes for {len(flist)} files")
+
+        task_queue: mp.Queue = ctx.Queue(maxsize=max(1, worker_count))
+        result_bus = ProcessResultBus(ctx)
+        result_sender = result_bus.create_sender()
+
+        fs_guard = FsGuardProcess(
+            ctx,
+            result_sender,
+            worker_count,
+            request_queue_maxsize=max(2, min(8, worker_count)),
         )
-        curdestdir = (
-            destdir
-            if osp.samefile(i, src)
-            else (
-                osp.join(
-                    destdir,
-                    osp.relpath(osp.dirname(i), src),
-                    osp.splitext(osp.basename(i))[0],
+        workers = [
+            ctx.Process(
+                target=_worker_loop,
+                args=(
+                    task_queue,
+                    fs_guard.create_client_slot(idx),
+                    result_sender,
+                    sd_name_mapping,
+                ),
+                name=f"SpWorker:{idx}",
+                daemon=True,
+            )
+            for idx in range(worker_count)
+        ]
+        ProcessUtils.start_all(fs_guard, *workers)
+        current_stage.set_value("正在分发任务")
+
+        for i in flist:
+            current_dir.set_value(osp.basename(osp.dirname(i)))
+            panel.update()
+            curdestdir = (
+                destdir
+                if osp.samefile(i, src)
+                else (
+                    osp.join(
+                        destdir,
+                        osp.relpath(osp.dirname(i), src),
+                        osp.splitext(osp.basename(i))[0],
+                    )
+                    if separate
+                    else osp.join(destdir, osp.relpath(osp.dirname(i), src))
                 )
-                if separate
-                else osp.join(destdir, osp.relpath(osp.dirname(i), src))
             )
-        )
-        task_queue.put(
-            ResolveSpineTask(
-                abfile=i,
-                destdir=curdestdir,
+            task_queue.put(
+                ResolveSpineTask(
+                    abfile=i,
+                    destdir=curdestdir,
+                )
             )
-        )
-    for _ in workers:
-        task_queue.put(StopMessage())
+        for _ in workers:
+            task_queue.put(StopMessage())
 
-    ui.reset()
-    ui.loop_stop()
-    worker_done = set()
-    fs_guard_done = False
-    fs_guard_stop_sent = False
-    fatal_error = None
+        current_stage.set_value("正在处理任务")
+        current_dir.set_value(None)
+        worker_done = set()
+        fs_guard_done = False
+        fs_guard_stop_sent = False
+        fatal_error = None
 
-    def _set_fs_guard_done(_pid: int):
-        nonlocal fs_guard_done
-        fs_guard_done = True
-
-    result_bus = (
-        result_bus.set_on_file_queued(tr_file_saving.update_demand)
-        .set_on_file_saved(tr_file_saving.report)
-        .set_on_processed(tr_processed.report)
-        .set_on_worker_done(worker_done.add)
-        .set_on_fs_guard_done(_set_fs_guard_done)
-        .set_on_log(Logger.log)
-    )
-
-    while len(worker_done) < len(workers) or not fs_guard_done:
-        result_bus.drain(timeout=0.1)
-
-        for worker in workers:
-            if worker.exitcode is not None and worker.pid not in worker_done:
-                if worker.exitcode != 0:
-                    fatal_error = f'Worker process "{worker.name}" exited unexpectedly with code {worker.exitcode}'
-                    Logger.error(f"ResolveSpine: {fatal_error}")
-                worker_done.add(worker.pid)
-
-        if len(worker_done) == len(workers) and not fs_guard_stop_sent:
-            fs_guard.stop()
-            fs_guard_stop_sent = True
-
-        if fs_guard.exitcode is not None and not fs_guard_done:
-            if fs_guard.exitcode != 0:
-                fatal_error = f"FsGuard process exited unexpectedly with code {fs_guard.exitcode}"
-                Logger.error(f"ResolveSpine: {fatal_error}")
+        def _set_fs_guard_done(_pid: int):
+            nonlocal fs_guard_done
             fs_guard_done = True
 
-        if fatal_error:
-            break
-
-        ui.request(
-            [
-                "正在批量导出Spine模型...",
-                tracker.to_progress_bar_str(),
-                f"累计解包：\t{tr_processed.to_progress_str()}",
-                f"累计导出：\t{tr_file_saving.to_progress_str()}",
-                f"预计剩余时间：\t{tracker.to_eta_str()}",
-                f"累计消耗时间：\t{tracker.to_rt_str()}",
-                f"运行状态统计：\t{Logger.to_ew_stats_str()}",
-            ]
+        result_bus = (
+            result_bus.set_on_file_queued(tr_file_saving.update_demand)
+            .set_on_file_saved(tr_file_saving.report)
+            .set_on_processed(tr_processed.report)
+            .set_on_worker_done(worker_done.add)
+            .set_on_fs_guard_done(_set_fs_guard_done)
+            .set_on_log(Logger.log)
         )
-        ui.refresh(post_delay=0.1)
 
-    if fatal_error:
-        ProcessUtils.terminate_all(*workers, fs_guard)
-        raise RuntimeError(fatal_error)
+        while len(worker_done) < len(workers) or not fs_guard_done:
+            result_bus.drain(timeout=0.1)
+
+            for worker in workers:
+                if worker.exitcode is not None and worker.pid not in worker_done:
+                    if worker.exitcode != 0:
+                        fatal_error = f'Worker process "{worker.name}" exited unexpectedly with code {worker.exitcode}'
+                        Logger.error(f"ResolveSpine: {fatal_error}")
+                    worker_done.add(worker.pid)
+
+            if len(worker_done) == len(workers) and not fs_guard_stop_sent:
+                fs_guard.stop()
+                fs_guard_stop_sent = True
+
+            if fs_guard.exitcode is not None and not fs_guard_done:
+                if fs_guard.exitcode != 0:
+                    fatal_error = f"FsGuard process exited unexpectedly with code {fs_guard.exitcode}"
+                    Logger.error(f"ResolveSpine: {fatal_error}")
+                fs_guard_done = True
+
+            if fatal_error:
+                break
+
+            panel.update()
+
+        if fatal_error:
+            ProcessUtils.terminate_all(*workers, fs_guard)
+            raise RuntimeError(fatal_error)
+    finally:
+        panel.stop()
 
     ProcessUtils.join_all(*workers, fs_guard)
     for worker in workers:
@@ -712,8 +719,11 @@ def main(
     if fs_guard.exitcode not in (0, None):
         raise RuntimeError(f"FsGuard process exited with code {fs_guard.exitcode}")
 
-    ui.reset()
-    print("\nSpine模型批量导出结束!", s=1)
-    print(f"  累计解包 {tr_processed.get_done()} 个文件")
-    print(f"  累计导出 {tr_file_saving.get_done()} 个文件")
-    print(f"  此项用时 {round(tracker.get_rt(), 1)} 秒")
+    CLI.show_summary(
+        "Spine 模型批量导出结束",
+        [
+            ("累计解包", f"{tr_processed.get_done()} 个文件"),
+            ("累计导出", f"{tr_file_saving.get_done()} 个文件"),
+            ("耗时", f"{round(tracker.get_rt(), 1)} 秒"),
+        ],
+    )

@@ -6,18 +6,17 @@ import glob
 import os.path as osp
 import re
 import shutil
+import time
 
+from .ui.RichCLI import RichCLI
+from .ui.TaskLive import TaskDetailField, TaskLiveView, TaskValueField
 from .ResolveSpine import SpineType
-from .utils.GlobalMethods import print, rmdir
+from .utils.GlobalMethods import rmdir
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
-from .utils.TaskUtils import (
-    ThreadCtrl,
-    Counter,
-    UICtrl,
-    TaskReporter,
-    TaskReporterTracker,
-)
+from .utils.TaskUtils import ThreadCtrl, Counter, TaskReporter, TaskReporterTracker
+
+CLI = RichCLI.get_instance()
 
 
 PATTERN_BUILDING = re.compile(r"^(build_)?char_(\d+_[0-9a-zA-Z]+(_[0-9a-zA-Z#]+)?)$")
@@ -95,66 +94,65 @@ def main(srcdirs: Sequence[str], destdirs: Sequence[str]):
     :param destdirs: Destination directories list;
     :rtype: None;
     """
-    print("\n正在解析目录...", s=1)
-    Logger.info("CollectModels: Reading directories...")
-    if len(srcdirs) != len(destdirs):
-        Logger.error("CollectModels: Arguments error")
-        print("参数错误", c=3)
-        return
-
-    flist = []  # [(upkdir, destdir), ...]
-    for srcdir, destdir in zip(srcdirs, destdirs):
-        print(f"\t正在读取目录 {srcdir}")
-        for upkdir in glob.iglob(osp.join(glob.escape(srcdir), "*")):
-            if osp.isdir(upkdir):
-                flist.append((upkdir, destdir))
-
     Logger.reset_stats()
-    thread_ctrl = ThreadCtrl()
+
     collected = Counter()
-    ui = UICtrl()
-    tr_finished = TaskReporter(1, len(flist))
-    tracker = TaskReporterTracker(tr_finished)
+    current_stage = TaskValueField("阶段", "正在解析目录")
+    current_search = TaskValueField("当前搜索")
+    panel = TaskLiveView("正在分拣模型...", progress_getter=lambda: 0.0)
+    panel.set_detail_fields(
+        [
+            current_stage,
+            current_search,
+            TaskDetailField("累计分拣", collected.now),
+            TaskDetailField("运行状态统计", Logger.to_ew_stats_str),
+        ]
+    )
+    panel.start()
 
-    ui.reset()
-    ui.loop_start()
-    for upkdir, destdir in flist:
-        # (i stands for a source dir's path)
-        ui.request(
-            [
-                "正在分拣模型...",
-                tracker.to_progress_bar_str(),
-                f"当前搜索：\t{osp.basename(upkdir)}",
-                f"累计分拣：\t{collected.now()}",
-                f"预计剩余时间：\t{tracker.to_eta_str()}",
-                f"累计消耗时间：\t{tracker.to_rt_str()}",
-                f"运行状态统计：\t{Logger.to_ew_stats_str()}",
-            ]
-        )
-        ###
-        thread_ctrl.run_subthread(
-            collect_models,
-            (upkdir, destdir, True, tr_finished.report, collected.update),
-            name=f"CmThread:{id(upkdir)}",
-        )
+    try:
+        Logger.info("CollectModels: Reading directories...")
+        if len(srcdirs) != len(destdirs):
+            Logger.error("CollectModels: Arguments error")
+            CLI.show_error("参数错误", "源目录与目标目录数量不一致。")
+            return
 
-    ui.reset()
-    ui.loop_stop()
-    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
-        ui.request(
-            [
-                "正在分拣模型...",
-                tracker.to_progress_bar_str(),
-                f"累计分拣：\t{collected.now()}",
-                f"预计剩余时间：\t{tracker.to_eta_str()}",
-                f"累计消耗时间：\t{tracker.to_rt_str()}",
-                f"运行状态统计：\t{Logger.to_ew_stats_str()}",
-            ]
-        )
-        ui.refresh(post_delay=0.1)
+        flist = []  # [(upkdir, destdir), ...]
+        for srcdir, destdir in zip(srcdirs, destdirs):
+            current_stage.set_value("正在读取目录")
+            current_search.set_value(srcdir)
+            panel.update()
+            for upkdir in glob.iglob(osp.join(glob.escape(srcdir), "*")):
+                if osp.isdir(upkdir):
+                    flist.append((upkdir, destdir))
 
-    ui.loop_stop()
-    ui.reset()
-    print("\n分拣模型结束!", s=1)
-    print(f"  累计分拣 {collected.now()} 套模型")
-    print(f"  此项用时 {round(tracker.get_rt(), 1)} 秒")
+        thread_ctrl = ThreadCtrl()
+        tr_finished = TaskReporter(1, len(flist))
+        tracker = TaskReporterTracker(tr_finished)
+        panel.bind_tracker(tracker)
+        current_stage.set_value("正在分拣模型")
+
+        for upkdir, destdir in flist:
+            current_search.set_value(osp.basename(upkdir))
+            panel.update()
+            thread_ctrl.run_subthread(
+                collect_models,
+                (upkdir, destdir, True, tr_finished.report, collected.update),
+                name=f"CmThread:{id(upkdir)}",
+            )
+
+        current_search.set_value(None)
+        current_stage.set_value("正在等待任务完成")
+        while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
+            panel.update()
+            time.sleep(0.1)
+    finally:
+        panel.stop()
+
+    CLI.show_summary(
+        "分拣模型结束",
+        [
+            ("累计分拣", f"{collected.now()} 套模型"),
+            ("耗时", f"{round(tracker.get_rt(), 1)} 秒"),
+        ],
+    )

@@ -2,8 +2,16 @@
 # @ BSD 3-Clause License
 import os, sys, json, shutil
 import subprocess
+
+from src.ui.RichCLI import RichCLI
 from src.utils.Profiler import CodeProfiler
-from src.utils.GlobalMethods import print, stacktrace
+from src.utils.GlobalMethods import stacktrace
+
+CLI = RichCLI.get_instance()
+
+
+def _print_status(message: str, *, style: str = "white") -> None:
+    CLI.console.print(message, style=style, markup=False, highlight=False)
 
 
 def __check_file_list(dir_path: str):
@@ -32,19 +40,19 @@ def __check_file_list(dir_path: str):
     if actual_set != expected_set:
         added = sorted(list(actual_set - expected_set))
         removed = sorted(list(expected_set - actual_set))
-        print(f"\n[File Mismatch] {os.path.basename(actual_path)}", c=1)
+        _print_status(f"\n[File Mismatch] {os.path.basename(actual_path)}", style="bold red")
         if added:
-            print(f"  Added ({len(added)}):", c=3)
+            _print_status(f"  Added ({len(added)}):", style="bold yellow")
             for f in added[:10]:
-                print(f"    + {f}", c=2)
+                _print_status(f"    + {f}", style="bold green")
             if len(added) > 10:
-                print(f"    ... and {len(added) - 10} more", c=2)
+                _print_status(f"    ... and {len(added) - 10} more", style="bold green")
         if removed:
-            print(f"  Removed ({len(removed)}):", c=3)
+            _print_status(f"  Removed ({len(removed)}):", style="bold yellow")
             for f in removed[:10]:
-                print(f"    - {f}", c=1)
+                _print_status(f"    - {f}", style="bold red")
             if len(removed) > 10:
-                print(f"    ... and {len(removed) - 10} more", c=1)
+                _print_status(f"    ... and {len(removed) - 10} more", style="bold red")
         raise AssertionError(f"File list mismatch for {actual_path}: {len(added)} added, {len(removed)} removed")
 
 
@@ -57,7 +65,7 @@ def __run_cli(args: list):
 def test():
     for i in range(int(sys.argv[1]) if len(sys.argv) > 1 else 1):
         try:
-            print(f"[#{i}] Preparing...", c=6)
+            _print_status(f"[#{i}] Preparing...", style="bold cyan")
             DIR_UPK = "test/upk"
             DIR_CMB = "test/cmb"
             DIR_DTA = "test/dta"
@@ -69,7 +77,7 @@ def test():
             shutil.rmtree(DIR_SPI, ignore_errors=True)
             shutil.rmtree(DIR_USM, ignore_errors=True)
 
-            print(f"[#{i}] Testing...", c=6)
+            _print_status(f"[#{i}] Testing...", style="bold cyan")
             with CodeProfiler("unit_1"):
                 out, err, code = __run_cli(
                     [
@@ -152,17 +160,17 @@ def test():
                     print(err)
                     raise AssertionError(f"ArkUnpacker cu mode failed, code={code}")
 
-            print(f"[#{i}] Analysing...", c=6)
+            _print_status(f"[#{i}] Analysing...", style="bold cyan")
             __check_file_list(DIR_UPK)
             __check_file_list(DIR_CMB)
             __check_file_list(DIR_DTA)
             __check_file_list(DIR_SPI)
             __check_file_list(DIR_USM)
 
-            print(f"[#{i}] Test success!", c=2)
+            _print_status(f"[#{i}] Test success!", style="bold green")
         except BaseException as arg:
-            print(f"[#{i}] Test failed because an error occurred!", c=1)
-            print(stacktrace(), c=3)
+            _print_status(f"[#{i}] Test failed because an error occurred!", style="bold red")
+            _print_status(stacktrace(), style="bold yellow")
     json.dump(
         {
             "average": CodeProfiler.get_avg_time_all(),

@@ -6,6 +6,7 @@ import glob
 import json
 import math
 import os.path as osp
+import time
 from collections import defaultdict
 
 import bson
@@ -13,18 +14,15 @@ import numpy as np
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 
+from .ui.RichCLI import RichCLI
+from .ui.TaskLive import TaskDetailField, TaskLiveView, TaskValueField
 from .utils.Config import Config
-from .utils.GlobalMethods import (
-    print,
-    rmdir,
-    is_ab_file,
-    is_known_asset_file,
-    is_binary_file,
-    get_modules_from_package_name,
-)
+from .utils.GlobalMethods import rmdir, is_ab_file, is_known_asset_file, is_binary_file, get_modules_from_package_name
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
-from .utils.TaskUtils import ThreadCtrl, UICtrl, TaskReporter, TaskReporterTracker
+from .utils.TaskUtils import ThreadCtrl, TaskReporter, TaskReporterTracker
+
+CLI = RichCLI.get_instance()
 
 
 class CompatibleFloat(float):
@@ -325,74 +323,76 @@ def main(rootdir: str, destdir: str, do_del: bool = False):
     :param do_del: Whether to delete the existed destination directory first, `False` for default;
     :rtype: None;
     """
-    print("\n正在解析路径...", s=1)
-    Logger.info("DecodeTextAsset: Retrieving file paths...")
-    rootdir = osp.normpath(osp.realpath(rootdir))
-    destdir = osp.normpath(osp.realpath(destdir))
-    flist = []
-    for i in glob.iglob(osp.join(glob.escape(rootdir), "**", "*"), recursive=True):
-        if osp.isfile(i) and not is_known_asset_file(i) and not is_ab_file(i):
-            flist.append(i)
-
-    if do_del:
-        print("\n正在清理...", s=1)
-        rmdir(destdir)
-
     Logger.reset_stats()
     SafeSaver.get_instance().reset_counter()
+
     thread_ctrl = ThreadCtrl()
-    ui = UICtrl()
-    tr_processed = TaskReporter(2, len(flist))
+    tr_processed = TaskReporter(2, 1)
     tr_file_saving = TaskReporter(1)
     tracker = TaskReporterTracker(tr_processed, tr_file_saving)
+    current_stage = TaskValueField("阶段", "正在解析路径")
+    current_dir = TaskValueField("当前目录")
+    current_search = TaskValueField("当前搜索")
+    panel = TaskLiveView("正在批量解码文本资源...")
+    panel.set_detail_fields(
+        [
+            current_stage,
+            current_dir,
+            current_search,
+            TaskDetailField("累计搜索", tr_processed.to_progress_str),
+            TaskDetailField("累计解码", tr_file_saving.to_progress_str),
+            TaskDetailField("运行状态统计", Logger.to_ew_stats_str),
+        ]
+    )
+    panel.bind_tracker(tracker)
+    panel.start()
 
-    ui.reset()
-    ui.loop_start()
-    for i in flist:
-        ui.request(
-            [
-                "正在批量解码文本资源...",
-                tracker.to_progress_bar_str(),
-                f"当前目录：\t{osp.basename(osp.dirname(i))}",
-                f"当前搜索：\t{osp.basename(i)}",
-                f"累计搜索：\t{tr_processed.to_progress_str()}",
-                f"累计解码：\t{tr_file_saving.to_progress_str()}",
-                f"预计剩余时间：\t{tracker.to_eta_str()}",
-                f"累计消耗时间：\t{tracker.to_rt_str()}",
-                f"运行状态统计：\t{Logger.to_ew_stats_str()}",
-            ]
-        )
-        ###
-        thread_ctrl.run_subthread(
-            text_asset_resolve,
-            (
-                i,
-                osp.join(destdir, osp.relpath(osp.dirname(i), rootdir)),
-                tr_processed.report,
-                tr_file_saving.update_demand,
-                tr_file_saving.report,
-            ),
-            name=f"RFThread:{id(i)}",
-        )
+    try:
+        Logger.info("DecodeTextAsset: Retrieving file paths...")
+        rootdir = osp.normpath(osp.realpath(rootdir))
+        destdir = osp.normpath(osp.realpath(destdir))
+        flist = []
+        for i in glob.iglob(osp.join(glob.escape(rootdir), "**", "*"), recursive=True):
+            if osp.isfile(i) and not is_known_asset_file(i) and not is_ab_file(i):
+                flist.append(i)
+        tr_processed.update_demand(len(flist) - 1)
 
-    ui.reset()
-    ui.loop_stop()
-    while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
-        ui.request(
-            [
-                "正在批量解码文本资源...",
-                tracker.to_progress_bar_str(),
-                f"累计搜索：\t{tr_processed.to_progress_str()}",
-                f"累计解码：\t{tr_file_saving.to_progress_str()}",
-                f"预计剩余时间：\t{tracker.to_eta_str()}",
-                f"累计消耗时间：\t{tracker.to_rt_str()}",
-                f"运行状态统计：\t{Logger.to_ew_stats_str()}",
-            ]
-        )
-        ui.refresh(post_delay=0.1)
+        if do_del:
+            current_stage.set_value("正在清理目标目录")
+            panel.update()
+            rmdir(destdir)
 
-    ui.reset()
-    print("\n批量解码文本资源结束!", s=1)
-    print(f"  累计搜索 {tr_processed.get_done()} 个文件")
-    print(f"  累计解码 {tr_file_saving.get_done()} 个文件")
-    print(f"  此项用时 {round(tracker.get_rt(), 1)} 秒")
+        current_stage.set_value("正在分发任务")
+        for i in flist:
+            current_dir.set_value(osp.basename(osp.dirname(i)))
+            current_search.set_value(osp.basename(i))
+            panel.update()
+            thread_ctrl.run_subthread(
+                text_asset_resolve,
+                (
+                    i,
+                    osp.join(destdir, osp.relpath(osp.dirname(i), rootdir)),
+                    tr_processed.report,
+                    tr_file_saving.update_demand,
+                    tr_file_saving.report,
+                ),
+                name=f"RFThread:{id(i)}",
+            )
+
+        current_stage.set_value("正在处理任务")
+        current_dir.set_value(None)
+        current_search.set_value(None)
+        while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
+            panel.update()
+            time.sleep(0.1)
+    finally:
+        panel.stop()
+
+    CLI.show_summary(
+        "批量解码文本资源结束",
+        [
+            ("累计搜索", f"{tr_processed.get_done()} 个文件"),
+            ("累计解码", f"{tr_file_saving.get_done()} 个文件"),
+            ("耗时", f"{round(tracker.get_rt(), 1)} 秒"),
+        ],
+    )

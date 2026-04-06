@@ -9,9 +9,11 @@ import re
 from datetime import datetime
 
 from .DecodeTextAsset import ArkFBOLibrary
+from .ui.RichCLI import RichCLI
 from .utils.Config import Config
-from .utils.GlobalMethods import color, print
 from .utils.Logger import Logger
+
+CLI = RichCLI.get_instance()
 
 
 class ModelsDist:
@@ -122,7 +124,7 @@ class ModelsDist:
 
     def update_operator_data(self):
         Logger.info("ModelsDataDist: Decoding operator data.")
-        print("解析干员信息...")
+        CLI.show_stage("解析干员信息...")
         raw: "dict[str,dict]" = self.get_gamedata(("character_table",))
         Logger.info("ModelsDataDist: Parsing operator data.")
         collected = {}
@@ -141,11 +143,11 @@ class ModelsDist:
                 )
         self.data["data"].update(collected)
         Logger.info(f"ModelsDataDist: Found {len(collected)} operators.")
-        print(f"\t找到 {len(collected)} 位干员", c=2)
+        CLI.show_success(f"  找到 {len(collected)} 位干员")
 
     def update_skin_data(self):
         Logger.info("ModelsDataDist: Decoding skin data.")
-        print("解析干员皮肤信息...")
+        CLI.show_stage("解析干员皮肤信息...")
         raw: "dict[str,dict]" = self.get_gamedata(("skin_table",))
         Logger.info("ModelsDataDist: Parsing skin data.")
         collected = {}
@@ -171,14 +173,14 @@ class ModelsDist:
                         Logger.info(f'ModelsDataDist: The skin-key of the skin "{k}" collided with an existed one.')
                 else:
                     Logger.warn(f'ModelsDataDist: The operator-key of the skin "{k}" not found.')
-                    print(f"\t皮肤 {k} 找不到对应的干员Key", c=3)
+                    CLI.show_issue(k, "找不到对应的干员 Key", name="皮肤", type_name="Operator")
         self.data["data"].update(collected)
         Logger.info(f"ModelsDataDist: Found {len(collected)} skins.")
-        print(f"\t找到 {len(collected)} 件干员皮肤", c=2)
+        CLI.show_success(f"  找到 {len(collected)} 件干员皮肤")
 
     def update_enemy_data(self):
         Logger.info("ModelsDataDist: Decoding enemy data.")
-        print("解析敌方单位信息...")
+        CLI.show_stage("解析敌方单位信息...")
         raw: "dict[str,list]" = self.get_gamedata(("enemydata", "enemy_database"))
         Logger.info("ModelsDataDist: Parsing enemy data.")
         collected = {}
@@ -200,11 +202,11 @@ class ModelsDist:
                 )
         self.data["data"].update(collected)
         Logger.info(f"ModelsDataDist: Found {len(collected)} enemies.")
-        print(f"\t找到 {len(collected)} 个敌方单位", c=2)
+        CLI.show_success(f"  找到 {len(collected)} 个敌方单位")
 
     def update_dynillust_data(self):
         Logger.info("ModelsDataDist: Parsing dynillust data.")
-        print("分析动态立绘信息...")
+        CLI.show_stage("分析动态立绘信息...")
         collected = {}
         if osp.isdir(self.data["storageDirectory"]["DynIllust"]):
             pattern = osp.join(glob.escape(self.data["storageDirectory"]["DynIllust"]), "dyn_*")
@@ -243,22 +245,22 @@ class ModelsDist:
                         )
                     else:
                         Logger.warn(f'ModelsDataDist: The operator-key of the dyn illust "{key}" not found.')
-                        print(f"\t动态立绘 {key} 找不到对应的干员Key", c=3)
+                        CLI.show_issue(key, "找不到对应的干员 Key", name="动态立绘", type_name="DynIllust")
                 else:
                     Logger.warn(
                         f'ModelsDataDist: The operator-key of the dyn illust "{key}" could not pass the regular expression check.'
                     )
-                    print(f"\t动态立绘 {key} 未成功通过正则匹配", c=3)
+                    CLI.show_issue(key, "未成功通过正则匹配", name="动态立绘", type_name="DynIllust")
         else:
             Logger.warn("ModelsDataDist: The directory of dyn illust not found.")
-            print("\t动态立绘根文件夹未找到", c=3)
+            CLI.show_warning("  动态立绘根文件夹未找到")
         self.data["data"].update(collected)
         Logger.info(f"ModelsDataDist: Found {len(collected)} dynillusts.")
-        print(f"\t找到 {len(collected)} 套动态立绘", c=2)
+        CLI.show_success(f"  找到 {len(collected)} 套动态立绘")
 
     def verify_models(self):
         Logger.info("ModelsDataDist: Validating models files.")
-        print("校验模型文件...")
+        CLI.show_stage("校验模型文件...")
         cur_done = 0
         cur_fail = 0
         total = len(self.data["data"])
@@ -293,9 +295,7 @@ class ModelsDist:
                         # 如果ext_alt组所指定的文件不存在
                         if not ext_verified:
                             Logger.info(f'ModelsDataDist: The {ext_type} asset of "{k}" not found, see in "{d}".')
-                            print(
-                                f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：{color(1)}{ext_type} 文件缺失{color(7)}"
-                            )
+                            CLI.show_issue(k, f"{ext_type} 文件缺失", name=v["name"], type_name=v["type"], severity="error")
                             fail_flag = True
                             break  # 跳出对ext_alt的遍历
                     if not fail_flag:
@@ -304,20 +304,27 @@ class ModelsDist:
                         cur_fail += 1
                 else:
                     Logger.info(f'ModelsDataDist: The model directory of "{k}" not found, expected path "{d}".')
-                    print(f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：模型不存在")
+                    CLI.show_issue(k, "模型不存在", name=v["name"], type_name=v["type"], severity="error")
                     cur_fail += 1
             else:
                 Logger.info(
                     f"ModelsDataDist: The model asset of \"{k}\" is the type of \"{v['type']}\" which is not declared in the prefab."
                 )
-                print(f"[{color(3)}{k}{color(7)}] {v['name']}（{v['type']}）：未在脚本预设中找到其类型的存储目录")
+                CLI.show_issue(k, "未在脚本预设中找到其类型的存储目录", name=v["name"], type_name=v["type"])
                 cur_fail += 1
             self.data["data"][k]["assetList"] = asset_list
             cur_done += 1
             if cur_done % 100 == 0:
-                print(f"\t已处理完成 {color(2)}{round(cur_done / total * 100)}%{color(7)}")
+                CLI.show_success(f"  已处理完成 {round(cur_done / total * 100)}%")
         Logger.info(f"ModelsDataDist: Verify models completed, {cur_done - cur_fail} success, {cur_fail} failure.")
-        print(f"\n\t校验完成：{color(2)}成功{cur_done - cur_fail}{color(7)}，失败{cur_fail}")
+        CLI.show_summary(
+            "模型校验完成",
+            [
+                ("成功", cur_done - cur_fail),
+                ("失败", cur_fail),
+            ],
+            border_style="green" if cur_fail == 0 else "yellow",
+        )
 
     def export_json(self):
         Logger.info("ModelsDataDist: Writing to json.")
@@ -329,6 +336,7 @@ class ModelsDist:
                 indent=Config.get("export_json_indent"),
             )
         Logger.info("ModelsDataDist: Succeeded in writing to json.")
+        CLI.show_summary("ArkModels 数据集生成完成", [("输出文件", "models_data.json")])
 
 
 ########## Main-主程序 ##########
