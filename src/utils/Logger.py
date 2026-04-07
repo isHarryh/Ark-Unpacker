@@ -3,6 +3,7 @@
 import queue
 import threading
 from datetime import datetime
+from typing import Callable, Optional
 
 
 class Logger:
@@ -11,6 +12,7 @@ class Logger:
     __time_format = "%Y-%m-%d %H:%M:%S"
     __file_encoding = "UTF-8"
     __instance = None
+    __forwarder: Optional[Callable[[str, str], None]] = None
 
     LV_NONE = 0
     LV_ERROR = 1
@@ -170,32 +172,44 @@ class Logger:
 
     @staticmethod
     def log(level: str, msg: str):
+        level = str(level).lower()
+        message = str(msg)
         if Logger.__instance:
             if level == "error":
-                Logger.__instance._error(msg)
+                Logger.__instance._error(message)
             elif level == "warn":
-                Logger.__instance._warn(msg)
+                Logger.__instance._warn(message)
             elif level == "info":
-                Logger.__instance._info(msg)
+                Logger.__instance._info(message)
             else:
-                Logger.__instance._debug(msg)
+                Logger.__instance._debug(message)
+        elif Logger.__forwarder:
+            try:
+                Logger.__forwarder(level, message)
+            except BaseException:
+                pass
+
+    @staticmethod
+    def set_forwarder(forwarder: Optional[Callable[[str, str], None]]):
+        """Sets logger forwarder when logger instance is unavailable (e.g. worker process).
+
+        :param forwarder: Callback that consumes `(level, message)`, `None` to disable.
+        :rtype: None;
+        """
+        Logger.__forwarder = forwarder
 
     @staticmethod
     def error(msg: str):
-        if Logger.__instance:
-            Logger.__instance._error(msg)
+        Logger.log("error", msg)
 
     @staticmethod
     def warn(msg: str):
-        if Logger.__instance:
-            Logger.__instance._warn(msg)
+        Logger.log("warn", msg)
 
     @staticmethod
     def info(msg: str):
-        if Logger.__instance:
-            Logger.__instance._info(msg)
+        Logger.log("info", msg)
 
     @staticmethod
     def debug(msg: str):
-        if Logger.__instance:
-            Logger.__instance._debug(msg)
+        Logger.log("debug", msg)

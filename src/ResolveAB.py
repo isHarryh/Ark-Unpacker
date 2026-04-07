@@ -373,6 +373,7 @@ def _worker_loop(
     export_json_indent: int,
 ):
     reporter = result_sender.create_reporter()
+    Logger.set_forwarder(reporter.log)
     fs_client = fs_client_slot.create_client(reporter)
     session = ResolveABWorkerSession(
         reporter,
@@ -576,6 +577,7 @@ def main(
 
             panel.update()
 
+        result_bus.drain(timeout=0.0)
         if fatal_error:
             ProcessUtils.terminate_all(*workers, fs_guard)
             raise RuntimeError(fatal_error)
@@ -583,6 +585,7 @@ def main(
         panel.stop()
 
     ProcessUtils.join_all(*workers, fs_guard)
+    result_bus.drain(timeout=0.0)
     for worker in workers:
         if worker.exitcode not in (0, None):
             raise RuntimeError(f'Worker process "{worker.name}" exited with code {worker.exitcode}')
