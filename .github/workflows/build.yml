@@ -3,7 +3,7 @@ name: Build
 on:
   push:
     branches:
-      - "v4.x"
+      - "v5.x"
 
 env:
   PYTHONIOENCODING: "UTF-8"
