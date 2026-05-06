@@ -1,17 +1,16 @@
-Additional Documentation for ArkUnpacker
+ArkUnpacker附加说明文档
+# 关于ArkVoice提取与分拣工具
 
-# About the ArkVoice Extraction and Sorting Tool
+## 功能概述
 
-## Overview
+[ArkVoice](https://github.com/isHarryh/Ark-Voice)是作者建立的明日方舟语音仓库，收录了游戏中的各个语种的干员语音文件，采用 OGG 编码格式、分片合并法存储。“ArkVoice提取与分拣工具” 用于辅助该仓库进行更新，其子功能包括：
 
-[ArkVoice](https://github.com/isHarryh/Ark-Voice) is an Arknights voice repository created by the author, containing operator voice files in multiple languages from the game. The repository uses OGG encoding format with a segmented merging method for storage. The "ArkVoice Extraction and Sorting Tool" is designed to assist in updating this repository. Its sub-features include:
+- 语音提取：自动从游戏原始资源文件中，提取语音为 WAV 文件。
+- 分拣与合并：对提取出的 WAV 文件进行分片合并，并另存为压缩后的 OGG 文件。
+- 生成数据集：将 ArkVoice 仓库中的语音的详细信息写入一个 JSON 数据集中。
 
-- Voice Extraction: Automatically extracts voice data as WAV files from the game's original resource files.
-- Sorting and Merging: Merges segmented WAV files and re-encodes them into compressed OGG files.
-- Dataset Generation: Writes detailed metadata of the voices in the ArkVoice repository into a JSON dataset.
+## 使用方法
 
-## Usage
-
-1. Follow the instructions in the README to complete [Resource Preparation](../README.md#1资源准备). For the required resource folders, refer to the folder names indicated within the program. Place the prepared resource folders directly in the **program directory**.
-2. Launch the program, enter the "ArkVoice Extraction and Sorting Tool" interface, and follow the prompts to complete the process. Afterward, the required files (and folders) for the ArkVoice repository will be generated in the program directory.
-3. Clone the ArkVoice repository, replace its original contents with the newly generated files (and folders), and perform commit and push operations to update the repository, completing the voice library update.
+1. 按照 README 文档中的说明，进行[资源准备](../README.md#1资源准备)。具体需要哪些资源文件夹，请参考程序内的提示所述的资源文件夹名。请将准备的资源文件夹直接放在**程序所在目录**里面。
+2. 打开程序，进入 “ArkVoice提取与分拣工具” 界面，按照提示完成整个流程。之后，程序所在目录就会生成 ArkVoice 仓库需要的文件（和文件夹）了。
+3. 克隆ArkVoice仓库，使用刚刚生成的文件（和文件夹）替换掉原来的内容，并进行 Commit-Push 等操作更新仓库，即可完成语音库的更新。
