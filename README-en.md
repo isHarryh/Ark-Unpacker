@@ -17,6 +17,6 @@
       <img alt="GitHub Downloads" src="https://img.shields.io/github/downloads/isHarryh/Ark-Unpacker/total?label=Downloads">
    </p>
       
-   **English** **|** [🇨🇳中文](./README-en.md)
+   **English** **|** [🇨🇳中文](./README.md)
 
 </div>
