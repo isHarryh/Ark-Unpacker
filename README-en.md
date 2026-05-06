@@ -116,8 +116,8 @@ Please download the exe file `ArkUnpacker-vx.x.x_x64.exe` from the Releases page
 
 Before using this program, you should have a basic understanding of:
 
-- [RGB channel images and A channel images](docs/en/Essentials.md#rgb通道图和a通道图)
-- [Spine animated characters](docs/en/Essentials.md#spine动画小人)
+- [RGB channel images and A channel images](docs/en/Essentials.md#rgb-channels-and-alpha-channel-images)
+- [Spine animated characters](docs/en/Essentials.md#spine-animated-characters)
 
 ### 4. Example Usage
 

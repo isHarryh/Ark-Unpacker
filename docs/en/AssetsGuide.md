@@ -54,7 +54,7 @@ Contents stored in each subdirectory:
 
 There are many resource entries. You can use your browser or editor’s search function (e.g., `Ctrl+F`) to find keywords.
 
-[Back to top](#资源导览)
+[Back to top](#resource-overview)
 
 ---
 
@@ -229,4 +229,4 @@ There are many resource entries. You can use your browser or editor’s search f
 - `ui/zonemap_{x}.ab` Main stage backgrounds  
 - `ui/zonemap_camp{x}.ab` Annihilation stage backgrounds  
 
-[Back to top](#资源导览)
+[Back to top](#resource-overview)

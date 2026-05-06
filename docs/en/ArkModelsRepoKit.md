@@ -12,6 +12,6 @@ Additional Documentation for ArkUnpacker
 
 ## Usage
 
-1. Follow the instructions in the README to complete [Resource Preparation](../README.md#1资源准备). For the required resource folders, refer to the folder names indicated within the program. Place the prepared resource folders directly in the **program directory**.
+1. Follow the instructions in the README to complete [Resource Preparation](../README-en.md#1-asset-preparation). For the required resource folders, refer to the folder names indicated within the program. Place the prepared resource folders directly in the **program directory**.
 2. Launch the program, enter the "ArkModels Extraction and Sorting Tool" interface, and follow the prompts to complete the process. Afterward, the required files (and folders) for the ArkModels repository will be generated in the program directory.
 3. Clone the ArkModels repository, replace its original contents with the newly generated files (and folders), and perform commit and push operations to update the repository.
