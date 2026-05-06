@@ -16,9 +16,9 @@
       <img alt="GitHub Actions" src="https://github.com/isHarryh/Ark-Unpacker/actions/workflows/build.yml/badge.svg">
       <img alt="GitHub Downloads" src="https://img.shields.io/github/downloads/isHarryh/Ark-Unpacker/total?label=Downloads">
    </p>
-   <sub>
-      <i> This project only supports Chinese docs. If you are an English user, feel free to contact us. </i>
-   </sub>
+      
+   **🇨🇳中文** **|** [🌎English](./README-en.md)
+
 </div>
 
 ## 介绍 <sub>Intro</sub>
