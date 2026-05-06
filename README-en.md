@@ -21,7 +21,7 @@
 
 </div>
 
-## Introduction <sub>Intro</sub>
+## Introduction
 
 ### End-of-Updates Notice
 
@@ -57,7 +57,7 @@ This project is being gradually upgraded and migrated to [ArkStudio](https://git
 - Configuration guide > [Click here](docs/en/ConfigFile.md)
 - Asset lookup guide > [Click here](docs/en/AssetsGuide.md)
 
-## Usage <sub>Usage</sub>
+## Usage
 
 ### 1. Asset Preparation
 
@@ -78,7 +78,7 @@ The following explains **how to obtain Arknights AB files** using **Android** as
 At this point, your directory structure looks roughly like this:
 
 ```
-你的目录
+Your directory
 ├─Android
 └─Android(2)
 ```
@@ -124,9 +124,9 @@ Before using this program, you should have a basic understanding of:
 The simplest usage is to place the folder(s) to be unpacked (one or more) into the same directory as the program. At this point, the directory structure looks like this:
 
 ```
-你的目录
-├─Android (解包整个目录需要很久)
-├─chararts (可以选择解包部分文件夹)
+Your directory
+├─Android (Unpacking the entire directory may take a long time)
+├─chararts (You can choose to unpack specific subfolders)
 └─ArkUnpacker.exe
 ```
 
@@ -208,7 +208,7 @@ options:
 
 Run `ArkUnpacker -h` to display this help message. If you run a command without any `mode` parameter, the program will start in interactive CLI mode.
 
-## Notes <sub>Notice</sub>
+## Notes
 
 1. In one-click execution mode, the program will not unpack AB files located directly in the program directory; it only unpacks AB files inside subfolders.
 2. The program automatically adjusts its multiprocessing strategy based on the number of CPU cores, and it requires sufficient device performance (especially CPU and disk). Low-spec machines may run slowly.
@@ -219,7 +219,7 @@ Run `ArkUnpacker -h` to display this help message. If you run a command without 
    4. Drag-and-drop files into the console to quickly paste their path.
 4. If you want more details or to contribute, please [see the developer guide](docs/en/ForDevelopers.md).
 
-## Licensing <sub>Licensing</sub>
+## Licensing
 
 This project is licensed under the **BSD-3-Clause** license. Anyone may freely use and modify the source code in this project, provided that the author credit and original license are retained in the source code or copyright notices, and the project name or author name must not be used for promotion.
 
