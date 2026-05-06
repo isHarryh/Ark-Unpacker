@@ -8,7 +8,7 @@ Additional Documentation for ArkUnpacker
 > **Note:**  
 > - Please use this tool within reasonable limits. Under the BSD 3-Clause License, the author is not responsible for any infringement caused by illegal use of unpacked resources.
 > - The following content is based on **Arknights Android `v2.4.01`**. The exact locations of specific resources may vary significantly across different client versions.
-> - All content in this document is independently compiled by the author and is for reference only. Please credit the source if you wish to转载.
+> - All content in this document is compiled by the author and is for reference purposes only. Please cite the source if you wish to copy it.
 
 <!-- spell-checker: disable -->
 

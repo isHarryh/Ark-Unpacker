@@ -6,7 +6,7 @@ This document describes the preparation steps and procedures required to run the
 
 ## Dependencies
 
-1. **Python:** This project requires a **Python 3.9–3.12** runtime environment. You can [download it here](https://www.python.org/downloads).  
+1. **Python:** This project requires a **Python 3.10–3.12** runtime environment. You can [download it here](https://www.python.org/downloads).  
 2. **IDE:** The recommended integrated development environment (IDE) is **VS Code**. You can [download it here](https://code.visualstudio.com).  
     > Recommended VS Code extensions:  
     > - [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker)  
