@@ -53,7 +53,7 @@
 
 ### 相关文档
 
-- 更新日志 > [点击查看](./CHANGELOG.md)
+- 更新日志 > [点击查看](docs/zh/CHANGELOG.md)
 - 配置文件指引 > [点击查看](docs/zh/ConfigFile.md)
 - 游戏资源查找指南 > [点击查看](docs/zh/AssetsGuide.md)
 
