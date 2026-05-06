@@ -54,8 +54,8 @@
 ### 相关文档
 
 - 更新日志 > [点击查看](./CHANGELOG.md)
-- 配置文件指引 > [点击查看](docs/ConfigFile.md)
-- 游戏资源查找指南 > [点击查看](docs/AssetsGuide.md)
+- 配置文件指引 > [点击查看](docs/zh/ConfigFile.md)
+- 游戏资源查找指南 > [点击查看](docs/zh/AssetsGuide.md)
 
 ## 使用方法 <sub>Usage</sub>
 
@@ -104,7 +104,7 @@
 
 <br>
 
-为了便于您找到特定资源的 AB 文件位置，我们整理并列出了各个子目录储存的资源的内容，浏览[此文档](docs/AssetsGuide.md)以查看详情。注意，此文档的内容可能不是最新。
+为了便于您找到特定资源的 AB 文件位置，我们整理并列出了各个子目录储存的资源的内容，浏览[此文档](docs/zh/AssetsGuide.md)以查看详情。注意，此文档的内容可能不是最新。
 
 ### 2.下载 ArkUnpacker
 
@@ -116,8 +116,8 @@
 
 在正式地使用本程序前，您最好对以下内容有初步了解：
 
-- [RGB 通道图和 A 通道图](docs/Essentials.md#rgb通道图和a通道图)
-- [Spine 动画小人](docs/Essentials.md#spine动画小人)
+- [RGB 通道图和 A 通道图](docs/zh/Essentials.md#rgb通道图和a通道图)
+- [Spine 动画小人](docs/zh/Essentials.md#spine动画小人)
 
 ### 4.示例用法
 
@@ -133,7 +133,7 @@
 然后直接运行程序，弹出交互式命令行界面，依据其提示操作即可。
 
 > [!TIP]
-> 运行程序后，工作目录会生成配置文件 `ArkUnpackerConfig.json` 与日志文件 `ArkUnpackerLogs.log`。有关配置文件的字段说明，请参阅[此文档](docs/ConfigFile.md)了解详情。
+> 运行程序后，工作目录会生成配置文件 `ArkUnpackerConfig.json` 与日志文件 `ArkUnpackerLogs.log`。有关配置文件的字段说明，请参阅[此文档](docs/zh/ConfigFile.md)了解详情。
 
 ### 5.各模式的功能概述
 
@@ -154,7 +154,7 @@
 
 #### 自定义文本数据解码
 
-解码指定目录中的数据文件，并将解码结果导出到指定目录。具体的原理，请参阅[此文档](docs/TextAssetsDecoding.md)了解详情。
+解码指定目录中的数据文件，并将解码结果导出到指定目录。具体的原理，请参阅[此文档](docs/zh/TextAssetsDecoding.md)了解详情。
 
 #### 自定义 Spine 模型导出
 
@@ -166,11 +166,11 @@
 
 #### ArkModels 提取与分拣工具
 
-此为定制功能，请参阅[此文档](docs/ArkModelsRepoKit.md)了解详情。
+此为定制功能，请参阅[此文档](docs/zh/ArkModelsRepoKit.md)了解详情。
 
 #### ArkVoice 提取与分拣工具
 
-此为定制功能，请参阅[此文档](docs/ArkVoiceRepoKit.md)了解详情。
+此为定制功能，请参阅[此文档](docs/zh/ArkVoiceRepoKit.md)了解详情。
 
 ### 6.命令行用法
 
@@ -217,7 +217,7 @@ options:
    2. 左键单击小黑窗会进入“文本选取”模式，此时主程序会暂停执行。
    3. 右键单击小黑窗可以粘贴文本，也可用于退出“文本选取”模式。
    4. 拖放文件到小黑窗可以快速粘贴其路径。
-4. 如果您希望了解更多细节或参与贡献，请[查看开发者指引](docs/ForDevelopers.md)。
+4. 如果您希望了解更多细节或参与贡献，请[查看开发者指引](docs/zh/ForDevelopers.md)。
 
 ## 许可证 <sub>Licensing</sub>
 
