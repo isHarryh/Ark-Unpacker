@@ -53,7 +53,7 @@ This project is being gradually upgraded and migrated to [ArkStudio](https://git
 
 ### Related Docs
 
-- Changelog > [Click here](docs/CHANGELOG.md)
+- Changelog > [Click here](./CHANGELOG.md)
 - Configuration guide > [Click here](docs/en/ConfigFile.md)
 - Asset lookup guide > [Click here](docs/en/AssetsGuide.md)
 
