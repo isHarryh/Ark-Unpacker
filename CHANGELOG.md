@@ -1,9 +1,9 @@
 ﻿CHANGELOG
 ==========
 
-| **表示** |    ★     |    ☆     |   ~~Text~~   |
-| :------: | :------: | :------: | :----------: |
-| **含义** | 重大变更 | 主要变更 | 已弃用的特性 |
+|  **表示**   |      ★       |      ☆       |      ~~Text~~       |
+| :---------: | :----------: | :----------: | :-----------------: |
+|  **含义**   |   重大变更   |   主要变更   |    已弃用的特性     |
 | **Meaning** | Major change | Minor change | Deprecated features |
 
 -----
@@ -38,6 +38,10 @@
    [EN] Updated workflow scripts for automated builds.
 2. 将 Poetry 升级到了 2.3.2。  
    [EN] Upgraded Poetry to 2.3.2.
+
+#### 补丁 (Patch)
+1. ☆ (v5.0.1) 将 ArkFBSPy 库升级到游戏版本 2.7.41。  
+   [EN] (v5.0.1) Upgraded ArkFBSPy to game version 2.7.41.
 
 ## v4.5
 #### 新增 (Added)
@@ -498,7 +502,6 @@
    [EN] Added the "ArkModels Extraction and Sorting Tool" feature. See the [supplementary document](docs/ArkModelsRepoKit.md) for details.
 
 ## v2.0
-
 #### 新增 (Added)
 1. ★ 支持且默认以多线程模式运行资源解包和图片合并，极大地提升了运行速度。  
    [EN] Added and enabled multi-threaded resource unpacking and image merging by default, greatly improving runtime speed.
@@ -521,8 +524,6 @@
 1. 整理了说明文档，建立了[docs目录](docs)用于存储附加说明文档。  
    [EN] Organized the documentation and created the [docs directory](docs) to store supplementary documents.
 
-#### 测试数据 (Test Data)
-
 ## v1.2
 #### 新增 (Added)
 1. ★ 支持将不同ab文件中解包出的文件分别放到不同的子文件夹中，以便分类保存。  
@@ -533,8 +534,6 @@
 #### 优化 (Improved)
 1. 移除了目录创建时的回显。  
    [EN] Removed echo output when creating directories.
-
-#### 测试数据 (Test Data)
 
 ## v1.1
 #### 新增 (Added)
@@ -570,6 +569,3 @@
    [EN] Fixed a potential missing `fmod.dll` in the executable.
 2. ☆ 采用了的文件虚拟化技术打包可执行文件。  
    [EN] Packaged the executable using file virtualization technology.
-
-#### 测试数据 (Test Data)
-
