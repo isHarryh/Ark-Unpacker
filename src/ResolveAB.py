@@ -472,7 +472,7 @@ def main(
         worker_count = min(len(flist), PerformanceLevel.get_process_limit(Config.get("performance_level")))
         Logger.info(f"ResolveAB: Using {worker_count} worker processes for {len(flist)} files")
 
-        task_queue: mp.Queue = ctx.Queue(maxsize=max(1, worker_count))
+        task_queue: mp.Queue = ctx.Queue(maxsize=max(64, worker_count * 8))
         result_bus = ProcessResultBus(ctx)
         result_sender = result_bus.create_sender()
 
@@ -502,6 +502,24 @@ def main(
         ProcessUtils.start_all(fs_guard, *workers)
         current_stage.set_value("正在分发任务")
 
+        worker_done = set()
+        fs_guard_done = False
+        fs_guard_stop_sent = False
+        fatal_error = None
+
+        def _set_fs_guard_done(_pid: int):
+            nonlocal fs_guard_done
+            fs_guard_done = True
+
+        result_bus = (
+            result_bus.set_on_file_queued(tr_file_saving.update_demand)
+            .set_on_file_saved(tr_file_saving.report)
+            .set_on_processed(tr_processed.report)
+            .set_on_worker_done(worker_done.add)
+            .set_on_fs_guard_done(_set_fs_guard_done)
+            .set_on_log(Logger.log)
+        )
+
         for i in flist:
             current_dir.set_value(osp.basename(osp.dirname(i)))
             panel.update()
@@ -529,28 +547,21 @@ def main(
                     do_tree=do_tree,
                 )
             )
+            result_bus.drain(timeout=0.0)
+            for worker in workers:
+                if worker.exitcode is not None and worker.pid not in worker_done:
+                    if worker.exitcode != 0:
+                        fatal_error = f'Worker process "{worker.name}" exited unexpectedly with code {worker.exitcode}'
+                        Logger.error(f"ResolveAB: {fatal_error}")
+                    worker_done.add(worker.pid)
+            if fatal_error:
+                break
+
         for _ in workers:
             task_queue.put(StopMessage())
 
         current_stage.set_value("正在处理任务")
         current_dir.set_value(None)
-        worker_done = set()
-        fs_guard_done = False
-        fs_guard_stop_sent = False
-        fatal_error = None
-
-        def _set_fs_guard_done(_pid: int):
-            nonlocal fs_guard_done
-            fs_guard_done = True
-
-        result_bus = (
-            result_bus.set_on_file_queued(tr_file_saving.update_demand)
-            .set_on_file_saved(tr_file_saving.report)
-            .set_on_processed(tr_processed.report)
-            .set_on_worker_done(worker_done.add)
-            .set_on_fs_guard_done(_set_fs_guard_done)
-            .set_on_log(Logger.log)
-        )
 
         while len(worker_done) < len(workers) or not fs_guard_done:
             result_bus.drain(timeout=0.1)
