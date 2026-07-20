@@ -674,7 +674,7 @@ if __name__ == "__main__":
                     elif order == "0":
                         break
                 except InterruptedError as arg:
-                    Logger.warn("CI: Program was slightly interrupted by user.")
+                    Logger.warning("CI: Program was slightly interrupted by user.")
                     CLI.show_notice("轻度中止", str(arg), style="yellow")
         else:
             # Has arguments input -> GOTO -> The specified mode
