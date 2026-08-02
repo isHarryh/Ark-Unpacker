@@ -10,9 +10,8 @@ from typing import (
     TypeVar,
     Union,
 )
-import glob
-import os.path as osp
 import multiprocessing as mp
+import os.path as osp
 
 import UnityPy
 import UnityPy.classes as uc
@@ -22,14 +21,14 @@ from UnityPy.helpers import CompressionHelper
 from UnityPy.streams.EndianBinaryReader import EndianBinaryReader
 
 from .lz4ak.Block import decompress_lz4ak
-from .mp.FsGuardProcess import FsGuardClient, FsGuardClientSlot, FsGuardProcess
+from .mp.FsGuardProcess import FsGuardClient, FsGuardClientSlot
 from .mp.Messages import ResolveABTask, StopMessage
-from .mp.Process import ProcessUtils
-from .mp.ProcessResultBus import ProcessResultBus, ProcessResultSender
+from .mp.ProcessResultBus import ProcessResultSender
 from .mp.ProcessReporter import ProcessReporter
+from .mp.WorkerPool import WorkerPool
 from .ui.RichCLI import RichCLI
 from .ui.TaskLive import TaskDetailField, TaskLiveView, TaskValueField
-from .utils.GlobalMethods import rmdir, is_ab_file
+from .utils.GlobalMethods import rmdir, collect_ab_files, calc_destdir
 from .utils.Config import Config, PerformanceLevel
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
@@ -401,6 +400,29 @@ def _worker_loop(
     session.worker_done()
 
 
+def _iter_ab_tasks(
+    flist: Collection[str],
+    src: str,
+    destdir: str,
+    separate: bool,
+    do_img: bool,
+    do_txt: bool,
+    do_aud: bool,
+    do_mesh: bool,
+    do_tree: bool,
+) -> Generator[ResolveABTask, None, None]:
+    for i in flist:
+        yield ResolveABTask(
+            abfile=i,
+            destdir=calc_destdir(i, src, destdir, separate),
+            do_img=do_img,
+            do_txt=do_txt,
+            do_aud=do_aud,
+            do_mesh=do_mesh,
+            do_tree=do_tree,
+        )
+
+
 ########## Main-主程序 ##########
 def main(
     src: str,
@@ -450,11 +472,7 @@ def main(
         Logger.info("ResolveAB: Retrieving file paths...")
         src = osp.normpath(osp.realpath(src))
         destdir = osp.normpath(osp.realpath(destdir))
-        flist = [src] if osp.isfile(src) else []
-        if osp.isdir(src):
-            for i in glob.iglob(osp.join(glob.escape(src), "**", "*"), recursive=True):
-                if osp.isfile(i) and is_ab_file(i):
-                    flist.append(i)
+        flist = collect_ab_files(src)
         tr_processed.update_demand(len(flist) - 1)
 
         if do_del:
@@ -471,137 +489,43 @@ def main(
         ctx = mp.get_context("spawn")
         worker_count = min(len(flist), PerformanceLevel.get_process_limit(Config.get("performance_level")))
         Logger.info(f"ResolveAB: Using {worker_count} worker processes for {len(flist)} files")
-
-        task_queue: mp.Queue = ctx.Queue(maxsize=max(64, worker_count * 8))
-        result_bus = ProcessResultBus(ctx)
-        result_sender = result_bus.create_sender()
-
-        fs_guard = FsGuardProcess(
-            ctx,
-            result_sender,
-            worker_count,
-            request_queue_maxsize=max(2, min(8, worker_count)),
-        )
         export_encoding = Config.get("export_encoding")
         export_json_indent = Config.get("export_json_indent")
-        workers = [
-            ctx.Process(
-                target=_worker_loop,
-                args=(
-                    task_queue,
-                    fs_guard.create_client_slot(idx),
-                    result_sender,
-                    export_encoding,
-                    export_json_indent,
-                ),
-                name=f"RsWorker:{idx}",
-                daemon=True,
-            )
-            for idx in range(worker_count)
-        ]
-        ProcessUtils.start_all(fs_guard, *workers)
+
         current_stage.set_value("正在分发任务")
-
-        worker_done = set()
-        fs_guard_done = False
-        fs_guard_stop_sent = False
-        fatal_error = None
-
-        def _set_fs_guard_done(_pid: int):
-            nonlocal fs_guard_done
-            fs_guard_done = True
-
-        result_bus = (
-            result_bus.set_on_file_queued(tr_file_saving.update_demand)
-            .set_on_file_saved(tr_file_saving.report)
-            .set_on_processed(tr_processed.report)
-            .set_on_worker_done(worker_done.add)
-            .set_on_fs_guard_done(_set_fs_guard_done)
-            .set_on_log(Logger.log)
-        )
-
-        for i in flist:
-            current_dir.set_value(osp.basename(osp.dirname(i)))
-            panel.update()
-            curdestdir = (
-                destdir
-                if osp.samefile(i, src)
-                else (
-                    osp.join(
-                        destdir,
-                        osp.relpath(osp.dirname(i), src),
-                        osp.splitext(osp.basename(i))[0],
-                    )
-                    if separate
-                    else osp.join(destdir, osp.relpath(osp.dirname(i), src))
-                )
+        with WorkerPool(
+            ctx=ctx,
+            worker_count=worker_count,
+            worker_target=_worker_loop,
+            worker_args_factory=lambda queue, fs_guard, sender, idx: (
+                queue,
+                fs_guard.create_client_slot(idx),
+                sender,
+                export_encoding,
+                export_json_indent,
+            ),
+            process_name="RsWorker",
+        ) as pool:
+            pool.set_handlers(
+                on_file_queued=tr_file_saving.update_demand,
+                on_file_saved=tr_file_saving.report,
+                on_processed=tr_processed.report,
+                on_log=Logger.log,
+                on_error=Logger.error,
+                on_tick=panel.update,
             )
-            task_queue.put(
-                ResolveABTask(
-                    abfile=i,
-                    destdir=curdestdir,
-                    do_img=do_img,
-                    do_txt=do_txt,
-                    do_aud=do_aud,
-                    do_mesh=do_mesh,
-                    do_tree=do_tree,
-                )
+            def _on_dispatch(task: ResolveABTask):
+                current_dir.set_value(osp.basename(osp.dirname(task.abfile)))
+                panel.update()
+
+            pool.dispatch(
+                _iter_ab_tasks(flist, src, destdir, separate, do_img, do_txt, do_aud, do_mesh, do_tree),
+                on_dispatch=_on_dispatch,
             )
-            result_bus.drain(timeout=0.0)
-            for worker in workers:
-                if worker.exitcode is not None and worker.pid not in worker_done:
-                    if worker.exitcode != 0:
-                        fatal_error = f'Worker process "{worker.name}" exited unexpectedly with code {worker.exitcode}'
-                        Logger.error(f"ResolveAB: {fatal_error}")
-                    worker_done.add(worker.pid)
-            if fatal_error:
-                break
-
-        for _ in workers:
-            task_queue.put(StopMessage())
-
-        current_stage.set_value("正在处理任务")
-        current_dir.set_value(None)
-
-        while len(worker_done) < len(workers) or not fs_guard_done:
-            result_bus.drain(timeout=0.1)
-
-            for worker in workers:
-                if worker.exitcode is not None and worker.pid not in worker_done:
-                    if worker.exitcode != 0:
-                        fatal_error = f'Worker process "{worker.name}" exited unexpectedly with code {worker.exitcode}'
-                        Logger.error(f"ResolveAB: {fatal_error}")
-                    worker_done.add(worker.pid)
-
-            if len(worker_done) == len(workers) and not fs_guard_stop_sent:
-                fs_guard.stop()
-                fs_guard_stop_sent = True
-
-            if fs_guard.exitcode is not None and not fs_guard_done:
-                if fs_guard.exitcode != 0:
-                    fatal_error = f"FsGuard process exited unexpectedly with code {fs_guard.exitcode}"
-                    Logger.error(f"ResolveAB: {fatal_error}")
-                fs_guard_done = True
-
-            if fatal_error:
-                break
-
-            panel.update()
-
-        result_bus.drain(timeout=0.0)
-        if fatal_error:
-            ProcessUtils.terminate_all(*workers, fs_guard)
-            raise RuntimeError(fatal_error)
+            current_stage.set_value("正在处理任务")
+            current_dir.set_value(None)
     finally:
         panel.stop()
-
-    ProcessUtils.join_all(*workers, fs_guard)
-    result_bus.drain(timeout=0.0)
-    for worker in workers:
-        if worker.exitcode not in (0, None):
-            raise RuntimeError(f'Worker process "{worker.name}" exited with code {worker.exitcode}')
-    if fs_guard.exitcode not in (0, None):
-        raise RuntimeError(f"FsGuard process exited with code {fs_guard.exitcode}")
 
     CLI.show_summary(
         "批量解包结束",

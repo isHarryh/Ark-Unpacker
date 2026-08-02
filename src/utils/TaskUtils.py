@@ -1,6 +1,6 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
-from typing import Callable, Optional, Set, Union
+from typing import Any, Callable, Iterable, Optional, Set, Union
 
 import asyncio
 import psutil
@@ -40,7 +40,7 @@ class ThreadCtrl:
     ):
         """Creates a sub thread and run it."""
         while self.count_subthread() >= self.__max:
-            pass
+            time.sleep(0.01)
         ts = threading.Thread(
             target=fun,
             args=args if args is not None else (),
@@ -50,6 +50,60 @@ class ThreadCtrl:
         )
         self.__sts.append(ts)
         ts.start()
+
+    # EndClass
+
+
+class ThreadPool:
+    """Runs a batch of tasks on a pool of worker threads.
+
+    The pool handles task distribution and completion waiting internally, so
+    that callers only need to provide the tasks and the worker entry point.
+    """
+
+    def __init__(
+        self,
+        worker_target: Callable,
+        worker_args_factory: Callable[[Any], tuple],
+        thread_name: str = "Worker",
+        max_subthread: Optional[int] = None,
+    ):
+        self._ctrl = ThreadCtrl(max_subthread)
+        self._worker_target = worker_target
+        self._worker_args_factory = worker_args_factory
+        self._thread_name = thread_name
+        self._on_tick: Optional[Callable[[], None]] = None
+
+    def set_handlers(self, *, on_tick: Optional[Callable[[], None]] = None):
+        self._on_tick = on_tick
+        return self
+
+    def dispatch(self, tasks: Iterable, on_dispatch: Optional[Callable[[Any], None]] = None):
+        """Distributes the given tasks to the worker threads."""
+        for task in tasks:
+            if on_dispatch is not None:
+                on_dispatch(task)
+            self._ctrl.run_subthread(
+                self._worker_target,
+                self._worker_args_factory(task),
+                name=f"{self._thread_name}:{id(task)}",
+            )
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            self._wait_for_completion()
+        return False
+
+    def _wait_for_completion(self):
+        from .SaverUtils import SafeSaver
+
+        while self._ctrl.count_subthread() or not SafeSaver.get_instance().completed():
+            if self._on_tick is not None:
+                self._on_tick()
+            time.sleep(0.1)
 
     # EndClass
 

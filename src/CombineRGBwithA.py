@@ -6,7 +6,6 @@ import glob
 import numpy as np
 import os.path as osp
 import re
-import time
 from PIL import Image
 
 from .ui.RichCLI import RichCLI
@@ -14,7 +13,7 @@ from .ui.TaskLive import TaskDetailField, TaskLiveView, TaskValueField
 from .utils.GlobalMethods import rmdir, is_image_file
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
-from .utils.TaskUtils import ThreadCtrl, TaskReporter, TaskReporterTracker
+from .utils.TaskUtils import TaskReporter, TaskReporterTracker, ThreadPool
 
 CLI = RichCLI.get_instance()
 
@@ -216,6 +215,20 @@ def image_resize(img: Image.Image, size: tuple):
     return img
 
 
+def collect_alpha_images(rootdir: str) -> List[str]:
+    """Collects all the alpha images from the given directory recursively.
+
+    :param rootdir: Source directory;
+    :returns: A list of alpha image file paths;
+    :rtype: List[str];
+    """
+    flist = []
+    for i in glob.iglob(osp.join(glob.escape(rootdir), "**", "*"), recursive=True):
+        if osp.isfile(i) and is_image_file(i) and AlphaRGBSearcher.calc_real_name(i) is not None:
+            flist.append(i)
+    return flist
+
+
 def image_resolve(
     fp: str,
     destdir: str,
@@ -268,7 +281,6 @@ def main(rootdir: str, destdir: str, do_del: bool = False):
     Logger.reset_stats()
     SafeSaver.get_instance().reset_counter()
 
-    thread_ctrl = ThreadCtrl()
     tr_processed = TaskReporter(2, 1)
     tr_file_saving = TaskReporter(1)
     tracker = TaskReporterTracker(tr_processed, tr_file_saving)
@@ -293,10 +305,7 @@ def main(rootdir: str, destdir: str, do_del: bool = False):
         Logger.info("CombineRGBwithA: Retrieving file paths...")
         rootdir = osp.normpath(osp.realpath(rootdir))
         destdir = osp.normpath(osp.realpath(destdir))
-        flist = []
-        for i in glob.iglob(osp.join(glob.escape(rootdir), "**", "*"), recursive=True):
-            if osp.isfile(i) and is_image_file(i) and AlphaRGBSearcher.calc_real_name(i) is not None:
-                flist.append(i)
+        flist = collect_alpha_images(rootdir)
         tr_processed.update_demand(len(flist) - 1)
 
         if do_del:
@@ -305,28 +314,27 @@ def main(rootdir: str, destdir: str, do_del: bool = False):
             rmdir(destdir)  # 慎用，会预先删除目的地目录的所有内容
 
         current_stage.set_value("正在分发任务")
-        for i in flist:
-            current_dir.set_value(osp.basename(osp.dirname(i)))
-            current_file.set_value(osp.basename(i))
-            panel.update()
-            thread_ctrl.run_subthread(
-                image_resolve,
-                (
-                    i,
-                    osp.join(destdir, osp.relpath(osp.dirname(i), rootdir)),
-                    tr_processed.report,
-                    tr_file_saving.update_demand,
-                    tr_file_saving.report,
-                ),
-                name=f"CBThread:{id(i)}",
-            )
+        with ThreadPool(
+            worker_target=image_resolve,
+            worker_args_factory=lambda i: (
+                i,
+                osp.join(destdir, osp.relpath(osp.dirname(i), rootdir)),
+                tr_processed.report,
+                tr_file_saving.update_demand,
+                tr_file_saving.report,
+            ),
+            thread_name="CBThread",
+        ) as pool:
+            def _on_dispatch(task):
+                current_dir.set_value(osp.basename(osp.dirname(task)))
+                current_file.set_value(osp.basename(task))
+                panel.update()
 
-        current_stage.set_value("正在处理任务")
-        current_dir.set_value(None)
-        current_file.set_value(None)
-        while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
-            panel.update()
-            time.sleep(0.1)
+            pool.set_handlers(on_tick=panel.update)
+            pool.dispatch(flist, on_dispatch=_on_dispatch)
+            current_stage.set_value("正在处理任务")
+            current_dir.set_value(None)
+            current_file.set_value(None)
     finally:
         panel.stop()
 

@@ -3,6 +3,7 @@
 from typing import List
 
 import importlib
+import glob
 import os
 import os.path as osp
 import pkgutil
@@ -77,6 +78,46 @@ def is_ab_file(path: str) -> bool:
     :rtype: bool;
     """
     return any(path.lower().endswith(ext) for ext in _EXT_AB)
+
+
+def collect_ab_files(src: str) -> List[str]:
+    """Collects all the AB files from the given file or directory recursively.
+
+    :param src: Source file or directory;
+    :returns: A list of AB file paths;
+    :rtype: List[str];
+    """
+    flist = [src] if osp.isfile(src) else []
+    if osp.isdir(src):
+        for i in glob.iglob(osp.join(glob.escape(src), "**", "*"), recursive=True):
+            if osp.isfile(i) and is_ab_file(i):
+                flist.append(i)
+    return flist
+
+
+def calc_destdir(abfile: str, src: str, destdir: str, separate: bool) -> str:
+    """Calculates the destination directory of the given AB file.
+
+    :param abfile: Path to the AB file;
+    :param src: Source file or directory;
+    :param destdir: Destination directory;
+    :param separate: Whether to group the files by their source AB file path;
+    :returns: The destination directory path;
+    :rtype: str;
+    """
+    return (
+        destdir
+        if osp.samefile(abfile, src)
+        else (
+            osp.join(
+                destdir,
+                osp.relpath(osp.dirname(abfile), src),
+                osp.splitext(osp.basename(abfile))[0],
+            )
+            if separate
+            else osp.join(destdir, osp.relpath(osp.dirname(abfile), src))
+        )
+    )
 
 
 def is_usm_file(path: str) -> bool:

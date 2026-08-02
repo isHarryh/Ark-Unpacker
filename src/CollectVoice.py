@@ -6,7 +6,6 @@ import glob
 import json
 import os.path as osp
 import threading
-import time
 from io import BytesIO
 from pydub import AudioSegment
 
@@ -16,7 +15,7 @@ from .utils.Config import Config
 from .utils.GlobalMethods import rmdir
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
-from .utils.TaskUtils import ThreadCtrl, Counter, TaskReporter, TaskReporterTracker
+from .utils.TaskUtils import Counter, TaskReporter, TaskReporterTracker, ThreadPool
 
 _INTERNAL_LOCK = threading.Lock()
 CLI = RichCLI.get_instance()
@@ -141,34 +140,35 @@ def main(srcdir: str, destdir: str, force_std_name: bool):
         flist = list(filter(lambda x: osp.basename(x[0]).startswith("char_"), flist))
         info_merged = {}
 
-        thread_ctrl = ThreadCtrl()
         tr_finished = TaskReporter(1, len(flist))
         tracker = TaskReporterTracker(tr_finished)
         panel.bind_tracker(tracker)
         current_stage.set_value("正在分拣语音")
 
-        for upkdir, destdir in flist:
-            current_search.set_value(osp.basename(upkdir))
-            panel.update()
-            thread_ctrl.run_subthread(
-                collect_voice,
-                (
-                    upkdir,
-                    destdir,
-                    False,
-                    force_std_name,
-                    info_merged,
-                    tr_finished.report,
-                    collected.update,
-                ),
-                name=f"CvThread:{id(upkdir)}",
+        def _make_worker_args(task: tuple) -> tuple:
+            return (
+                task[0],
+                task[1],
+                False,
+                force_std_name,
+                info_merged,
+                tr_finished.report,
+                collected.update,
             )
 
-        current_search.set_value(None)
-        current_stage.set_value("正在等待任务完成")
-        while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
+        def _on_dispatch(task: tuple):
+            current_search.set_value(osp.basename(task[0]))
             panel.update()
-            time.sleep(0.1)
+
+        with ThreadPool(
+            worker_target=collect_voice,
+            worker_args_factory=_make_worker_args,
+            thread_name="CvThread",
+        ) as pool:
+            pool.set_handlers(on_tick=panel.update)
+            pool.dispatch(flist, on_dispatch=_on_dispatch)
+            current_search.set_value(None)
+            current_stage.set_value("正在等待任务完成")
     finally:
         panel.stop()
 

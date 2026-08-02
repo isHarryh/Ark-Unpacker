@@ -6,15 +6,12 @@ import glob
 import os.path as osp
 import re
 import shutil
-import time
-
 from .ui.RichCLI import RichCLI
 from .ui.TaskLive import TaskDetailField, TaskLiveView, TaskValueField
 from .ResolveSpine import SpineType
 from .utils.GlobalMethods import rmdir
 from .utils.Logger import Logger
-from .utils.SaverUtils import SafeSaver
-from .utils.TaskUtils import ThreadCtrl, Counter, TaskReporter, TaskReporterTracker
+from .utils.TaskUtils import Counter, TaskReporter, TaskReporterTracker, ThreadPool
 
 CLI = RichCLI.get_instance()
 
@@ -126,26 +123,27 @@ def main(srcdirs: Sequence[str], destdirs: Sequence[str]):
                 if osp.isdir(upkdir):
                     flist.append((upkdir, destdir))
 
-        thread_ctrl = ThreadCtrl()
         tr_finished = TaskReporter(1, len(flist))
         tracker = TaskReporterTracker(tr_finished)
         panel.bind_tracker(tracker)
         current_stage.set_value("正在分拣模型")
 
-        for upkdir, destdir in flist:
-            current_search.set_value(osp.basename(upkdir))
-            panel.update()
-            thread_ctrl.run_subthread(
-                collect_models,
-                (upkdir, destdir, True, tr_finished.report, collected.update),
-                name=f"CmThread:{id(upkdir)}",
-            )
+        def _make_worker_args(task: tuple) -> tuple:
+            return (*task, True, tr_finished.report, collected.update)
 
-        current_search.set_value(None)
-        current_stage.set_value("正在等待任务完成")
-        while thread_ctrl.count_subthread() or not SafeSaver.get_instance().completed() or tracker.get_progress() < 1:
+        def _on_dispatch(task: tuple):
+            current_search.set_value(osp.basename(task[0]))
             panel.update()
-            time.sleep(0.1)
+
+        with ThreadPool(
+            worker_target=collect_models,
+            worker_args_factory=_make_worker_args,
+            thread_name="CmThread",
+        ) as pool:
+            pool.set_handlers(on_tick=panel.update)
+            pool.dispatch(flist, on_dispatch=_on_dispatch)
+            current_search.set_value(None)
+            current_stage.set_value("正在等待任务完成")
     finally:
         panel.stop()
 
