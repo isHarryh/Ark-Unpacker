@@ -16,8 +16,6 @@ test/usm
 
 # Include
 !.github/
-!.vscode/
 !docs/
 !src/
 !test/
-.vscode/
