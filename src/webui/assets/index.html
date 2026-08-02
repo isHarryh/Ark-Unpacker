@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>ArkUnpacker · 资源浏览器</title>
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="返回资源根目录">
+        <span class="brand-mark">A</span>
+        <span><strong>ARK</strong><small>RESOURCE BROWSER</small></span>
+      </a>
+      <form id="root-form" class="root-picker">
+        <span class="root-label">ROOT</span>
+        <input id="root-input" autocomplete="off" spellcheck="false" aria-label="资源根目录">
+        <button type="submit">打开目录</button>
+      </form>
+      <button id="settings-button" class="settings-button" type="button" aria-label="界面设置">
+        <span>⚙</span><b>设置</b>
+      </button>
+      <span id="server-state" class="server-state"><i></i> LOCAL</span>
+    </header>
+
+    <aside class="sidebar">
+      <div class="side-heading">资源类型</div>
+      <nav id="kind-nav" class="kind-nav" aria-label="资源类型筛选">
+        <button class="active" data-kind="all"><span class="nav-icon">⌘</span>全部资源<em id="count-all">—</em></button>
+        <button data-kind="bundle"><span class="nav-icon">⬡</span>AssetBundle<em id="count-bundle">—</em></button>
+        <button data-kind="image"><span class="nav-icon">◫</span>图片<em id="count-image">—</em></button>
+        <button data-kind="audio"><span class="nav-icon">♫</span>音频<em id="count-audio">—</em></button>
+        <button data-kind="text"><span class="nav-icon">≡</span>文本<em id="count-text">—</em></button>
+        <button data-kind="video"><span class="nav-icon">▶</span>视频<em id="count-video">—</em></button>
+        <button data-kind="model"><span class="nav-icon">◇</span>模型<em id="count-model">—</em></button>
+      </nav>
+      <div class="side-note">
+        <strong>浏览提示</strong>
+        <p>点击 AB/BIN 可直接查看内部 Unity 对象，无需预先解包。</p>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <section class="workspace-head">
+        <div>
+          <div id="breadcrumbs" class="breadcrumbs"></div>
+          <h1 id="view-title">资源</h1>
+          <p id="view-subtitle">正在读取资源目录…</p>
+        </div>
+        <div class="tools">
+          <div class="search-box">
+            <span>⌕</span>
+            <input id="search-input" type="search" placeholder="搜索当前目录及子目录" autocomplete="off" aria-label="筛选资源">
+            <button id="regex-toggle" class="regex-toggle" type="button" aria-pressed="false" title="使用正则表达式">.*</button>
+            <kbd>Ctrl K</kbd>
+          </div>
+          <div class="date-filter">
+            <button id="date-filter-button" class="date-filter-button" type="button" aria-expanded="false" title="按修改时间筛选">◷ <span>时间</span></button>
+            <div id="date-filter-panel" class="date-filter-panel" hidden>
+              <strong>修改时间范围</strong>
+              <label>开始日期<input id="date-from" type="date"></label>
+              <label>结束日期<input id="date-to" type="date"></label>
+              <div><button id="clear-date-filter" type="button">清除</button><button id="apply-date-filter" type="button">应用</button></div>
+            </div>
+          </div>
+          <button id="refresh-button" class="icon-button" aria-label="刷新" title="刷新">↻</button>
+        </div>
+      </section>
+
+      <section class="table-wrap" aria-live="polite">
+        <table class="resource-table">
+          <thead>
+            <tr>
+              <th aria-sort="ascending"><button type="button" data-sort="name"><span>名称</span><i>↑</i></button></th>
+              <th aria-sort="none"><button type="button" data-sort="type"><span>类型</span><i></i></button></th>
+              <th aria-sort="none"><button type="button" data-sort="size"><span>大小</span><i></i></button></th>
+              <th aria-sort="none"><button type="button" data-sort="detail"><span id="detail-column-title">修改时间</span><i></i></button></th>
+            </tr>
+          </thead>
+          <tbody id="resource-list"></tbody>
+        </table>
+        <div id="empty-state" class="empty-state" hidden>
+          <span>⌁</span>
+          <strong>这里没有匹配的资源</strong>
+          <p>尝试清除搜索条件或切换资源类型。</p>
+        </div>
+        <div id="loading" class="loading"><i></i><span>正在索引资源</span></div>
+      </section>
+    </main>
+
+    <div id="inspector-resizer" class="inspector-resizer" role="separator" aria-orientation="vertical" aria-label="调整预览栏宽度" tabindex="0"></div>
+    <aside id="inspector" class="inspector">
+      <div class="inspector-head">
+        <span>资源预览</span>
+        <button id="close-inspector" aria-label="关闭预览">×</button>
+      </div>
+      <div id="preview" class="preview">
+        <div class="preview-placeholder"><span>◈</span><p>选择一个资源以查看详情</p></div>
+      </div>
+      <div id="metadata" class="metadata"></div>
+      <a id="download-button" class="download-button" href="#" hidden>下载资源 <span>↓</span></a>
+    </aside>
+
+    <div id="toast" class="toast" role="status"></div>
+    <div id="resource-tooltip" class="resource-tooltip" role="tooltip" hidden></div>
+  </div>
+
+  <div id="settings-modal" class="settings-modal" hidden>
+    <section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <header>
+        <div><small>APPEARANCE</small><h2 id="settings-title">界面设置</h2></div>
+        <button id="close-settings" type="button" aria-label="关闭设置">×</button>
+      </header>
+      <div class="setting-item">
+        <div>
+          <label for="font-scale">界面字号</label>
+          <p>同步放大资源列表、菜单、详情和预览文字。</p>
+        </div>
+        <output id="font-scale-value" for="font-scale">110%</output>
+        <input id="font-scale" type="range" min="85" max="150" value="110" step="5">
+        <div class="range-labels"><span>较小</span><span>默认</span><span>较大</span></div>
+      </div>
+      <div class="setting-item compact">
+        <div><strong>预览栏宽度</strong><p>也可以直接拖动预览栏左侧边缘。</p></div>
+        <button id="reset-inspector-width" type="button">恢复默认</button>
+      </div>
+      <footer><button id="reset-settings" type="button">恢复全部默认设置</button></footer>
+    </section>
+  </div>
+  <script src="/assets/app.js" defer></script>
+</body>
+</html>

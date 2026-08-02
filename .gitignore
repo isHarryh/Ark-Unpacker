@@ -20,3 +20,4 @@ test/usm
 !docs/
 !src/
 !test/
+.vscode/

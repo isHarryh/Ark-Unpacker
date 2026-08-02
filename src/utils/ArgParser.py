@@ -46,6 +46,27 @@ class _ArkUnpackerArgParser(argparse.ArgumentParser):
             help="show a version message and exit",
         )
         parser.add_argument(
+            "--webui",
+            action="store_true",
+            help="start the local web resource browser; use --input to set its initial root",
+        )
+        parser.add_argument(
+            "--host",
+            default="127.0.0.1",
+            help="in web UI mode: listen address, defaults to 127.0.0.1",
+        )
+        parser.add_argument(
+            "--port",
+            default=0,
+            type=int,
+            help="in web UI mode: listen port, 0 chooses an available port",
+        )
+        parser.add_argument(
+            "--no-browser",
+            action="store_true",
+            help="in web UI mode: do not open the default browser automatically",
+        )
+        parser.add_argument(
             "-m",
             "--mode",
             choices=["ab", "cb", "fb", "sp", "cu"],

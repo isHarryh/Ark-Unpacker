@@ -43,6 +43,7 @@ def prt_homepage():
             MenuOption("6", "自定义 Criware USM 提取", "提取过场动画并进行格式转换"),
             MenuOption("7", "ArkModels 工具", "面向 Ark-Models 仓库更新的专用工作流"),
             MenuOption("8", "ArkVoice 工具", "面向 Ark-Voice 仓库更新的专用工作流"),
+            MenuOption("9", "资源浏览 WebUI", "在浏览器中查看目录和 AssetBundle 内部资源"),
             MenuOption("0", "退出"),
         ],
     )
@@ -642,13 +643,25 @@ if __name__ == "__main__":
                 border_style="cyan",
             )
             sys.exit(0)
+        if getattr(args, "webui", False):
+            if args.port < 0 or args.port > 65535:
+                parser.error("web UI port should be between 0 and 65535")
+            from src.webui.server import run_server
+
+            run_server(
+                root=args.input or ".",
+                host=args.host,
+                port=args.port,
+                open_browser=not args.no_browser,
+            )
+            sys.exit(0)
         if getattr(args, "mode", None) is None:
             # No argument input -> ENTER -> Interactive CLI mode
             while True:
                 try:
                     CLI.title("ArkUnpacker")
                     prt_homepage()
-                    order = UserInput.request_options(["0", "1", "2", "3", "4", "5", "6", "7", "8"])
+                    order = UserInput.request_options(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
                     if order == "1":
                         run_quickaccess()
                         prt_continue()
@@ -671,6 +684,10 @@ if __name__ == "__main__":
                         run_arkmodels_workflow()
                     elif order == "8":
                         run_arkvoice_workflow()
+                    elif order == "9":
+                        from src.webui.server import run_server
+
+                        run_server(root=".")
                     elif order == "0":
                         break
                 except InterruptedError as arg:
