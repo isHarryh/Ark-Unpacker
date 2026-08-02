@@ -8,6 +8,23 @@
 
 -----
 
+## v5.1
+#### 修复 (Fixed)
+1. ★ \([#33](https://github.com/isHarryh/Ark-Unpacker/pull/33)\) 修复了解包大量文件时可能的进度假死问题。  
+   [EN] Fixed the potential progress freeze issue when unpacking a large number of files.
+
+#### 优化 (Improved)
+1. ★ 重构了任务调度和 Worker Pool。  
+   [EN] Refactored task scheduling and worker pool.
+
+#### 依赖 (Dependencies)
+1. ☆ 将 UnityPy 升级到了 1.25.3。  
+   [EN] Upgraded UnityPy to 1.25.3.
+2. ☆ 将 ArkFBSPy 库升级到游戏版本 2.7.61。  
+   [EN] Upgraded ArkFBSPy to game version 2.7.61.
+3. 将 pyinstaller 升级到了 6.20.0。  
+   [EN] Upgraded pyinstaller to 6.20.0.
+
 ## v5.0
 #### 新增 (Added)
 1. ★ 新增了多进程 AssetBundle 文件解包的特性（先前是多线程解包），大幅提升了解包速度。  
@@ -34,9 +51,9 @@
 #### 构建 (Build)
 1. ★ 弃用了 Python 3.9。  
    [EN] Dropped support for Python 3.9.
-3. 更新了自动化构建的工作流脚本。  
+2. 更新了自动化构建的工作流脚本。  
    [EN] Updated workflow scripts for automated builds.
-2. 将 Poetry 升级到了 2.3.2。  
+3. 将 Poetry 升级到了 2.3.2。  
    [EN] Upgraded Poetry to 2.3.2.
 
 #### 补丁 (Patch)
