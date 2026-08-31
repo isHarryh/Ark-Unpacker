@@ -435,11 +435,64 @@ def pfb_resolve(srcdir: str) -> dict:
     return all_mappings
 
 
+def _is_redundant_spine(spine: SpineAsset, peers: Sequence[SpineAsset]) -> bool:
+    """Checks whether the given spine is redundant among its same-named peers.
+
+    This usually happens on some specific dynamic illustrations,
+    where the redundant one typically contains only a subset of the animations
+    of the complete model, and is therefore not expected.
+
+    :param spine: The spine asset to check;
+    :param peers: Other spine assets that share the same group key;
+    :returns: `True` if the spine's animation set is a strict subset of another peer's;
+    """
+    anims = {a.name.lower() for a in spine.skel_handler.skeleton_data.animations}
+    if not anims:
+        return False
+    for peer in peers:
+        peer_anims = {a.name.lower() for a in peer.skel_handler.skeleton_data.animations}
+        if anims < peer_anims:
+            return True
+    return False
+
+
+def _filter_redundant_same_named_spines(spines: Sequence[SpineAsset]) -> List[SpineAsset]:
+    """Filters out redundant same-named spine assets extracted from one resource.
+
+    :param spines: The spine assets extracted from one resource;
+    :returns: The filtered spine assets;
+    """
+
+    def _get_spine_group_key(spine: SpineAsset) -> str:
+        """Gets the group key of the given spine asset, i.e. its export directory."""
+        base = osp.splitext(osp.basename(spine.atlas_handler.original_name))[0].lower()
+        return f"{spine.type.value}/{base}"
+
+    groups: Dict[str, List[SpineAsset]] = {}
+    for spine in spines:
+        groups.setdefault(_get_spine_group_key(spine), []).append(spine)
+
+    filtered = []
+    for key, group in groups.items():
+        if len(group) <= 1:
+            filtered.extend(group)
+            continue
+        for spine in group:
+            if _is_redundant_spine(spine, group):
+                Logger.info(
+                    f'ResolveSpine: Filtered out redundant same-named spine "{spine.skel_handler.name}" '
+                    f'whose animations are a subset of another spine of "{key}"'
+                )
+            else:
+                filtered.append(spine)
+    return filtered
+
+
 def _iter_resolved_spine_export_items(
     res: Resource,
     sd_name_mapping: SDPathID2NamesMap,
 ) -> Generator[SafeSaver.ExportItem, None, None]:
-    spines = SpineAsset.from_resource(res)
+    spines = _filter_redundant_same_named_spines(SpineAsset.from_resource(res))
     if len(spines) >= 10:
         Logger.info(f'ResolveSpine: "{res.name}" has {len(spines)} spines, unpacking it may take a long time.')
 
@@ -640,6 +693,7 @@ def main(
                 on_error=Logger.error,
                 on_tick=panel.update,
             )
+
             def _on_dispatch(task: ResolveSpineTask):
                 current_dir.set_value(osp.basename(osp.dirname(task.abfile)))
                 panel.update()
