@@ -8,6 +8,19 @@
 
 -----
 
+## v5.2
+#### 新增 (Added)
+1. ★ 新增了识别并过滤冗余同名 Spine 资源的特性，避免解包出动画不完整的重复模型。  
+   [EN] Added identification and filtering of redundant same-named spine assets, avoiding extraction of duplicated models with incomplete animations.
+
+#### 依赖 (Dependencies)
+1. ☆ 将 ArkFBSPy 库升级到游戏版本 2.7.71。  
+   [EN] Upgraded ArkFBSPy to game version 2.7.71.
+2. ☆ 将 wannacri 升级到了 0.3.3。  
+   [EN] Upgraded wannacri to 0.3.3.
+3. 将 pyinstaller 升级到了 6.22.3。  
+   [EN] Upgraded pyinstaller to 6.22.3.
+
 ## v5.1
 #### 修复 (Fixed)
 1. ★ \([#33](https://github.com/isHarryh/Ark-Unpacker/pull/33)\) 修复了解包大量文件时可能的进度假死问题。  
