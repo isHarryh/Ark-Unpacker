@@ -223,11 +223,13 @@ options:
 
 本项目基于 **BSD-3 开源协议**。任何人都可以自由地使用和修改项目内的源代码，前提是要在源代码或版权声明中保留作者说明和原有协议，且不可以使用本项目名称或作者名称进行宣传推广。
 
------
+---
 
 <div align="center">
-    <p><i>GitHub 历史星标图</i></p>
-    <a href="https://starchart.cc/isHarryh/Ark-Unpacker">
-       <img alt="Stars Chart" src="https://starchart.cc/isHarryh/Ark-Unpacker.svg?variant=adaptive">
-    </a>
+   <p><i>GitHub Star History</i></p>
+   <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=isharryh/ark-unpacker&type=date&theme=dark&legend=top-left" />
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=isharryh/ark-unpacker&type=date&legend=top-left" />
+      <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=isharryh/ark-unpacker&type=date&legend=top-left" />
+   </picture>
 </div>
