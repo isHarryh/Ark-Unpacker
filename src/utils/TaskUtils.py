@@ -1,6 +1,7 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
 import asyncio
+import inspect
 import queue
 import threading
 import time
@@ -257,7 +258,7 @@ class CoroutineCtrl:
             async with self.__semaphore:
                 try:
                     # Check if handler is async
-                    if asyncio.iscoroutinefunction(self.__handler):
+                    if inspect.iscoroutinefunction(self.__handler):
                         await self.__handler(*data)
                     else:
                         # Run sync handler in thread pool
@@ -280,7 +281,7 @@ class CoroutineCtrl:
 
                 # Clean up completed tasks
                 if running_tasks:
-                    running_tasks -= set(map(asyncio.Task.done, running_tasks))
+                    running_tasks = {task for task in running_tasks if not task.done()}
 
                 # Check if we have room for more tasks
                 if len(running_tasks) < self.__max_concurrency:
