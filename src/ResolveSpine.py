@@ -1,27 +1,32 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
-from enum import StrEnum
-import multiprocessing as mp
-from typing import Callable, Collection, Dict, Generator, List, Optional, Sequence, Union
-
 import glob
+import multiprocessing as mp
 import os.path as osp
+from collections.abc import Callable, Collection, Generator, Sequence
+from enum import StrEnum
 
 import UnityPy
 import UnityPy.classes as uc
-from spine_asset.v38 import AtlasFile, SkeletonBinary, SkeletonJson, SkeletonData
+from spine_asset.v38 import AtlasFile, SkeletonBinary, SkeletonData, SkeletonJson
 
-from .ResolveAB import Resource, TreeReader
 from .CombineRGBwithA import AlphaRGBCombiner, image_resize
 from .mp.FsGuardProcess import FsGuardClient, FsGuardClientSlot
 from .mp.Messages import ResolveSpineTask, StopMessage
-from .mp.ProcessResultBus import ProcessResultSender
 from .mp.ProcessReporter import ProcessReporter
+from .mp.ProcessResultBus import ProcessResultSender
 from .mp.WorkerPool import WorkerPool
+from .ResolveAB import Resource, TreeReader
 from .ui.RichCLI import RichCLI
 from .ui.TaskLive import TaskDetailField, TaskLiveView, TaskValueField
 from .utils.Config import Config, PerformanceLevel
-from .utils.GlobalMethods import rmdir, is_ab_file, stacktrace, collect_ab_files, calc_destdir
+from .utils.GlobalMethods import (
+    calc_destdir,
+    collect_ab_files,
+    is_ab_file,
+    rmdir,
+    stacktrace,
+)
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
 from .utils.TaskUtils import TaskReporter, TaskReporterTracker
@@ -29,7 +34,7 @@ from .utils.TaskUtils import TaskReporter, TaskReporterTracker
 CLI = RichCLI.get_instance()
 
 
-SDPathID2NamesMap = Dict[int, Union[str, List[str]]]
+SDPathID2NamesMap = dict[int, str | list[str]]
 
 
 class SpineType(StrEnum):
@@ -44,7 +49,7 @@ class SpineType(StrEnum):
 
 
 class SpineAssetHandler:
-    def __init__(self, obj: Union[uc.TextAsset, uc.Texture2D]):
+    def __init__(self, obj: uc.TextAsset | uc.Texture2D):
         self.obj = obj
         self.original_name = obj.m_Name
 
@@ -139,7 +144,7 @@ class SpineSkeletonHandler(SpineAssetHandler):
 
 
 class SpineTextureHandler(SpineAssetHandler):
-    def __init__(self, tex_rgb: uc.Texture2D, tex_alpha: Optional[uc.Texture2D] = None):
+    def __init__(self, tex_rgb: uc.Texture2D, tex_alpha: uc.Texture2D | None = None):
         super().__init__(tex_rgb)
         self.tex_rgb = tex_rgb
         self.tex_alpha = tex_alpha
@@ -159,8 +164,8 @@ class SpineAsset:
         atlas_handler: SpineAtlasHandler,
         skel_handler: SpineSkeletonHandler,
         tex_pairs: Sequence[SpineTextureHandler],
-        sd_pathid: Optional[int] = None,
-        type_: Optional[SpineType] = None,
+        sd_pathid: int | None = None,
+        type_: SpineType | None = None,
     ):
         """Initializes a Spine asset with the given handlers.
 
@@ -181,7 +186,7 @@ class SpineAsset:
                 type_ = atlas_handler.guess_type()
         self.type = type_
 
-    def process_path(self, custom_folder_name: Optional[str] = None):
+    def process_path(self, custom_folder_name: str | None = None):
         """Sets the path prefix for all associated Spine asset objects based on type and folder name.
 
         :param custom_folder_name: Custom folder name to use instead of the atlas name, optional;
@@ -281,7 +286,7 @@ class SpineAsset:
         return mapping
 
     @classmethod
-    def from_resource(cls, res: Resource) -> List["SpineAsset"]:
+    def from_resource(cls, res: Resource) -> list["SpineAsset"]:
         """Gets Spine assets from the given resource.
 
         :param res: The Resource instance to extract Spine assets from;
@@ -300,7 +305,7 @@ class SpineAsset:
                 # ad = AtlasData
                 with TreeReader(mono_ad) as tree_ad:
                     atlas = res.get_object_by_pathid(tree_ad["atlasFile"], uc.TextAsset)
-                    tex_handlers: List[SpineTextureHandler] = []
+                    tex_handlers: list[SpineTextureHandler] = []
                     for mat in (res.get_object_by_pathid(i, uc.Material) for i in tree_ad["materials"]):
                         # mat = MaterialData
                         tex_rgb, tex_alpha = None, None
@@ -456,7 +461,7 @@ def _is_redundant_spine(spine: SpineAsset, peers: Sequence[SpineAsset]) -> bool:
     return False
 
 
-def _filter_redundant_same_named_spines(spines: Sequence[SpineAsset]) -> List[SpineAsset]:
+def _filter_redundant_same_named_spines(spines: Sequence[SpineAsset]) -> list[SpineAsset]:
     """Filters out redundant same-named spine assets extracted from one resource.
 
     :param spines: The spine assets extracted from one resource;
@@ -468,7 +473,7 @@ def _filter_redundant_same_named_spines(spines: Sequence[SpineAsset]) -> List[Sp
         base = osp.splitext(osp.basename(spine.atlas_handler.original_name))[0].lower()
         return f"{spine.type.value}/{base}"
 
-    groups: Dict[str, List[SpineAsset]] = {}
+    groups: dict[str, list[SpineAsset]] = {}
     for spine in spines:
         groups.setdefault(_get_spine_group_key(spine), []).append(spine)
 
@@ -514,9 +519,9 @@ def spine_resolve(
     abfile: str,
     destdir: str,
     sd_name_mapping: SDPathID2NamesMap,
-    on_processed: Optional[Callable] = None,
-    on_file_queued: Optional[Callable] = None,
-    on_file_saved: Optional[Callable] = None,
+    on_processed: Callable | None = None,
+    on_file_queued: Callable | None = None,
+    on_file_saved: Callable | None = None,
 ):
     """Extracts Spine assets from an AB file.
 
@@ -608,7 +613,7 @@ def main(
     destdir: str,
     do_del: bool = False,
     separate: bool = True,
-    pfb_dir: Optional[str] = None,
+    pfb_dir: str | None = None,
 ):
     """Extracts all Spine assets from the given directory or a given AB file.
 

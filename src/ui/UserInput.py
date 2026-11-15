@@ -3,9 +3,10 @@
 import os.path as osp
 import re
 import sys
-from typing import Callable, Optional, Sequence
+from collections.abc import Callable, Sequence
 
 from rich.text import Text
+
 from src.utils.GlobalMethods import try_shorten_path
 
 from .RichCLI import RichCLI
@@ -22,8 +23,8 @@ class UserInput:
     def _ask_text(
         prompt: str,
         *,
-        choices: Optional[Sequence[str]] = None,
-        default: Optional[str] = None,
+        choices: Sequence[str] | None = None,
+        default: str | None = None,
         case_sensitive: bool = True,
         inline_prompt: bool = False,
     ) -> str:
@@ -51,16 +52,16 @@ class UserInput:
 
     @staticmethod
     def _show_prompt_page(
-        title: Optional[str],
+        title: str | None,
         prompt: str,
         *,
-        rows: Optional[Sequence[tuple[str, object]]] = None,
-        note: Optional[str] = None,
-        error: Optional[str] = None,
-        input_label: Optional[str] = None,
-        input_choices: Optional[str] = None,
-        input_default: Optional[str] = None,
-        input_hint: Optional[str] = None,
+        rows: Sequence[tuple[str, object]] | None = None,
+        note: str | None = None,
+        error: str | None = None,
+        input_label: str | None = None,
+        input_choices: str | None = None,
+        input_default: str | None = None,
+        input_hint: str | None = None,
     ) -> str:
         normalized_error = error.rstrip("。").strip() if error else None
         if not title:
@@ -103,8 +104,8 @@ class UserInput:
 
     @staticmethod
     def _compose_note(
-        note: Optional[str],
-    ) -> Optional[str]:
+        note: str | None,
+    ) -> str | None:
         lines: list[str] = []
         if note:
             for line in note.splitlines():
@@ -115,7 +116,7 @@ class UserInput:
         return "\n".join(lines) if lines else None
 
     @staticmethod
-    def _compose_input_hint(note: Optional[str], *, lite: bool = False) -> str:
+    def _compose_input_hint(note: str | None, *, lite: bool = False) -> str:
         lines: list[str] = []
         if note:
             lines.extend([line.strip() for line in note.splitlines() if line.strip()])
@@ -126,7 +127,7 @@ class UserInput:
         return "\n".join(lines)
 
     @staticmethod
-    def _show_validation_error(title: Optional[str], message: str) -> Optional[str]:
+    def _show_validation_error(title: str | None, message: str) -> str | None:
         if title:
             return message
         UserInput._CLI.console.print(f"  {message.rstrip('。')}", style="bold red", markup=False, highlight=False)
@@ -136,11 +137,11 @@ class UserInput:
     def request(
         prompt: str = "» ",
         *,
-        title: Optional[str] = None,
-        rows: Optional[Sequence[tuple[str, object]]] = None,
+        title: str | None = None,
+        rows: Sequence[tuple[str, object]] | None = None,
         input_label: str = "请输入",
-        note: Optional[str] = None,
-        default: Optional[str] = None,
+        note: str | None = None,
+        default: str | None = None,
     ) -> str:
         input_hint = UserInput._compose_input_hint(UserInput._compose_note(note), lite=(title is None))
         ask_prompt = UserInput._show_prompt_page(
@@ -162,11 +163,11 @@ class UserInput:
     def request_options(
         options: Sequence[object],
         *,
-        title: Optional[str] = None,
-        rows: Optional[Sequence[tuple[str, object]]] = None,
+        title: str | None = None,
+        rows: Sequence[tuple[str, object]] | None = None,
         prompt: str = "请选择一个选项",
-        note: Optional[str] = None,
-        default: Optional[str] = None,
+        note: str | None = None,
+        default: str | None = None,
     ) -> str:
         choices = [str(option) for option in options]
         if not choices:
@@ -192,12 +193,12 @@ class UserInput:
     @staticmethod
     def request_input_path(
         *,
-        title: Optional[str] = None,
-        rows: Optional[Sequence[tuple[str, object]]] = None,
+        title: str | None = None,
+        rows: Sequence[tuple[str, object]] | None = None,
         prompt: str = "路径",
-        note: Optional[str] = None,
+        note: str | None = None,
     ) -> str:
-        error: Optional[str] = None
+        error: str | None = None
         note_text = note or "支持相对路径"
         while True:
             input_hint = UserInput._compose_input_hint(UserInput._compose_note(note_text), lite=(title is None))
@@ -223,13 +224,13 @@ class UserInput:
     @staticmethod
     def request_output_path(
         *,
-        default_generator: Optional[Callable[[], str]] = None,
-        title: Optional[str] = None,
-        rows: Optional[Sequence[tuple[str, object]]] = None,
+        default_generator: Callable[[], str] | None = None,
+        title: str | None = None,
+        rows: Sequence[tuple[str, object]] | None = None,
         prompt: str = "输出路径",
-        note: Optional[str] = None,
+        note: str | None = None,
     ) -> str:
-        error: Optional[str] = None
+        error: str | None = None
         note_text = note or ("支持相对路径" + ("，留空表示自动创建" if default_generator else ""))
         while True:
             input_hint = UserInput._compose_input_hint(UserInput._compose_note(note_text), lite=(title is None))
@@ -276,9 +277,9 @@ class UserInput:
         prompt: str,
         *,
         default: bool,
-        title: Optional[str] = None,
-        rows: Optional[Sequence[tuple[str, object]]] = None,
-        note: Optional[str] = None,
+        title: str | None = None,
+        rows: Sequence[tuple[str, object]] | None = None,
+        note: str | None = None,
     ) -> bool:
         default_text = "y" if default else "n"
         input_hint = UserInput._compose_input_hint(UserInput._compose_note(note), lite=(title is None))
@@ -337,8 +338,8 @@ class ParamInputSession:
         prompt: str,
         *,
         input_label: str = "请输入",
-        note: Optional[str] = None,
-        default: Optional[str] = None,
+        note: str | None = None,
+        default: str | None = None,
     ) -> str:
         return UserInput.request(
             prompt,
@@ -354,7 +355,7 @@ class ParamInputSession:
         key: str,
         *,
         prompt: str,
-        note: Optional[str] = None,
+        note: str | None = None,
     ) -> str:
         value = UserInput.request_input_path(
             title=self._title,
@@ -368,10 +369,10 @@ class ParamInputSession:
     def request_output_path(
         self,
         key: str,
-        default_generator: Optional[Callable[[], str]] = None,
+        default_generator: Callable[[], str] | None = None,
         *,
         prompt: str,
-        note: Optional[str] = None,
+        note: str | None = None,
     ) -> str:
         value = UserInput.request_output_path(
             default_generator=default_generator,
@@ -389,7 +390,7 @@ class ParamInputSession:
         default: bool,
         *,
         prompt: str,
-        note: Optional[str] = None,
+        note: str | None = None,
     ) -> bool:
         value = UserInput.request_yes_or_no(
             prompt,

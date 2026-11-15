@@ -1,14 +1,14 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
-from typing import Callable, Sequence
-
 import glob
 import os.path as osp
 import re
 import shutil
+from collections.abc import Callable, Sequence
+
+from .ResolveSpine import SpineType
 from .ui.RichCLI import RichCLI
 from .ui.TaskLive import TaskDetailField, TaskLiveView, TaskValueField
-from .ResolveSpine import SpineType
 from .utils.GlobalMethods import rmdir
 from .utils.Logger import Logger
 from .utils.TaskUtils import Counter, TaskReporter, TaskReporterTracker, ThreadPool

@@ -1,12 +1,11 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
-from typing import Callable, List, Optional, Union
-
 import glob
 import json
 import math
 import os.path as osp
 from collections import defaultdict
+from collections.abc import Callable
 
 import bson
 import numpy as np
@@ -16,7 +15,13 @@ from Crypto.Util.Padding import unpad
 from .ui.RichCLI import RichCLI
 from .ui.TaskLive import TaskDetailField, TaskLiveView, TaskValueField
 from .utils.Config import Config
-from .utils.GlobalMethods import rmdir, is_ab_file, is_known_asset_file, is_binary_file, get_modules_from_package_name
+from .utils.GlobalMethods import (
+    get_modules_from_package_name,
+    is_ab_file,
+    is_binary_file,
+    is_known_asset_file,
+    rmdir,
+)
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
 from .utils.TaskUtils import TaskReporter, TaskReporterTracker, ThreadPool
@@ -59,7 +64,7 @@ class ArkFBOLibrary:
 
         :param path: The file path;
         :returns: The root type or `None` indicates that the file may not be a FlatBuffer Object file;
-        :rtype: Type or None;
+        :rtype: type | None;
         """
         target = osp.basename(path)
         for m in ArkFBOLibrary.CN:
@@ -69,7 +74,7 @@ class ArkFBOLibrary:
         return None
 
     @staticmethod
-    def decode(path: str, root_type: Optional[type] = _AUTO_GUESS_ROOT_TYPE):
+    def decode(path: str, root_type: type | None = _AUTO_GUESS_ROOT_TYPE):
         """Decodes the given FlatBuffers binary file.
 
         :param path: The file path;
@@ -158,8 +163,8 @@ class ArkAESLibrary:
 class FBOHandler:
     """Handler for FlatBuffers Objects, implementing conversion to Python dict type."""
 
-    SERIALIZE_AS_IS = Union[bool, int, str, list, tuple, dict, None]
-    SERIALIZE_AS_STR = Union[bytes, bytearray, memoryview]
+    SERIALIZE_AS_IS = bool | int | str | list | tuple | dict | None
+    SERIALIZE_AS_STR = bytes | bytearray | memoryview
     SERIALIZE_ENCODING = None  # Will be dynamically retrieved
 
     def __init__(self, data: bytearray, root_type: type):
@@ -267,12 +272,12 @@ class FBOHandler:
         return FBOHandler._to_json_dict(self._root)
 
 
-def collect_text_assets(rootdir: str) -> List[str]:
+def collect_text_assets(rootdir: str) -> list[str]:
     """Collects all the possible TextAsset files from the given directory recursively.
 
     :param rootdir: Source directory;
     :returns: A list of file paths;
-    :rtype: List[str];
+    :rtype: list[str];
     """
     flist = []
     for i in glob.iglob(osp.join(glob.escape(rootdir), "**", "*"), recursive=True):
@@ -284,9 +289,9 @@ def collect_text_assets(rootdir: str) -> List[str]:
 def text_asset_resolve(
     fp: str,
     destdir: str,
-    on_processed: Optional[Callable],
-    on_file_queued: Optional[Callable],
-    on_file_saved: Optional[Callable],
+    on_processed: Callable | None,
+    on_file_queued: Callable | None,
+    on_file_saved: Callable | None,
 ):
     """Decodes the give Arknights TextAsset file that is either FBO stored format or AES encrypted format,
     otherwise does nothing.

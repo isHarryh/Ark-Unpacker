@@ -2,8 +2,9 @@
 # @ BSD 3-Clause License
 import multiprocessing as mp
 import queue
+from collections.abc import Callable
 from multiprocessing.context import SpawnContext
-from typing import Callable, Optional
+
 from .ProcessReporter import (
     RESULT_FILE_QUEUED,
     RESULT_FILE_SAVED,
@@ -11,19 +12,19 @@ from .ProcessReporter import (
     RESULT_LOG,
     RESULT_PROCESSED,
     RESULT_WORKER_DONE,
+    ProcessReporter,
 )
-from .ProcessReporter import ProcessReporter
 
 
 class _ProcessResultReceiver:
     def __init__(self, result_queue: mp.Queue):
         self._queue = result_queue
-        self._on_file_queued: Optional[Callable[[int], None]] = None
-        self._on_file_saved: Optional[Callable[[bool], None]] = None
-        self._on_log: Optional[Callable[[str, str], None]] = None
-        self._on_processed: Optional[Callable[[bool], None]] = None
-        self._on_worker_done: Optional[Callable[[int], None]] = None
-        self._on_fs_guard_done: Optional[Callable[[int], None]] = None
+        self._on_file_queued: Callable[[int], None] | None = None
+        self._on_file_saved: Callable[[bool], None] | None = None
+        self._on_log: Callable[[str, str], None] | None = None
+        self._on_processed: Callable[[bool], None] | None = None
+        self._on_worker_done: Callable[[int], None] | None = None
+        self._on_fs_guard_done: Callable[[int], None] | None = None
         self._handlers = {
             RESULT_FILE_QUEUED: self._handle_file_queued,
             RESULT_FILE_SAVED: self._handle_file_saved,

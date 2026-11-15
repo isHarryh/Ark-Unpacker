@@ -1,17 +1,9 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
-from typing import (
-    Collection,
-    Generator,
-    List,
-    Literal,
-    Optional,
-    Tuple,
-    TypeVar,
-    Union,
-)
 import multiprocessing as mp
 import os.path as osp
+from collections.abc import Collection, Generator
+from typing import Literal, TypeVar
 
 import UnityPy
 import UnityPy.classes as uc
@@ -23,13 +15,13 @@ from UnityPy.streams.EndianBinaryReader import EndianBinaryReader
 from .lz4ak.Block import decompress_lz4ak
 from .mp.FsGuardProcess import FsGuardClient, FsGuardClientSlot
 from .mp.Messages import ResolveABTask, StopMessage
-from .mp.ProcessResultBus import ProcessResultSender
 from .mp.ProcessReporter import ProcessReporter
+from .mp.ProcessResultBus import ProcessResultSender
 from .mp.WorkerPool import WorkerPool
 from .ui.RichCLI import RichCLI
 from .ui.TaskLive import TaskDetailField, TaskLiveView, TaskValueField
-from .utils.GlobalMethods import rmdir, collect_ab_files, calc_destdir
 from .utils.Config import Config, PerformanceLevel
+from .utils.GlobalMethods import calc_destdir, collect_ab_files, rmdir
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
 from .utils.TaskUtils import TaskReporter, TaskReporterTracker
@@ -42,7 +34,7 @@ _T = TypeVar("_T", bound=uc.Object)
 
 
 class TreeReader:
-    def __init__(self, obj: Optional[uc.Object]):
+    def __init__(self, obj: uc.Object | None):
         self.obj = getattr(obj, "object_reader", obj)
 
     def __enter__(self):
@@ -93,7 +85,7 @@ class Resource:
             all_pathid.add(reader.path_id)
         max_pathid = max(all_pathid) if all_pathid else 0
 
-        self._lut_pathid: dict[int, Tuple[ObjectReader, Optional[uc.Object]]] = {}
+        self._lut_pathid: dict[int, tuple[ObjectReader, uc.Object | None]] = {}
         for reader in self.env.objects:
             if reader.path_id in self._lut_pathid:
                 other_reader, _ = self._lut_pathid[reader.path_id]
@@ -109,7 +101,7 @@ class Resource:
             self._lut_pathid[reader.path_id] = (reader, None)
 
     def _build_type_lut(self):
-        self._lut_type: dict[str, List[int]] = {}
+        self._lut_type: dict[str, list[int]] = {}
         for reader in self.env.objects:
             clz = reader.get_class()
             if not clz:
@@ -119,7 +111,7 @@ class Resource:
             self._lut_type[clz.__name__].append(reader.path_id)
 
     def _build_roi_type_lut(self):
-        self._lut_roi_type: dict[str, List[int]] = {}
+        self._lut_roi_type: dict[str, list[int]] = {}
         for reader in self.env.objects:
             clz = reader.get_class()
             if not clz:
@@ -142,9 +134,9 @@ class Resource:
 
     def try_get_object_by_pathid(
         self,
-        pathid: Union[int, dict],
+        pathid: int | dict,
         assert_type: type[_T] = uc.Object,
-    ) -> Optional[_T]:
+    ) -> _T | None:
         """Tries to get the object with the given PathID.
 
         :param pathid: PathID in int or a dict containing `m_PathID` field;
@@ -158,7 +150,7 @@ class Resource:
 
     def get_object_by_pathid(
         self,
-        pathid: Union[int, dict],
+        pathid: int | dict,
         assert_type: type[_T] = uc.Object,
     ) -> _T:
         """Gets the object with the given PathID.
@@ -228,7 +220,7 @@ class Resource:
 
     def find_object_and_typetree_with_key(
         self, obj_type: type[_T], contains_keys: Collection[str]
-    ) -> Generator[Tuple[_T, dict], None, None]:
+    ) -> Generator[tuple[_T, dict], None, None]:
         """Finds all the objects of the given type whose typetree contains all the given keys.
 
         :param obj_type: The expected type of the objects;

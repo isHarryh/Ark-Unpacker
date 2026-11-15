@@ -1,6 +1,6 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
-from typing import Optional, Protocol
+from typing import Protocol
 
 
 class ProcessLike(Protocol):
@@ -8,7 +8,7 @@ class ProcessLike(Protocol):
 
     def start(self) -> None: ...
 
-    def join(self, timeout: Optional[float] = None) -> None: ...
+    def join(self, timeout: float | None = None) -> None: ...
 
     def terminate(self) -> None: ...
 
@@ -20,7 +20,7 @@ class ProcessUtils:
             process.start()
 
     @staticmethod
-    def join_all(*processes: ProcessLike, timeout: Optional[float] = None):
+    def join_all(*processes: ProcessLike, timeout: float | None = None):
         for process in processes:
             process.join(timeout=timeout)
 

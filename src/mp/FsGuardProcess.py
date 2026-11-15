@@ -6,12 +6,12 @@ import os.path as osp
 from functools import lru_cache
 from hashlib import blake2b
 from multiprocessing.context import SpawnContext
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 from .Messages import PrepareWriteRequest, PrepareWriteResponse, StopMessage
 from .Process import ProcessLike
-from .ProcessResultBus import ProcessResultSender
 from .ProcessReporter import ProcessReporter
+from .ProcessResultBus import ProcessResultSender
 
 
 class _FamilyState(NamedTuple):
@@ -22,7 +22,7 @@ class _FamilyState(NamedTuple):
 class _DirEntry(NamedTuple):
     name: str
     path: str
-    data_hash: Optional[bytes]
+    data_hash: bytes | None
 
 
 class _DirState(NamedTuple):
@@ -35,7 +35,7 @@ class FsGuardClient:
         request_queue: mp.Queue,
         response_queue: mp.Queue,
         worker_slot: int,
-        reporter: Optional[ProcessReporter] = None,
+        reporter: ProcessReporter | None = None,
     ):
         self._request_queue = request_queue
         self._response_queue = response_queue
@@ -43,7 +43,7 @@ class FsGuardClient:
         self._reporter = reporter
         self._request_id = 0
 
-    def prepare_write(self, destdir: str, name: str, ext: str, data_hash: bytes) -> Optional[str]:
+    def prepare_write(self, destdir: str, name: str, ext: str, data_hash: bytes) -> str | None:
         if self._reporter:
             self._reporter.file_queued()
         response = self._request(
@@ -79,7 +79,7 @@ class FsGuardClientSlot:
         self._response_queue = response_queue
         self._worker_slot = worker_slot
 
-    def create_client(self, reporter: Optional[ProcessReporter] = None) -> FsGuardClient:
+    def create_client(self, reporter: ProcessReporter | None = None) -> FsGuardClient:
         return FsGuardClient(
             self._request_queue,
             self._response_queue,
@@ -127,7 +127,7 @@ class FsGuardProcess(ProcessLike):
     def is_alive(self) -> bool:
         return self._process.is_alive()
 
-    def join(self, timeout: Optional[float] = None) -> None:
+    def join(self, timeout: float | None = None) -> None:
         self._process.join(timeout=timeout)
 
     def start(self) -> None:
@@ -242,7 +242,7 @@ class _FsGuardRuntime:
                     continue
                 entry_name, entry_ext = osp.splitext(entry.name)
                 entry_path = self._normalize_path(entry.path)
-                entry_hash: Optional[bytes] = None
+                entry_hash: bytes | None = None
                 try:
                     entry_hash = self._hash_file(entry.path)
                 except Exception as arg:

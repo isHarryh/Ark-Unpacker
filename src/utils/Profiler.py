@@ -1,7 +1,5 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
-from typing import Dict, List
-
 import threading
 import time
 from collections import defaultdict
@@ -19,7 +17,7 @@ class CodeProfiler(ContextDecorator):
     ```
     """
 
-    _records: Dict[str, List[float]] = defaultdict(list)
+    _records: dict[str, list[float]] = defaultdict(list)
     _internal_lock = threading.Lock()
 
     def __init__(self, name: str):

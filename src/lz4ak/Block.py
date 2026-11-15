@@ -1,12 +1,11 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
-from typing import Union
-
 import lz4
 import lz4.block
+
 from ..utils.Profiler import CodeProfiler
 
-ByteString = Union[bytes, bytearray, memoryview]
+ByteString = bytes | bytearray | memoryview
 
 
 def _read_extra_length(data: ByteString, cur_pos: int, max_pos: int) -> tuple[int, int]:

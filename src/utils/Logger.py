@@ -2,8 +2,8 @@
 # @ BSD 3-Clause License
 import queue
 import threading
+from collections.abc import Callable
 from datetime import datetime
-from typing import Callable, Optional
 
 
 class Logger:
@@ -12,7 +12,7 @@ class Logger:
     __time_format = "%Y-%m-%d %H:%M:%S"
     __file_encoding = "UTF-8"
     __instance = None
-    __forwarder: Optional[Callable[[str, str], None]] = None
+    __forwarder: Callable[[str, str], None] | None = None
 
     LV_NONE = 0
     LV_ERROR = 1
@@ -190,7 +190,7 @@ class Logger:
                 pass
 
     @staticmethod
-    def set_forwarder(forwarder: Optional[Callable[[str, str], None]]):
+    def set_forwarder(forwarder: Callable[[str, str], None] | None):
         """Sets logger forwarder when logger instance is unavailable (e.g. worker process).
 
         :param forwarder: Callback that consumes `(level, message)`, `None` to disable.

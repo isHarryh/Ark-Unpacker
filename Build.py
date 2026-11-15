@@ -2,12 +2,15 @@
 # @ BSD 3-Clause License
 import os
 import os.path as osp
+import re
+import shutil
+import subprocess
+import time
+
 import toml
 
 
-def __get_venv_dir():
-    import re, subprocess
-
+def __get_venv_dir() -> str:
     rst = subprocess.run(["poetry", "env", "info"], capture_output=True)
 
     if rst.returncode == 0:
@@ -27,7 +30,7 @@ def __get_venv_dir():
     raise Exception("venv dir not found or poetry config failed")
 
 
-def __get_proj_info():
+def __get_proj_info() -> dict[str, str]:
     try:
         config = toml.load("pyproject.toml")
         config = config["project"]
@@ -46,7 +49,7 @@ def __get_proj_info():
         raise arg
 
 
-def __get_build_def(proj_dir, venv_dir):
+def __get_build_def(proj_dir: str, venv_dir: str) -> dict[str, str]:
     try:
         config = toml.load("pyproject.toml")
         return {
@@ -57,7 +60,7 @@ def __get_build_def(proj_dir, venv_dir):
         raise arg
 
 
-def __main():
+def __main() -> None:
     proj_dir = osp.dirname(osp.abspath(__file__))
     venv_dir = __get_venv_dir()
     proj_info = __get_proj_info()
@@ -70,7 +73,7 @@ def __main():
     exit(0)
 
 
-def __exec(cmd):
+def __exec(cmd: str) -> None:
     rst = os.system(cmd)
     if rst == 0:
         print(f"\n[Done] <- {cmd}")
@@ -80,9 +83,7 @@ def __exec(cmd):
         exit(1)
 
 
-def __build(proj_info, proj_dir, build_def):
-    import time, shutil
-
+def __build(proj_info: dict[str, str], proj_dir: str, build_def: dict[str, str]) -> None:
     t1 = time.time()
 
     print(f"Removing build dir...")

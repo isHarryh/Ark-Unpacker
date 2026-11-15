@@ -1,12 +1,11 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
-from typing import Any
-
 import glob
 import json
 import os.path as osp
 import re
 from datetime import datetime
+from typing import Any
 
 from .DecodeTextAsset import ArkFBOLibrary
 from .ui.RichCLI import RichCLI
@@ -125,7 +124,7 @@ class ModelsDist:
     def update_operator_data(self):
         Logger.info("ModelsDataDist: Decoding operator data.")
         CLI.show_stage("解析干员信息...")
-        raw: "dict[str,dict]" = self.get_gamedata(("character_table",))
+        raw: dict[str, dict] = self.get_gamedata(("character_table",))
         Logger.info("ModelsDataDist: Parsing operator data.")
         collected = {}
         for k, v in raw["Characters"].items():
@@ -148,7 +147,7 @@ class ModelsDist:
     def update_skin_data(self):
         Logger.info("ModelsDataDist: Decoding skin data.")
         CLI.show_stage("解析干员皮肤信息...")
-        raw: "dict[str,dict]" = self.get_gamedata(("skin_table",))
+        raw: dict[str, dict] = self.get_gamedata(("skin_table",))
         Logger.info("ModelsDataDist: Parsing skin data.")
         collected = {}
         for k, v in raw["CharSkins"].items():
@@ -181,7 +180,7 @@ class ModelsDist:
     def update_enemy_data(self):
         Logger.info("ModelsDataDist: Decoding enemy data.")
         CLI.show_stage("解析敌方单位信息...")
-        raw: "dict[str,list]" = self.get_gamedata(("enemydata", "enemy_database"))
+        raw: dict[str, list] = self.get_gamedata(("enemydata", "enemy_database"))
         Logger.info("ModelsDataDist: Parsing enemy data.")
         collected = {}
         if not isinstance(raw["Enemies"], dict):

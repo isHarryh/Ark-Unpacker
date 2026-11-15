@@ -1,8 +1,8 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
 import os
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Iterable, Optional, Sequence
 
 from rich import box
 from rich.console import Console, Group, RenderableType
@@ -25,7 +25,7 @@ class MenuOption:
 
 
 class RichCLI:
-    _instance: Optional["RichCLI"] = None
+    _instance: "RichCLI | None" = None
 
     def __init__(self):
         self.console = Console(highlight=False, soft_wrap=True)
@@ -51,8 +51,8 @@ class RichCLI:
         title: str,
         options: Sequence[MenuOption],
         *,
-        intro: Optional[Iterable[str]] = None,
-        footer: Optional[Iterable[str]] = None,
+        intro: Iterable[str] | None = None,
+        footer: Iterable[str] | None = None,
         border_style: str = "cyan",
     ) -> None:
         body: list[RenderableType] = []
@@ -85,7 +85,7 @@ class RichCLI:
             )
         )
 
-    def show_section(self, title: str, description: Optional[str] = None) -> None:
+    def show_section(self, title: str, description: str | None = None) -> None:
         content: RenderableType = Text(description, style="white") if description else Text("")
         self.console.print(
             Panel(
@@ -116,13 +116,13 @@ class RichCLI:
         title: str,
         prompt: str,
         *,
-        rows: Optional[Sequence[tuple[str, object]]] = None,
-        note: Optional[str] = None,
-        error: Optional[str] = None,
-        input_label: Optional[str] = None,
-        input_choices: Optional[str] = None,
-        input_default: Optional[str] = None,
-        input_hint: Optional[str] = None,
+        rows: Sequence[tuple[str, object]] | None = None,
+        note: str | None = None,
+        error: str | None = None,
+        input_label: str | None = None,
+        input_choices: str | None = None,
+        input_default: str | None = None,
+        input_hint: str | None = None,
         border_style: str = "cyan",
     ) -> None:
         body: list[RenderableType] = []
@@ -215,8 +215,8 @@ class RichCLI:
         key: str,
         detail: str,
         *,
-        name: Optional[str] = None,
-        type_name: Optional[str] = None,
+        name: str | None = None,
+        type_name: str | None = None,
         severity: str = "warning",
     ) -> None:
         detail_style = "bold red" if severity == "error" else "bold yellow"

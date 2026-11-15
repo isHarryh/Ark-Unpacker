@@ -1,9 +1,7 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
-from typing import List
-
-import importlib
 import glob
+import importlib
 import os
 import os.path as osp
 import pkgutil
@@ -80,12 +78,12 @@ def is_ab_file(path: str) -> bool:
     return any(path.lower().endswith(ext) for ext in _EXT_AB)
 
 
-def collect_ab_files(src: str) -> List[str]:
+def collect_ab_files(src: str) -> list[str]:
     """Collects all the AB files from the given file or directory recursively.
 
     :param src: Source file or directory;
     :returns: A list of AB file paths;
-    :rtype: List[str];
+    :rtype: list[str];
     """
     flist = [src] if osp.isfile(src) else []
     if osp.isdir(src):
@@ -163,24 +161,24 @@ def try_shorten_path(path: str) -> str:
 ##### ↓ Dynamic import related ↓ #####
 
 
-def get_modules_from_package(package: types.ModuleType) -> List[types.ModuleType]:
+def get_modules_from_package(package: types.ModuleType) -> list[types.ModuleType]:
     """Gets all the modules from the given package.
 
     :param package: The package to get modules from;
     :returns: A list of modules;
-    :rtype: List[types.ModuleType];
+    :rtype: list[types.ModuleType];
     """
     walk_result = pkgutil.walk_packages(package.__path__, package.__name__ + ".")
     module_names = [name for _, name, is_pkg in walk_result if not is_pkg]
     return [importlib.import_module(name) for name in module_names]
 
 
-def get_modules_from_package_name(package_name: str) -> List[types.ModuleType]:
+def get_modules_from_package_name(package_name: str) -> list[types.ModuleType]:
     """Gets all the modules from the package with the given name.
 
     :param package_name: The name of the package to get modules from;
     :returns: A list of modules;
-    :rtype: List[types.ModuleType];
+    :rtype: list[types.ModuleType];
     """
     package = importlib.import_module(package_name)
     return get_modules_from_package(package)

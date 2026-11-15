@@ -1,10 +1,10 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
-from multiprocessing.context import SpawnContext
-from typing import Any, Callable, Iterable, Optional
-
 import multiprocessing as mp
 import queue
+from collections.abc import Callable, Iterable
+from multiprocessing.context import SpawnContext
+from typing import Any
 
 from .FsGuardProcess import FsGuardProcess
 from .Messages import StopMessage
@@ -49,19 +49,19 @@ class WorkerPool:
         self._worker_done: set[int] = set()
         self._fs_guard_done = False
         self._fs_guard_stop_sent = False
-        self._fatal_error: Optional[str] = None
-        self._on_error: Optional[Callable[[str], None]] = None
-        self._on_tick: Optional[Callable[[], None]] = None
+        self._fatal_error: str | None = None
+        self._on_error: Callable[[str], None] | None = None
+        self._on_tick: Callable[[], None] | None = None
 
     def set_handlers(
         self,
         *,
-        on_file_queued: Optional[Callable[[int], None]] = None,
-        on_file_saved: Optional[Callable[[bool], None]] = None,
-        on_processed: Optional[Callable[[bool], None]] = None,
-        on_log: Optional[Callable[[str, str], None]] = None,
-        on_error: Optional[Callable[[str], None]] = None,
-        on_tick: Optional[Callable[[], None]] = None,
+        on_file_queued: Callable[[int], None] | None = None,
+        on_file_saved: Callable[[bool], None] | None = None,
+        on_processed: Callable[[bool], None] | None = None,
+        on_log: Callable[[str, str], None] | None = None,
+        on_error: Callable[[str], None] | None = None,
+        on_tick: Callable[[], None] | None = None,
     ):
         self._on_error = on_error
         self._on_tick = on_tick
@@ -75,7 +75,7 @@ class WorkerPool:
                 getattr(self._result_bus, f"set_on_{name}")(callback)
         return self
 
-    def dispatch(self, tasks: Iterable, on_dispatch: Optional[Callable[[Any], None]] = None):
+    def dispatch(self, tasks: Iterable, on_dispatch: Callable[[Any], None] | None = None):
         """Distributes the given tasks to the workers, then signals them to stop.
 
         Enqueueing never blocks indefinitely: if the bounded queue is full, the

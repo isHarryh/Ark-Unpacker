@@ -1,11 +1,14 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
-import os, sys, json, shutil
+import json
+import os
+import shutil
 import subprocess
+import sys
 
 from src.ui.RichCLI import RichCLI
-from src.utils.Profiler import CodeProfiler
 from src.utils.GlobalMethods import stacktrace
+from src.utils.Profiler import CodeProfiler
 
 CLI = RichCLI.get_instance()
 
@@ -14,7 +17,7 @@ def _print_status(message: str, *, style: str = "white") -> None:
     CLI.console.print(message, style=style, markup=False, highlight=False)
 
 
-def __check_file_list(dir_path: str):
+def __check_file_list(dir_path: str) -> None:
     name = os.path.basename(dir_path)
     actual_path = f"test/_summary/{name}.out"
     std_file_path = f"test/_summary/{name}.std"
@@ -56,13 +59,13 @@ def __check_file_list(dir_path: str):
         raise AssertionError(f"File list mismatch for {actual_path}: {len(added)} added, {len(removed)} removed")
 
 
-def __run_cli(args: list):
+def __run_cli(args: list[str]) -> tuple[str, str, int]:
     cmd = [sys.executable, "Main.py"] + args
     result = subprocess.run(cmd, stdout=sys.stdout, stderr=sys.stderr, encoding="utf-8", errors="replace")
     return "", "", result.returncode
 
 
-def test():
+def test() -> None:
     for i in range(int(sys.argv[1]) if len(sys.argv) > 1 else 1):
         try:
             _print_status(f"[#{i}] Preparing...", style="bold cyan")

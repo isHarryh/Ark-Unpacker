@@ -1,12 +1,12 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
-from typing import Callable
-
 import glob
 import json
 import os.path as osp
 import threading
+from collections.abc import Callable
 from io import BytesIO
+
 from pydub import AudioSegment
 
 from .ui.RichCLI import RichCLI

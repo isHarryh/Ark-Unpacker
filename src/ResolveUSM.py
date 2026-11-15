@@ -1,22 +1,20 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
-from typing import Callable, List, Optional
-
 import glob
 import os
 import os.path as osp
+from collections.abc import Callable
 
 import ffmpeg
 from wannacri import usm
 
 from .ui.RichCLI import RichCLI
 from .ui.TaskLive import TaskDetailField, TaskLiveView, TaskValueField
+from .utils.Config import Config
 from .utils.GlobalMethods import is_usm_file, rmdir, stacktrace
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
 from .utils.TaskUtils import TaskReporter, TaskReporterTracker, ThreadPool
-from .utils.Config import Config
-
 
 FFMPEG_RUN_PARAMS = {"quiet": True}
 CLI = RichCLI.get_instance()
@@ -57,9 +55,9 @@ class UsmProcessor:
         """
         self._usm_path = usm_path
         self._encoding = encoding
-        self.usm_obj: Optional[usm.Usm] = None
-        self.video_paths: List[str] = []
-        self.audio_paths: List[str] = []
+        self.usm_obj: usm.Usm | None = None
+        self.video_paths: list[str] = []
+        self.audio_paths: list[str] = []
 
     def load_usm(self):
         """Loads the USM file."""
@@ -209,9 +207,9 @@ def process_usm_file(
     destdir: str,
     do_vid: bool = True,
     do_aud: bool = True,
-    on_processed: Optional[Callable] = None,
-    on_converting: Optional[Callable] = None,
-    on_converted: Optional[Callable] = None,
+    on_processed: Callable | None = None,
+    on_converting: Callable | None = None,
+    on_converted: Callable | None = None,
 ):
     """Processes a single USM file.
 
@@ -257,12 +255,12 @@ def process_usm_file(
         on_processed()
 
 
-def collect_usm_files(rootdir: str) -> List[str]:
+def collect_usm_files(rootdir: str) -> list[str]:
     """Collects all the USM files from the given directory recursively.
 
     :param rootdir: Source directory;
     :returns: A list of USM file paths;
-    :rtype: List[str];
+    :rtype: list[str];
     """
     flist = []
     for i in glob.iglob(osp.join(glob.escape(rootdir), "**", "*"), recursive=True):

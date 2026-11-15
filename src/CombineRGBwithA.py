@@ -1,16 +1,16 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
-from typing import Callable, List, Optional, Union
-
 import glob
-import numpy as np
 import os.path as osp
 import re
+from collections.abc import Callable
+
+import numpy as np
 from PIL import Image
 
 from .ui.RichCLI import RichCLI
 from .ui.TaskLive import TaskDetailField, TaskLiveView, TaskValueField
-from .utils.GlobalMethods import rmdir, is_image_file
+from .utils.GlobalMethods import is_image_file, rmdir
 from .utils.Logger import Logger
 from .utils.SaverUtils import SafeSaver
 from .utils.TaskUtils import TaskReporter, TaskReporterTracker, ThreadPool
@@ -24,13 +24,13 @@ class NoRGBImageMatchedError(FileNotFoundError):
 
 
 class AlphaRGBCombiner:
-    def __init__(self, alpha: Union[str, Image.Image]):
+    def __init__(self, alpha: str | Image.Image):
         self.img_alpha = image_open(alpha, "RGBA")
 
     def combine_with(
         self,
-        rgb: Union[str, Image.Image],
-        resize: Optional[tuple] = None,
+        rgb: str | Image.Image,
+        resize: tuple | None = None,
         remove_bleeding: bool = True,
     ):
         """Merges the RGB image and the Alpha image in an efficient way.
@@ -54,7 +54,7 @@ class AlphaRGBCombiner:
         return img_rgb
 
     @staticmethod
-    def remove_bleeding(rgba: Union[str, Image.Image], min_alpha: int = 0):
+    def remove_bleeding(rgba: str | Image.Image, min_alpha: int = 0):
         """Removes the color bleeding in the given RGBA image
         by setting the RGB value of the transparent pixel to (0, 0, 0).
 
@@ -71,7 +71,7 @@ class AlphaRGBCombiner:
         return img_rgba
 
     @staticmethod
-    def apply_premultiplied_alpha(rgba: Union[str, Image.Image], resize: Optional[tuple] = None):
+    def apply_premultiplied_alpha(rgba: str | Image.Image, resize: tuple | None = None):
         """Multiplies the RGB channels with the alpha channel.
         Useful when handling non-PMA Spine textures.
 
@@ -143,7 +143,7 @@ class AlphaRGBSearcher:
             else:
                 raise NoRGBImageMatchedError(self.fp_alpha)
 
-    def choose_most_similar_rgb(self, candidates: List[str]):
+    def choose_most_similar_rgb(self, candidates: list[str]):
         best_candidate = None
         best_similarity = -1
         for i in candidates:
@@ -163,8 +163,8 @@ class AlphaRGBSearcher:
 
     @staticmethod
     def calc_similarity(
-        rgb: Union[str, Image.Image],
-        alpha: Union[str, Image.Image],
+        rgb: str | Image.Image,
+        alpha: str | Image.Image,
         mode: str = "L",
         precision: int = 150,
     ):
@@ -197,7 +197,7 @@ class AlphaRGBSearcher:
         return 0 if diff_mean >= 255 else (255 if diff_mean <= 0 else 255 - diff_mean)
 
 
-def image_open(fp_or_img: Union[str, Image.Image], mode: str):
+def image_open(fp_or_img: str | Image.Image, mode: str):
     if isinstance(fp_or_img, Image.Image):
         img = fp_or_img
     else:
@@ -215,12 +215,12 @@ def image_resize(img: Image.Image, size: tuple):
     return img
 
 
-def collect_alpha_images(rootdir: str) -> List[str]:
+def collect_alpha_images(rootdir: str) -> list[str]:
     """Collects all the alpha images from the given directory recursively.
 
     :param rootdir: Source directory;
     :returns: A list of alpha image file paths;
-    :rtype: List[str];
+    :rtype: list[str];
     """
     flist = []
     for i in glob.iglob(osp.join(glob.escape(rootdir), "**", "*"), recursive=True):
@@ -232,9 +232,9 @@ def collect_alpha_images(rootdir: str) -> List[str]:
 def image_resolve(
     fp: str,
     destdir: str,
-    on_processed: Optional[Callable],
-    on_file_queued: Optional[Callable],
-    on_file_saved: Optional[Callable],
+    on_processed: Callable | None,
+    on_file_queued: Callable | None,
+    on_file_saved: Callable | None,
 ):
     """Finds an RGB image to combine with the given Alpha image then saves the combined image into the given directory.
 

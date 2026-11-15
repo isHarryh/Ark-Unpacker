@@ -1,13 +1,21 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
-from typing import Callable, Optional, Protocol, Sequence
+from collections.abc import Callable, Sequence
+from typing import Protocol
 
 from rich import box
 from rich.align import Align
 from rich.console import Group, RenderableType
 from rich.live import Live
 from rich.panel import Panel
-from rich.progress import BarColumn, Progress, TaskID, TaskProgressColumn, TimeElapsedColumn, TimeRemainingColumn
+from rich.progress import (
+    BarColumn,
+    Progress,
+    TaskID,
+    TaskProgressColumn,
+    TimeElapsedColumn,
+    TimeRemainingColumn,
+)
 from rich.rule import Rule
 from rich.table import Column, Table
 from rich.text import Text
@@ -20,32 +28,32 @@ class TaskTrackerLike(Protocol):
 
 
 class TaskDetailField:
-    def __init__(self, name: str, value_getter: Callable[[], Optional[object]]):
+    def __init__(self, name: str, value_getter: Callable[[], object | None]):
         self._name = name
         self._value_getter = value_getter
 
     def get_name(self) -> str:
         return self._name
 
-    def get_value(self) -> Optional[object]:
+    def get_value(self) -> object | None:
         return self._value_getter()
 
 
 class TaskValueField(TaskDetailField):
-    def __init__(self, name: str, value: Optional[object] = None):
+    def __init__(self, name: str, value: object | None = None):
         self._value = value
         super().__init__(name, self._get_current_value)
 
-    def set_value(self, value: Optional[object]) -> None:
+    def set_value(self, value: object | None) -> None:
         self._value = value
 
-    def _get_current_value(self) -> Optional[object]:
+    def _get_current_value(self) -> object | None:
         return self._value
 
 
 class TaskLiveView:
     @staticmethod
-    def _none_progress() -> Optional[float]:
+    def _none_progress() -> float | None:
         return None
 
     def __init__(
@@ -53,23 +61,23 @@ class TaskLiveView:
         title: str = "运行中",
         *,
         refresh_rate: float = 0.1,
-        detail_fields: Optional[Sequence[TaskDetailField]] = None,
-        progress_getter: Callable[[], Optional[float]] = _none_progress,
+        detail_fields: Sequence[TaskDetailField] | None = None,
+        progress_getter: Callable[[], float | None] = _none_progress,
     ):
         self._refresh_per_second = max(1.0, 1.0 / refresh_rate) if refresh_rate > 0 else 10.0
         self._title = title
         self._detail_fields = list(detail_fields or [])
         assert progress_getter is not None
         self._progress_getter = progress_getter
-        self._progress: Optional[float] = None
+        self._progress: float | None = None
         self._rows: list[tuple[str, str]] = []
         self._label_width = 10
-        self._tracker: Optional[TaskTrackerLike] = None
+        self._tracker: TaskTrackerLike | None = None
         self._tracker_force_inc = True
-        self._progress_widget: Optional[Progress] = None
-        self._progress_task_id: Optional[TaskID] = None
+        self._progress_widget: Progress | None = None
+        self._progress_task_id: TaskID | None = None
         self._cli = RichCLI.get_instance()
-        self._live: Optional[Live] = None
+        self._live: Live | None = None
 
     def set_title(self, title: str) -> None:
         self._title = title
@@ -79,7 +87,7 @@ class TaskLiveView:
         if self._detail_fields:
             self._label_width = max(len(field.get_name()) for field in self._detail_fields) * 2
 
-    def bind_tracker(self, tracker: Optional[TaskTrackerLike], *, force_inc: bool = True) -> None:
+    def bind_tracker(self, tracker: TaskTrackerLike | None, *, force_inc: bool = True) -> None:
         self._tracker = tracker
         self._tracker_force_inc = force_inc
         if tracker is not None:
@@ -87,7 +95,7 @@ class TaskLiveView:
         else:
             self._progress_getter = TaskLiveView._none_progress
 
-    def get_progress(self) -> Optional[float]:
+    def get_progress(self) -> float | None:
         progress = self._progress_getter()
         if progress is None:
             return None

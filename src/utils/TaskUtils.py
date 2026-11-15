@@ -1,23 +1,24 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
-from typing import Any, Callable, Iterable, Optional, Set, Union
-
 import asyncio
-import psutil
 import queue
 import threading
 import time
+from collections.abc import Callable, Iterable
+from typing import Any
 
-from .Config import PerformanceLevel, Config
+import psutil
+
+from .Config import Config, PerformanceLevel
 from .Logger import Logger
 
 
 class ThreadCtrl:
     """Controller for Multi Threading."""
 
-    def __init__(self, max_subthread: Optional[int] = None):
+    def __init__(self, max_subthread: int | None = None):
         """Initializes a tool for multi threading."""
-        self.__sts: "list[threading.Thread]" = []
+        self.__sts: list[threading.Thread] = []
         if not max_subthread:
             max_subthread = PerformanceLevel.get_thread_limit(Config.get("performance_level"))
         self.set_max_subthread(max_subthread)
@@ -34,9 +35,9 @@ class ThreadCtrl:
     def run_subthread(
         self,
         fun,
-        args: Optional[tuple] = None,
-        kwargs: Optional[dict] = None,
-        name: Optional[str] = None,
+        args: tuple | None = None,
+        kwargs: dict | None = None,
+        name: str | None = None,
     ):
         """Creates a sub thread and run it."""
         while self.count_subthread() >= self.__max:
@@ -66,19 +67,19 @@ class ThreadPool:
         worker_target: Callable,
         worker_args_factory: Callable[[Any], tuple],
         thread_name: str = "Worker",
-        max_subthread: Optional[int] = None,
+        max_subthread: int | None = None,
     ):
         self._ctrl = ThreadCtrl(max_subthread)
         self._worker_target = worker_target
         self._worker_args_factory = worker_args_factory
         self._thread_name = thread_name
-        self._on_tick: Optional[Callable[[], None]] = None
+        self._on_tick: Callable[[], None] | None = None
 
-    def set_handlers(self, *, on_tick: Optional[Callable[[], None]] = None):
+    def set_handlers(self, *, on_tick: Callable[[], None] | None = None):
         self._on_tick = on_tick
         return self
 
-    def dispatch(self, tasks: Iterable, on_dispatch: Optional[Callable[[Any], None]] = None):
+    def dispatch(self, tasks: Iterable, on_dispatch: Callable[[Any], None] | None = None):
         """Distributes the given tasks to the worker threads."""
         for task in tasks:
             if on_dispatch is not None:
@@ -115,8 +116,8 @@ class CoroutineCtrl:
         self,
         handler: Callable,
         name: str = "",
-        max_concurrency: Optional[int] = None,
-        min_spare_memory_mb: Optional[int] = None,
+        max_concurrency: int | None = None,
+        min_spare_memory_mb: int | None = None,
     ):
         """Initializes a Coroutine Controller.
 
@@ -131,9 +132,9 @@ class CoroutineCtrl:
         self._total_requested = Counter()
         self._total_processed = Counter()
         self.__thread = None
-        self.__loop: Optional[asyncio.AbstractEventLoop] = None
-        self.__queue: Optional[asyncio.Queue] = None
-        self.__semaphore: Optional[asyncio.Semaphore] = None
+        self.__loop: asyncio.AbstractEventLoop | None = None
+        self.__queue: asyncio.Queue | None = None
+        self.__semaphore: asyncio.Semaphore | None = None
 
         if max_concurrency is None:
             max_concurrency = PerformanceLevel.get_thread_limit(Config.get("performance_level"))
@@ -269,7 +270,7 @@ class CoroutineCtrl:
 
         Logger.debug(f"CoroutineCtrl: {self._name}: Loop started")
 
-        running_tasks: Set[asyncio.Task] = set()
+        running_tasks: set[asyncio.Task] = set()
 
         while True:
             try:
@@ -323,7 +324,7 @@ class Counter:
         """Initializes a cumulative counter."""
         self.__s = 0
 
-    def update(self, val: Union[int, bool] = 1):
+    def update(self, val: int | bool = 1):
         """Updates the counter.
 
         :param val: Delta value in int or bool (`True` for 1 and `False` for 0);

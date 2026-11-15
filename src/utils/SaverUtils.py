@@ -1,22 +1,22 @@
 # Copyright (c) 2022-2026, Harry Huang
 # @ BSD 3-Clause License
+import hashlib
+import json
 import os
 import os.path as osp
 import re
-import json
 import threading
+from collections.abc import Callable, Generator, Sequence
 from contextlib import ContextDecorator
 from dataclasses import dataclass
 from io import BytesIO
-import hashlib
-from typing import Callable, Generator, Optional, Sequence
 
 import UnityPy.classes as uc
 from PIL import Image
 
-from .Profiler import CodeProfiler
 from .Config import Config, PerformanceLevel
 from .Logger import Logger
+from .Profiler import CodeProfiler
 from .TaskUtils import CoroutineCtrl
 
 
@@ -76,8 +76,8 @@ class SafeSaver(CoroutineCtrl):
         destdir: str,
         name: str,
         ext: str,
-        on_queued: Optional[Callable] = None,
-        on_saved: Optional[Callable] = None,
+        on_queued: Callable | None = None,
+        on_saved: Callable | None = None,
     ):
         """Saves a binary data to a file.
 
@@ -99,8 +99,8 @@ class SafeSaver(CoroutineCtrl):
         destdir: str,
         name: str,
         ext: str = _EXT_IMAGE,
-        on_queued: Optional[Callable] = None,
-        on_saved: Optional[Callable] = None,
+        on_queued: Callable | None = None,
+        on_saved: Callable | None = None,
     ):
         """Saves an image to a file.
 
@@ -119,8 +119,8 @@ class SafeSaver(CoroutineCtrl):
         obj: uc.Object,
         destdir: str,
         name: str,
-        on_queued: Optional[Callable] = None,
-        on_saved: Optional[Callable] = None,
+        on_queued: Callable | None = None,
+        on_saved: Callable | None = None,
     ):
         """Saves the given Unity object as a file. If a object is not exportable, it does nothing.
 
@@ -142,8 +142,8 @@ class SafeSaver(CoroutineCtrl):
         data: dict,
         destdir: str,
         name: str,
-        on_queued: Optional[Callable] = None,
-        on_saved: Optional[Callable] = None,
+        on_queued: Callable | None = None,
+        on_saved: Callable | None = None,
     ):
         """Saves the given data as a JSON file.
 
@@ -175,8 +175,8 @@ class SafeSaver(CoroutineCtrl):
     def save_objects(
         lst: Sequence[uc.Object],
         destdir: str,
-        on_queued: Optional[Callable] = None,
-        on_saved: Optional[Callable] = None,
+        on_queued: Callable | None = None,
+        on_saved: Callable | None = None,
     ):
         """Saves all the Unity objects in the given list as files.
         If a object is not exportable, it does nothing.
@@ -222,7 +222,7 @@ class SafeSaver(CoroutineCtrl):
     @staticmethod
     def iter_object_export_items(
         obj: uc.Object,
-        name_override: Optional[str] = None,
+        name_override: str | None = None,
     ) -> Generator["SafeSaver.ExportItem", None, None]:
         if obj.object_reader is None or obj.object_reader.byte_size == 0:
             return
@@ -248,7 +248,7 @@ class SafeSaver(CoroutineCtrl):
             yield SafeSaver.ExportItem(name, ".obj", obj.export().encode("utf-8"))
 
     @staticmethod
-    def _save_async(data: bytes, destdir: str, name: str, ext: str, on_saved: Optional[Callable]):
+    def _save_async(data: bytes, destdir: str, name: str, ext: str, on_saved: Callable | None):
         dest = SafeSaver._sanitize_dest(osp.join(destdir, name + ext))
         try:
             with CodeProfiler("saver_save"):

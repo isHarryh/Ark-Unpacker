@@ -2,7 +2,6 @@
 # @ BSD 3-Clause License
 import multiprocessing as mp
 import os
-from typing import Optional
 
 RESULT_FILE_QUEUED = 1
 RESULT_FILE_SAVED = 2
@@ -31,8 +30,8 @@ class ProcessReporter:
     def processed(self, success: bool = True):
         self.emit(RESULT_PROCESSED, success)
 
-    def worker_done(self, pid: Optional[int] = None):
+    def worker_done(self, pid: int | None = None):
         self.emit(RESULT_WORKER_DONE, os.getpid() if pid is None else pid)
 
-    def fs_guard_done(self, pid: Optional[int] = None):
+    def fs_guard_done(self, pid: int | None = None):
         self.emit(RESULT_FS_GUARD_DONE, os.getpid() if pid is None else pid)
