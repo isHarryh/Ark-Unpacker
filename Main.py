@@ -22,7 +22,7 @@ from src.utils.Config import Config
 from src.utils.GlobalMethods import rmdir, stacktrace, try_shorten_path
 from src.utils.Logger import Logger
 
-ARKUNPACKER_VERSION = "v5.2"
+ARKUNPACKER_VERSION = "v5.3"
 ARKUNPACKER_LOCAL = "zh-CN"
 CLI = RichCLI.get_instance()
 
