@@ -163,12 +163,12 @@ class Resource:
             raise RuntimeError("Environment has been disposed or not initialized")
         if isinstance(pathid, dict):
             if "m_PathID" not in pathid:
-                raise KeyError(f"Given dict does not contain m_PathID field")
+                raise KeyError("Given dict does not contain m_PathID field")
             pid = pathid["m_PathID"]
         elif isinstance(pathid, int):
             pid = pathid
         else:
-            raise TypeError(f"Argument pathid must be int or dict")
+            raise TypeError("Argument pathid must be int or dict")
         if pid not in self._lut_pathid:
             raise KeyError(f"Object with PathID {pid} not found")
         reader, obj = self._lut_pathid[pid]

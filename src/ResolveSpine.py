@@ -198,7 +198,7 @@ class SpineAsset:
             else osp.splitext(osp.basename(self.atlas_handler.original_name))[0]
         )
         prefix = f"{self.type.value}/{folder_name}/"
-        for h in list((self.atlas_handler, self.skel_handler)) + list(self.tex_handlers):
+        for h in [self.atlas_handler, self.skel_handler] + list(self.tex_handlers):
             h.set_path_prefix(prefix)
 
     def iter_export_items(self) -> Generator[SafeSaver.ExportItem, None, None]:

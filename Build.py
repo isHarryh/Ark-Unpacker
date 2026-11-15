@@ -5,6 +5,7 @@ import os.path as osp
 import re
 import shutil
 import subprocess
+import sys
 import time
 
 import toml
@@ -43,10 +44,10 @@ def __get_proj_info() -> dict[str, str]:
         }
     except KeyError as arg:
         print(f"x Required field missing, {arg}")
-        raise arg
-    except Exception as arg:
+        raise
+    except Exception:
         print("× Failed to parse poetry project info.")
-        raise arg
+        raise
 
 
 def __get_build_def(proj_dir: str, venv_dir: str) -> dict[str, str]:
@@ -55,9 +56,9 @@ def __get_build_def(proj_dir: str, venv_dir: str) -> dict[str, str]:
         return {
             k: v.replace("$project$", proj_dir).replace("$venv$", venv_dir) for k, v in config["tool"]["build"].items()
         }
-    except Exception as arg:
+    except Exception:
         print("× Failed to parse build definition fields.")
-        raise arg
+        raise
 
 
 def __main() -> None:
@@ -68,9 +69,9 @@ def __main() -> None:
     print(f"Project: {proj_info['name']}|{proj_info['version']}|{proj_info['author']}|{proj_info['license']}")
     print(f"Root: {proj_dir}")
     print(f"Venv: {venv_dir}")
-    print("")
+    print()
     __build(proj_info, proj_dir, build_def)
-    exit(0)
+    sys.exit(0)
 
 
 def __exec(cmd: str) -> None:
@@ -80,23 +81,23 @@ def __exec(cmd: str) -> None:
     else:
         print(f"\n[Error] <- {cmd}")
         print(f"× Execution failed! Returned code: {rst}")
-        exit(1)
+        sys.exit(1)
 
 
 def __build(proj_info: dict[str, str], proj_dir: str, build_def: dict[str, str]) -> None:
     t1 = time.time()
 
-    print(f"Removing build dir...")
+    print("Removing build dir...")
     os.chdir(proj_dir)
     build_dir = build_def["build-dir"]
     if osp.exists(build_dir):
         shutil.rmtree(build_dir, ignore_errors=False)
 
-    print(f"Creating build dir...")
+    print("Creating build dir...")
     os.mkdir(build_dir)
     os.chdir(build_dir)
 
-    print(f"Creating version file...")
+    print("Creating version file...")
     version_file = "version.txt"
     with open(version_file, "w", encoding="UTF-8") as f:
         # spell-checker: disable
@@ -130,20 +131,20 @@ StringFileInfo([
         # spell-checker: enable
 
     print("Running pyinstaller...")
-    cmd_pyinstaller = f"poetry run pyinstaller -F"
+    cmd_pyinstaller = "poetry run pyinstaller -F"
     cmd_pyinstaller += f" --name \"{proj_info['name']}-v{proj_info['version']}\""
     cmd_pyinstaller += f" --version-file {version_file}"
-    cmd_pyinstaller += f" --icon \"{build_def['icon']}\"" if "icon" in build_def.keys() else ""
-    if "add-binary" in build_def.keys():
+    cmd_pyinstaller += f" --icon \"{build_def['icon']}\"" if "icon" in build_def else ""
+    if "add-binary" in build_def:
         for i in build_def["add-binary"].split("|"):
             cmd_pyinstaller += f' --add-binary "{i}"' if i else ""
-    if "add-data" in build_def.keys():
+    if "add-data" in build_def:
         for i in build_def["add-data"].split("|"):
             cmd_pyinstaller += f' --add-data "{i}"' if i else ""
-    if "hidden-import" in build_def.keys():
+    if "hidden-import" in build_def:
         for i in build_def["hidden-import"].split("|"):
             cmd_pyinstaller += f' --hidden-import "{i}"' if i else ""
-    cmd_pyinstaller += f" --log-level {build_def['log-level']}" if "log-level" in build_def.keys() else ""
+    cmd_pyinstaller += f" --log-level {build_def['log-level']}" if "log-level" in build_def else ""
     cmd_pyinstaller += f" \"{build_def['entry']}\""
     __exec(cmd_pyinstaller)
 

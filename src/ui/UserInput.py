@@ -46,7 +46,7 @@ class UserInput:
                 allowed = [choice.lower() for choice in normalized_choices]
             if allowed is not None and candidate not in allowed:
                 assert normalized_choices is not None
-                UserInput._CLI.console.print(f"  提供的输入必须在可选项中", style="bold yellow")
+                UserInput._CLI.console.print("  提供的输入必须在可选项中", style="bold yellow")
                 continue
             return candidate if (allowed is not None and not case_sensitive) else value
 

@@ -125,9 +125,7 @@ class WorkerPool:
                 if self._check_crashes():
                     return False
                 continue
-            if self._check_crashes():
-                return False
-            return True
+            return not self._check_crashes()
 
     def _send_stop(self):
         for _ in self._workers:

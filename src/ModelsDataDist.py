@@ -223,7 +223,7 @@ class ModelsDist:
                         origin = self.data["data"][key_char]
                     else:
                         # 回退到模糊查找（有些动态立绘的名称缺少尾号）
-                        for k in self.data["data"].keys():
+                        for k in self.data["data"]:
                             if k.startswith(key_char):
                                 origin = self.data["data"][k]
                                 Logger.info(

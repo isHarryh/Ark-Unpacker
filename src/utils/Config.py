@@ -71,7 +71,7 @@ class Config:
             try:
                 loaded_config = json.load(open(Config.__config_path, "r", encoding=Config.__file_encoding))
                 if isinstance(loaded_config, dict):
-                    for k in Config.__default_config.keys():
+                    for k in Config.__default_config:
                         default_val = Config.__default_config[k]
                         self._config[k] = (
                             loaded_config[k]

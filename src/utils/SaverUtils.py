@@ -59,7 +59,7 @@ class SafeSaver(CoroutineCtrl):
     def __init__(self):
         """Not recommended to use. Please use the static methods."""
         max_concurrency = PerformanceLevel.get_thread_limit(Config.get("performance_level"))
-        super(SafeSaver, self).__init__(self._save_async, max_concurrency=max_concurrency, name="Saver")
+        super().__init__(self._save_async, max_concurrency=max_concurrency, name="Saver")
         # Cache config values to avoid repeated reads
         self._export_encoding = Config.get("export_encoding")
         self._export_json_indent = Config.get("export_json_indent")

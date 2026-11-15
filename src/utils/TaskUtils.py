@@ -290,7 +290,7 @@ class CoroutineCtrl:
                         task = asyncio.create_task(task_function(data))
                         running_tasks.add(task)
                         self.__queue.task_done()
-                    except asyncio.TimeoutError:
+                    except TimeoutError:
                         # No task available for now
                         continue
                 else:

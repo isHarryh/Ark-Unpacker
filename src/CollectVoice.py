@@ -41,7 +41,6 @@ def collect_voice(
     on_finished: Callable,
     on_collected: Callable,
 ):
-    global _INTERNAL_LOCK
     ori_name = osp.basename(upkdir)
     std_name = "_".join(ori_name.split("_")[:3]) if force_std_name else ori_name
     voice_merged: AudioSegment = AudioSegment.empty()
@@ -51,7 +50,7 @@ def collect_voice(
     for file in sorted(i for i in glob.iglob(osp.join(glob.escape(upkdir), "*")) if osp.isfile(i)):
         name, ext = osp.splitext(osp.basename(file))
         # Ensure the audio file is supported
-        if not ext.lower() == ".wav":
+        if ext.lower() != ".wav":
             Logger.warn(f'CollectVoice: Unexpected file type "{ext}"')
             continue
         if not name.startswith("CN_"):

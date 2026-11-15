@@ -173,11 +173,11 @@ def run_custom_resolve_ab():
         .lower()
         .strip()
     )
-    do_img = True if "i" in do_them else False
-    do_txt = True if "t" in do_them else False
-    do_aud = True if "a" in do_them else False
-    do_mesh = True if "m" in do_them else False
-    do_tree = True if "j" in do_them else False
+    do_img = "i" in do_them
+    do_txt = "t" in do_them
+    do_aud = "a" in do_them
+    do_mesh = "m" in do_them
+    do_tree = "j" in do_them
     session.set_bool("图片", do_img)
     session.set_bool("文本", do_txt)
     session.set_bool("音频", do_aud)
@@ -722,7 +722,7 @@ if __name__ == "__main__":
             CLI.blank()
             CLI.show_error("程序非常规退出", f"程序以显式退出码结束：{arg.code}")
         sys.exit(arg.code)
-    except KeyboardInterrupt as arg:
+    except KeyboardInterrupt:
         Logger.error("CI: Program was forcibly interrupted by user.")
         CLI.blank()
         CLI.show_error("用户强制中止", "检测到 KeyboardInterrupt，已强制退出程序。")

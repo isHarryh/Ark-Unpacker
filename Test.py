@@ -41,8 +41,8 @@ def __check_file_list(dir_path: str) -> None:
         expected_set = set(f.read().splitlines())
 
     if actual_set != expected_set:
-        added = sorted(list(actual_set - expected_set))
-        removed = sorted(list(expected_set - actual_set))
+        added = sorted(actual_set - expected_set)
+        removed = sorted(expected_set - actual_set)
         _print_status(f"\n[File Mismatch] {os.path.basename(actual_path)}", style="bold red")
         if added:
             _print_status(f"  Added ({len(added)}):", style="bold yellow")
@@ -171,7 +171,7 @@ def test() -> None:
             __check_file_list(DIR_USM)
 
             _print_status(f"[#{i}] Test success!", style="bold green")
-        except BaseException as arg:
+        except BaseException:
             _print_status(f"[#{i}] Test failed because an error occurred!", style="bold red")
             _print_status(stacktrace(), style="bold yellow")
     json.dump(

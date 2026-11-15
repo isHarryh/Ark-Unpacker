@@ -271,7 +271,7 @@ class VoiceDist:
         }
 
     def retrieve(self):
-        Logger.info(f"VoiceDataDist: Starting retrieve voice data.")
+        Logger.info("VoiceDataDist: Starting retrieve voice data.")
         CLI.show_stage("读取各语种的子数据集...")
         failed = False
         for var, dir in VoiceDist.VARIATIONS_DIR.items():
