@@ -66,34 +66,25 @@ class AlphaRGBCombiner:
         img_rgba: Image.Image = image_open(rgba, "RGBA")
         img_black = Image.new("RGBA", img_rgba.size)
         img_alpha = img_rgba.getchannel("A")
-        img_mask = img_alpha.point(lambda x: 0 if x > min_alpha else 255)
+        img_mask = img_alpha.point([0 if a > min_alpha else 255 for a in range(256)])
         img_rgba.paste(img_black, img_mask)
         return img_rgba
 
     @staticmethod
-    def apply_premultiplied_alpha(rgba: str | Image.Image, resize: tuple | None = None):
+    def apply_premultiplied_alpha(rgba: str | Image.Image):
         """Multiplies the RGB channels with the alpha channel.
         Useful when handling non-PMA Spine textures.
 
         :param rgba: Instance of RGBA image or its file path;
-        :param resize: Resize the final image to the given size, `None` for disabled;
         :returns: A new image instance;
         :rtype: Image;
         """
         img_rgba: Image.Image = image_open(rgba, "RGBA")
-        if resize:
-            # Resize RGB/A channel separately
-            data = np.array(img_rgba, dtype=np.float32)
-            img_rgb = Image.fromarray(data[:, :, :3], "RGB")
-            img_alpha = Image.fromarray(data[:, :, 3], "L")
-            img_rgb = image_resize(img_rgb, resize)
-            img_alpha = image_resize(img_alpha, resize)
-            img_rgb.putalpha(img_alpha)
         # Apply PMA
         data = np.array(img_rgba, dtype=np.float32)
         data[:, :, :3] *= data[:, :, 3:] / 255.0
         data_int = np.clip(data, 0, 255).astype(np.uint8)
-        return Image.fromarray(data_int, "RGBA")
+        return Image.fromarray(data_int)
 
 
 class AlphaRGBSearcher:
@@ -210,7 +201,7 @@ def image_open(fp_or_img: str | Image.Image, mode: str):
 def image_resize(img: Image.Image, size: tuple):
     if len(img.size) == 2 and len(size) == 2:
         if img.size[0] != size[0] or img.size[1] != size[1]:
-            img = img.resize(size, resample=Image.BILINEAR)
+            img = img.resize(size, resample=Image.Resampling.BILINEAR)
     assert isinstance(img, Image.Image)
     return img
 
