@@ -7,8 +7,7 @@ import shutil
 import subprocess
 import sys
 import time
-
-import toml
+import tomllib
 
 
 def __get_venv_dir() -> str:
@@ -33,7 +32,8 @@ def __get_venv_dir() -> str:
 
 def __get_proj_info() -> dict[str, str]:
     try:
-        config = toml.load("pyproject.toml")
+        with open("pyproject.toml", "rb") as f:
+            config = tomllib.load(f)
         config = config["project"]
         return {
             "name": config["name"],
@@ -52,7 +52,8 @@ def __get_proj_info() -> dict[str, str]:
 
 def __get_build_def(proj_dir: str, venv_dir: str) -> dict[str, str]:
     try:
-        config = toml.load("pyproject.toml")
+        with open("pyproject.toml", "rb") as f:
+            config = tomllib.load(f)
         return {
             k: v.replace("$project$", proj_dir).replace("$venv$", venv_dir) for k, v in config["tool"]["build"].items()
         }
